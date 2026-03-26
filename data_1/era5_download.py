@@ -2,6 +2,8 @@ import cdsapi
 import zipfile
 import os
 
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+
 c = cdsapi.Client()
 
 months = [str(i).zfill(2) for i in range(1, 13)]
@@ -9,8 +11,8 @@ months = [str(i).zfill(2) for i in range(1, 13)]
 for m in months:
     print(f"\n📥 Downloading month: {m} ...")
 
-    output_nc  = f'era5_2024_{m}.nc'
-    output_zip = f'era5_2024_{m}.zip'
+    output_nc  = os.path.join(SCRIPT_DIR, f'era5_2024_{m}.nc')
+    output_zip = os.path.join(SCRIPT_DIR, f'era5_2024_{m}.zip')
 
     # ── Download ─────────────────────────────────────────────────────────────
     c.retrieve(
@@ -51,8 +53,8 @@ for m in months:
 
             nc_inside = [n for n in names if n.endswith('.nc')]
             if nc_inside:
-                z.extract(nc_inside[0], '.')
-                os.rename(nc_inside[0], output_nc)
+                z.extract(nc_inside[0], SCRIPT_DIR)
+                os.rename(os.path.join(SCRIPT_DIR, nc_inside[0]), output_nc)
                 print(f"  ✅ Extracted → {output_nc}")
             else:
                 print(f"  ❌ No .nc found inside zip. Contents: {names}")

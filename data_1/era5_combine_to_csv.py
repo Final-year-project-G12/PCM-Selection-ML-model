@@ -5,6 +5,8 @@ import glob
 import os
 import zipfile
 
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+
 # ─────────────────────────────────────────────────────────────────────────────
 # HELPER: unzip any files that are still ZIPs
 # ─────────────────────────────────────────────────────────────────────────────
@@ -59,9 +61,7 @@ def nc_to_dataframe(filepath):
     else:
         for eng in ['netcdf4', 'scipy', 'h5netcdf']:
             try:
-                xr.open_dataset(filepath, engine=eng)
-                engine = eng
-                break
+                return xr.open_dataset(filepath, engine=eng)
             except Exception:
                 continue
         else:
@@ -115,8 +115,11 @@ def nc_to_dataframe(filepath):
         df['GHI_Wm2'] = df['solar_radiation'].clip(lower=0)
         print("  ℹ️  GHI source: solar_radiation (W/m²)")
     elif 'ssrd' in df.columns:
+        # ssrd is accumulated J/m² — deaccumulate then convert to W/m²
+        df = df.sort_values('valid_time' if 'valid_time' in df.columns else 'timestamp')
+        df['ssrd'] = df['ssrd'].diff().clip(lower=0)
         df['GHI_Wm2'] = (df['ssrd'] / 3600.0).clip(lower=0)
-        print("  ℹ️  GHI source: ssrd ÷ 3600 (J/m² → W/m²)")
+        print("  ℹ️  GHI source: ssrd deaccumulated ÷ 3600 (J/m² → W/m²)")
     elif 'msdwswrf' in df.columns:
         df['GHI_Wm2'] = df['msdwswrf'].clip(lower=0)
         print("  ℹ️  GHI source: msdwswrf (W/m²)")
@@ -182,12 +185,11 @@ print("=" * 60)
 print("ERA5 → CSV CONVERTER  (with lat/lon + solar_radiation)")
 print("=" * 60)
 
-nc_files = sorted(glob.glob("era5_2024_*.nc"))
+nc_files = sorted(glob.glob(os.path.join(SCRIPT_DIR, "era5_2024_*.nc")))
 
 if not nc_files:
     print(f"❌ No era5_2024_*.nc files found.")
-    print(f"   Current directory: {os.getcwd()}")
-    print("   Move this script to the same folder as your .nc files.")
+    print(f"   Script directory: {SCRIPT_DIR}")
     exit()
 
 print(f"Found {len(nc_files)} files: {nc_files}\n")
@@ -245,7 +247,7 @@ else:
     climate_df['GHI_Wm2']   = climate_df['GHI_Wm2'].clip(lower=0)
     climate_df['Precip_mm'] = climate_df['Precip_mm'].clip(lower=0)
 
-    output = 'era5_climate_coimbatore_2024.csv'
+    output = os.path.join(SCRIPT_DIR, 'era5_climate_coimbatore_2024.csv')
     climate_df.to_csv(output, index=False)
 
     print(f"\n🎉 SUCCESS!")

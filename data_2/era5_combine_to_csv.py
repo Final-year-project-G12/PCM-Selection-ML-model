@@ -3,7 +3,10 @@ import pandas as pd
 import numpy as np
 import glob
 import os
+import re
 import zipfile
+
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # ─────────────────────────────────────────────────────────────────────────────
 # HELPER: unzip if needed
@@ -53,9 +56,7 @@ def open_nc(filepath):
     else:
         for eng in ['netcdf4', 'scipy', 'h5netcdf']:
             try:
-                xr.open_dataset(filepath, engine=eng)
-                engine = eng
-                break
+                return xr.open_dataset(filepath, engine=eng)
             except Exception:
                 continue
         else:
@@ -171,8 +172,11 @@ def build_final_df(df, source_label=""):
         df['GHI_Wm2'] = df['solar_radiation'].clip(lower=0)
         print("  ℹ️  GHI ← solar_radiation (W/m²)")
     elif 'ssrd' in df.columns:
+        # ssrd is accumulated J/m² — deaccumulate then convert to W/m²
+        df = df.sort_values('valid_time' if 'valid_time' in df.columns else 'timestamp')
+        df['ssrd'] = df['ssrd'].diff().clip(lower=0)
         df['GHI_Wm2'] = (df['ssrd'] / 3600.0).clip(lower=0)
-        print("  ℹ️  GHI ← ssrd ÷ 3600")
+        print("  ℹ️  GHI ← ssrd deaccumulated ÷ 3600")
     elif 'msdwswrf' in df.columns:
         df['GHI_Wm2'] = df['msdwswrf'].clip(lower=0)
         print("  ℹ️  GHI ← msdwswrf")
@@ -239,10 +243,10 @@ print("=" * 65)
 #   era5_2024_01.nc                          (single-file month)
 #   era5_2024_01__data_stream-oper_*.nc      (split-file month from ZIP)
 
-all_nc = sorted(glob.glob("era5_2024_*.nc"))
+all_nc = sorted(glob.glob(os.path.join(SCRIPT_DIR, "era5_2024_*.nc")))
 if not all_nc:
     print("❌ No era5_2024_*.nc files found.")
-    print(f"   Current directory: {os.getcwd()}")
+    print(f"   Script directory: {SCRIPT_DIR}")
     exit()
 
 # Build month → [list of files] mapping
@@ -250,11 +254,10 @@ from collections import defaultdict
 month_files = defaultdict(list)
 
 for f in all_nc:
-    # extract the MM part (characters 9-10 after 'era5_2024_')
-    parts = os.path.basename(f).split('_')   # ['era5', '2024', 'MM', ...]
-    if len(parts) >= 3:
-        mm = parts[2][:2]                    # first 2 chars = month number
-        month_files[mm].append(f)
+    # extract the MM part robustly via regex
+    m = re.match(r'era5_\d{4}_(\d{2})', os.path.basename(f))
+    if m:
+        month_files[m.group(1)].append(f)
 
 print(f"Found files for {len(month_files)} months:")
 for mm in sorted(month_files):
@@ -320,7 +323,7 @@ else:
     climate_df['GHI_Wm2']   = climate_df['GHI_Wm2'].clip(lower=0)
     climate_df['Precip_mm'] = climate_df['Precip_mm'].clip(lower=0)
 
-    output = 'era5_climate_coimbatore_2024.csv'
+    output = os.path.join(SCRIPT_DIR, 'era5_climate_coimbatore_2024.csv')
     climate_df.to_csv(output, index=False)
 
     # NaN audit

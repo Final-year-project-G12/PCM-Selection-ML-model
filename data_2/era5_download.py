@@ -2,6 +2,8 @@ import cdsapi
 import zipfile
 import os
 
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+
 c = cdsapi.Client()
 
 months = [str(i).zfill(2) for i in range(1, 13)]
@@ -9,8 +11,8 @@ months = [str(i).zfill(2) for i in range(1, 13)]
 for m in months:
     print(f"\n📥 Downloading month: {m} ...")
 
-    output_nc  = f'era5_2024_{m}.nc'
-    output_zip = f'era5_2024_{m}.zip'
+    output_nc  = os.path.join(SCRIPT_DIR, f'era5_2024_{m}.nc')
+    output_zip = os.path.join(SCRIPT_DIR, f'era5_2024_{m}.zip')
 
     # ── Download ─────────────────────────────────────────────────────────────
     c.retrieve(
@@ -63,10 +65,10 @@ for m in months:
                 # and accumulated vars (ssrd, tp) into separate files.
                 # Save BOTH with descriptive names so the combine script can merge them.
                 for nc_name in nc_inside:
-                    z.extract(nc_name, '.')
+                    z.extract(nc_name, SCRIPT_DIR)
                     basename = os.path.splitext(os.path.basename(nc_name))[0]
-                    dest = f'era5_2024_{m}__{basename}.nc'
-                    os.rename(nc_name, dest)
+                    dest = os.path.join(SCRIPT_DIR, f'era5_2024_{m}__{basename}.nc')
+                    os.rename(os.path.join(SCRIPT_DIR, nc_name), dest)
                     print(f"  ✅ Extracted → {dest}")
                 # The plain era5_2024_MM.nc is NOT created when there are 2 files.
                 # The combine script will glob both parts and merge them.
