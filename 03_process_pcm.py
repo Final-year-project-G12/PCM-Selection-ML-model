@@ -90,7 +90,32 @@ SWH_TM_MIN = 35.0   # °C
 SWH_TM_MAX = 75.0   # °C
 
 
-def load_and_clean_pcm(csv_path: str) -> pd.DataFrame:
+def visualize_preprocessing_diff(df_before: pd.DataFrame, df_after: pd.DataFrame):
+    """
+    Visualizes the differences before and after preprocessing (imputation of missing values).
+    Shows missing values heatmaps and distributions of key imputed features.
+    """
+    try:
+        import matplotlib.pyplot as plt
+        import seaborn as sns
+        
+        # 1. Missing Values Heatmap Comparison
+        fig, axes = plt.subplots(1, 2, figsize=(16, 6))
+        
+        sns.heatmap(df_before.isnull(), cbar=False, cmap='viridis', ax=axes[0])
+        axes[0].set_title('Missing Values Before Imputation', fontsize=14)
+        
+        sns.heatmap(df_after.isnull(), cbar=False, cmap='viridis', ax=axes[1])
+        axes[1].set_title('Missing Values After Imputation', fontsize=14)
+        
+        plt.tight_layout()
+        plt.show()
+
+    except ImportError:
+        print("[VISUALIZATION ERROR] matplotlib and/or seaborn are not installed.")
+        print("Please install them using: pip install matplotlib seaborn")
+
+def load_and_clean_pcm(csv_path: str, visualize: bool = False) -> pd.DataFrame:
     """Load PCM CSV, standardize columns, fix encoding, filter SWH range."""
     df = pd.read_csv(csv_path, encoding="utf-8", on_bad_lines="skip")
 
@@ -145,6 +170,8 @@ def load_and_clean_pcm(csv_path: str) -> pd.DataFrame:
         if col in df.columns:
             df[col] = df[col].apply(extract_numeric)
             df[col] = pd.to_numeric(df[col], errors="coerce")
+
+    df_before_imputation = df.copy() if visualize else None
 
     # ── Handle Missing Values in PCM Table ────────────────────────────────
     
@@ -213,6 +240,9 @@ def load_and_clean_pcm(csv_path: str) -> pd.DataFrame:
     for col in ["flammability", "appearance", "manufacturer", "pcm_type"]:
         if col in df.columns:
             df[col] = df[col].fillna("Unknown")
+            
+    if visualize and df_before_imputation is not None:
+        visualize_preprocessing_diff(df_before_imputation, df)
 
     # ── Filter: only SWH-suitable PCMs ───────────────────────────────────
     # Singh 2025: 40–70°C; we use 35–75°C with margin
@@ -331,7 +361,7 @@ if __name__ == "__main__":
         print("  -> Copy your PCM CSV to data/raw/pcm_data.csv and re-run.")
         raise SystemExit(1)
 
-    pcm_df = load_and_clean_pcm(INPUT_PCM_CSV)
+    pcm_df = load_and_clean_pcm(INPUT_PCM_CSV, visualize=True)
     pcm_df = add_derived_pcm_features(pcm_df)
     pcm_df = compute_pcm_suitability_score(pcm_df)
 
@@ -373,4 +403,3 @@ if __name__ == "__main__":
     print(f"\nTotal PCMs after cleaning: {len(pcm_df)}")
     print(f"Columns: {list(pcm_df.columns)}")
     print(f"\nOutput file: {pcm_out}")
-
