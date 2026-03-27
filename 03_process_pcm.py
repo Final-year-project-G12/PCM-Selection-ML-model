@@ -172,7 +172,7 @@ def load_and_clean_pcm(csv_path: str) -> pd.DataFrame:
     # Pre-fill easy single-variable derivations
     df["latent_heat_freezing"] = df["latent_heat_freezing"].fillna(df["latent_heat_melting"])
     df["Tm_freezing"] = df["Tm_freezing"].fillna(df["Tm_melting"] - 1.0)
-    df["Tm_nucleation"] = df["Tm_nucleation"].fillna(df["Tm_freezing"] - 2.0)
+    df["Tm_nucleation"] = df["Tm_nucleation"].fillna(df["Tm_freezing"])
     df["max_op_temp"]        = df["max_op_temp"].fillna(df["Tm_melting"] + 30.0)
     df["cycles_tested"]      = df["cycles_tested"].fillna(0) # Assume 0 if not reported
     
@@ -207,7 +207,7 @@ def load_and_clean_pcm(csv_path: str) -> pd.DataFrame:
     
     df["heat_storage_Wh_kg"] = df["heat_storage_Wh_kg"].fillna(200.0)
     df["volume_expansion"]   = df["volume_expansion"].fillna(10.0)
-    df["flash_point"]        = df["flash_point"].fillna(df["max_op_temp"] + 50.0)
+    # flash_point handled as Flash_Point_known flag down in derived features
     
     # Clean text columns
     for col in ["flammability", "appearance", "manufacturer", "pcm_type"]:
@@ -240,10 +240,13 @@ def add_derived_pcm_features(df: pd.DataFrame) -> pd.DataFrame:
         df["Tm_melting"] - df["Tm_freezing"].fillna(df["Tm_melting"] - 2) + 1e-6
     )
 
+    df["latent_heat_avg"] = (df["latent_heat_melting"].fillna(0) + df["latent_heat_freezing"].fillna(0)) / 2
+    df["Tm_range"] = df["Tm_melting"] - df["Tm_freezing"]
+    df["heat_storage_Wh_kg"] = df["heat_storage_Wh_kg"].fillna(df["latent_heat_melting"] / 3.6)
+
     # Volumetric energy density (ρH) — Kou 2025 key metric
-    # ρH = density_solid (kg/m³) × latent_heat_melting (kJ/kg) / 1000 → MJ/m³
-    df["rho_H_MJ_m3"] = (df["density_solid"].fillna(800) *
-                          df["latent_heat_melting"]) / 1000
+    # ρH = density_solid (kg/m³) × latent_heat_avg (kJ/kg) / 1000 → MJ/m³
+    df["rho_H_MJ_m3"] = (df["density_solid"].fillna(800) * df["latent_heat_avg"]) / 1000
 
     # TC ratio: liquid/solid (>1 means liquid phase conducts better)
     df["TC_ratio"] = (df["TC_liquid"].fillna(df["TC_both"]) /
@@ -256,11 +259,6 @@ def add_derived_pcm_features(df: pd.DataFrame) -> pd.DataFrame:
     df["density_avg"] = (df["density_liquid"].fillna(800) +
                          df["density_solid"].fillna(850)) / 2
 
-    # Flammability binary — safety flag for embedded system
-    df["is_flammable"] = df["flammability"].str.lower().str.contains(
-        "yes|flammable|combustible", na=False
-    ).astype(int)
-
     # Cycles-tested confidence score (log scale, normalized to 0–1)
     max_cycles = df["cycles_tested"].fillna(0).max()
     if max_cycles > 0:
@@ -268,11 +266,17 @@ def add_derived_pcm_features(df: pd.DataFrame) -> pd.DataFrame:
     else:
         df["cycles_confidence"] = 0.5
 
-    # PCM type encoding (organic=0, inorganic=1, eutectic=2)
-    type_map = {"organic": 0, "inorganic": 1, "eutectic": 2}
-    df["pcm_type_code"] = df["pcm_type"].str.lower().map(
-        lambda x: next((v for k, v in type_map.items() if k in str(x)), 0)
-    )
+    # Target Flag for unknown Flash Points
+    df["flash_point_known"] = df["flash_point"].notna().astype(int)
+
+    # Categorical Encoding with standard LabelEncoder
+    from sklearn.preprocessing import LabelEncoder
+    le = LabelEncoder()
+    df["pcm_type_code"] = le.fit_transform(df["pcm_type"].fillna("Unknown"))
+    df["flammability_enc"] = le.fit_transform(df["flammability"].fillna("Unknown"))
+
+    # Drop low ML value categorical strings
+    df = df.drop(columns=["manufacturer", "appearance"], errors="ignore")
 
     return df
 
@@ -344,9 +348,9 @@ if __name__ == "__main__":
     print("=" * 80)
 
     display_cols = [
-        "product", "pcm_type", "Tm_melting", "Tm_freezing",
-        "latent_heat_melting", "TC_both", "Cp_avg", "density_avg",
-        "rho_H_MJ_m3", "is_flammable", "pcm_suitability_score",
+        "product", "pcm_type", "Tm_melting", "Tm_range",
+        "latent_heat_avg", "TC_both", "Cp_avg", "density_avg",
+        "rho_H_MJ_m3", "flammability_enc", "pcm_suitability_score",
     ]
     display_cols = [c for c in display_cols if c in pcm_df.columns]
 
