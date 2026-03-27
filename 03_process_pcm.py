@@ -29,11 +29,11 @@ Requirements:
     pip install pandas numpy scikit-learn
 
 Methods (Adapted explicitly for PCM Data per Mansouri et al. 2025 guidelines):
-    1. Handle Missing Values in PCM Table: Imputes structural nulls (Nucleation, Flash Points) and deploys KNN imputation for thermal metrics.
+    1. Handle Missing Values in PCM Table: Imputes structural nulls (Nucleation, Flash Points) and deploys advanced MICE (IterativeImputer with RandomForests) for complex missing thermal metrics.
     2. Encode Categorical PCM Columns: Utilizes LabelEncoder for strings such as flammability and PCM structure type.
     3. Compute Derived PCM Features: Extracts hysteresis (Tm_range), average latent heats, and volumetric density (rhoH).
     4. Feature Selection for PCM Classifier: Drops noisy/granular strings (Appearance, Manufacturer) unhelpful to ML.
-    5. Normalization / Scaling: Applies MinMaxScaler to harmonize input parameters bounded closely between 0 and 1.
+    5. Multi-Criteria Decision Making (TOPSIS): Computes highly sophisticated geometric target suitability scores by calculating L2 Euclidean distances to theoretically 'Ideal' PCMs.
 """
 
 import os
@@ -171,8 +171,17 @@ def load_and_clean_pcm(csv_path: str) -> pd.DataFrame:
     df["cycles_tested"]      = df["cycles_tested"].fillna(0) # Assume 0 if not reported
     
     # METHOD: Missing value handling (imputation)
-    # 2. Apply KNN Imputation for complex missing thermophysical properties
-    imputer = KNNImputer(n_neighbors=5, weights="distance")
+    # 2. Apply Multivariate Feature Imputation (MICE) via Chained Equations using Random Forests
+    # This complex method replaces simple KNN. It models each feature as a function of the others.
+    from sklearn.experimental import enable_iterative_imputer
+    from sklearn.impute import IterativeImputer
+    from sklearn.ensemble import RandomForestRegressor
+    
+    imputer = IterativeImputer(
+        estimator=RandomForestRegressor(n_estimators=10, random_state=42),
+        max_iter=10, 
+        random_state=42
+    )
     
     cols_to_impute = [
         "TC_both", "TC_liquid", "TC_solid", 
@@ -280,39 +289,40 @@ def add_derived_pcm_features(df: pd.DataFrame) -> pd.DataFrame:
 
 def compute_pcm_suitability_score(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Compute a composite PCM suitability score for SWH.
-    Based on Singh 2025 priority order:
-      latent heat (40%) > TC (25%) > Tm position (20%) > Cp (10%) > density (5%)
-
-    This score is used to GENERATE the target label for the classifier.
-    Higher score = better PCM for SWH.
+    # METHOD: Multi-Criteria Decision Making (TOPSIS Algorithm)
+    Compute a composite PCM suitability score for SWH using the advanced 
+    Technique for Order of Preference by Similarity to Ideal Solution (TOPSIS).
+    Replaces basic linear sum with geometric ideal point distance calculations.
     """
-    # METHOD: Normalization / standardization
-    scaler = MinMaxScaler()
-
     score_features = {
         "latent_heat_melting":  0.40,
         "TC_both":              0.25,
         "Cp_avg":               0.10,
-        "rho_H_MJ_m3":         0.15,
+        "rho_H_MJ_m3":          0.15,
         "cycles_confidence":    0.10,
     }
 
-    available = {k: v for k, v in score_features.items() if k in df.columns}
-
-    # Normalize each feature to 0–1
-    score_df = df[list(available.keys())].fillna(0)
-    score_norm = pd.DataFrame(
-        scaler.fit_transform(score_df),
-        columns=score_df.columns,
-        index=df.index
-    )
-
-    # Weighted sum
-    df["pcm_suitability_score"] = sum(
-        score_norm[col] * weight
-        for col, weight in available.items()
-    )
+    available_cols = [k for k in score_features.keys() if k in df.columns]
+    
+    # 1. Vector Normalization
+    X = df[available_cols].fillna(0).values
+    norm_X = X / (np.sqrt((X**2).sum(axis=0)) + 1e-8)
+    
+    # 2. Apply Weighting
+    weights = np.array([score_features[k] for k in available_cols])
+    V = norm_X * weights
+    
+    # 3. Determine Ideal Best (V+) and Ideal Worst (V-) solutions
+    # (Assuming all criteria here are beneficial to maximize)
+    V_plus = np.max(V, axis=0)
+    V_minus = np.min(V, axis=0)
+    
+    # 4. Calculate Geometric Separation (Euclidean L2 distances)
+    S_plus = np.sqrt(((V - V_plus)**2).sum(axis=1))
+    S_minus = np.sqrt(((V - V_minus)**2).sum(axis=1))
+    
+    # 5. Calculate Relative Closeness to the Ideal Solution (TOPSIS Score 0.0-1.0)
+    df["pcm_suitability_score"] = S_minus / (S_plus + S_minus + 1e-8)
 
     return df
 
