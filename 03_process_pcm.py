@@ -142,43 +142,57 @@ def load_and_clean_pcm(csv_path: str) -> pd.DataFrame:
             df[col] = df[col].apply(extract_numeric)
             df[col] = pd.to_numeric(df[col], errors="coerce")
 
-    # ── Handle Missing Values (Imputation & Physical Fallbacks) ──────────────
+    # ── Handle Missing Values (Imputation using ML & Physical Fallbacks) ──────────────
     
-    # 1. Thermal Conductivity (TC)
+    # As per IEEE 11141790 (Multimodal Learning Techniques for Renewable Energy), ML-based 
+    # imputation (e.g., KNN, VAEs) is preferred for handling missing modality data points
+    # over standard mean/median fallbacks. Here we implement KNN Imputation.
+    from sklearn.impute import KNNImputer
+    
+    # 1. First enforce known physical relationships (domain constraints)
     if "TC_both" not in df.columns:
         df["TC_both"] = np.nan
-    
-    # Fill TC_both if missing using average of solid & liquid
     mask_tc_both = df["TC_both"].isna() & df["TC_liquid"].notna() & df["TC_solid"].notna()
     df.loc[mask_tc_both, "TC_both"] = (df.loc[mask_tc_both, "TC_liquid"] + df.loc[mask_tc_both, "TC_solid"]) / 2
     
-    # Fill TC_both using either liquid or solid if the other is also missing
-    df["TC_both"] = df["TC_both"].fillna(df["TC_liquid"]).fillna(df["TC_solid"]).fillna(df["TC_both"].median())
-
-    # Backfill TC_liquid and TC_solid from TC_both
-    df["TC_liquid"] = df["TC_liquid"].fillna(df["TC_both"])
-    df["TC_solid"]  = df["TC_solid"].fillna(df["TC_both"])
-
-    # 2. Specific Heat (Cp)
-    # Solid Cp is typically ~90% of liquid Cp for PCMs if unknown
-    df["Cp_liquid"] = df["Cp_liquid"].fillna(df["Cp_solid"] * 1.1).fillna(2.2) # fallback 2.2 kJ/kgK
-    df["Cp_solid"]  = df["Cp_solid"].fillna(df["Cp_liquid"] * 0.9).fillna(2.0)
-
-    # 3. Latent Heat & Temperatures
+    # Pre-fill easy single-variable derivations
     df["latent_heat_freezing"] = df["latent_heat_freezing"].fillna(df["latent_heat_melting"])
     df["Tm_freezing"] = df["Tm_freezing"].fillna(df["Tm_melting"] - 1.0)
     df["Tm_nucleation"] = df["Tm_nucleation"].fillna(df["Tm_freezing"] - 2.0)
-
-    # 4. Density
+    df["max_op_temp"]        = df["max_op_temp"].fillna(df["Tm_melting"] + 30.0)
+    df["cycles_tested"]      = df["cycles_tested"].fillna(0) # Assume 0 if not reported
+    
+    # 2. Apply KNN Imputation for complex missing thermophysical properties
+    imputer = KNNImputer(n_neighbors=5, weights="distance")
+    
+    cols_to_impute = [
+        "TC_both", "TC_liquid", "TC_solid", 
+        "Cp_liquid", "Cp_solid",
+        "density_liquid", "density_solid", 
+        "heat_storage_Wh_kg", "volume_expansion", "flash_point"
+    ]
+    
+    # Ensure columns exist before imputing
+    available_cols = [c for c in cols_to_impute if c in df.columns]
+    
+    if available_cols and len(df) >= 5:
+        imputed_array = imputer.fit_transform(df[available_cols])
+        df[available_cols] = pd.DataFrame(imputed_array, columns=available_cols, index=df.index)
+    
+    # 3. Final physical fallback logic for anything KNN missed (e.g. if all values were NaN)
+    df["TC_both"] = df["TC_both"].fillna(df["TC_liquid"]).fillna(df["TC_solid"]).fillna(0.5)
+    df["TC_liquid"] = df["TC_liquid"].fillna(df["TC_both"])
+    df["TC_solid"]  = df["TC_solid"].fillna(df["TC_both"])
+    
+    df["Cp_liquid"] = df["Cp_liquid"].fillna(df["Cp_solid"] * 1.1).fillna(2.2)
+    df["Cp_solid"]  = df["Cp_solid"].fillna(df["Cp_liquid"] * 0.9).fillna(2.0)
+    
     df["density_liquid"] = df["density_liquid"].fillna(df["density_solid"] * 0.9).fillna(850.0)
     df["density_solid"]  = df["density_solid"].fillna(df["density_liquid"] * 1.1).fillna(900.0)
-
-    # 5. Other physical properties
-    df["heat_storage_Wh_kg"] = df["heat_storage_Wh_kg"].fillna(df["heat_storage_Wh_kg"].median())
-    df["volume_expansion"]   = df["volume_expansion"].fillna(df["volume_expansion"].median()).fillna(10.0)
-    df["max_op_temp"]        = df["max_op_temp"].fillna(df["Tm_melting"] + 30.0)
-    df["flash_point"]        = df["flash_point"].fillna(df["flash_point"].median()).fillna(df["max_op_temp"] + 50.0)
-    df["cycles_tested"]      = df["cycles_tested"].fillna(0) # Assume 0 if not reported
+    
+    df["heat_storage_Wh_kg"] = df["heat_storage_Wh_kg"].fillna(200.0)
+    df["volume_expansion"]   = df["volume_expansion"].fillna(10.0)
+    df["flash_point"]        = df["flash_point"].fillna(df["max_op_temp"] + 50.0)
     
     # Clean text columns
     for col in ["flammability", "appearance", "manufacturer", "pcm_type"]:
