@@ -27,6 +27,19 @@ Your PCM CSV columns (as provided):
 
 Requirements:
     pip install pandas numpy scikit-learn
+
+Methods:
+    Column Standardization Mapping: Renames inconsistent CSV columns into clean, uniform snake_case variables.
+    Encoding Normalization: Removes duplicate columns caused by UTF-8 degree symbol variations in the headers.
+    Numeric Coercion & Regex Extraction: Extracts usable numerical floats from messy strings like "peak: 43" or "40-45" using regex.
+    Physical Constraints / Domain Fallbacks: Infers missing physical properties (e.g., density) based on known thermodynamic formulas.
+    Handling missing modalities: Reconciles unrecorded or structurally missing properties across varying manufacturer specifications.
+    Missing value handling (KNN Imputation): Uses K-Nearest Neighbors ML to predict and fill complex missing thermophysical data points.
+    Threshold-Based Outlier Removal: Filters out materials that fall outside the optimal Solar Water Heating range (35–75°C).
+    Critical NaN Dropping: Removes rows entirely missing fundamental essential properties (like latent heat) that shouldn't be guessed.
+    Derived Feature Extraction: Calculates entirely new thermodynamic ML features, such as volumetric energy density and thermal inertia.
+    Categorical Encoding: Converts textual descriptors (like 'organic' or 'flammable') into structured numerical or binary codes.
+    Normalization / standardization: Scales target properties tightly between 0 and 1 via MinMaxScaler to allow fair suitability scoring.
 """
 
 import os
@@ -144,6 +157,7 @@ def load_and_clean_pcm(csv_path: str) -> pd.DataFrame:
 
     # ── Handle Missing Values (Imputation using ML & Physical Fallbacks) ──────────────
     
+    # METHOD: Handling missing modalities (if multiple datasets)
     # As per IEEE 11141790 (Multimodal Learning Techniques for Renewable Energy), ML-based 
     # imputation (e.g., KNN, VAEs) is preferred for handling missing modality data points
     # over standard mean/median fallbacks. Here we implement KNN Imputation.
@@ -162,6 +176,7 @@ def load_and_clean_pcm(csv_path: str) -> pd.DataFrame:
     df["max_op_temp"]        = df["max_op_temp"].fillna(df["Tm_melting"] + 30.0)
     df["cycles_tested"]      = df["cycles_tested"].fillna(0) # Assume 0 if not reported
     
+    # METHOD: Missing value handling (imputation)
     # 2. Apply KNN Imputation for complex missing thermophysical properties
     imputer = KNNImputer(n_neighbors=5, weights="distance")
     
@@ -271,6 +286,7 @@ def compute_pcm_suitability_score(df: pd.DataFrame) -> pd.DataFrame:
     This score is used to GENERATE the target label for the classifier.
     Higher score = better PCM for SWH.
     """
+    # METHOD: Normalization / standardization
     scaler = MinMaxScaler()
 
     score_features = {
