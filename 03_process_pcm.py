@@ -28,18 +28,12 @@ Your PCM CSV columns (as provided):
 Requirements:
     pip install pandas numpy scikit-learn
 
-Methods:
-    Column Standardization Mapping: Renames inconsistent CSV columns into clean, uniform snake_case variables.
-    Encoding Normalization: Removes duplicate columns caused by UTF-8 degree symbol variations in the headers.
-    Numeric Coercion & Regex Extraction: Extracts usable numerical floats from messy strings like "peak: 43" or "40-45" using regex.
-    Physical Constraints / Domain Fallbacks: Infers missing physical properties (e.g., density) based on known thermodynamic formulas.
-    Handling missing modalities: Reconciles unrecorded or structurally missing properties across varying manufacturer specifications.
-    Missing value handling (KNN Imputation): Uses K-Nearest Neighbors ML to predict and fill complex missing thermophysical data points.
-    Threshold-Based Outlier Removal: Filters out materials that fall outside the optimal Solar Water Heating range (35–75°C).
-    Critical NaN Dropping: Removes rows entirely missing fundamental essential properties (like latent heat) that shouldn't be guessed.
-    Derived Feature Extraction: Calculates entirely new thermodynamic ML features, such as volumetric energy density and thermal inertia.
-    Categorical Encoding: Converts textual descriptors (like 'organic' or 'flammable') into structured numerical or binary codes.
-    Normalization / standardization: Scales target properties tightly between 0 and 1 via MinMaxScaler to allow fair suitability scoring.
+Methods (Adapted explicitly for PCM Data per Mansouri et al. 2025 guidelines):
+    1. Handle Missing Values in PCM Table: Imputes structural nulls (Nucleation, Flash Points) and deploys KNN imputation for thermal metrics.
+    2. Encode Categorical PCM Columns: Utilizes LabelEncoder for strings such as flammability and PCM structure type.
+    3. Compute Derived PCM Features: Extracts hysteresis (Tm_range), average latent heats, and volumetric density (rhoH).
+    4. Feature Selection for PCM Classifier: Drops noisy/granular strings (Appearance, Manufacturer) unhelpful to ML.
+    5. Normalization / Scaling: Applies MinMaxScaler to harmonize input parameters bounded closely between 0 and 1.
 """
 
 import os
@@ -155,9 +149,9 @@ def load_and_clean_pcm(csv_path: str) -> pd.DataFrame:
             df[col] = df[col].apply(extract_numeric)
             df[col] = pd.to_numeric(df[col], errors="coerce")
 
-    # ── Handle Missing Values (Imputation using ML & Physical Fallbacks) ──────────────
+    # ── Handle Missing Values in PCM Table ────────────────────────────────
     
-    # METHOD: Handling missing modalities (if multiple datasets)
+    # METHOD: Handle Missing Values in PCM Table
     # As per IEEE 11141790 (Multimodal Learning Techniques for Renewable Energy), ML-based 
     # imputation (e.g., KNN, VAEs) is preferred for handling missing modality data points
     # over standard mean/median fallbacks. Here we implement KNN Imputation.
@@ -231,6 +225,7 @@ def load_and_clean_pcm(csv_path: str) -> pd.DataFrame:
 
 def add_derived_pcm_features(df: pd.DataFrame) -> pd.DataFrame:
     """
+    # METHOD: Compute Derived PCM Features
     Compute derived PCM features useful for the ML classifier.
     Feature importance order from Singh 2025:
       latent heat > TC > Tm > Cp > density
@@ -269,12 +264,14 @@ def add_derived_pcm_features(df: pd.DataFrame) -> pd.DataFrame:
     # Target Flag for unknown Flash Points
     df["flash_point_known"] = df["flash_point"].notna().astype(int)
 
+    # METHOD: Encode Categorical PCM Columns
     # Categorical Encoding with standard LabelEncoder
     from sklearn.preprocessing import LabelEncoder
     le = LabelEncoder()
     df["pcm_type_code"] = le.fit_transform(df["pcm_type"].fillna("Unknown"))
     df["flammability_enc"] = le.fit_transform(df["flammability"].fillna("Unknown"))
 
+    # METHOD: Feature Selection for PCM Classifier
     # Drop low ML value categorical strings
     df = df.drop(columns=["manufacturer", "appearance"], errors="ignore")
 
