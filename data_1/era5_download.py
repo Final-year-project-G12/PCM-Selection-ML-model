@@ -18,63 +18,47 @@ for m in months:
         {
             'product_type': 'reanalysis',
             'variable': [
-                '2m_temperature',
-                '2m_dewpoint_temperature',
-                '10m_u_component_of_wind',
-                '10m_v_component_of_wind',
-                'total_precipitation',
-                'surface_solar_radiation_downwards',
-                'total_cloud_cover',
+                '2m_temperature',                       # t2m  → T_ambient_C
+                '2m_dewpoint_temperature',              # d2m  → RH_percent
+                '10m_u_component_of_wind',              # u10  → Wind_speed_ms
+                '10m_v_component_of_wind',              # v10  → Wind_speed_ms
+                'total_precipitation',                  # tp   → Precip_mm   ✅ ADDED
+                'surface_solar_radiation_downwards',    # ssrd → GHI_Wm2     ✅ FIXED NAME
+                'total_cloud_cover',                    # tcc  → Cloud_cover_fraction
             ],
             'year': '2024',
             'month': m,
             'day':  [str(i).zfill(2) for i in range(1, 32)],
             'time': [f'{i:02d}:00' for i in range(24)],
-            'area': [11.12, 76.85, 10.91, 77.06],
+            'area': [11.12, 76.85, 10.91, 77.06],      # [N, W, S, E] Coimbatore bbox
             'data_format': 'netcdf',
             'download_format': 'unarchived',
         },
         output_nc
     )
 
-    # ── Check if CDS delivered a ZIP (happens when variables split by stepType)
+    # ── Safety check: if CDS still delivers a zip, unzip it ──────────────────
     with open(output_nc, 'rb') as f:
         header = f.read(4)
 
-    if header[:2] == b'PK':
-        print(f"  ⚠️  Got ZIP archive — extracting ALL .nc files inside ...")
+    if header[:2] == b'PK':                            # ZIP magic bytes
+        print(f"  ⚠️  Got ZIP archive — unzipping {output_nc} ...")
         os.rename(output_nc, output_zip)
 
         with zipfile.ZipFile(output_zip, 'r') as z:
             names = z.namelist()
             print(f"     ZIP contains: {names}")
+
             nc_inside = [n for n in names if n.endswith('.nc')]
-
-            if len(nc_inside) == 0:
-                print(f"  ❌ No .nc found inside zip.")
-
-            elif len(nc_inside) == 1:
+            if nc_inside:
                 z.extract(nc_inside[0], '.')
                 os.rename(nc_inside[0], output_nc)
                 print(f"  ✅ Extracted → {output_nc}")
-
             else:
-                # ERA5 splits instant vars (t2m, u10, v10, tcc, d2m)
-                # and accumulated vars (ssrd, tp) into separate files.
-                # Save BOTH with descriptive names so the combine script can merge them.
-                for nc_name in nc_inside:
-                    z.extract(nc_name, '.')
-                    basename = os.path.splitext(os.path.basename(nc_name))[0]
-                    dest = f'era5_2024_{m}__{basename}.nc'
-                    os.rename(nc_name, dest)
-                    print(f"  ✅ Extracted → {dest}")
-                # The plain era5_2024_MM.nc is NOT created when there are 2 files.
-                # The combine script will glob both parts and merge them.
+                print(f"  ❌ No .nc found inside zip. Contents: {names}")
 
         os.remove(output_zip)
     else:
         print(f"  ✅ Valid NetCDF saved → {output_nc}")
 
 print("\n🎉 All months downloaded successfully!")
-print("\nNOTE: If any month produced two files (e.g. era5_2024_01__*instant*.nc and")
-print("      era5_2024_01__*accum*.nc), the combine script will automatically merge them.")
