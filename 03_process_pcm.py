@@ -28,7 +28,7 @@ Your PCM CSV columns (as provided):
 Requirements:
     pip install pandas numpy scikit-learn
 
-Methods (Adapted explicitly for PCM Data per Mansouri et al. 2025 guidelines):
+Methods:
     1. Handle Missing Values in PCM Table: Imputes structural nulls (Nucleation, Flash Points) and deploys advanced MICE (IterativeImputer with RandomForests) for complex missing thermal metrics.
     2. Encode Categorical PCM Columns: Utilizes LabelEncoder for strings such as flammability and PCM structure type.
     3. Compute Derived PCM Features: Extracts hysteresis (Tm_range), average latent heats, and volumetric density (rhoH).
@@ -41,14 +41,13 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 
-INPUT_PCM_CSV = r"C:\Users\chiru\OneDrive\Desktop\Final_yr_Proj\sem6_R2\PCM_Properties.csv"
-OUTPUT_DIR    = r"C:\Users\chiru\OneDrive\Desktop\Final_yr_Proj\sem6_R2"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+INPUT_PCM_CSV = os.path.join(BASE_DIR, "PCM_Properties.csv")
+OUTPUT_DIR    = BASE_DIR
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-# ─────────────────────────────────────────────
 # COLUMN NAME STANDARDIZATION
-# Maps your messy CSV column names → clean snake_case names
-# ─────────────────────────────────────────────
+# Maps messy CSV column names → clean snake_case names
 
 COLUMN_MAP = {
     "PCM":                                    "pcm_id",
@@ -83,11 +82,9 @@ COLUMN_MAP = {
     "Number of Cycles Tested":                "cycles_tested",
 }
 
-# ─────────────────────────────────────────────
 # PCM FILTERING — SWH-SUITABLE RANGE
 # Singh 2025: optimal Tm for SWH = 40–70°C
 # Allow slight margin below (35°C) for pre-heating scenarios
-# ─────────────────────────────────────────────
 
 SWH_TM_MIN = 35.0   # °C
 SWH_TM_MAX = 75.0   # °C
