@@ -19,7 +19,7 @@ def unzip_if_needed(filepath):
     if header[:2] != b'PK':
         return [filepath]                             # already a real NC file
 
-    print(f"  ⚠️  {filepath} is a ZIP — extracting all .nc inside ...")
+    print(f"  [WARNING] {filepath} is a ZIP -- extracting all .nc inside ...")
     zip_path = filepath.replace('.nc', '_tmp.zip')
     os.rename(filepath, zip_path)
 
@@ -27,7 +27,7 @@ def unzip_if_needed(filepath):
     with zipfile.ZipFile(zip_path, 'r') as z:
         nc_files_inside = [n for n in z.namelist() if n.endswith('.nc')]
         if not nc_files_inside:
-            print(f"  ❌ No .nc found inside {zip_path}.")
+            print(f"  [ERROR] No .nc found inside {zip_path}.")
             os.rename(zip_path, filepath)
             return []
         for nc_name in nc_files_inside:
@@ -36,7 +36,7 @@ def unzip_if_needed(filepath):
             dest = filepath.replace('.nc', f'__{basename}.nc')
             os.rename(os.path.join(SCRIPT_DIR, nc_name), dest)
             extracted.append(dest)
-            print(f"  ✅ Unzipped → {dest}")
+            print(f"  [OK] Unzipped -> {dest}")
 
     os.remove(zip_path)
     return extracted
@@ -60,7 +60,7 @@ def open_nc(filepath):
                 return xr.open_dataset(filepath, engine=eng)
             except Exception:
                 continue
-        print(f"  ❌ Cannot open {filepath}")
+        print(f"  [ERROR] Cannot open {filepath}")
         return None
 
     ds = xr.open_dataset(filepath, engine=engine)
@@ -143,7 +143,7 @@ def dataset_to_df(ds, month_label=""):
             df['timestamp'] = pd.to_datetime(df[tcol])
             break
     else:
-        print(f"  ❌ No time column found {month_label}")
+        print(f"  [ERROR] No time column found {month_label}")
         return None
 
     # ── GHI (W/m²) — deaccumulate ssrd ──────────────────────────────────────
@@ -160,14 +160,14 @@ def dataset_to_df(ds, month_label=""):
         df['GHI_Wm2'] = df['msdwswrf'].clip(lower=0)
         print("  ℹ️  GHI ← msdwswrf")
     else:
-        print(f"  ⚠️  GHI variable not found {month_label}")
+        print(f"  [WARNING] GHI variable not found {month_label}")
         df['GHI_Wm2'] = np.nan
 
     # ── Temperature (K → °C) ─────────────────────────────────────────────────
     if 't2m' in df.columns:
         df['T_ambient_C'] = df['t2m'] - 273.15
     else:
-        print(f"  ⚠️  t2m not found {month_label}")
+        print(f"  [WARNING] t2m not found {month_label}")
         df['T_ambient_C'] = np.nan
 
     # ── Wind Speed (m/s) ─────────────────────────────────────────────────────
@@ -181,7 +181,7 @@ def dataset_to_df(ds, month_label=""):
         df['Precip_mm'] = (df['tp'] * 1000.0).clip(lower=0)
         print("  ℹ️  Precip ← tp")
     else:
-        print(f"  ⚠️  tp not found {month_label}")
+        print(f"  [WARNING] tp not found {month_label}")
         df['Precip_mm'] = np.nan
 
     # ── Cloud Cover (0–1) ────────────────────────────────────────────────────
@@ -208,7 +208,7 @@ def dataset_to_df(ds, month_label=""):
         df['DNI_Wm2'] = (df['fdir'] / 3600.0).clip(lower=0)
         print("  ℹ️  DNI ← fdir deaccumulated per grid point ÷ 3600")
     else:
-        print(f"  ⚠️  fdir (DNI) not found {month_label}")
+        print(f"  [WARNING] fdir (DNI) not found {month_label}")
         df['DNI_Wm2'] = np.nan
 
     # ── DHI (W/m²) — deaccumulate fsdss ──────────────────────────────────────
@@ -218,7 +218,7 @@ def dataset_to_df(ds, month_label=""):
         df['DHI_Wm2'] = (df['fsdss'] / 3600.0).clip(lower=0)
         print("  ℹ️  DHI ← fsdss deaccumulated per grid point ÷ 3600")
     else:
-        print(f"  ⚠️  fsdss (DHI) not found {month_label}")
+        print(f"  [WARNING] fsdss (DHI) not found {month_label}")
         df['DHI_Wm2'] = np.nan
 
     # ── Surface Pressure (Pa) ─────────────────────────────────────────────────
@@ -226,7 +226,7 @@ def dataset_to_df(ds, month_label=""):
         df['surface_pressure_Pa'] = df['sp']
         print("  ℹ️  surface_pressure_Pa ← sp")
     else:
-        print(f"  ⚠️  sp (surface_pressure) not found {month_label}")
+        print(f"  [WARNING] sp (surface_pressure) not found {month_label}")
         df['surface_pressure_Pa'] = np.nan
 
     # ── Select final columns ─────────────────────────────────────────────────
@@ -270,7 +270,7 @@ failed  = []
 
 for mm in sorted(month_files.keys()):
     paths = month_files[mm]
-    print(f"\n📂 Processing month {mm} ({len(paths)} file(s))")
+    print(f"\n[Processing] Processing month {mm} ({len(paths)} file(s))")
 
     # Unzip any ZIPs still in ZIP format
     real_paths = []
@@ -291,11 +291,11 @@ for mm in sorted(month_files.keys()):
         if df is not None and len(df) > 0:
             all_dfs.append(df)
             grid_pts = df[['latitude','longitude']].drop_duplicates().shape[0]
-            print(f"  ✅ {len(df):,} rows extracted for month {mm}  ({grid_pts} grid points × {len(df)//grid_pts} hours)")
+            print(f"  [OK] {len(df):,} rows extracted for month {mm}  ({grid_pts} grid points x {len(df)//grid_pts} hours)")
         else:
             failed.append(mm)
     except Exception as e:
-        print(f"  ❌ Error processing month {mm}: {e}")
+        print(f"  [ERROR] Error processing month {mm}: {e}")
         import traceback; traceback.print_exc()
         failed.append(mm)
 
@@ -305,7 +305,7 @@ print("MERGING ALL MONTHS")
 print("=" * 65)
 
 if not all_dfs:
-    print("❌ No data to merge.")
+    print("[ERROR] No data to merge.")
 else:
     climate_df = pd.concat(all_dfs, ignore_index=True)
 
@@ -332,7 +332,7 @@ else:
     timestamps = climate_df['timestamp'].nunique()
     nan_summary = climate_df.isna().sum()
 
-    print(f"\n🎉 SUCCESS!")
+    print(f"\n[SUCCESS] SUCCESS!")
     print(f"   File        : {output}")
     print(f"   Total rows  : {len(climate_df):,}")
     print(f"   Grid points : {grid_pts}  (lat/lon cells across Tamil Nadu)")
@@ -350,4 +350,4 @@ else:
     print(climate_df.drop(columns='timestamp').describe().round(2).to_string())
 
 if failed:
-    print(f"\n⚠️  Failed months: {failed}")
+    print(f"\n[WARNING] Failed months: {failed}")

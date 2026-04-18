@@ -26,12 +26,12 @@ if args.month:
 else:
     months = [str(i).zfill(2) for i in range(int(args.start), int(args.end) + 1)]
 
-print(f"📋 Months to process: {months}")
+print(f"[Months to process]: {months}")
 
 c = cdsapi.Client()
 
 for m in months:
-    print(f"\n📥 Downloading month: {m} ...")
+    print(f"\n[Downloading month]: {m} ...")
 
     output_nc  = os.path.join(SCRIPT_DIR, f'era5_2024_{m}.nc')
     output_zip = os.path.join(SCRIPT_DIR, f'era5_2024_{m}.zip')
@@ -40,7 +40,7 @@ for m in months:
     import glob as _glob
     already = _glob.glob(os.path.join(SCRIPT_DIR, f'era5_2024_{m}*.nc'))
     if already:
-        print(f"  ⏭️  Skipping month {m} — already downloaded: {[os.path.basename(f) for f in already]}")
+        print(f"  [Skipping] Skipping month {m} — already downloaded: {[os.path.basename(f) for f in already]}")
         continue
 
     # ── Download ─────────────────────────────────────────────────────────────
@@ -76,7 +76,7 @@ for m in months:
         header = f.read(4)
 
     if header[:2] == b'PK':
-        print(f"  ⚠️  Got ZIP archive — extracting ALL .nc files inside ...")
+        print(f"  [WARNING] Got ZIP archive — extracting ALL .nc files inside ...")
         os.rename(output_nc, output_zip)
 
         with zipfile.ZipFile(output_zip, 'r') as z:
@@ -85,12 +85,12 @@ for m in months:
             nc_inside = [n for n in names if n.endswith('.nc')]
 
             if len(nc_inside) == 0:
-                print(f"  ❌ No .nc found inside zip.")
+                print(f"  [ERROR] No .nc found inside zip.")
 
             elif len(nc_inside) == 1:
                 z.extract(nc_inside[0], SCRIPT_DIR)
                 os.rename(os.path.join(SCRIPT_DIR, nc_inside[0]), output_nc)
-                print(f"  ✅ Extracted → {output_nc}")
+                print(f"  [OK] Extracted -> {output_nc}")
 
             else:
                 # ERA5 splits instant vars (t2m, u10, v10, tcc, d2m)
@@ -100,13 +100,13 @@ for m in months:
                     basename = os.path.splitext(os.path.basename(nc_name))[0]
                     dest = os.path.join(SCRIPT_DIR, f'era5_2024_{m}__{basename}.nc')
                     os.rename(os.path.join(SCRIPT_DIR, nc_name), dest)
-                    print(f"  ✅ Extracted → {dest}")
+                    print(f"  [OK] Extracted -> {dest}")
 
         os.remove(output_zip)
     else:
-        print(f"  ✅ Valid NetCDF saved → {output_nc}")
+        print(f"  [OK] Valid NetCDF saved -> {output_nc}")
 
-print("\n🎉 All months downloaded successfully!")
+print("\n[DONE] All months downloaded successfully!")
 print("\nNOTE: If any month produced two files (e.g. era5_2024_01__*instant*.nc and")
 print("      era5_2024_01__*accum*.nc), the combine script will automatically merge them.")
 print(f"\nExpected file size: ~391 grid points × 8,784 hours × 7 variables")

@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/leaflet.awesome.rotate.min.css"/>
+    
+            <meta name="viewport" content="width=device-width,
+                initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+            <style>
+                #map_aea23103561a72292cb35774beed4786 {
+                    position: relative;
+                    width: 100.0%;
+                    height: 100.0%;
+                    left: 0.0%;
+                    top: 0.0%;
+                }
+                .leaflet-container { font-size: 1rem; }
+            </style>
+
+            <style>html, body {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            </style>
+
+            <style>#map {
+                position:absolute;
+                top:0;
+                bottom:0;
+                right:0;
+                left:0;
+                }
+            </style>
+
+            <script>
+                L_NO_TOUCH = false;
+                L_DISABLE_3D = false;
+            </script>
+
+        
+</head>
+<body>
+    
+    <div style='position:fixed;bottom:30px;left:30px;
+        background:white;padding:10px;border-radius:5px;border:1px solid #ccc;
+        font-size:12px;font-family:Arial;z-index:9999'>
+        <b>RRTDHS Index (Kou 2025)</b><br>
+        🔴 Red  = HIGH solar resource (> 5.7)<br>
+        🔵 Blue = MODERATE solar resource<br>
+        <i>Bubble size ∝ RRTDHS magnitude</i>
+    </div>
+    
+            <div class="folium-map" id="map_aea23103561a72292cb35774beed4786" ></div>
+        
+</body>
+<script>
+    
+    
+            var map_aea23103561a72292cb35774beed4786 = L.map(
+                "map_aea23103561a72292cb35774beed4786",
+                {
+                    center: [11.0, 77.0],
+                    crs: L.CRS.EPSG3857,
+                    ...{
+  "zoom": 7,
+  "zoomControl": true,
+  "preferCanvas": false,
+}
+
+                }
+            );
+
+            
+
+        
+    
+            var tile_layer_41ab41e5f7730f291da0487a6ef573b9 = L.tileLayer(
+                "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+                {
+  "minZoom": 0,
+  "maxZoom": 20,
+  "maxNativeZoom": 20,
+  "noWrap": false,
+  "attribution": "\u0026copy; \u003ca href=\"https://www.openstreetmap.org/copyright\"\u003eOpenStreetMap\u003c/a\u003e contributors \u0026copy; \u003ca href=\"https://carto.com/attributions\"\u003eCARTO\u003c/a\u003e",
+  "subdomains": "abcd",
+  "detectRetina": false,
+  "tms": false,
+  "opacity": 1,
+}
+
+            );
+        
+    
+            tile_layer_41ab41e5f7730f291da0487a6ef573b9.addTo(map_aea23103561a72292cb35774beed4786);
+        
+    
+            var circle_marker_c85191ef557695e9d2e00879733e06a7 = L.circleMarker(
+                [11.6, 77.0],
+                {"bubblingMouseEvents": true, "color": "#e65c00", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#e65c00", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 18.45804172244366, "stroke": true, "weight": 3}
+            ).addTo(map_aea23103561a72292cb35774beed4786);
+        
+    
+        var popup_2199f9fdb25e3712d83d8a51eb6b8174 = L.popup({
+  "maxWidth": 230,
+});
+
+        
+            
+                var html_c350d53eb6038d236824c96569a2bc9e = $(`<div id="html_c350d53eb6038d236824c96569a2bc9e" style="width: 100.0%; height: 100.0%;">         <div style='font-family:Arial;font-size:12px;width:210px'>           <b style='font-size:14px;color:#e65c00'>Jan</b><br>           <hr style='margin:3px 0'>           📐 RRTDHS: <b>10.011</b><br>           <span style='color:#e65c00'>             🔴 HIGH solar resource (> 5.7)           </span><br>           ☀️ GHI mean: <b>204.0 W/m²</b><br>           🌡️ T_amb:    <b>24.6 °C</b>         </div>         </div>`)[0];
+                popup_2199f9fdb25e3712d83d8a51eb6b8174.setContent(html_c350d53eb6038d236824c96569a2bc9e);
+            
+        
+
+        circle_marker_c85191ef557695e9d2e00879733e06a7.bindPopup(popup_2199f9fdb25e3712d83d8a51eb6b8174)
+        ;
+
+        
+    
+    
+            circle_marker_c85191ef557695e9d2e00879733e06a7.bindTooltip(
+                `<div>
+                     Jan: RRTDHS=10.011 🔴 HIGH
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_0b254c7451843cbdb135a79aac7b2a24 = L.marker(
+                [11.6, 77.0],
+                {
+}
+            ).addTo(map_aea23103561a72292cb35774beed4786);
+        
+    
+            var div_icon_f718fd9ba58bbc25ed9688e38b9143f9 = L.divIcon({
+  "html": "\u003cdiv style=\u0027font-size:9px;font-weight:bold;color:#e65c00;text-align:center\u0027\u003eJan\u003cbr\u003e10.01\u003c/div\u003e",
+  "iconSize": [40, 24],
+  "iconAnchor": [20, 12],
+  "className": "empty",
+});
+        
+    
+                marker_0b254c7451843cbdb135a79aac7b2a24.setIcon(div_icon_f718fd9ba58bbc25ed9688e38b9143f9);
+            
+    
+            var circle_marker_bc9deefb719de59111169a9b5a2536f4 = L.circleMarker(
+                [11.519615242270664, 77.3],
+                {"bubblingMouseEvents": true, "color": "#e65c00", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#e65c00", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 22.609882829975845, "stroke": true, "weight": 3}
+            ).addTo(map_aea23103561a72292cb35774beed4786);
+        
+    
+        var popup_9db5e83419a0c85f7eba6acc56b4b8a8 = L.popup({
+  "maxWidth": 230,
+});
+
+        
+            
+                var html_bbd6014a9ab7ecbbd73a08d160b96eb0 = $(`<div id="html_bbd6014a9ab7ecbbd73a08d160b96eb0" style="width: 100.0%; height: 100.0%;">         <div style='font-family:Arial;font-size:12px;width:210px'>           <b style='font-size:14px;color:#e65c00'>Feb</b><br>           <hr style='margin:3px 0'>           📐 RRTDHS: <b>13.985</b><br>           <span style='color:#e65c00'>             🔴 HIGH solar resource (> 5.7)           </span><br>           ☀️ GHI mean: <b>257.6 W/m²</b><br>           🌡️ T_amb:    <b>26.6 °C</b>         </div>         </div>`)[0];
+                popup_9db5e83419a0c85f7eba6acc56b4b8a8.setContent(html_bbd6014a9ab7ecbbd73a08d160b96eb0);
+            
+        
+
+        circle_marker_bc9deefb719de59111169a9b5a2536f4.bindPopup(popup_9db5e83419a0c85f7eba6acc56b4b8a8)
+        ;
+
+        
+    
+    
+            circle_marker_bc9deefb719de59111169a9b5a2536f4.bindTooltip(
+                `<div>
+                     Feb: RRTDHS=13.985 🔴 HIGH
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_eaa5b50cad0e0e3b9370b74ebbfd443c = L.marker(
+                [11.519615242270664, 77.3],
+                {
+}
+            ).addTo(map_aea23103561a72292cb35774beed4786);
+        
+    
+            var div_icon_b5642edd3d3ccbd2fd3a5af812252c62 = L.divIcon({
+  "html": "\u003cdiv style=\u0027font-size:9px;font-weight:bold;color:#e65c00;text-align:center\u0027\u003eFeb\u003cbr\u003e13.99\u003c/div\u003e",
+  "iconSize": [40, 24],
+  "iconAnchor": [20, 12],
+  "className": "empty",
+});
+        
+    
+                marker_eaa5b50cad0e0e3b9370b74ebbfd443c.setIcon(div_icon_b5642edd3d3ccbd2fd3a5af812252c62);
+            
+    
+            var circle_marker_7bfa6e91b68d5b783b8b977efb3c337e = L.circleMarker(
+                [11.3, 77.51961524227066],
+                {"bubblingMouseEvents": true, "color": "#e65c00", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#e65c00", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 26.068073889178393, "stroke": true, "weight": 3}
+            ).addTo(map_aea23103561a72292cb35774beed4786);
+        
+    
+        var popup_ea8725204e566e4589969869557c061d = L.popup({
+  "maxWidth": 230,
+});
+
+        
+            
+                var html_dba0ba44f93cb052f12f8f75ce3f6c8c = $(`<div id="html_dba0ba44f93cb052f12f8f75ce3f6c8c" style="width: 100.0%; height: 100.0%;">         <div style='font-family:Arial;font-size:12px;width:210px'>           <b style='font-size:14px;color:#e65c00'>Mar</b><br>           <hr style='margin:3px 0'>           📐 RRTDHS: <b>17.295</b><br>           <span style='color:#e65c00'>             🔴 HIGH solar resource (> 5.7)           </span><br>           ☀️ GHI mean: <b>286.8 W/m²</b><br>           🌡️ T_amb:    <b>28.4 °C</b>         </div>         </div>`)[0];
+                popup_ea8725204e566e4589969869557c061d.setContent(html_dba0ba44f93cb052f12f8f75ce3f6c8c);
+            
+        
+
+        circle_marker_7bfa6e91b68d5b783b8b977efb3c337e.bindPopup(popup_ea8725204e566e4589969869557c061d)
+        ;
+
+        
+    
+    
+            circle_marker_7bfa6e91b68d5b783b8b977efb3c337e.bindTooltip(
+                `<div>
+                     Mar: RRTDHS=17.295 🔴 HIGH
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_6a28aa97c3dde024c75408d6fe628f27 = L.marker(
+                [11.3, 77.51961524227066],
+                {
+}
+            ).addTo(map_aea23103561a72292cb35774beed4786);
+        
+    
+            var div_icon_c450c5efdacefba65e1e48ded0d4b10a = L.divIcon({
+  "html": "\u003cdiv style=\u0027font-size:9px;font-weight:bold;color:#e65c00;text-align:center\u0027\u003eMar\u003cbr\u003e17.30\u003c/div\u003e",
+  "iconSize": [40, 24],
+  "iconAnchor": [20, 12],
+  "className": "empty",
+});
+        
+    
+                marker_6a28aa97c3dde024c75408d6fe628f27.setIcon(div_icon_c450c5efdacefba65e1e48ded0d4b10a);
+            
+    
+            var circle_marker_a8d835fe7f2373c85cdd3b7939f5d802 = L.circleMarker(
+                [11.0, 77.6],
+                {"bubblingMouseEvents": true, "color": "#e65c00", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#e65c00", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 27.999999998955325, "stroke": true, "weight": 3}
+            ).addTo(map_aea23103561a72292cb35774beed4786);
+        
+    
+        var popup_459062a59ee86ed59eda324e7d432c42 = L.popup({
+  "maxWidth": 230,
+});
+
+        
+            
+                var html_0d89cd30184194b2604601d80edd624a = $(`<div id="html_0d89cd30184194b2604601d80edd624a" style="width: 100.0%; height: 100.0%;">         <div style='font-family:Arial;font-size:12px;width:210px'>           <b style='font-size:14px;color:#e65c00'>Apr</b><br>           <hr style='margin:3px 0'>           📐 RRTDHS: <b>19.145</b><br>           <span style='color:#e65c00'>             🔴 HIGH solar resource (> 5.7)           </span><br>           ☀️ GHI mean: <b>287.1 W/m²</b><br>           🌡️ T_amb:    <b>30.0 °C</b>         </div>         </div>`)[0];
+                popup_459062a59ee86ed59eda324e7d432c42.setContent(html_0d89cd30184194b2604601d80edd624a);
+            
+        
+
+        circle_marker_a8d835fe7f2373c85cdd3b7939f5d802.bindPopup(popup_459062a59ee86ed59eda324e7d432c42)
+        ;
+
+        
+    
+    
+            circle_marker_a8d835fe7f2373c85cdd3b7939f5d802.bindTooltip(
+                `<div>
+                     Apr: RRTDHS=19.145 🔴 HIGH
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_eb868189c63444a777d68b84f68660a0 = L.marker(
+                [11.0, 77.6],
+                {
+}
+            ).addTo(map_aea23103561a72292cb35774beed4786);
+        
+    
+            var div_icon_1c116a8ecf4b0876d8f63dfc820d1bbe = L.divIcon({
+  "html": "\u003cdiv style=\u0027font-size:9px;font-weight:bold;color:#e65c00;text-align:center\u0027\u003eApr\u003cbr\u003e19.14\u003c/div\u003e",
+  "iconSize": [40, 24],
+  "iconAnchor": [20, 12],
+  "className": "empty",
+});
+        
+    
+                marker_eb868189c63444a777d68b84f68660a0.setIcon(div_icon_1c116a8ecf4b0876d8f63dfc820d1bbe);
+            
+    
+            var circle_marker_42add32e25a63e455762a15744e46eae = L.circleMarker(
+                [10.7, 77.51961524227066],
+                {"bubblingMouseEvents": true, "color": "#e65c00", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#e65c00", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 19.478278292339738, "stroke": true, "weight": 3}
+            ).addTo(map_aea23103561a72292cb35774beed4786);
+        
+    
+        var popup_cc37ae1efa53fbc9e73a8ed72e220bbc = L.popup({
+  "maxWidth": 230,
+});
+
+        
+            
+                var html_d08d08e9ed391d015b674f22b212d456 = $(`<div id="html_d08d08e9ed391d015b674f22b212d456" style="width: 100.0%; height: 100.0%;">         <div style='font-family:Arial;font-size:12px;width:210px'>           <b style='font-size:14px;color:#e65c00'>May</b><br>           <hr style='margin:3px 0'>           📐 RRTDHS: <b>10.987</b><br>           <span style='color:#e65c00'>             🔴 HIGH solar resource (> 5.7)           </span><br>           ☀️ GHI mean: <b>193.3 W/m²</b><br>           🌡️ T_amb:    <b>27.4 °C</b>         </div>         </div>`)[0];
+                popup_cc37ae1efa53fbc9e73a8ed72e220bbc.setContent(html_d08d08e9ed391d015b674f22b212d456);
+            
+        
+
+        circle_marker_42add32e25a63e455762a15744e46eae.bindPopup(popup_cc37ae1efa53fbc9e73a8ed72e220bbc)
+        ;
+
+        
+    
+    
+            circle_marker_42add32e25a63e455762a15744e46eae.bindTooltip(
+                `<div>
+                     May: RRTDHS=10.987 🔴 HIGH
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_2c3d0414ee38cd6b3619647c5bf66e74 = L.marker(
+                [10.7, 77.51961524227066],
+                {
+}
+            ).addTo(map_aea23103561a72292cb35774beed4786);
+        
+    
+            var div_icon_6b6bb376391d39bbc5793a73003362e2 = L.divIcon({
+  "html": "\u003cdiv style=\u0027font-size:9px;font-weight:bold;color:#e65c00;text-align:center\u0027\u003eMay\u003cbr\u003e10.99\u003c/div\u003e",
+  "iconSize": [40, 24],
+  "iconAnchor": [20, 12],
+  "className": "empty",
+});
+        
+    
+                marker_2c3d0414ee38cd6b3619647c5bf66e74.setIcon(div_icon_6b6bb376391d39bbc5793a73003362e2);
+            
+    
+            var circle_marker_8583c9836f80545a88b8567a3aafeacc = L.circleMarker(
+                [10.480384757729336, 77.3],
+                {"bubblingMouseEvents": true, "color": "#e65c00", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#e65c00", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 17.710831150280892, "stroke": true, "weight": 3}
+            ).addTo(map_aea23103561a72292cb35774beed4786);
+        
+    
+        var popup_1a908e9ce2c78727b0f2affb82aa0a0d = L.popup({
+  "maxWidth": 230,
+});
+
+        
+            
+                var html_d4352503f666d774ec4de72e26e0b90f = $(`<div id="html_d4352503f666d774ec4de72e26e0b90f" style="width: 100.0%; height: 100.0%;">         <div style='font-family:Arial;font-size:12px;width:210px'>           <b style='font-size:14px;color:#e65c00'>Jun</b><br>           <hr style='margin:3px 0'>           📐 RRTDHS: <b>9.296</b><br>           <span style='color:#e65c00'>             🔴 HIGH solar resource (> 5.7)           </span><br>           ☀️ GHI mean: <b>179.0 W/m²</b><br>           🌡️ T_amb:    <b>25.7 °C</b>         </div>         </div>`)[0];
+                popup_1a908e9ce2c78727b0f2affb82aa0a0d.setContent(html_d4352503f666d774ec4de72e26e0b90f);
+            
+        
+
+        circle_marker_8583c9836f80545a88b8567a3aafeacc.bindPopup(popup_1a908e9ce2c78727b0f2affb82aa0a0d)
+        ;
+
+        
+    
+    
+            circle_marker_8583c9836f80545a88b8567a3aafeacc.bindTooltip(
+                `<div>
+                     Jun: RRTDHS=9.296 🔴 HIGH
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_6f2cc36e0218469a7516879919e3d10c = L.marker(
+                [10.480384757729336, 77.3],
+                {
+}
+            ).addTo(map_aea23103561a72292cb35774beed4786);
+        
+    
+            var div_icon_712a70d732c63379eb51d225747d143f = L.divIcon({
+  "html": "\u003cdiv style=\u0027font-size:9px;font-weight:bold;color:#e65c00;text-align:center\u0027\u003eJun\u003cbr\u003e9.30\u003c/div\u003e",
+  "iconSize": [40, 24],
+  "iconAnchor": [20, 12],
+  "className": "empty",
+});
+        
+    
+                marker_6f2cc36e0218469a7516879919e3d10c.setIcon(div_icon_712a70d732c63379eb51d225747d143f);
+            
+    
+            var circle_marker_bb150c7034731c6bea1a59e5d6d603bf = L.circleMarker(
+                [10.4, 77.0],
+                {"bubblingMouseEvents": true, "color": "#e65c00", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#e65c00", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 16.324641543905102, "stroke": true, "weight": 3}
+            ).addTo(map_aea23103561a72292cb35774beed4786);
+        
+    
+        var popup_e5c13bc1617e6ce9e07d4ff3b908b439 = L.popup({
+  "maxWidth": 230,
+});
+
+        
+            
+                var html_4c9ce651293ef4fba3c9529368d21b13 = $(`<div id="html_4c9ce651293ef4fba3c9529368d21b13" style="width: 100.0%; height: 100.0%;">         <div style='font-family:Arial;font-size:12px;width:210px'>           <b style='font-size:14px;color:#e65c00'>Jul</b><br>           <hr style='margin:3px 0'>           📐 RRTDHS: <b>7.969</b><br>           <span style='color:#e65c00'>             🔴 HIGH solar resource (> 5.7)           </span><br>           ☀️ GHI mean: <b>160.8 W/m²</b><br>           🌡️ T_amb:    <b>24.8 °C</b>         </div>         </div>`)[0];
+                popup_e5c13bc1617e6ce9e07d4ff3b908b439.setContent(html_4c9ce651293ef4fba3c9529368d21b13);
+            
+        
+
+        circle_marker_bb150c7034731c6bea1a59e5d6d603bf.bindPopup(popup_e5c13bc1617e6ce9e07d4ff3b908b439)
+        ;
+
+        
+    
+    
+            circle_marker_bb150c7034731c6bea1a59e5d6d603bf.bindTooltip(
+                `<div>
+                     Jul: RRTDHS=7.969 🔴 HIGH
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_5c0dbb54931a5ef50b25b17a285a55c4 = L.marker(
+                [10.4, 77.0],
+                {
+}
+            ).addTo(map_aea23103561a72292cb35774beed4786);
+        
+    
+            var div_icon_038bc006be2cd42bd15cf81a60a5b914 = L.divIcon({
+  "html": "\u003cdiv style=\u0027font-size:9px;font-weight:bold;color:#e65c00;text-align:center\u0027\u003eJul\u003cbr\u003e7.97\u003c/div\u003e",
+  "iconSize": [40, 24],
+  "iconAnchor": [20, 12],
+  "className": "empty",
+});
+        
+    
+                marker_5c0dbb54931a5ef50b25b17a285a55c4.setIcon(div_icon_038bc006be2cd42bd15cf81a60a5b914);
+            
+    
+            var circle_marker_a157b17ce43da8c5e7cea80db1e51429 = L.circleMarker(
+                [10.480384757729336, 76.7],
+                {"bubblingMouseEvents": true, "color": "#e65c00", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#e65c00", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 18.008080043784027, "stroke": true, "weight": 3}
+            ).addTo(map_aea23103561a72292cb35774beed4786);
+        
+    
+        var popup_929960396e0913eea44532cb956ea621 = L.popup({
+  "maxWidth": 230,
+});
+
+        
+            
+                var html_3908527f0bc1d6d8b5ccb01602921732 = $(`<div id="html_3908527f0bc1d6d8b5ccb01602921732" style="width: 100.0%; height: 100.0%;">         <div style='font-family:Arial;font-size:12px;width:210px'>           <b style='font-size:14px;color:#e65c00'>Aug</b><br>           <hr style='margin:3px 0'>           📐 RRTDHS: <b>9.580</b><br>           <span style='color:#e65c00'>             🔴 HIGH solar resource (> 5.7)           </span><br>           ☀️ GHI mean: <b>188.4 W/m²</b><br>           🌡️ T_amb:    <b>25.3 °C</b>         </div>         </div>`)[0];
+                popup_929960396e0913eea44532cb956ea621.setContent(html_3908527f0bc1d6d8b5ccb01602921732);
+            
+        
+
+        circle_marker_a157b17ce43da8c5e7cea80db1e51429.bindPopup(popup_929960396e0913eea44532cb956ea621)
+        ;
+
+        
+    
+    
+            circle_marker_a157b17ce43da8c5e7cea80db1e51429.bindTooltip(
+                `<div>
+                     Aug: RRTDHS=9.580 🔴 HIGH
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_f403f6c5daf2bd518bbc28c90e48e91c = L.marker(
+                [10.480384757729336, 76.7],
+                {
+}
+            ).addTo(map_aea23103561a72292cb35774beed4786);
+        
+    
+            var div_icon_7484e66d7e675a3ea34f9ca1a4e20b04 = L.divIcon({
+  "html": "\u003cdiv style=\u0027font-size:9px;font-weight:bold;color:#e65c00;text-align:center\u0027\u003eAug\u003cbr\u003e9.58\u003c/div\u003e",
+  "iconSize": [40, 24],
+  "iconAnchor": [20, 12],
+  "className": "empty",
+});
+        
+    
+                marker_f403f6c5daf2bd518bbc28c90e48e91c.setIcon(div_icon_7484e66d7e675a3ea34f9ca1a4e20b04);
+            
+    
+            var circle_marker_d9d191b1ca94aa70d1d8567bb1c7a3f3 = L.circleMarker(
+                [10.7, 76.48038475772934],
+                {"bubblingMouseEvents": true, "color": "#e65c00", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#e65c00", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 20.072073012590792, "stroke": true, "weight": 3}
+            ).addTo(map_aea23103561a72292cb35774beed4786);
+        
+    
+        var popup_3232679274b6af155944c059e373e76a = L.popup({
+  "maxWidth": 230,
+});
+
+        
+            
+                var html_c4e9a0aa26b5ffab909781aef53782bf = $(`<div id="html_c4e9a0aa26b5ffab909781aef53782bf" style="width: 100.0%; height: 100.0%;">         <div style='font-family:Arial;font-size:12px;width:210px'>           <b style='font-size:14px;color:#e65c00'>Sep</b><br>           <hr style='margin:3px 0'>           📐 RRTDHS: <b>11.556</b><br>           <span style='color:#e65c00'>             🔴 HIGH solar resource (> 5.7)           </span><br>           ☀️ GHI mean: <b>222.7 W/m²</b><br>           🌡️ T_amb:    <b>25.7 °C</b>         </div>         </div>`)[0];
+                popup_3232679274b6af155944c059e373e76a.setContent(html_c4e9a0aa26b5ffab909781aef53782bf);
+            
+        
+
+        circle_marker_d9d191b1ca94aa70d1d8567bb1c7a3f3.bindPopup(popup_3232679274b6af155944c059e373e76a)
+        ;
+
+        
+    
+    
+            circle_marker_d9d191b1ca94aa70d1d8567bb1c7a3f3.bindTooltip(
+                `<div>
+                     Sep: RRTDHS=11.556 🔴 HIGH
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_8b27b3db33851e509fba66bf2b0a450b = L.marker(
+                [10.7, 76.48038475772934],
+                {
+}
+            ).addTo(map_aea23103561a72292cb35774beed4786);
+        
+    
+            var div_icon_eeed23691c2a9e5ac4f3debcd461a75f = L.divIcon({
+  "html": "\u003cdiv style=\u0027font-size:9px;font-weight:bold;color:#e65c00;text-align:center\u0027\u003eSep\u003cbr\u003e11.56\u003c/div\u003e",
+  "iconSize": [40, 24],
+  "iconAnchor": [20, 12],
+  "className": "empty",
+});
+        
+    
+                marker_8b27b3db33851e509fba66bf2b0a450b.setIcon(div_icon_eeed23691c2a9e5ac4f3debcd461a75f);
+            
+    
+            var circle_marker_726d02b8d24c82c70ca63f876d9da78b = L.circleMarker(
+                [11.0, 76.4],
+                {"bubblingMouseEvents": true, "color": "#e65c00", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#e65c00", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 17.03280945062579, "stroke": true, "weight": 3}
+            ).addTo(map_aea23103561a72292cb35774beed4786);
+        
+    
+        var popup_b10e425ca77e634221c9b97fbdcfd9d3 = L.popup({
+  "maxWidth": 230,
+});
+
+        
+            
+                var html_cae6b10465e7a2c1536a2fa28753bdf4 = $(`<div id="html_cae6b10465e7a2c1536a2fa28753bdf4" style="width: 100.0%; height: 100.0%;">         <div style='font-family:Arial;font-size:12px;width:210px'>           <b style='font-size:14px;color:#e65c00'>Oct</b><br>           <hr style='margin:3px 0'>           📐 RRTDHS: <b>8.647</b><br>           <span style='color:#e65c00'>             🔴 HIGH solar resource (> 5.7)           </span><br>           ☀️ GHI mean: <b>172.2 W/m²</b><br>           🌡️ T_amb:    <b>25.1 °C</b>         </div>         </div>`)[0];
+                popup_b10e425ca77e634221c9b97fbdcfd9d3.setContent(html_cae6b10465e7a2c1536a2fa28753bdf4);
+            
+        
+
+        circle_marker_726d02b8d24c82c70ca63f876d9da78b.bindPopup(popup_b10e425ca77e634221c9b97fbdcfd9d3)
+        ;
+
+        
+    
+    
+            circle_marker_726d02b8d24c82c70ca63f876d9da78b.bindTooltip(
+                `<div>
+                     Oct: RRTDHS=8.647 🔴 HIGH
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_2bc94f8e603e0a29f2a6b6cf680e64b2 = L.marker(
+                [11.0, 76.4],
+                {
+}
+            ).addTo(map_aea23103561a72292cb35774beed4786);
+        
+    
+            var div_icon_3df2b9875c7cf07c05be8a8e65e77e61 = L.divIcon({
+  "html": "\u003cdiv style=\u0027font-size:9px;font-weight:bold;color:#e65c00;text-align:center\u0027\u003eOct\u003cbr\u003e8.65\u003c/div\u003e",
+  "iconSize": [40, 24],
+  "iconAnchor": [20, 12],
+  "className": "empty",
+});
+        
+    
+                marker_2bc94f8e603e0a29f2a6b6cf680e64b2.setIcon(div_icon_3df2b9875c7cf07c05be8a8e65e77e61);
+            
+    
+            var circle_marker_d304c2058e35ad4e6bb6c180ab393426 = L.circleMarker(
+                [11.299999999999999, 76.48038475772934],
+                {"bubblingMouseEvents": true, "color": "#e65c00", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#e65c00", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 16.672807931686105, "stroke": true, "weight": 3}
+            ).addTo(map_aea23103561a72292cb35774beed4786);
+        
+    
+        var popup_7cee4dc3527d746988fc5e00317cc79f = L.popup({
+  "maxWidth": 230,
+});
+
+        
+            
+                var html_18b8225cdb9a1bf3651dd8c2e9eba3f9 = $(`<div id="html_18b8225cdb9a1bf3651dd8c2e9eba3f9" style="width: 100.0%; height: 100.0%;">         <div style='font-family:Arial;font-size:12px;width:210px'>           <b style='font-size:14px;color:#e65c00'>Nov</b><br>           <hr style='margin:3px 0'>           📐 RRTDHS: <b>8.302</b><br>           <span style='color:#e65c00'>             🔴 HIGH solar resource (> 5.7)           </span><br>           ☀️ GHI mean: <b>169.8 W/m²</b><br>           🌡️ T_amb:    <b>24.6 °C</b>         </div>         </div>`)[0];
+                popup_7cee4dc3527d746988fc5e00317cc79f.setContent(html_18b8225cdb9a1bf3651dd8c2e9eba3f9);
+            
+        
+
+        circle_marker_d304c2058e35ad4e6bb6c180ab393426.bindPopup(popup_7cee4dc3527d746988fc5e00317cc79f)
+        ;
+
+        
+    
+    
+            circle_marker_d304c2058e35ad4e6bb6c180ab393426.bindTooltip(
+                `<div>
+                     Nov: RRTDHS=8.302 🔴 HIGH
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_65b713adf10150b79d20802fa4cc6944 = L.marker(
+                [11.299999999999999, 76.48038475772934],
+                {
+}
+            ).addTo(map_aea23103561a72292cb35774beed4786);
+        
+    
+            var div_icon_b2d121a2a879daa2bdc4448453779b47 = L.divIcon({
+  "html": "\u003cdiv style=\u0027font-size:9px;font-weight:bold;color:#e65c00;text-align:center\u0027\u003eNov\u003cbr\u003e8.30\u003c/div\u003e",
+  "iconSize": [40, 24],
+  "iconAnchor": [20, 12],
+  "className": "empty",
+});
+        
+    
+                marker_65b713adf10150b79d20802fa4cc6944.setIcon(div_icon_b2d121a2a879daa2bdc4448453779b47);
+            
+    
+            var circle_marker_c637793d66a6418cb5a033b9193dfe6c = L.circleMarker(
+                [11.519615242270664, 76.7],
+                {"bubblingMouseEvents": true, "color": "#e65c00", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#e65c00", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 17.240373978797344, "stroke": true, "weight": 3}
+            ).addTo(map_aea23103561a72292cb35774beed4786);
+        
+    
+        var popup_f8e8c8c32041d08a93f9bf983e4a1ece = L.popup({
+  "maxWidth": 230,
+});
+
+        
+            
+                var html_9f6f61fb45dc8cc6e48c33d501911fc7 = $(`<div id="html_9f6f61fb45dc8cc6e48c33d501911fc7" style="width: 100.0%; height: 100.0%;">         <div style='font-family:Arial;font-size:12px;width:210px'>           <b style='font-size:14px;color:#e65c00'>Dec</b><br>           <hr style='margin:3px 0'>           📐 RRTDHS: <b>8.845</b><br>           <span style='color:#e65c00'>             🔴 HIGH solar resource (> 5.7)           </span><br>           ☀️ GHI mean: <b>183.0 W/m²</b><br>           🌡️ T_amb:    <b>24.3 °C</b>         </div>         </div>`)[0];
+                popup_f8e8c8c32041d08a93f9bf983e4a1ece.setContent(html_9f6f61fb45dc8cc6e48c33d501911fc7);
+            
+        
+
+        circle_marker_c637793d66a6418cb5a033b9193dfe6c.bindPopup(popup_f8e8c8c32041d08a93f9bf983e4a1ece)
+        ;
+
+        
+    
+    
+            circle_marker_c637793d66a6418cb5a033b9193dfe6c.bindTooltip(
+                `<div>
+                     Dec: RRTDHS=8.845 🔴 HIGH
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_5924838f4976c16ee39a14503469a558 = L.marker(
+                [11.519615242270664, 76.7],
+                {
+}
+            ).addTo(map_aea23103561a72292cb35774beed4786);
+        
+    
+            var div_icon_2310ead0105e9a421652eb66facc7ae8 = L.divIcon({
+  "html": "\u003cdiv style=\u0027font-size:9px;font-weight:bold;color:#e65c00;text-align:center\u0027\u003eDec\u003cbr\u003e8.85\u003c/div\u003e",
+  "iconSize": [40, 24],
+  "iconAnchor": [20, 12],
+  "className": "empty",
+});
+        
+    
+                marker_5924838f4976c16ee39a14503469a558.setIcon(div_icon_2310ead0105e9a421652eb66facc7ae8);
+            
+    
+            var marker_19bc761c4e2cf3263edfdcbedbc0d3f7 = L.marker(
+                [11.0, 77.0],
+                {
+}
+            ).addTo(map_aea23103561a72292cb35774beed4786);
+        
+    
+            var icon_1ecf2a7600203718a088cc5f2cfbb1bc = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "orange",
+  "iconColor": "white",
+  "icon": "sun",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+            marker_19bc761c4e2cf3263edfdcbedbc0d3f7.bindTooltip(
+                `<div>
+                     Coimbatore — RRTDHS threshold: 5.7
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_19bc761c4e2cf3263edfdcbedbc0d3f7.setIcon(icon_1ecf2a7600203718a088cc5f2cfbb1bc);
+            
+    
+            tile_layer_41ab41e5f7730f291da0487a6ef573b9.addTo(map_aea23103561a72292cb35774beed4786);
+        
+    
+                marker_0b254c7451843cbdb135a79aac7b2a24.setIcon(div_icon_f718fd9ba58bbc25ed9688e38b9143f9);
+            
+    
+                marker_eaa5b50cad0e0e3b9370b74ebbfd443c.setIcon(div_icon_b5642edd3d3ccbd2fd3a5af812252c62);
+            
+    
+                marker_6a28aa97c3dde024c75408d6fe628f27.setIcon(div_icon_c450c5efdacefba65e1e48ded0d4b10a);
+            
+    
+                marker_eb868189c63444a777d68b84f68660a0.setIcon(div_icon_1c116a8ecf4b0876d8f63dfc820d1bbe);
+            
+    
+                marker_2c3d0414ee38cd6b3619647c5bf66e74.setIcon(div_icon_6b6bb376391d39bbc5793a73003362e2);
+            
+    
+                marker_6f2cc36e0218469a7516879919e3d10c.setIcon(div_icon_712a70d732c63379eb51d225747d143f);
+            
+    
+                marker_5c0dbb54931a5ef50b25b17a285a55c4.setIcon(div_icon_038bc006be2cd42bd15cf81a60a5b914);
+            
+    
+                marker_f403f6c5daf2bd518bbc28c90e48e91c.setIcon(div_icon_7484e66d7e675a3ea34f9ca1a4e20b04);
+            
+    
+                marker_8b27b3db33851e509fba66bf2b0a450b.setIcon(div_icon_eeed23691c2a9e5ac4f3debcd461a75f);
+            
+    
+                marker_2bc94f8e603e0a29f2a6b6cf680e64b2.setIcon(div_icon_3df2b9875c7cf07c05be8a8e65e77e61);
+            
+    
+                marker_65b713adf10150b79d20802fa4cc6944.setIcon(div_icon_b2d121a2a879daa2bdc4448453779b47);
+            
+    
+                marker_5924838f4976c16ee39a14503469a558.setIcon(div_icon_2310ead0105e9a421652eb66facc7ae8);
+            
+    
+                marker_19bc761c4e2cf3263edfdcbedbc0d3f7.setIcon(icon_1ecf2a7600203718a088cc5f2cfbb1bc);
+            
+</script>
+</html>

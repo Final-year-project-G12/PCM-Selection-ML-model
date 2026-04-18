@@ -14,7 +14,7 @@ print("NETCDF DIAGNOSTIC REPORT")
 print("=" * 70)
 
 # Check instant files
-print("\n📋 INSTANT FILES (.._instant.nc):")
+print("\n[INSTANT FILES (.._instant.nc)]:")
 instant_files = sorted(glob.glob(os.path.join(SCRIPT_DIR, '*instant*.nc')))
 print(f"   Found {len(instant_files)} files\n")
 
@@ -33,7 +33,7 @@ for f in instant_files[:2]:  # Check first 2
         print(f"      ERROR: {e}")
 
 # Check extra files
-print("\n📋 EXTRA FILES (.._extra*.nc):")
+print("\n[EXTRA FILES (.._extra*.nc)]:")
 extra_files = sorted(glob.glob(os.path.join(SCRIPT_DIR, '*_extra*.nc')))
 print(f"   Found {len(extra_files)} files\n")
 
@@ -52,7 +52,7 @@ for f in extra_files[:4]:  # Check first 4 (2 accum + 2 instant)
         print(f"      ERROR: {e}")
 
 # Check base CSV
-print("\n📋 BASE CSV:")
+print("\n[BASE CSV]:")
 csv_file = os.path.join(SCRIPT_DIR, 'era5_climate_tamilnadu_2024.csv')
 if os.path.exists(csv_file):
     df = pd.read_csv(csv_file, nrows=5)

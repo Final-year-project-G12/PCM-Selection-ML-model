@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/leaflet.awesome.rotate.min.css"/>
+    
+            <meta name="viewport" content="width=device-width,
+                initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+            <style>
+                #map_44dbac55952708e58f6e1ffcef904620 {
+                    position: relative;
+                    width: 100.0%;
+                    height: 100.0%;
+                    left: 0.0%;
+                    top: 0.0%;
+                }
+                .leaflet-container { font-size: 1rem; }
+            </style>
+
+            <style>html, body {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            </style>
+
+            <style>#map {
+                position:absolute;
+                top:0;
+                bottom:0;
+                right:0;
+                left:0;
+                }
+            </style>
+
+            <script>
+                L_NO_TOUCH = false;
+                L_DISABLE_3D = false;
+            </script>
+
+        
+</head>
+<body>
+    
+    
+            <div class="folium-map" id="map_44dbac55952708e58f6e1ffcef904620" ></div>
+        
+</body>
+<script>
+    
+    
+            var map_44dbac55952708e58f6e1ffcef904620 = L.map(
+                "map_44dbac55952708e58f6e1ffcef904620",
+                {
+                    center: [8.0, 76.25],
+                    crs: L.CRS.EPSG3857,
+                    ...{
+  "zoom": 8,
+  "zoomControl": true,
+  "preferCanvas": false,
+}
+
+                }
+            );
+
+            
+
+        
+    
+            var tile_layer_890dbdf5c8ad59913a56c75908753c8d = L.tileLayer(
+                "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+                {
+  "minZoom": 0,
+  "maxZoom": 20,
+  "maxNativeZoom": 20,
+  "noWrap": false,
+  "attribution": "\u0026copy; \u003ca href=\"https://www.openstreetmap.org/copyright\"\u003eOpenStreetMap\u003c/a\u003e contributors \u0026copy; \u003ca href=\"https://carto.com/attributions\"\u003eCARTO\u003c/a\u003e",
+  "subdomains": "abcd",
+  "detectRetina": false,
+  "tms": false,
+  "opacity": 1,
+}
+
+            );
+        
+    
+            tile_layer_890dbdf5c8ad59913a56c75908753c8d.addTo(map_44dbac55952708e58f6e1ffcef904620);
+        
+    
+            var marker_85fabee2fac73b3aac92dd847d6d0ea9 = L.marker(
+                [8.0, 76.25],
+                {
+}
+            ).addTo(map_44dbac55952708e58f6e1ffcef904620);
+        
+    
+            var icon_7b0bfc4f94654dfd1de1a9fdd9c297b8 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "blue",
+  "iconColor": "white",
+  "icon": "info-sign",
+  "prefix": "glyphicon",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_f7a66e357cf1b0dfa248fdb524d802dc = L.popup({
+  "maxWidth": 330,
+});
+
+        
+            
+                var i_frame_47e28e9715bd5ac21ba7d0526e44d76d = $(`<iframe src="data:text/html;charset=utf-8;base64,CiAgICAKPGRpdiBzdHlsZT0nZm9udC1mYW1pbHk6QXJpYWwsc2Fucy1zZXJpZjtmb250LXNpemU6MTNweDt3aWR0aDoyODBweDsKICAgICAgICAgICAgYmFja2dyb3VuZDojMWUyMzMwO2NvbG9yOiNlY2YwZjE7cGFkZGluZzoxMnB4O2JvcmRlci1yYWRpdXM6OHB4Oyc+CiAgPGIgc3R5bGU9J2ZvbnQtc2l6ZToxNnB4O2NvbG9yOiNmMzljMTI7Jz5bUkVHSU9OXSBUYW1pbCBOYWR1PC9iPgogIDxociBzdHlsZT0nYm9yZGVyLWNvbG9yOiM1NTU7bWFyZ2luOjZweCAwOycvPgogIDx0YWJsZSB3aWR0aD0nMTAwJSc+CiAgICA8dHI+PHRkPjxiPkNlbnRyb2lkPC9iPjwvdGQ+PHRkIGFsaWduPSdyaWdodCc+OC4wMDAwwrBOLCA3Ni4yNTAwwrBFPC90ZD48L3RyPgogICAgPHRyPjx0ZD48Yj5BdmcuIEFsdGl0dWRlPC9iPjwvdGQ+PHRkIGFsaWduPSdyaWdodCc+MTIuMCBtPC90ZD48L3RyPgogICAgPHRyPjx0ZCBjb2xzcGFuPScyJz48aHIgc3R5bGU9J21hcmdpbjozcHggMCcvPjwvdGQ+PC90cj4KICAgIDx0cj48dGQ+W1RFTVBdIFRfYW1iIG1lYW48L3RkPjx0ZCBhbGlnbj0ncmlnaHQnPjxiPjI3LjUgwrBDPC9iPjwvdGQ+PC90cj4KICAgIDx0cj48dGQ+W1RFTVBdIFRfYW1iIHJhbmdlPC90ZD48dGQgYWxpZ249J3JpZ2h0Jz4xMy4z4oCTNDMuNCDCsEM8L3RkPjwvdHI+CiAgICA8dHI+PHRkPltTVU5dIEdISSBtZWFuPC90ZD48dGQgYWxpZ249J3JpZ2h0Jz48Yj4zMy4zIFcvbcKyPC9iPjwvdGQ+PC90cj4KICAgIDx0cj48dGQ+W1NVTl0gR0hJIHBlYWs8L3RkPjx0ZCBhbGlnbj0ncmlnaHQnPjczNy40IFcvbcKyPC90ZD48L3RyPgogICAgPHRyPjx0ZD5bRFJPUF0gUkh1bSBtZWFuPC90ZD48dGQgYWxpZ249J3JpZ2h0Jz48Yj43NS44ICU8L2I+PC90ZD48L3RyPgogICAgPHRyPjx0ZD5bUkFJTl0gVG90YWwgcHJlY2lwPC90ZD48dGQgYWxpZ249J3JpZ2h0Jz42MjExNzguMSBtbTwvdGQ+PC90cj4KICAgIDx0cj48dGQ+W1dJTkRdIE1lYW4gd2luZCBzcGQ8L3RkPjx0ZCBhbGlnbj0ncmlnaHQnPjAuMDAgbS9zPC90ZD48L3RyPgogICAgPHRyPjx0ZCBjb2xzcGFuPScyJz48aHIgc3R5bGU9J21hcmdpbjozcHggMCcvPjwvdGQ+PC90cj4KICAgIDx0cj48dGQ+RGF0YSBwZXJpb2Q8L3RkPjx0ZCBhbGlnbj0ncmlnaHQnPjIwMjQtMDEtMDEgdG8gMjAyNC0xMi0zMTwvdGQ+PC90cj4KICAgIDx0cj48dGQ+U2FtcGxlIGNvdW50PC90ZD48dGQgYWxpZ249J3JpZ2h0Jz4zNDM0NTQ0IHJvd3M8L3RkPjwvdHI+CiAgPC90YWJsZT4KPC9kaXY+" width="310" style="border:none !important;" height="320"></iframe>`)[0];
+                popup_f7a66e357cf1b0dfa248fdb524d802dc.setContent(i_frame_47e28e9715bd5ac21ba7d0526e44d76d);
+            
+        
+
+        marker_85fabee2fac73b3aac92dd847d6d0ea9.bindPopup(popup_f7a66e357cf1b0dfa248fdb524d802dc)
+        ;
+
+        
+    
+    
+            marker_85fabee2fac73b3aac92dd847d6d0ea9.bindTooltip(
+                `<div>
+                     Tamil Nadu — Click for full climate summary
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_85fabee2fac73b3aac92dd847d6d0ea9.setIcon(icon_7b0bfc4f94654dfd1de1a9fdd9c297b8);
+            
+    
+            var circle_e96104d1579d95ccb408a0abbfa134a1 = L.circle(
+                [8.0, 76.25],
+                {"bubblingMouseEvents": true, "color": "blue", "dashArray": null, "dashOffset": null, "fill": false, "fillColor": "blue", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 0.3, "radius": 50000, "stroke": true, "weight": 1}
+            ).addTo(map_44dbac55952708e58f6e1ffcef904620);
+        
+    
+            circle_e96104d1579d95ccb408a0abbfa134a1.bindTooltip(
+                `<div>
+                     Study area (±50 km from centroid)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var layer_control_f392f0331fdce6e27cc97a09578ad05a_layers = {
+                base_layers : {
+                    "cartodbpositron" : tile_layer_890dbdf5c8ad59913a56c75908753c8d,
+                },
+                overlays :  {
+                },
+            };
+            let layer_control_f392f0331fdce6e27cc97a09578ad05a = L.control.layers(
+                layer_control_f392f0331fdce6e27cc97a09578ad05a_layers.base_layers,
+                layer_control_f392f0331fdce6e27cc97a09578ad05a_layers.overlays,
+                {
+  "position": "topright",
+  "collapsed": true,
+  "autoZIndex": true,
+}
+            ).addTo(map_44dbac55952708e58f6e1ffcef904620);
+
+        
+    
+            tile_layer_890dbdf5c8ad59913a56c75908753c8d.addTo(map_44dbac55952708e58f6e1ffcef904620);
+        
+    
+                marker_85fabee2fac73b3aac92dd847d6d0ea9.setIcon(icon_7b0bfc4f94654dfd1de1a9fdd9c297b8);
+            
+</script>
+</html>

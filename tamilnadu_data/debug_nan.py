@@ -10,11 +10,11 @@ print("=" * 70)
 
 # Check base CSV
 df = pd.read_csv('era5_climate_tamilnadu_2024.csv')
-print(f"\n📋 Base CSV columns: {list(df.columns)}")
+print(f"\n[Base CSV columns]: {list(df.columns)}")
 print(f"   Shape: {df.shape}")
 
 # Check a P_atm/sp extraction
-print(f"\n🔍 Checking P_atm extraction from extra instant files...")
+print(f"\n[Checking P_atm/sp extraction from extra instant files]...")
 extra_instant_files = sorted(glob.glob('*_extra*instant*.nc'))
 if extra_instant_files:
     print(f"   Found {len(extra_instant_files)} extra instant files")
@@ -40,7 +40,7 @@ if extra_instant_files:
             print(f"      ERROR: {e}")
 
 # Now re-run the merge logic in simplified form
-print(f"\n🔄 Simulating merge logic...")
+print(f"\n[Simulating merge logic]...")
 print(f"   Base CSV has {len(df)} rows")
 
 # Load instant files

@@ -14,7 +14,7 @@ base['latitude'] = base['latitude'].round(4)
 base['longitude'] = base['longitude'].round(4)
 base['timestamp'] = pd.to_datetime(base['timestamp'])
 
-print("\n📋 BASE CSV (first 1000 rows):")
+print("\n[BASE CSV (first 1000 rows)]:")
 print(f"   Unique timestamps: {base['timestamp'].nunique()}")
 print(f"   Unique (lat,lon) pairs: {len(base[['latitude', 'longitude']].drop_duplicates())}")
 print(f"   Sample timestamp: {base['timestamp'].iloc[0]}")
@@ -31,7 +31,7 @@ extra['longitude'] = extra['longitude'].round(4)
 extra['timestamp'] = pd.to_datetime(extra['valid_time'])
 ds.close()
 
-print("\n🔍 EXTRA INSTANT FILE:")
+print("\n[EXTRA INSTANT FILE]:")
 print(f"   Unique timestamps: {extra['timestamp'].nunique()}")
 print(f"   Unique (lat,lon) pairs: {len(extra[['latitude', 'longitude']].drop_duplicates())}")
 print(f"   Sample timestamp: {extra['timestamp'].iloc[0]}")
@@ -40,7 +40,7 @@ print(f"   Lat range: {extra['latitude'].min():.4f} - {extra['latitude'].max():.
 print(f"   Lon range: {extra['longitude'].min():.4f} - {extra['longitude'].max():.4f}")
 
 # Try a manual merge test
-print("\n🔗 MANUAL MERGE TEST:")
+print("\n[MANUAL MERGE TEST]:")
 test_base = base[['timestamp', 'latitude', 'longitude']].drop_duplicates().head(10)
 test_extra = extra[['timestamp', 'latitude', 'longitude']].drop_duplicates()
 
@@ -55,9 +55,9 @@ for idx, row in test_base.iterrows():
     ]
     if len(matching) > 0:
         matches += 1
-        print(f"   ✓ Match found: {ts} @ ({lat}, {lon})")
+        print(f"   [OK] Match found: {ts} @ ({lat}, {lon})")
     else:
-        print(f"   ✗ No match: {ts} @ ({lat}, {lon})")
+        print(f"   [NO] No match: {ts} @ ({lat}, {lon})")
 
 print(f"\n   Total matches: {matches} / {len(test_base)}")
 

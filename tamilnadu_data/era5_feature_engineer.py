@@ -309,7 +309,7 @@ if accum_files:
         # strd → LW_down (W/m²)
         if 'strd' in extra_combined.columns:
             extra_combined = deaccum_per_grid(extra_combined, 'strd', 'LW_down')
-            print("  ℹ️  LW_down ← strd deaccumulated ÷ 3600")
+            print("  [INFO] LW_down <- strd deaccumulated / 3600")
 
 # Process instant files (sp → P_atm)
 if instant_files:
@@ -403,21 +403,21 @@ df['season']      = df['season_code'].map(season_name)
 # ─────────────────────────────────────────────────────────────────────────────
 # STEP 5: Solar geometry (use fallback to avoid pvlib DLL issues)
 # ─────────────────────────────────────────────────────────────────────────────
-print("\n☀️  Computing solar geometry (pure Python, no pvlib) ...")
+print("\n[Computing] Computing solar geometry (pure Python, no pvlib) ...")
 try:
     # Note: GHI column is still called 'GHI_Wm2' at this point, passed as a parameter
     df_temp = df.copy()
     df_temp['GHI'] = df_temp['GHI_Wm2']  # Create alias for the function to use
     df_temp = solar_geometry_no_pvlib(df_temp, lat_col='latitude', lon_col='longitude', time_col='timestamp')
     df[['SZA', 'solar_azimuth', 'ETR', 'GHI_clearsky', 'CSI']] = df_temp[['SZA', 'solar_azimuth', 'ETR', 'GHI_clearsky', 'CSI']]
-    print(f"   ✓ Solar zenith angle (SZA) calculated: {df['SZA'].notna().sum()} values")
-    print(f"   ✓ Solar azimuth calculated: {df['solar_azimuth'].notna().sum()} values")
-    print(f"   ✓ Extraterrestrial radiation (ETR) calculated: {df['ETR'].notna().sum()} values")
-    print(f"   ✓ Clear-sky GHI calculated: {df['GHI_clearsky'].notna().sum()} values")
-    print(f"   ✓ Clear-sky index (CSI) calculated: {df['CSI'].notna().sum()} values")
-    print("  ✅ Solar geometry done (Haurwitz 1945 model, Spencer 1971 declination)")
+    print(f"   [OK] Solar zenith angle (SZA) calculated: {df['SZA'].notna().sum()} values")
+    print(f"   [OK] Solar azimuth calculated: {df['solar_azimuth'].notna().sum()} values")
+    print(f"   [OK] Extraterrestrial radiation (ETR) calculated: {df['ETR'].notna().sum()} values")
+    print(f"   [OK] Clear-sky GHI calculated: {df['GHI_clearsky'].notna().sum()} values")
+    print(f"   [OK] Clear-sky index (CSI) calculated: {df['CSI'].notna().sum()} values")
+    print("  [OK] Solar geometry done (Haurwitz 1945 model, Spencer 1971 declination)")
 except Exception as e:
-    print(f"  ❌ Error: {str(e)}")
+    print(f"  [ERROR] Error: {str(e)}")
     for c in ['SZA', 'solar_azimuth', 'ETR', 'GHI_clearsky', 'CSI']:
         df[c] = np.nan
 
@@ -425,7 +425,7 @@ except Exception as e:
 # Skipped in final output for performance with 3.4M rows
 # Users can compute locally: sunrise_hour = first SZA(lat,lon,date) where SZA < 90
 # sunset_hour = last SZA(lat,lon,date) where SZA < 90
-print("  ⏭️  Sunrise/sunset computation skipped (SZA available for local computation)")
+print("  [Skipping] Sunrise/sunset computation skipped (SZA available for local computation)")
 
 # ─────────────────────────────────────────────────────────────────────────────
 # STEP 6: RRTDHS (Relative Required Thermal Discharge per Hour per Setpoint)
@@ -440,7 +440,7 @@ df['RRTDHS'] = (df['GHI_Wm2'] / delta_T).round(4)
 # ─────────────────────────────────────────────────────────────────────────────
 # STEP 7: Static metadata per grid point
 # ─────────────────────────────────────────────────────────────────────────────
-print("\n🏙️  Adding static metadata ...")
+print("\n[Adding] Adding static metadata ...")
 
 # City lookup
 def get_city(lat, lon):
@@ -523,14 +523,14 @@ final_df  = df[out_cols]
 # ─────────────────────────────────────────────────────────────────────────────
 # STEP 9: Save
 # ─────────────────────────────────────────────────────────────────────────────
-print(f"\n💾 Writing {OUTPUT_CSV} ...")
+print(f"\n[Writing] Writing {OUTPUT_CSV} ...")
 final_df.to_csv(OUTPUT_CSV, index=False)
 
-print(f"\n🎉 Done!")
+print(f"\n[Done] Done!")
 print(f"   Rows      : {len(final_df):,}")
 print(f"   Columns   : {len(out_cols)}  →  {out_cols}")
 if missing:
-    print(f"   ⚠️  Missing (run download scripts first): {missing}")
+    print(f"   [WARNING] Missing (run download scripts first): {missing}")
 print(f"   File size : ~{os.path.getsize(OUTPUT_CSV)/1e6:.1f} MB")
 print(f"\nNaN audit (top issues):")
 nan_s = final_df.isna().sum()

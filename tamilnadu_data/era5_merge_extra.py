@@ -19,17 +19,17 @@ print("=" * 65)
 
 # ── Load existing CSV ──────────────────────────────────────────────────────────
 if not os.path.exists(EXISTING_CSV):
-    print(f"❌ Existing CSV not found: {EXISTING_CSV}")
+    print(f"[ERROR] Existing CSV not found: {EXISTING_CSV}")
     exit()
 
-print(f"\n📂 Loading existing CSV: {EXISTING_CSV}")
+print(f"\n[Loading] Loading existing CSV: {EXISTING_CSV}")
 climate_df = pd.read_csv(EXISTING_CSV, parse_dates=['timestamp'])
 print(f"   Shape: {climate_df.shape}  |  Columns: {list(climate_df.columns)}")
 
 # ── Find _extra*.nc files and group by month ────────────────────────────────
 extra_nc = sorted(glob.glob(os.path.join(SCRIPT_DIR, 'era5_2024_*_extra*.nc')))
 if not extra_nc:
-    print("❌ No era5_2024_*_extra*.nc files found. Run era5_download_extra.py first.")
+    print("[ERROR] No era5_2024_*_extra*.nc files found. Run era5_download_extra.py first.")
     exit()
 
 month_files = defaultdict(list)
@@ -53,7 +53,7 @@ def open_nc(filepath):
                 ds = xr.open_dataset(filepath, engine=eng); engine = eng; break
             except Exception: continue
         else:
-            print(f"  ❌ Cannot open {filepath}"); return None
+            print(f"  [ERROR] Cannot open {filepath}"); return None
     ds = xr.open_dataset(filepath, engine=engine)
     for dim in ['number', 'surface', 'step']:
         if dim in ds.dims and ds.sizes[dim] == 1:
@@ -73,18 +73,18 @@ extra_dfs = []
 
 for mm in sorted(month_files.keys()):
     paths = month_files[mm]
-    print(f"\n📂 Processing month {mm} ({len(paths)} file(s))")
+    print(f"\n[Processing] Processing month {mm} ({len(paths)} file(s))")
 
     datasets = [ds for ds in (open_nc(p) for p in paths) if ds is not None]
     if not datasets:
-        print(f"  ❌ No datasets loaded for month {mm}"); continue
+        print(f"  [ERROR] No datasets loaded for month {mm}"); continue
 
     try:
         merged = xr.merge(datasets, join='inner', compat='override') if len(datasets) > 1 else datasets[0]
         if len(datasets) > 1:
             print(f"    Merged {len(datasets)} files.")
     except Exception as e:
-        print(f"  ❌ Merge failed: {e}"); continue
+        print(f"  [ERROR] Merge failed: {e}"); continue
 
     df = merged.to_dataframe().reset_index()
     merged.close()
@@ -104,34 +104,34 @@ for mm in sorted(month_files.keys()):
     if 'fdir' in df.columns:
         df['fdir'] = df.groupby(['latitude', 'longitude'])['fdir'].diff().clip(lower=0)
         df['fdir_Wm2'] = (df['fdir'] / 3600.0).clip(lower=0)
-        print("  ℹ️  fdir (direct horizontal) deaccumulated ÷ 3600")
+        print("  [INFO] fdir (direct horizontal) deaccumulated / 3600")
     else:
         df['fdir_Wm2'] = np.nan
-        print("  ⚠️  fdir not found")
+        print("  [WARNING] fdir not found")
 
     # Surface pressure (instantaneous — no deaccumulation needed)
     if 'sp' in df.columns:
         df['surface_pressure_Pa'] = df['sp']
-        print("  ℹ️  surface_pressure_Pa ← sp")
+        print("  [INFO] surface_pressure_Pa <- sp")
     else:
         df['surface_pressure_Pa'] = np.nan
-        print("  ⚠️  sp not found")
+        print("  [WARNING] sp not found")
 
     keep = ['timestamp', 'latitude', 'longitude', 'fdir_Wm2', 'surface_pressure_Pa']
     extra_dfs.append(df[[c for c in keep if c in df.columns]])
-    print(f"  ✅ {len(df):,} rows for month {mm}")
+    print(f"  [OK] {len(df):,} rows for month {mm}")
 
 if not extra_dfs:
-    print("❌ No extra data extracted."); exit()
+    print("[ERROR] No extra data extracted."); exit()
 
 # ── Combine all extra months ───────────────────────────────────────────────────
 extra_combined = pd.concat(extra_dfs, ignore_index=True)
 extra_combined['fdir_Wm2'] = extra_combined['fdir_Wm2'].fillna(0).clip(lower=0)
 
-print(f"\n✅ Extra data combined: {extra_combined.shape}")
+print(f"\n[OK] Extra data combined: {extra_combined.shape}")
 
 # ── Merge with existing CSV ────────────────────────────────────────────────────
-print("\n🔗 Merging into existing CSV ...")
+print("\n[Merging] Merging into existing CSV ...")
 
 # Round lat/lon to avoid float precision mismatches
 for df_ in [climate_df, extra_combined]:
@@ -151,8 +151,8 @@ merged_df = climate_df.merge(
 if 'fdir_Wm2' in merged_df.columns and 'GHI_Wm2' in merged_df.columns:
     merged_df['DHI_Wm2'] = (merged_df['GHI_Wm2'] - merged_df['fdir_Wm2']).clip(lower=0)
     merged_df.rename(columns={'fdir_Wm2': 'DNI_Wm2'}, inplace=True)
-    print("  ✅ DNI_Wm2 = fdir_Wm2 (direct horizontal)")
-    print("  ✅ DHI_Wm2 = GHI - fdir (diffuse horizontal)")
+    print("  [OK] DNI_Wm2 = fdir_Wm2 (direct horizontal)")
+    print("  [OK] DHI_Wm2 = GHI - fdir (diffuse horizontal)")
 
 # Reorder columns
 desired_order = [

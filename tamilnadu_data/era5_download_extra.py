@@ -26,13 +26,13 @@ if args.month:
 else:
     months = [str(i).zfill(2) for i in range(int(args.start), int(args.end) + 1)]
 
-print(f"📋 Extra-variable download for months: {months}")
+print(f"[Extra-variable download for months]: {months}")
 print("   Variables: DNI (fdir), DHI (fsdss), surface_pressure (sp)")
 
 c = cdsapi.Client()
 
 for m in months:
-    print(f"\n📥 Downloading extra vars for month: {m} ...")
+    print(f"\n[Downloading extra vars for month]: {m} ...")
 
     output_nc  = os.path.join(SCRIPT_DIR, f'era5_2024_{m}_extra.nc')
     output_zip = os.path.join(SCRIPT_DIR, f'era5_2024_{m}_extra.zip')
@@ -40,7 +40,7 @@ for m in months:
     # Skip if already downloaded
     already = glob.glob(os.path.join(SCRIPT_DIR, f'era5_2024_{m}_extra*.nc'))
     if already:
-        print(f"  ⏭️  Already have: {[os.path.basename(f) for f in already]}")
+        print(f"  [Skipping] Already have: {[os.path.basename(f) for f in already]}")
         continue
 
     c.retrieve(
@@ -68,7 +68,7 @@ for m in months:
         header = f.read(4)
 
     if header[:2] == b'PK':
-        print(f"  ⚠️  Got ZIP — extracting ...")
+        print(f"  [WARNING] Got ZIP — extracting ...")
         os.rename(output_nc, output_zip)
         with zipfile.ZipFile(output_zip, 'r') as z:
             names = z.namelist()
@@ -77,17 +77,17 @@ for m in months:
             if len(nc_inside) == 1:
                 z.extract(nc_inside[0], SCRIPT_DIR)
                 os.rename(os.path.join(SCRIPT_DIR, nc_inside[0]), output_nc)
-                print(f"  ✅ Extracted → {output_nc}")
+                print(f"  [OK] Extracted -> {output_nc}")
             else:
                 for nc_name in nc_inside:
                     z.extract(nc_name, SCRIPT_DIR)
                     basename = os.path.splitext(os.path.basename(nc_name))[0]
                     dest = os.path.join(SCRIPT_DIR, f'era5_2024_{m}_extra__{basename}.nc')
                     os.rename(os.path.join(SCRIPT_DIR, nc_name), dest)
-                    print(f"  ✅ Extracted → {dest}")
+                    print(f"  [OK] Extracted -> {dest}")
         os.remove(output_zip)
     else:
-        print(f"  ✅ Valid NetCDF saved → {output_nc}")
+        print(f"  [OK] Valid NetCDF saved -> {output_nc}")
 
-print("\n🎉 Extra variable download complete!")
+print("\n[DONE] Extra variable download complete!")
 print("Now run:  python .\\era5_merge_extra.py")
