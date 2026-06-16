@@ -1,0 +1,1127 @@
+
+===== PAGE 1 =====
+Journal of Energy Storage 73 (2023) 108990
+Available online 19 September 2023
+2352-152X/© 2023 Published by Elsevier Ltd.
+Research Papers 
+Enhancing solar thermal collector systems for hot water production through 
+machine learning-driven multi-objective optimization with phase change 
+material (PCM) 
+Ehsanolah Assareh
+a , b , c , * , 1
+, Amjad Riaz
+b , d , 1
+, Mehrdad Ahmadinejad
+e , 1
+, Siamak Hoseinzadeh
+f , **
+, 
+Mohammad Zaheri Abdehvand
+a
+, Sajjad Keykhah
+a
+, Tohid Jafarinejad
+g
+, Rahim Moltames
+h
+, 
+Moonyong Lee
+b , ** 
+a
+Department of Mechanical Engineering, Islamic Azad University Dezful Branch, Dezful, Iran 
+b
+School of Chemical Engineering, Yeungnam University, Gyeongsan 38541, South Korea 
+c
+Mechanical Engineering Department, Faculty of Engineering, Quchan University of Technology, Quchan, Iran 
+d
+Department of Chemical Engineering, COMSATS University, Islamabad (Lahore Campus), Pakistan 
+e
+Department of Mechanical Engineering, University of Vermont, Burlington, VT, USA 
+f
+Department of Planning, Design, and Technology of Architecture Sapienza University of Rome, Rome 00196, Italy 
+g
+Department of Energy Engineering, Sharif University of Technology, Tehran, Iran 
+h
+Department of Renewable Energy and Environment, Faculty of New Sciences and Technologies, University of Tehran, Tehran, Iran   
+ARTICLE INFO  
+Keywords: 
+Solar thermal collector 
+PCM 
+Diameter/area of storage tank 
+Building energy system 
+Energy storage 
+ABSTRACT  
+Energy storage and supply in solar thermal collector systems rely heavily on phase change materials (PCM). It is 
+vital to establish the appropriate values for energy discharge time (t
+PCM
+) and net amount of stored energy (Q
+net
+) 
+within the PCMs in order to increase the efficiency of solar thermal collectors. For this study, we implemented a 
+multi-objective evolutionary algorithm based on decomposition (MOEA/D) for the optimization process using 
+the MATLAB simulator software. The simulation findings show that, under ideal circumstances where t
+PCM 
+is 
+large and Q
+net 
+is low, these two goal functions are inversely connected to one another. According to an analysis of 
+how input parameters affect the objective functions, the mass of PCM is minimized and the mass flow rate of the 
+input water is increased under ideal circumstances. The relationship between the tube ’ s inner diameter and the 
+t
+PCM 
+objective function shows that an increase in the tube ’ s diameter corresponds to an increase in the energy 
+discharge time. The amount of stored energy in the PCM increases when the system parameters are held constant 
+while the tube diameter is increased. Additionally, we investigated the effects of several solid PCM materials on 
+the discharge time and the energy stored.   
+1. Introduction 
+Many dedicated researchers have conducted in-depth analyses to 
+determine whether it is feasible to employ renewable energy sources and 
+energy storage technologies to reduce the consumption of fossil fuels 
+[ 1 – 4 ]. Solar radiation may be collected using photovoltaic cells or solar 
+collectors, making it one of the most widely available forms of renew -
+able energy [ 5 ]. Solar thermal collectors are effective at gathering solar 
+energy and converting it into usable energy for a number of uses, such as 
+heating air for HVAC systems, water for hygiene, or even storing solar 
+heat for use as a passive heating system in buildings [ 6 – 9 ]. Phase change 
+materials (PCMs) offer a very practical alternative for storing heat, 
+especially for low-temperature applications like dwellings [ 10 – 13 ] and 
+high temperature application (e.g. power generation) [ 14 , 15 ]. 
+Numerous studies have examined the viability of PCMs as a funda -
+mental form of energy storage, and all have demonstrated the enormous 
+improvements that PCMs may bring to energy systems [ 16 – 19 ]. To 
+attain the best performance in these systems, energy optimization ap -
+proaches are widely utilized. These methods use a variety of objective 
+functions that consider heterogeneous elements including energy, 
+environment, and economy [ 20 , 21 ]. Numerous investigations on PCM 
+* Correspondence to: E. Assareh, Department of Mechanical Engineering, Islamic Azad University Dezful Branch, Dezful, Iran. 
+** Corresponding authors. 
+E-mail addresses: Ehsanolah.assareh@yu.ac.kr (E. Assareh), Siamak.hosseinzadeh@uniroma1.it (S. Hoseinzadeh), mynlee@ynu.ac.kr (M. Lee).   
+1 
+These authors contributed equally to this article as the first authors. 
+Contents lists available at ScienceDirect 
+Journal of Energy Storage 
+journal homepag e: www.else vier.com/loc ate/est 
+https://doi.org/10.1016/j.est.2023.108990 
+Received 6 May 2023; Received in revised form 26 August 2023; Accepted 10 September 2023   
+===== PAGE 2 =====
+Journal of Energy Storage 73 (2023) 108990
+2
+energy storage system optimization methods have been carried out. For 
+instance, an exergoeconomic optimization of a solar thermal energy 
+system was performed by Aghbalou et al. [ 22 ]. The system was made up 
+of a solar collector and a rectangular water tank with a PCM casing that 
+served as a thermal energy storage system. Their investigation into how 
+convection and conductivity impact heat transfer offered a mathemat -
+ical justification for the PCM ’ s melting. Guo et al. [ 11 ] focused on get -
+ting the solar collector area and storage tank of a system with short-term 
+heat storage for space heating applications to fit together as well as 
+feasible. They were able to establish an ideal ratio between the collec -
+tion area and storage tank volume. 
+An integrated optimization method for using PCMs in thermal stor -
+age devices was presented by Lin et al. [ 23 ]. The two performance 
+measures that made up the study ’ s aim function were the average heat 
+transfer efficacy and effective PCM charging time. The use of a genetic 
+algorithm to determine the optimum Pareto front and a method for 
+making decisions with numerous criteria allowed the system ’ s efficiency 
+of heat transmission to rise from 44.25 % to 59.29 %. Furthermore, the 
+real PCM charging time increased from 4.53 to 6.11 h. Heat storage units 
+are used in solar energy storage systems to combat the variability and 
+unpredictability of solar energy. These systems use PCMs as their storage 
+medium. Nekoonam and Roshandel [ 24 ] have quantitatively investi -
+gated a system consisting of a PCM-based cascaded energy storage unit 
+and an energy collector. They demonstrated that the various-PCM en -
+ergy storage unit ’ s charging effectiveness is increased by a minimum of 
+7 % in its ideal configuration. Lin et al. [ 25 ] carried out a study aimed at 
+optimizing an experimental research and two-level model-based 
+approach were used to integrate a solar photovoltaic thermally collector 
+with thermal energy storage in phase change materials. According to the 
+experimental results, regulating the air flow rate at a particular solar 
+radiation level resulted in the solar-powered thermal collector combined 
+with PCM thermal power storage operating at its maximum efficiency. 
+Mahfuz et al. [ 26 ] analysed the performance of a shell and tube 
+thermal energy storage system using paraffin wax as the phase change 
+material, for a solar water heating application, due to its significant 
+capacity for storing energy and isothermal discharge and charging 
+performance. Huang et al. [ 27 ] developed a novel solar energy storage 
+structure and utilized a combined approach of numerical and experi -
+mental analyses to evaluate the performance of phase change materials. 
+The findings revealed that the PCM in the proposed energy storage 
+structure exhibited excellent performance, which was consistent with 
+the numerical model. Asgharian and Baniasadi [ 28 ] conducted a 
+comprehensive literature review to compare and evaluate various 
+mathematical models, numerical methods, and thermodynamic analyses 
+for phase change material-based systems in various solar energy storage 
+applications. The study primarily focuses on modeling and simulation of 
+such systems to analyse their accuracy and efficiency. Shamsi et al. [ 29 ] 
+established a model for Cascade Latent Heat Storage that blends a ge -
+netic algorithm technique with a characteristics-based strategy to fully 
+utilize a sequential multi-layer Phase Change Material thermal energy 
+system for storage. The study aims to enhance the efficiency and ca -
+pacity factor of the thermal heat storage system, which is a crucial 
+component in solar power plants for reducing power generation costs. 
+The study found that applying the genetic algorithm and the 
+characteristic-based strategy to optimize the system led to a consider -
+able improvement in system performance. Specifically, the optimization 
+yielded a 5 % increase in energy discharged over an 8-hour charge- 
+discharge cycle, and a 5.12 % increase in energy stored during a 4- 
+hour charge period, surpassing the performance a storage device with 
+a single PCM. 
+Fossil fuels are limited and will eventually run out, or there will come 
+a time when it will be too expensive to extract what is left. Also, fossil 
+fuels cause air, water, and soil pollution, producing greenhouse gases 
+that cause global warming. In this situation, renewable energy sources 
+are clean alternatives to fossil fuels. Nowadays, researchers pay atten -
+tion to renewable systems for producing different energies, including 
+electricity, cooling, heating, hydrogen, and fresh water, and to over -
+come the crisis of energy shortage, they pay attention to renewable 
+systems, including solar, wind, and earth systems. Heat is a necessary 
+thing that currently many researches and studies have been done on 
+solar systems, but more complete research is needed to complete 
+renewable studies [ 30 – 43 ]. 
+The use of hot water thermal storage systems is very widespread; 
+Because fossil resources are limited and energies must be compatible 
+with the environment in such conditions. This method is an efficient 
+solution for energy storage that has a high capacity to store energy and 
+supply it at a constant temperature (isotherm mode). To store energy, so- 
+called phase change materials (PCM) are used, which have the task of 
+storing energy in the form of latent heat. In recent decades, various 
+studies have been carried out in the field of heat transfer within systems 
+that have PCM by analyzing the latent energy stored in the system. These 
+studies have included energy storage methods, latent heat storage ma -
+terials, classification of PCMs, measurement methods, computational 
+and heat transfer issues, thermal energy storage systems and their fa -
+cilities, etc. The solar thermal energy storage system is one of the most 
+widely used systems, and its use is expanding day by day. 
+Nomenclature 
+T
+a 
+Ambient temperature [
+◦
+C] 
+A Area [m
+2
+] 
+C
+P 
+Specific heat of air and water at constant pressure [kJ/kg. 
+K] 
+˙m Mass flow rate [kg/s] 
+t Time [h] 
+T Temperature [
+◦
+C] 
+h Height 
+D Diameter 
+W width 
+U Overall heat transfer coefficient [kW/m
+2
+K] 
+t
+PCM 
+discharge time 
+Q
+net 
+quantity of stored energy 
+F Feed water mass flow rate [kg/s] 
+C
+P 
+Specific heat of air and water at constant pressure [kJ/kg.K] 
+˙
+Q
+u 
+collector heat gained, (kW) 
+˙m Mass flow rate [kg/s] 
+N number of covering glasses 
+ε
+p 
+plane emission intensity 
+ε
+g 
+glass emission intensity (0/88) 
+β collector gradient 
+h
+w 
+coefficient of wind heat transfer 
+˙
+Q Heat transfer rate [kW] 
+Subscripts 
+N Number 
+i in 
+e out 
+Abbreviations 
+PCM Phase Change Materials 
+MOEA/D multi-objective evolutionary algorithm based on 
+decomposition 
+Greek symbol 
+φ plane angle  
+E. Assareh et al.                                                                                                                                                                                                                                 
+===== PAGE 3 =====
+Journal of Energy Storage 73 (2023) 108990
+3
+This research focuses on enhancing the performance of solar thermal 
+collectors and phase change materials (PCM) used for hot water pro -
+duction, with the aim of reducing our reliance on fossil fuels. While 
+previous studies have separately optimized either the collectors or PCM, 
+this study takes a comprehensive approach by combining both through a 
+powerful and effective multiple-purpose evolutionary technique based 
+on decomposition. This approach, widely recognized in engineering and 
+resource planning, excels at handling multiple objectives simulta -
+neously. The optimization algorithm targets two crucial parameters - 
+energy discharge time (t
+PCM
+) and net quantity of stored energy (Q
+net
+) - 
+which significantly impact the overall efficiency of the system. To 
+further refine the optimization process, decision-making techniques and 
+response surface methodology have been employed. This integrated 
+approach holds tremendous potential for significantly improving the 
+performance of solar thermal collectors and PCM storage tanks, leading 
+to more efficient and cost-effective energy systems. The outcomes of this 
+study not only contribute to advancing renewable energy technologies 
+but also have the potential to guide future research and development 
+efforts. By moving closer to a sustainable future, this research takes a 
+meaningful step towards reducing our carbon footprint and creating a 
+cleaner and greener world. 
+2. Methodology 
+2.1. Method 
+In a genuine system, there are a number of objectives that may need 
+to be achieved simultaneously even when they are in conflict. A 
+multiple-purpose evolutionary approach has been utilized in several 
+researches to verify that the system has reached one of the many opti -
+mum stages. This approach has been applied in engineering problem- 
+solving, work scheduling, regulation of resource storage, and various 
+other areas, proving to be a straightforward and highly effective method 
+[ 44 ]. A problem involving multiple optimization objectives is broken 
+down into a number of single-objective optimizing sub-problems as part 
+of the suggested method for solving it. These sub-problems are simul -
+taneously solved using a population-based optimization method. A 
+weight vector is assigned to each sub-problem, which is used to aggre -
+gate the objective functions into a single objective function. To ensure 
+the stability of the solutions, we assume that certain conditions hold, 
+including one-dimensional flow and a sky that behaves like a black 
+substance for long irradiation of heating properties that are independent 
+of temperature. 
+Thermal energy phase change materials can be stored in two forms 
+sensible and latent heat energy. In sensible energy storage, thermal 
+energy is stored in a solid or liquid object by increasing its temperature. 
+The amount of sensible energy stored in the body depends on the tem -
+perature, specific heat capacity, and mass of the body. Thermal energy is 
+stored latently by the body when the body changes its phase from solid 
+to liquid liquid to gas or solid to solid. Phase change materials store 
+energy in the form of latent heat of fusion. Heat storage is done in 3 ways 
+phase change, In the first case, which is the phase change from solid to 
+solid, it is not suitable because the heat transfer is very slow and small. In 
+the second case, it is not practical to change the liquid to gas phase due 
+to the need for high heat and the creation of a high-pressure volume of 
+gas. However the phase change from solid to liquid is more suitable, and 
+this feature exists in PCM phase change materials, which change from 
+solid to liquid phase by absorbing heat at a constant temperature. These 
+materials release energy almost at the same temperature as they absorb. 
+The objectives of the research are summarized as follows: 
+1- Evaluation of the performance of systematic effective committees. 
+2- Multi-objective optimization with the optimal design approach. 
+3- Increasing efficiency and reducing operating costs. 
+2.2. System description 
+Fig. 1 shows a schematic of the solar heat storage unit. This system 
+consists of a flat plate solar collector, a water storage tank with disodium 
+hydrogen phosphate as PCM inside the PCM tank, a pipeline, and several 
+valves. The purified water is in pipes in the collector flow. When the sun 
+shines, the temperature of the water inside the collector pipes increases. 
+Then it goes into the water tank which is part of the PCM tank. Thermal 
+energy is transferred from hot water to solid PCM, which has a melting 
+temperature of 29 degrees Celsius. The heat transferred to the PCM 
+changes it from the solid phase to the liquid phase. In this state, the 
+water is ready for use. In the absence of solar energy, i.e. when the sun 
+sets, the network water returns to the storage tank from the bypass 
+pipeline and receives the energy stored during the day in the PCM liquid. 
+In this process, the water temperature increases with the PCM phase 
+change. After that, the water enters the pipelines for consumption and 
+this thermodynamic cycle continues. 
+2.3. Governing equations 
+An energy analysis is conducted to assess the amount of thermal 
+energy stored by the solar collector utilizing Phase Change Material 
+(PCM). The beneficial energy that raises the temperature of the water in 
+the collector is expressed by Q
+u
+, which can be written at A
+c 
+level is as 
+follows [ 45 ]: 
+Q
+u
+= A
+c
+F
+R
+[ S   U ( T
+c
+  T
+a
+) ] (1)  
+F
+R
+=
+˙mC
+p
+A
+c
+U
+[
+1   e
+ 
+[
+A c UF
+´
+˙mC p
+]
+]
+(2) 
+This energy is equal to the difference between the energy received 
+from the sun S(w/m2) and dissipated heating energy. F ′ is the collector 
+efficiency factor which is calculated as below [ 45 ]: 
+F
+´
+=
+U
+  1
+t
+W [ U
+L
+( D + ( W   D ) F ) ] +
+1
+π D
+i
+h
+f
+(3) 
+where, U
+t
+, which may be computed as follows, is the overall heat 
+transfer coefficient [ 45 ]: 
+U
+t
+=
+σ
+ 
+T
+a
++ T
+p
+) 
+T
+a
+2
++ T
+p
+2
+)
+[
+ϵ
+p
++ 0
+/
+0425N
+ 
+1   ϵ
+p
+) ]
+  1
++
+[
+2N + f   1
+ϵ g
+]
+  N
+(4) 
+In which N is the number of covering glasses, ε
+p 
+is the plane emission 
+intensity, ε
+g 
+indicates the glass emission intensity (0/88), T
+a 
+is the 
+ambience temperature, β is the collector gradient and h
+w 
+shows the co -
+efficient of wind heat transfer. 
+In this regard 3, U1 is the overall loss coefficient of the collector, 
+which can be obtained from reference [ 46 ]. 
+Finally, the value of QL is obtained from Eq. (9) : 
+Q
+L
+= U
+l
+( T
+in
+  T ◦ ) (5) 
+Also, f is expressed as Eq. (6) [ 46 ]. 
+f =
+ 
+1 + 0 . 089h
+w
+  0 . 1166h
+w
+ϵ
+p
+)
++ ( 1 + 0 . 07866N ) (6) 
+In this study, with the goal to enhance the effectiveness of the solar 
+heating system, the following functions are considered for optimization 
+[ 46 ]: the discharge time of PCM ( t
+PCM
+) and net stored energy within the 
+PCM ( Q
+net
+). 
+Q
+net
+= Q
+u
++ Q
+L
+(7) 
+The length of time that water may be maintained warm without solar 
+energy is known as the discharge time of PCM: 
+t
+PCM
+=
+Q
+net
+Q
+u
+(8) 
+E. Assareh et al.                                                                                                                                                                                                                                 
+===== PAGE 4 =====
+Journal of Energy Storage 73 (2023) 108990
+4
+2.4. Optimization 
+The priority of information is important in this type of optimization, 
+and one of the methods of determining the priority of information is to 
+determine the reference point. The reference point will determine the 
+priority of the values to be entered into the target functions. The 
+decomposition algorithm method can be used to determine the priority 
+of information in multi-objective optimization of the evolutionary al -
+gorithm and it is shown as MOEA/D. MOEA/D is one of the easy and 
+efficient methods of MOEA, which has been used in solving engineering 
+problems, work planning, resource stock control, etc. This method de -
+composes a multi-objective optimization problem into several single- 
+objective optimization problems. Then, from a population-based 
+method, it solves these problems simultaneously. This algorithm is 
+used in the present project by integrating its engineering problem. 
+The design parameters of the system are the inner diameter of the 
+tubes ( D ), the area of collector ( A
+c
+), and Total energy stored in PCM 
+minus the energy stored in water. In this study decision variables are the 
+very design parameters of the system. The MOEA/D method divides the 
+multiple-purpose problem into a number of simultaneously optimized 
+scalar optimizing sub-problems. This method uses weight vectors that 
+are defined for each sub-problem to combine the goal functions into a 
+single objective function. An illustration of an optimization with mul -
+tiple objectives problem is the following: 
+Min F ( x ) = ( f
+1
+( x ) , f
+2
+( x ) , … , f
+m
+( x ) )
+T
+Subject to x ∈ R
+m
+(9) 
+In which R
+m 
+is the decision-making space with m number of objective 
+functions with real values. 
+Table 1 introduces the decision variables and the range of 
+constraints. 
+2.5. Response surface optimization method 
+In traditional experimental design methods, only one factor was 
+considered as a variable, and other factors were placed at a fixed level, 
+and in this method, the mutual effects between variables were not 
+studied, and the full effects of the factors in the process could not be 
+shown. Also, to conduct the research, a large number of experiments 
+were needed, which led to an increase in time and cost, as well as an 
+increase in the consumption of reagents and materials. To overcome this 
+problem, the response surface method, or RSM was proposed for opti -
+mization studies. Response surface methodology is a set of statistical 
+techniques and applied mathematics for building empirical models 
+[ 47 , 48 ]. Fig. 2 shows the flowchart of the RSM method. 
+2.6. TOPSIS method 
+TOPSIS is a multi-indicator decision-making method for evaluating 
+and prioritizing options based on criteria according to their distance 
+from positive and negative ideals. The ideal solution is the one that in -
+creases the benefit criterion and decreases the cost criterion. The 
+optimal option is the option that has the smallest distance from the ideal 
+solution and at the same time the farthest distance from the negative 
+ideal solution. In the ranking of options by the TOPSIS method, the 
+options that are most similar to the ideal solution are ranked higher. In 
+Fig. 3 , the flowchart of the TOPSIS method is introduced [ 49 , 50 ]. 
+2.7. LINMAP method 
+The LINMAP method is one of the multi-criteria MCDM decision- 
+making methods used to determine the weights of criteria and sub- 
+criteria and to rank options. In the LINMAP method, the number of m 
+options with n indices is shown by m point vectors in an n-dimensional 
+space, and it is assumed that the DM will choose the options with the 
+smallest distance to the ideal point in this space [ 51 , 52 ]. 
+2.8. AHP method 
+The Analysis Hierarchy Method (AHP) was developed by Saati in 
+1980. This technique is a powerful and flexible method in the category 
+of multi-criteria decision-making methods that can solve complex 
+problems at different levels. For this reason, it is called a hierarchy 
+model because it is entered in the form of a tree model and levels 
+[ 53 , 54 ]. 
+2.9. Method 
+In this research, the storage system for solar heat is used. Energy 
+Fig. 1. Schematic of the proposed system.  
+Table 1 
+Decision variables and the range of restrictions.  
+Decision variable Lower 
+bound 
+Upper 
+bound 
+Diameter (m)  0.005  0.02 
+Area (m
+2
+)  0.2  1 
+Ac (m
+2
+)  0.26  0.38 
+Total energy stored in PCM minus the energy stored 
+in water [kJ]  
+3100  3300  
+E. Assareh et al.                                                                                                                                                                                                                                 
+===== PAGE 5 =====
+Journal of Energy Storage 73 (2023) 108990
+5
+analysis is used to evaluate the amount of thermal energy stored with the 
+solar collector in PCM. Based on these studies and analyses, the system 
+model is presented, system components are identified, and then pro -
+gramming is done accordingly. The efficiency of the mentioned system is 
+evaluated depending on the committees, and the real goals of achieving 
+the highest efficiency are subordinated. To achieve maximum efficiency, 
+several goals must be met at the same time. These goals should be 
+defined after clarifying the models. In general, it can be said that there 
+are two main functions of energy (Qnet) and imaginary time of PCM 
+(tpcm), the first one should be maximized and the second one should be 
+minimized. For this purpose, the MOEA/D optimization algorithm is 
+used. The research methodology is presented in the Fig. 4 . 
+3. Results and discussion 
+3.1. Validation 
+Due to the novelty of the study, and to increase the accuracy of the 
+modeling, the validation of the research has been done. In the research 
+of Luo et al. in 2021 [ 55 ], the thermal modeling of the solar collector 
+with the presence of PCM materials was investigated. The results of this 
+comparison are presented in Table 2 and it shows a comparative analysis 
+of the experimental value and the simulated value of the collector outlet 
+temperature with the addition of the ambient temperature change curve, 
+and as the results show, the modeling has good accuracy. 
+3.2. Results 
+Based on the ideal values of the stored energy within the PCM, Fig. 5 
+depicts the optimal values of the PCM ’ s discharge time. As it can be 
+elicited from the figure, when the conditions for the maximum time of 
+energy discharge in the PCM are met (the left side of the diagram), the 
+amount of the stored energy is at its lowest values. On the other hand, it 
+is evident that the optimized conditions for the maximum amount of 
+energy storage in the PCM leads to the least time of available energy at 
+night-time. The population of the computational data in the conditions 
+of Fig. 5 is equal to 500. Only two design parameters of diameter (D) and 
+contact area (A) can be manipulated by the optimization. Based on the 
+desired optimum objective, these parameters must be determined and 
+used in the development of the system. In the conditions of Fig. 6 , when 
+7 h of heating is required during night-time ( t
+PCM 
+= 7 h), the optimum 
+values of diameter and area are yielded as black points in Fig. 5 . If 6 h of 
+heating during night-time is considered ( t
+PCM 
+= 6 h), optimal parameters 
+are summarized in the blue stars. 
+The fluctuations of energy discharge as a function of tube inner 
+diameter are depicted in Fig. 7 . Other parameters are thought to be 
+Fig. 2. Flowchart of RSM method.  
+Fig. 3. Flowchart of the TOPSIS method.  
+E. Assareh et al.                                                                                                                                                                                                                                 
+===== PAGE 6 =====
+Journal of Energy Storage 73 (2023) 108990
+6
+constants so that the impact of this parameter can be calculated. Table 3 
+provides a list of constant parameters. 
+Another decision variable is Ac , the effect of which on the variations 
+in the energy discharge time and amount of stored energy in the PCM is 
+shown in Fig. 8 . 
+The blue line in Fig. 8 indicates the variations in t
+PCM 
+versus different 
+values of storage tank area, while the red line exhibits the variations in 
+Q
+net 
+versus storage tank area. As is observed, both the objective functions 
+change linearly with storage tank contact area. The energy objective 
+function of Q
+net 
+is more sensitive to the parameter of the area – compared 
+to the objective function of t
+PCM
+. Finally, the net energy stored in the 
+PCM with respect to the tube diameter is estimated. Table 4 expresses 
+the conditions in which other parameters are kept constant and the ef -
+fect of diameter is investigated. The change span of the diameter varies 
+from   0.02 to 0.005. 
+Fig. 9 represents the trend of variations in the net energy stored in 
+the PCM ( Q
+net
+) for different values of the inner diameter. The trend is 
+nonlinear and incremental. Therefore, by keeping the system conditions 
+constant and increasing the diameter of the tube, the amount of energy 
+stored in PCM also increases. 
+Q
+net 
+responds more sensitively to as the tube diameter increases. So, 
+Fig. 4. Methodology.  
+Table 2 
+Validation.  
+Time Temperature (
+◦
+C) 
+Current study Luo et al. 
+6:00  305  306 
+8:00  328.4  327.5 
+10:00  358.9  360 
+12:00  375  374 
+14:00  363  363 
+16:00  362  360 
+18:00  330.5  330  
+E. Assareh et al.                                                                                                                                                                                                                                 
+===== PAGE 7 =====
+Journal of Energy Storage 73 (2023) 108990
+7
+in larger diameters, the amount of Q
+net 
+variations is more tangible. In 
+addition to the aforementioned issues, the decision-making and RSM 
+techniques have been utilized to optimize the responses. In Fig. 10 , the 
+optimal points that are obtained via the decision-making (DM) tech -
+niques all coincide at a single point. In case of 7 h of discharge time ( t
+pcm 
+= 7 h), the energy stored in the PCM is equal to 3094 (kJ), whereas, for 
+the discharge time of 6 h (t
+pcm 
+= 6 h) the amount of stored energy is 
+equal to 3200 (kJ). It is worth mentioning the given values in Fig. 10 are 
+obtained using the RSM method. Using the weighted Euclidean distance 
+(di) on option Ai, the LINMAP technique assumes that the individual 
+making the decision chooses the option from a collection of two po -
+tential options that is closest to the desired result. The existing scales are 
+converted into unified ones using the weights-related variable ( Wj ), 
+which makes it evident how important the indexes are. In LINMAP 
+scheme, a number of m choices with n indexes through m vector points 
+are shown in a three-dimensional space, and it is assumed that DM opts 
+the choices with the least distance to the ideal point in this space. LIN -
+MAP is a point with the least distance from the ideal value. The TOPSIS 
+technique, which Huang and Li first presented in 1981, remains one of 
+the most effective multi-index methods for making decisions. This 
+approach is predicated on the notion that the chosen option must be as 
+far away as possible from both a positive ideal solution (the best state) 
+and a negative ideal solution (the worst state). This model ’ s funda -
+mental logic identifies both the positive ideal solution and the negative 
+ideal solution. The best option is one that raises the profit criteria and 
+lowers the cost standard. The best alternative is the one that deviates 
+most from both the desirable ideal scenario and the unpleasant desired 
+outcome. In other words, when rating options using the TOPSIS tech -
+nique, options that are closest to the optimal solution are given a higher 
+Fig. 5. MOEA/D optimal solution of the objective functions (net stored energy 
+in PCM and energy discharge time). 
+Fig. 6. Diameter and contact area parameters for the energy discharge times of 6 and 7 h.  
+Fig. 7. Variations of energy discharge time versus the tube diameter.  
+Table 3 
+Conditions of variable diameter and fixed parameters.  
+Parameter Unit Value 
+Q
+net 
+(kJ) 309732e3 
+˙m
+w 
+(kg/s) 0.009 
+A
+c 
+(m
+2
+) 0.287 
+m
+PCM 
+(kg) 10 
+T
+in_water 
+(K) 293.05  
+E. Assareh et al.                                                                                                                                                                                                                                 
+===== PAGE 8 =====
+Journal of Energy Storage 73 (2023) 108990
+8
+score. TOPSIS technique uses the worst value of the objective function in 
+place of the ideal value. The ideal value is determined by taking the 
+biggest value of the average created by the method known as AHP after 
+standardizing the values of the goal functions. 
+Response surface methodology (RSM) is a collection of mathematical 
+methods determining the relation between one or more response 
+variables and several independent variables under study. This method 
+was first developed by Box and Wilson in 1951. RSM has previously been 
+utilized as a collection of practical statistical and mathematical tools for 
+creating experimental models. RSM aims to optimize response (i.e. the 
+output variable), which is influenced by several independent variables 
+(i.e. input variables). In RSM scheme, the construction of the response 
+surface models is a repetitive process. Once an approximate model is 
+attained, the goodness of fit index is used to examine whether the 
+response is satisfactory or not. If the response is not confirmed, the 
+estimation of the process starts again and further experiments are then 
+conducted. 
+It should be mentioned that in this research, the net amount of stored 
+energy is shown by (Qnet) and it is investigated as the main objective 
+function to increase the efficiency of the solar thermal collector. (tPCM) 
+for the vital energy discharge time is considered as another objective 
+function. The results show that the temperature value increases with the 
+increase of time and considering that heat and temperature have a direct 
+Fig. 8. Effects of the storage tank ’ s contact area on the outcomes of objective functions.  
+Table 4 
+Fixed conditions for determining the effect of diameter on Q
+PCM
+.  
+Parameter Unit Value 
+Q
+PCM 
+(kJ) 309732e3 
+˙m
+w 
+(kg/s) 0.009 
+A
+c 
+(m
+2
+) 0.287 
+m
+PCM 
+(kg) 10 
+T
+in_water 
+(K) 293.05  
+Fig. 9. Changes of the net energy stored in PCM versus the inner diameter of 
+the tube. 
+Fig. 10. Optimal findings of using decision-making and RSM techniques.  
+E. Assareh et al.                                                                                                                                                                                                                                 
+===== PAGE 9 =====
+Journal of Energy Storage 73 (2023) 108990
+9
+relationship, the amount of thermal energy increases with the increase 
+of time and as a result, more energy will be stored. 
+In order to investigate the solid PCM materials, three classes of these 
+materials (i.e., hybrid salts, paraffin, and fatty acids) were considered 
+and one material from each of these classes was randomly chosen and 
+studied. Effects of these materials with respect to the objective functions 
+of Q
+net 
+and t
+PCM 
+are shown in Figs. 11 and 12 . The characteristics of these 
+materials are also shown in Table 5 . 
+According to the results in Figs. 11 and 12 , fatty acids and paraffin at 
+a high melting temperature slightly increase the energy discharge time 
+and net stored energy. Also, it is shown that at a high melting temper -
+ature, the hybrid salts, compared to paraffin and fatty acids, brings 
+about a much greater increase in the energy discharge time and amount 
+of net stored energy. Hybrid salts at a range of temperature from 0 to 150 
+degrees of centigrade have a high latent heat. Besides, they have wide 
+applications due to their high heat storage capacity and density. 
+Fatty acids are mainly obtained from animal and vegetable sources, 
+in addition, fatty acids are also produced from the oxidation of paraffin 
+waxes. 
+Latent heat storage by phase change materials (PCM) can be used as a 
+solution for the stability of solar equipment. The development of 
+nanotechnology has led to the emergence of a group of high- 
+performance nanostructured materials that have the ability to absorb 
+thermal energy and release it when needed, and have gradually found 
+industrial applications. 
+4. Conclusion 
+The thermal collector systems possess a substantial energy storage 
+and supply capacity. This study focuses on utilizing phase change ma -
+terials (PCMs) for storing solar energy during the daytime. PCMs absorb 
+latent or sensible heat, enabling them to store solar energy effectively. 
+The solar thermal collector ’ s performance is optimized using the MOEA/ 
+D multi-objective optimization algorithm, considering the objective 
+functions of energy discharge time (tPCM) and net stored energy in PCM 
+(Qnet). The investigation reveals that increasing the inner diameter of 
+the tube in the collector system leads to an increase in the energy 
+discharge time of the PCM (tPCM). Consequently, the heat accessibility 
+during the night is prolonged. The relationship between tPCM and tube 
+diameter is nonlinear, with higher diameters exhibiting a more signifi -
+cant sensitivity to the energy discharge time compared to smaller di -
+ameters. Both objective functions, tPCM and Qnet, demonstrate linear 
+changes concerning the contact area. The variations in these functions 
+are directly related to the area parameter. The analysis of net stored 
+energy in PCM (Qnet) for different tube diameters shows a nonlinear 
+increasing trend. Keeping the system conditions constant while 
+increasing the tube diameter results in higher energy storage in PCM. 
+Qnet is more sensitive to alterations in the inner tube diameter, partic -
+ularly in larger diameters. Consequently, precise selection of the tube 
+diameter is crucial when employing large tanks in a collector system, as 
+it significantly impacts the amount of stored energy (Qnet). 
+CRediT authorship contribution statement 
+Ehsanolah Assareh: Conceptualization, Methodology, Software, 
+Visualization, Investigation, Supervision, Writing- Reviewing and Edit -
+ing, Data curation. 
+Amjad Riaz: Writing- Reviewing and Editing. 
+Mehrdad Ahmadinejad: Data curation. 
+Siamak Hoseinzadeh: Writing- Reviewing and Editing. 
+Mohammad Zaheri Abdehvan: Software, Visualization, 
+Fig. 11. Comparison of discharge time for different PCM materials.  
+Fig. 12. Comparison of the stored energy for different PCM materials.  
+Table 5 
+Physical properties of different martials in this study [ 56 , 57 ].   
+Parameter Unit Value 
+Hybrid salt (disodium hydrogen 
+phosphate dodecahydrate) 
+Melting point 
+◦
+C  35 
+Density kg/ 
+m
+3  
+1522 
+Solid-specific heat kJ/ 
+kg K  
+1.55 
+Liquid ’ s specific 
+heat 
+kJ/ 
+kg K  
+2.51 
+Specific melting 
+latent heat 
+kJ/kg  278.84 
+Paraffin (C20-C33 paraffin) Melting point 
+◦
+C  50 
+Density kg/ 
+m
+3  
+912 
+Liquid ’ s specific 
+heat 
+kJ/ 
+kg K  
+2.4 
+Specific melting 
+latent heat 
+kJ/kg  189 
+Solid-specific heat kJ/ 
+kg K  
+2.4 
+Fatty acid (uric acid) Melting point 
+◦
+C  44 
+Density kg/ 
+m
+3  
+862 
+Specific melting 
+latent heat 
+kJ/kg  178 
+Solid-specific heat kJ/ 
+kg K  
+1.7 
+Liquid ’ s specific 
+heat 
+kJ/ 
+kg K  
+2.3  
+E. Assareh et al.                                                                                                                                                                                                                                 
+===== PAGE 10 =====
+Journal of Energy Storage 73 (2023) 108990
+10
+Investigation. 
+Sajjad Keykhah: Data curation, Software. 
+Tohid Jafarinejad: Data curation. 
+Rahim Moltames: Data curation. 
+Moonyong Lee: Supervision, Writing- Reviewing and Editing. 
+Declaration of competing interest 
+The authors declare that they have no known competing financial 
+interests or personal relationships that could have appeared to influence 
+the work reported in this paper. 
+Data availability 
+Data will be made available on request. 
+Acknowledgment 
+This work was supported by the National Research Foundation of 
+Korea (NRF) grant funded by the Korea government (MSIT) 
+(2021R1A2C1092152). 
+References 
+[1] J. Xia, K. Zhu, Y. Jiang, Method for integrating low-grade industrial waste heat into 
+district heating network, in: Building Simulation, Springer, 2016 . 
+[2] M. Ahmadinejad, R. Moosavi, Energy and exergy evaluation of a baffled-nanofluid- 
+based photovoltaic thermal system (PVT), Int. J. Heat Mass Transf. 203 (2023) 
+123775 . 
+[3] M. Ahmadinejad, A. Soleimani, A. Gerami, The effects of a novel baffle-based 
+collector on the performance of a photovoltaic/thermal system using SWCNT/ 
+Water nanofluid, Therm. Sci. Eng. Prog. 34 (2022) 101443 . 
+[4] M. Ahmadinejad, A. Soleimani, A. Gerami, Performance enhancement of a 
+photovoltaic thermal (PVT) system with sinusoidal fins: a quasi-transient energy- 
+exergy analysis, Int. J. Green Energy 20 (9) (2023) 978 – 996 . 
+[5] S.A. Kalogirou, Solar thermal collectors and applications, Prog. Energy Combust. 
+Sci. 30 (3) (2004) 231 – 295 . 
+[6] J. Deng, X. Yang, R. Ma, Y. Xu, Study on the thermodynamic characteristic 
+matching property and limit design principle of general flat plate solar air 
+collectors (FPSACs), in: Building Simulation, Springer, 2016 . 
+[7] J. Deng, X. Yang, Y. Xu, M. Yang, Entransy analysis on the thermal performance of 
+flat plate solar air collectors, in: Building Simulation, Springer, 2017 . 
+[8] M.H. Zahir, K. Irshad, M. Shafiullah, N.I. Ibrahim, A.K. Islam, K.O. Mohaisen, F.A. 
+A. Sulaiman, Challenges of the application of PCMs to achieve zero energy 
+buildings under hot weather conditions: a review, J. Energy Storage 64 (2023) 
+107156 . 
+[9] R. Kumar, A. Pandey, M. Samykano, B. Aljafari, Z. Ma, S. Bhattacharyya, V. Goel, 
+I. Ali, R. Kothari, et al., Phase change materials integrated solar desalination 
+system: an innovative approach for sustainable and clean water production and 
+storage, Renew. Sust. Energ. Rev. 165 (2022) 112611 . 
+[10] N. Mehla, A. Yadav, Experimental analysis of thermal performance of evacuated 
+tube solar air collector with phase change material for sunshine and off-sunshine 
+hours, Int. J. Ambient Energy 38 (2) (2017) 130 – 145 . 
+[11] F. Guo, J. Zhang, M. Shan, X. Yang, Analysis on the optimum matching of collector 
+and storage size of solar water heating systems in building space heating 
+applications, in: Building Simulation, Springer, 2018 . 
+[12] X. Chen, H. Yu, Y. Gao, L. Wang, G. Wang, The marriage of two-dimensional 
+materials and phase change materials for energy storage, conversion and 
+applications, EnergyChem 4 (2) (2022) 100071 . 
+[13] W. Aftab, J. Shi, M. Qin, Z. Liang, F. Xiong, A. Usman, S. Han, R. Zou, Molecularly 
+elongated phase change materials for mid-temperature solar-thermal energy 
+storage and electric conversion, Energy Storage Mater. 52 (2022) 284 – 290 . 
+[14] A. Raul, M. Jain, S. Gaikwad, S.K. Saha, Modelling and experimental study of latent 
+heat thermal energy storage with encapsulated PCMs for solar thermal 
+applications, Appl. Therm. Eng. 143 (2018) 415 – 428 . 
+[15] Y. Zhou, Z. Liu, A cross-scale ‘material-component-system ’ framework for transition 
+towards zero-carbon buildings and districts with low, medium and high- 
+temperature phase change materials, Sustain. Cities Soc. (2022) 104378 . 
+[16] W. Cui, T. Si, X. Li, X. Li, L. Lu, T. Ma, Q. Wang, Heat transfer enhancement of 
+phase change materials embedded with metal foam for thermal energy storage: a 
+review, Renew. Sust. Energ. Rev. 169 (2022) 112912 . 
+[17] H.M. Ali, Phase change materials based thermal energy storage for solar energy 
+systems, J. Build. Eng. 56 (2022) 104731 . 
+[18] S.F. Ahmed, N. Rafa, T. Mehnaz, B. Ahmed, N. Islam, M. Mofijur, A.T. Hoang, 
+G. Shafiullah, Integration of phase change materials in improving the performance 
+of heating, cooling, and clean energy storage systems: an overview, J. Clean. Prod. 
+364 (2022) 132639 . 
+[19] A. Mourad, A. Aissa, Z. Said, O. Younis, M. Iqbal, A. Alazzam, Recent advances on 
+the applications of phase change materials for solar collectors, practical 
+limitations, and challenges: a critical review, J. Energy Storage 49 (2022) 104186 . 
+[20] F. Harkouss, F. Fardoun, P.H. Biwole, Optimization approaches and climates 
+investigations in NZEB — a review, in: Building Simulation, Springer, 2018 . 
+[21] M.H. Jahangir, A. Khatibi, Using solar energy to meet thermal demand in smart 
+buildings due to different climate conditions: cases of Iran, Int. J. Ambient Energy 
+43 (1) (2022) 713 – 725 . 
+[22] F. Aghbalou, F. Badia, J. Illa, Exergetic optimization of solar collector and thermal 
+energy storage system, Int. J. Heat Mass Transf. 49 (7 – 8) (2006) 1255 – 1263 . 
+[23] W. Lin, Z. Ma, H. Ren, S. Gschwander, S. Wang, Multi-objective optimisation of 
+thermal energy storage using phase change materials for solar air systems, Renew. 
+Energy 130 (2019) 1116 – 1129 . 
+[24] S. Nekoonam, R. Roshandel, Modeling and optimization of a multiple (cascading) 
+phase change material solar storage system, Therm. Sci. Eng. Prog. 23 (2021) 
+100873 . 
+[25] W. Lin, Z. Ma, S. Wang, M.I. Sohel, E.L. Cascio, Experimental investigation and 
+two-level model-based optimisation of a solar photovoltaic thermal collector 
+coupled with phase change material thermal energy storage, Appl. Therm. Eng. 
+182 (2021) 116098 . 
+[26] M. Mahfuz, M. Anisur, M. Kibria, R. Saidur, I. Metselaar, Performance investigation 
+of thermal energy storage system with Phase Change Material (PCM) for solar 
+water heating application, Int. Commun. Heat Mass Transf. 57 (2014) 132 – 139 . 
+[27] M. Huang, W. He, A. Incecik, M.K. Gupta, G. Kr ´olczyk, Z. Li, Phase change material 
+heat storage performance in the solar thermal storage structure employing 
+experimental evaluation, J. Energy Storage 46 (2022) 103638 . 
+[28] H. Asgharian, E. Baniasadi, A review on modeling and simulation of solar energy 
+storage systems based on phase change materials, J. Energy Storage 21 (2019) 
+186 – 201 . 
+[29] H. Shamsi, M. Boroushaki, H. Geraei, Performance evaluation and optimization of 
+encapsulated cascade PCM thermal storage, J. Energy Storage 11 (2017) 64 – 75 . 
+[30] S.M. Alirahmi, et al., Development and multi-criteria optimization of a solar 
+thermal power plant integrated with PEM electrolyzer and thermoelectric 
+generator, Int. J. Hydrog. Energy 47 (57) (2022) 23919 – 23934 . 
+[31] R. Asadi, et al., Optimisation of combined cooling, heating and power (CCHP) 
+systems incorporating the solar and geothermal energy: a review study, Int. J. 
+Ambient Energy 43 (1) (2022) 42 – 60 . 
+[32] E. Assareh, et al., An extensive thermo-economic evaluation and optimization of an 
+integrated system empowered by solar-wind-ocean energy converter for electricity 
+generation – case study: Bandar Abas, Iran, Therm. Sci. Eng. Prog. 25 (2021) 
+100965 . 
+[33] E. Assareh, et al., Thermodynamic assessment of a cogeneration system with CSP 
+Driven-Brayton and Rankine cycles for electric power and hydrogen production in 
+the framework of the energy and water nexus, Energy Nexus 5 (2022) 100031 . 
+[34] E. Assareh, et al., Techno-economic analysis of combined cooling, heating, and 
+power (CCHP) system integrated with multiple renewable energy sources and 
+energy storage units, Energ. Buildings 278 (2023) 112618 . 
+[35] E. Assareh, et al., Optimization of geothermal- and solar-driven clean electricity 
+and hydrogen production multi-generation systems to address the energy nexus, 
+Energy Nexus 5 (2022) 100043 . 
+[36] E. Assareh, et al., An integrated system for producing electricity and fresh water 
+from a new gas-fired power plant and a concentrated solar power plant – case study 
+– (Australia, Spain, South Korea, Iran), Renew. Energy Focus 44 (2023) 19 – 39 . 
+[37] B. Azizimehr, et al., Thermoeconomic analysis and optimization of a solar micro 
+CCHP by using TLBO algorithm for domestic application, Energy Sources, Part A 42 
+(14) (2020) 1747 – 1761 . 
+[38] M.A. Behrang, et al., Assessment of electricity demand in Iran ’ s industrial sector 
+using different intelligent optimization techniques, Appl. Artif. Intell. 25 (4) (2011) 
+292 – 304 . 
+[39] A. Dezhdar, et al., Transient optimization of a new solar-wind multi-generation 
+system for hydrogen production, desalination, clean electricity, heating, cooling, 
+and energy storage using TRNSYS, Renew. Energy 208 (2023) 512 – 537 . 
+[40] A. Dezhdar, et al., A transient model for clean electricity generation using solar 
+energy and ocean thermal energy conversion (OTEC) - case study: Karkheh dam - 
+southwest Iran, Energy Nexus 9 (2023) 100176 . 
+[41] M. Nedaei, et al., A comprehensive evaluation of the wind resource characteristics 
+to investigate the short term penetration of regional wind power based on different 
+probability statistical methods, Renew. Energy 128 (2018) 362 – 374 . 
+[42] O. Rejeb, et al., Innovative integrated solar powered polygeneration system for 
+green hydrogen, oxygen, electricity and heat production, Energy Convers. Manag. 
+269 (2022) 116073 . 
+[43] A. Ghafouri, R. Esmaily, A. Alizadeh, Numerical simulation of tank-treading and 
+tumbling motion of red blood cell in the Poiseuille flow in a microchannel with and 
+without obstacle, Iran. J. Sci. Technol. - Trans. Mech. Eng. 43 (2019) 627 – 638, 
+https://doi.org/10.1007/s40997-018-0233-2 . 
+[44] M.H. Ahmadi, M.A. Ahmadi, F. Pourfayaz, Thermodynamic analysis and 
+evolutionary algorithm based on multi-objective optimization performance of 
+actual power generating thermal cycles, Appl. Therm. Eng. 99 (2016) 996 – 1005 . 
+[45] S.A. Kalogirou, Solar Energy Engineering: Processes and Systems, Academic Press, 
+2013 . 
+[46] S. Farahat, F. Sarhaddi, H. Ajam, Exergetic optimization of flat plate solar 
+collectors, Renew. Energy 34 (2009) 1169 – 1174, https://doi.org/10.1016/j. 
+renene.2008.06.014 . 
+[47] D.L. Allaix, V.I. Carbone, An improvement of the response surface method, Struct. 
+Saf. 33 (2) (2011) 165 – 172 . 
+E. Assareh et al.                                                                                                                                                                                                                                 
+===== PAGE 11 =====
+Journal of Energy Storage 73 (2023) 108990
+11
+[48] D.-Q. Li, et al., Response surface methods for slope reliability analysis: review and 
+comparison, Eng. Geol. 203 (2016) 3 – 14 . 
+[49] Y. Wang, et al., BMW-TOPSIS: a generalized TOPSIS model based on three-way 
+decision, Inf. Sci. 607 (2022) 799 – 818 . 
+[50] K. Zhang, J. Dai, A novel TOPSIS method with decision-theoretic rough fuzzy sets, 
+Inf. Sci. 608 (2022) 1221 – 1244 . 
+[51] I. Bereketli, et al., WEEE treatment strategies ’ evaluation using fuzzy LINMAP 
+method, Expert Syst. Appl. 38 (1) (2011) 71 – 79 . 
+[52] H.-C. Xia, et al., Fuzzy LINMAP method for multiattribute decision making under 
+fuzzy environments, J. Comput. Syst. Sci. 72 (4) (2006) 741 – 759 . 
+[53] M. Naderi, et al., Hierarchical Q-learning-enabled neutrosophic AHP scheme in 
+candidate relay set size adaption in vehicular networks, Comput. Netw. 235 (2023) 
+109968 . 
+[54] M. Kurttila, et al., Utilizing the analytic hierarchy process (AHP) in SWOT analysis 
+— a hybrid method and its application to a forest-certification case, Forest Policy 
+Econ. 1 (1) (2000) 41 – 52 . 
+[55] Q. Luo, et al., Thermal modeling of air-type double-pass solar collector with PCM- 
+rod embedded in vacuum tube, Energy Convers. Manag. 235 (2021) 113952 . 
+[56] P. Lian, R. Yan, Z. Wu, Z. Wang, Y. Chen, L. Zhang, X. Sheng, Thermal performance 
+of novel form-stable disodium hydrogen phosphate dodecahydrate-based 
+composite phase change materials for building thermal energy storage, Adv. 
+Compos. Hybrid Mater. 6 (2) (2023) 74 . 
+[57] D. Cabaleiro, F. Agresti, L. Fedele, S. Barison, C. Hermida-Merino, S. Losada- 
+Barreiro, S. Bobbo, M. Pi ˜neiro, Review on phase change material emulsions for 
+advanced thermal management: design, characterization and thermal 
+performance, Renew. Sust. Energ. Rev. 159 (2022) 112238 . 
+E. Assareh et al.                                                                                                                                                                                                                                 

@@ -1,0 +1,2754 @@
+
+--- PAGE 1 ---
+Artificial intelligence for solar water heating systems: A review of global 
+research trends, advances, and future perspectives
+Flavio Odoi-Yorke
+*
+Department of Renewable Energy Technology, School of Engineering, Cape Coast Technical University, Cape Coast, Ghana
+Centre for Renewable Energy, Cape Coast Technical University, Cape Coast, Ghana
+ARTICLE INFO
+Keywords:
+Artificial intelligence
+Optimisation
+Solar collectors
+Solar water heaters
+Sustainability
+ABSTRACT
+Solar water heating systems (SWHS) are pivotal in reducing fossil fuel dependence and promoting sustainable 
+thermal energy solutions. However, the performance of SWHS remains limited by design inefficiencies, dynamic 
+environmental conditions, and limited predictive and control capabilities. This study examined the role of 
+artificial intelligence (AI) in improving the performance, optimisation, and sustainability of SWHS. The study 
+adopted a dual-methodological approach combining quantitative bibliometric analysis and qualitative systematic 
+review. The bibliometric analysis, based on 245 Scopus-indexed documents (2000 – 2024), was conducted using 
+Bibliometrix (R) and VOSviewer to identify global research trends, collaborations, and thematic clusters. 
+Complementarily, the systematic review provided in-depth qualitative insights into AI applications, including 
+predictive modelling, optimisation algorithms, intelligent control systems, and hybrid designs. The findings show 
+exponential growth in AI-related SWHS research since 2019, mainly driven by contributions from China, India, 
+and the United States. Machine learning, artificial neural networks, and multi-objective optimisation dominate 
+the research domain, revealing significant improvements in thermal efficiency, exergy performance, and cost- 
+effectiveness. Nevertheless, regional disparities persist, with limited contributions from Africa and Latin Amer -
+ica despite their high solar potential. The study highlights that integrating AI with SWHS enables data-driven 
+optimisation, predictive maintenance, and adaptive control, leading to smarter, more sustainable, and cost- 
+efficient systems. These insights provide a quantitative and qualitative foundation for guiding future research, 
+policy formulation, and technology development toward intelligent and equitable solar thermal energy solutions.
+Introduction
+The global energy sector is undergoing a keen transformation due to 
+challenges such as increased energy demand [ 1 ], climate change miti -
+gation [ 2 ], and the urgent need for sustainable technological solutions 
+[ 3 ]. According to the United States Energy Information Administration 
+[ 4 ], global energy consumption is projected to grow by nearly 50 % 
+between 2020 and 2050, due to strong economic growth in developing 
+Asian economies. As global energy demand continues to surge, one 
+promising solution is the widespread adoption of solar water heating 
+systems (SWHS). SWHS uses the sun ’ s energy to warm water, reducing 
+the need for energy-intensive traditional water heating methods. 
+Therefore, transitioning to SWHS is vital to reduce carbon emissions [ 5 ], 
+decrease fossil fuel dependence [ 6 ], and provide cost-effective thermal 
+energy solutions across residential, commercial, and industrial sectors 
+[ 7 ].
+Global solar water heating capacity peaked at 560 GWth in 2023, an 
+increase of 18 GWth compared to the previous year. China is the world ’ s 
+biggest SWH market. According to [ 8 ], between 2009 and 2022, the 
+capacity of SWHS worldwide has increased steadily as new policies have 
+helped improve sales. The global market for water heaters was valued at 
+$23.7 billion as of 2023. It is expected to reach $32.1 billion by 2029, 
+growing at a compound annual growth rate of 5.2 % from 2024 through 
+2029. This substantial increase suggests the rising demand for modern 
+water heating solutions and the industry ’ s ongoing advancements [ 9 ].
+SWHS comes in various designs, all incorporating a collector and 
+storage tank to utilise the sun ’ s thermal energy to heat water [ 10 ]. These 
+systems can be categorised based on the type of collector and the cir -
+culation system used. Closed-loop, or indirect, systems use a non- 
+freezing liquid to transfer heat from the sun to the water in a storage 
+tank [ 11 ]. In this system, the sun ’ s thermal energy heats the fluid in the 
+solar collectors, which then passes through a heat exchanger in the 
+* Address: Department of Renewable Energy Technology, School of Engineering, Cape Coast Technical University, Cape Coast, Ghana.
+E-mail address: flavio.odoi-yorke@cctu.edu.gh . 
+Contents lists available at ScienceDirect
+Energy Conversion and Management: X
+journal homepage: www.scien cedirect.co m/journal/e nergy-con version-and -managem ent-x
+https://doi.org/10.1016/j.ecmx.2025.101378
+Received 23 September 2025; Received in revised form 16 October 2025; Accepted 2 November 2025  
+Energy Conversion and Management: X 28 (2025) 101378 
+Available online 4 November 2025 
+2590-1745/© 2025 The Author(s). Published by Elsevier Ltd. This is an open access article under the CC BY-NC license ( http://creativecommons.org/licenses/by- 
+nc/4.0/ ). 
+--- PAGE 2 ---
+storage tank, transferring the heat to the water. The non-freezing fluid 
+then cycles back to the collectors, making this system useful in freezing 
+climates. Indirect solar water heating systems often use propylene glycol 
+as the heat transfer fluid to prevent freezing and eliminate scaling issues 
+[ 12 ]. Another variation, the indirect solar drain-back system, relies on a 
+heat exchanger to separate the collector loop from the potable water, 
+draining the water back into a storage vessel when the pump is off to 
+avoid freezing [ 13 ].
+Recent advancements in SWHS have focused on improving efficiency 
+and performance. For instance, large-scale solar thermal plants and 
+district heating systems have developed significantly, contributing to 
+decarbonising the heat sector in neighbourhoods and cities [ 14 ]. In -
+novations such as those developed by Mixergy, which use artificial in -
+telligence (AI) to optimise home-produced solar energy, can potentially 
+reduce energy costs for heating water [ 15 ]. Moreover, projects like the 
+solar thermal system at Creighton University, which uses vacuum-sealed 
+glass tubes to convert the sun’s energy into heat, highlight the ongoing 
+efforts to transition away from fossil fuels for heating purposes [ 15 ].
+Currently, AI is deployed as an optimisation tool across various 
+renewable energy applications, including solar photovoltaic (PV) sys -
+tems [ 16 , 17 ], wind farms [ 18 ], solar thermal systems [ 19 ], hydropower 
+[ 20 ], and green hydrogen production [ 21 ]. AI algorithms can be applied 
+in SWHS to optimise thermal performance, predict maintenance needs, 
+and improve energy management. For instance, AI-driven weather 
+forecasting models like GraphCast [ 22 ] and Pangu-Weather [ 23 ] can 
+enable SWHS to dynamically adapt to real-time variations in solar 
+irradiance, thereby maximising energy capture and improving overall 
+system efficiency. In addition, the GraphCast and Pangu-Weather can 
+predict weather conditions up to 10 days in advance with high precision, 
+outperforming traditional methods [ 24 , 25 ]. This precise forecasting 
+optimises energy capture based on sunlight availability. Likewise, smart 
+controllers integrated into SWHS can learn user behaviour patterns, 
+optimise water use and minimise energy loss for a more reliable, cost- 
+effective, and sustainable solution. Similarly, AI can analyse user 
+behaviour, predict demand, and adjust heating schedules based on hot 
+water usage patterns. This proactive approach ensures hot water avail -
+ability when needed and reduces energy waste during low-demand pe -
+riods, leading to efficient energy use, cost savings, and greater 
+sustainability of SWHS [ 26 , 27 ].
+Numerous studies have applied AI techniques over traditional 
+methods for predicting SWHS thermal performance and optimising 
+design. For instance, Liu et al. [ 28 ] and Kalogirou and Panteliou [ 29 ] 
+revealed that artificial neural networks (ANN) effectively predict heat 
+collection rates, heat loss coefficients, and solar energy outputs with 
+high accuracy, outperforming conventional regression approaches. 
+Razavi et al. [ 30 ] confirmed ANN’s improved prediction accuracy across 
+materials, notably polypropylene and copper, emphasising the mate -
+rial’s impact on solar heater efficiency. Correa-Jullian et al. [ 31 ] further 
+established that long short-term memory (LSTM) models perform 
+exceptionally well in sequence predictions for SWHS, capturing complex 
+temporal patterns with minimal error. Enhanced methodologies like 
+modified shallow swarm optimisation with deep learning by Deepanraj 
+et al. [ 32 ] and attention-based LSTM with decomposed input by Heidari 
+and Khovalyg [ 33 ] underline AI’s potential in refining predictive accu -
+racy for energy usage under fluctuating conditions. Hybrid models 
+combining ANN and Transient System Simulation (TRNSYS) tool, as 
+shown by Souliotis et al. [ 34 ], effectively predict annual solar heater 
+performance.
+Similarly, other studies have used the traditional method to review 
+the development, advances, and progress of SWHS. For example, 
+Shamsul Azha et al. [ 35 ] reviewed existing methods on thermal per -
+formance enhancement for flat plate solar collectors and discussed heat- 
+transfer enhancement using vibration and its potential application for 
+flat plate solar collectors. Vengadesan and Senthil [ 36 ] analysed recent 
+developments in the thermo-economic performance of SWHS regarding 
+the design modification of thermo-physical properties of heat transfer 
+fluids, integrated thermal energy storage, and hybrid systems of flat 
+plate solar collectors. Uniyal et al. [ 37 ] examined recent advancements 
+in evacuated tube solar water heaters integrated with phase change 
+materials (PCM) and nanofluids. Aggarwal et al. [ 38 ] comprehensively 
+reviewed techniques for increasing the efficiency of evacuated tube solar 
+collectors. Nanda et al. [ 39 ] highlighted energetic and exergetic ap -
+proaches and analyses, technological development, and examined the 
+advantages, disadvantages, and developments of SWHS. Al-Mamun 
+et al. [ 10 ] comprehensively analysed the state of the art of SWHS for 
+sustainable solar energy utilisation. Singh et al. [ 40 ] comprehensively 
+assessed the use of PCM in SWHS. Naveenkumar [ 41 ] reviewed ad -
+vancements and modifications in solar water heaters and collectors, 
+focusing on efficiency enhancement techniques and applying ANN to 
+improve their performance, economic viability, and sustainability.
+The contribution of this study lies in its dual-methodology frame -
+work, which provides a data-driven analysis of AI integration in SWHS. 
+In contrast with previous qualitative reviews that primarily emphasised 
+technical aspects, performance evaluation, and design optimisation 
+through qualitative methods [ 10 , 35–41 ], this study provides a more 
+systematic and evidence-based perspective. This study combines bib -
+liometric analysis with a qualitative systematic review to provide a 
+holistic and quantitative assessment of research trends. The framework 
+goes beyond existing efforts by systematically mapping global research 
+patterns, identifying collaborative networks, pinpointing influential 
+research clusters, and tracking technological advances from 2000 to 
+2024. This methodological innovation provides evidence-based recom -
+mendations and quantitative insights into the research dynamics of AI- 
+optimised SWHS, addressing a critical knowledge gap in understand -
+ing the evolution and future trajectory of intelligent optimisation tech -
+niques in sustainable solar thermal applications.
+The structure of the remaining sections in this paper is as follows: 
+Section 2 provides a concise overview of the solar water heating sys -
+tems; Section 3 describes the methodology adopted in the study; Sec -
+tion 4 presents the results of the bibliometric analysis along with a 
+discussion of their implications; Section 5 highlights the insights from 
+the qualitative systematic review. Section 6 summarises the findings 
+and proposes directions for future research, and Section 7 outlines the 
+conclusions drawn from the study.
+Brief overview of solar water heating systems
+SWHS, which use solar energy to heat water, are classified into two 
+main types: active and passive systems ( Fig. 1 ). Active systems rely on 
+pumps and controllers to circulate water or heat-transfer fluid through 
+the solar collectors [ 42 ]. In direct active systems, water is pumped 
+directly through collectors and stored, making them suitable for climates 
+where freezing is not a concern [ 43 ]. In indirect active systems, a non- 
+freezing fluid such as glycol circulates through the collectors, trans -
+ferring heat to water via a heat exchanger, which protects against 
+freezing in colder climates [ 44 ].
+Passive SWHS, on the other hand, do not use electrical components 
+and rely instead on natural convection [ 10 ]. Thermosiphon systems 
+place the storage tank above the collector so that heated water rises 
+naturally into the tank as cooler water flows down [ 46 ]. Integral 
+collector-storage systems, also known as batch heaters, combine the 
+collector and storage unit, preheating water before it enters a conven -
+tional heater [ 47 ]. Although active systems generally perform better in 
+variable climates, passive systems are simpler, more durable, and cost- 
+effective, making them ideal for stable, warm regions.
+There are several types of solar collectors, each with unique effi -
+ciency and applicability. The two main solar thermal collectors are flat 
+plate and evacuated tube collectors [ 42 , 48 ]. Flat plate collectors are the 
+most common and consist of a flat, rectangular box with a transparent 
+cover and a dark absorber plate ( Fig. 2a ). They are efficient and cost- 
+effective, making them suitable for residential water heating [ 49 ]. On 
+the other hand, evacuated tube collectors consist of a series of parallel 
+F. Odoi-Yorke                                                                                                                                                                                                                                    Energy Conversion and Management: X 28 (2025) 101378 
+2 
+--- PAGE 3 ---
+glass tubes, each containing an absorber tube covered with a selective 
+coating, as shown in Fig. 2b . Due to their heat retention capabilities, 
+these collectors are highly efficient, especially in colder climates [ 50 ].
+Another type of collector is the concentrating collector, which uses 
+mirrors or lenses to focus sunlight onto a small, high-efficiency absorber 
+area [ 42 ]. This type of collector is often used for larger applications such 
+as industrial processes and electricity production in solar thermal power 
+plants. In addition to these types, solar heat pipes are also used in some 
+systems. Heat pipes efficiently transfer heat from the absorber to the 
+storage system and are commonly used in evacuated tube systems [ 51 ]. 
+The collector ’ s choice depends on the specific application, climate, and 
+cost considerations.
+Methodology
+The study methodology follows a comprehensive and systematic 
+approach to achieve the study goal. Fig. 3 (a) displays the data collection 
+process. The study strictly adhered to the Preferred Reporting Items for 
+Systematic Reviews and Meta-Analyses (PRISMA) guidelines to ensure 
+transparency and reproducibility for the data collection process 
+[ 52 – 54 ]. This study utilised the Scopus database as the primary source 
+for data extraction, chosen for its distinctive advantages over other da -
+tabases such as Web of Science and Google Scholar. The Scopus database 
+was selected due to its broader coverage of peer-reviewed literature in 
+engineering and technology, more consistent citation tracking, 
+comprehensive metadata availability, and quality control mechanisms 
+for indexed publications [ 55 , 56 ]. In addition, Scopus provides more 
+data export and analysis tools, making it suitable for bibliometric studies 
+[ 57 ].
+The search strategy was designed using Boolean operators to 
+combine two main concept clusters artificial intelligence-related terms: 
+( “ fuzzy logic ” OR “ artificial neural networks ” OR “ genetic algorithms ” 
+OR “ artificial intelligence ” OR “ machine learning ” OR “ deep learning ” 
+OR “ natural language processing ” OR “ reinforcement learning ” OR 
+“ support vector machines ” OR “ Bayesian networks ” OR “ decision trees ” 
+OR “ evolutionary algorithms ” OR “ k-Means clustering ” OR “ principal 
+component analysis ” OR “ random forests ” OR “ gradient boosting ma -
+chines ” OR “ deep reinforcement learning ” OR “ genetic programming ” 
+OR “ automated machine learning ” OR “ self-organizing maps ” OR 
+“ extreme learning machines ” OR “ long short-term memory ” OR “ con -
+volutional neural networks ” OR “ particle swarm optimisation ” OR “ ant 
+colony optimisation ” OR “ Markov decision processes ” OR “ Q-learning ” ) 
+and solar water heating system-related terms: ( “ solar hot water systems ” 
+OR “ solar hot water system ” OR “ solar water heaters ” OR “ solar water 
+heating ” OR “ solar water heater ” OR “ solar water collector ” OR “ solar 
+water collectors ” OR “ solar thermal water heating ” OR “ solar thermal 
+collectors ” OR “ solar thermal collector ” OR “ solar water heating sys -
+tems ” OR “ solar thermal energy for water heating ” OR “ solar thermal 
+Fig. 1. Schematic of (a) Passive SWHS; (b) Active SWHs [ 45 ] (Reproduced with permission from Elsevier, License number: 5907510436562).
+Fig. 2. (a) Flat plate collector; (b) Evacuated tube collector [ 42 ] (Reproduced 
+with permission from Elsevier, License number: 5907510770775).
+F. Odoi-Yorke                                                                                                                                                                                                                                    Energy Conversion and Management: X 28 (2025) 101378 
+3 
+--- PAGE 4 ---
+water systems ” OR “ solar heating systems for water ” OR “ solar hot water 
+systems ” OR “ solar hot water heaters ” OR “ solar water heating panels ” 
+OR “ solar hot water heater ” ).
+The search was conducted on October 21, 2024, covering publica -
+tions from 2000 to 2024, yielding an initial dataset of 255 documents, as 
+shown in Fig. 3 (a) . The inclusion criteria included research articles, 
+conference papers, review papers, and book chapters. In contrast, the 
+exclusion criteria comprise notes, errata, and editorials. This initial 
+filtering process reduced the dataset to 252 documents. After applying a 
+language filter to include only English-language publications, the 
+dataset was refined to 245 documents. Afterwards, data cleaning was 
+conducted to ensure the dataset ’ s accuracy, consistency, and reliability. 
+Duplicate records were identified and removed using document titles, 
+author names, publication years, and DOIs as reference points. Incon -
+sistent entries, such as variations in author names, keywords, and source 
+titles, were standardised to maintain uniformity across the dataset. 
+Finally, the cleaned dataset was verified in Bibliometrix (R) and VOS -
+viewer by cross-checking to confirm that all retained records were 
+consistent and correctly formatted for subsequent analysis.
+Fig. 3(b) displays the bibliometric analysis process using the Bib -
+liometrix R-package (R-version 4.3.2) and VOSviewer (version 1.6.20) 
+software. Bibliometrix facilitates comprehensive bibliometric analysis, 
+enabling data-driven insights, network mapping, and visualisation of 
+literature trends [ 60 – 64 ]. On the other hand, VOSviewer specialises in 
+constructing and visualising bibliometric networks, highlighting re -
+lationships such as co-authorship, co-citation, and keyword co- 
+occurrence [ 65 , 66 ]. The Bibliometrix R-package was used to examine 
+the following: (i) annual publication trends; (ii) geographical analysis of 
+research production and international collaborations; (iii) keyword 
+analysis; (iv) thematic mapping and evolution; and factorial analysis to 
+identify underlying research patterns. In contrast, VOSviewer was uti -
+lised to perform keyword co-occurrence analysis, clustering the key -
+words into individual thematic groups.
+This study performed a qualitative systematic review to complement 
+the quantitative insights obtained from the bibliometric analysis. The 
+systematic review applied clear inclusion and exclusion criteria to 
+ensure the relevance and quality of the selected studies. The inclusion 
+criteria prioritised peer-reviewed publications focusing on AI applica -
+tions in SWHS, specifically those addressing predictive modelling, 
+optimisation, control, or system design. The exclusion criteria elimi -
+nated studies without explicit AI integration or that did not involve 
+thermal water heating. These criteria ensured that the final dataset 
+comprised the most relevant, high-quality, reproducible studies aligned 
+with the review ’ s objectives. It is worth mentioning that the systematic 
+Fig. 3. Study methodology adopted: (a) PRISMA approach adopted for data collection for quantitative and qualitative analysis, and (b) bibliometric analysis 
+framework. Adapted and modified from [ 58,59 ].
+F. Odoi-Yorke                                                                                                                                                                                                                                    Energy Conversion and Management: X 28 (2025) 101378 
+4 
+--- PAGE 5 ---
+review aimed to extract in-depth information on technological ad -
+vancements, methodological approaches, and emerging research di -
+rections within the domain.
+Results and discussion
+Annual trend and temporal distribution of publications
+Fig. 4 displays the annual publications trend from 2000 to 2024. The 
+figure shows a clear upward trajectory, with notable patterns and 
+growth over these 24 years. The results show just 3 publications in 2000, 
+followed by intermittent activity in the early 2000 s, as evidenced by 
+years with zero publications (2001 and 2003) and low numbers (1 – 4 
+papers) until 2007. A noticeable increase occurred in 2008 with 10 
+publications, indicating the beginning of increased research interest in 
+this field. The linear regression equation y = 1.0554x   2113.6, with an 
+R
+2 
+value of 0.776, highlights this growth pattern. The positive slope of 
+1.0554 indicates that, on average, there has been an increase of about 
+one publication per year. At the same time, the R
+2 
+value of 0.776 sug -
+gests a strong fit of the trend line to the data, explaining about 77.6 % of 
+the variation in publication numbers over time.
+The growth became more evident after 2014, with publications 
+exceeding 10 papers yearly. A significant surge is observed from 2019 
+onwards, with the number of publications reaching 25 in 2019, followed 
+by sustained high levels of output (17 – 21 papers annually) between 
+2020 and 2023, culminating in a peak of 34 publications in 2024. This 
+recent research output suggests a keen interest in AI ’ s potential to 
+optimise SWH systems, coinciding with broader advances in AI tech -
+nology and increased focus on renewable energy solutions.
+It is worth noting that the results show three distinct phases: an 
+initial period of low activity (2000 – 2007), a transition period of mod -
+erate but irregular growth (2008 – 2018), and a recent period of sustained 
+high output (2019 – 2024). The positive trend, especially in recent years, 
+implies developing research interest, potentially driven by improved AI 
+capabilities, greater awareness of climate change issues, and the prac -
+tical benefits of integrating AI into solar thermal systems. The R
+2 
+value 
+suggests that this growth trend will continue, indicating sustained 
+research interest in this field.
+Geographical distribution and international research collaboration 
+network
+The geographical contribution of research publications is displayed 
+in Fig. 5 . It can be observed that China is the leading contributor with 
+151 publications, representing roughly 22 % of the total output, fol -
+lowed by India with 105 publications (16 %) and the United States with 
+65 publications (10 %). These three countries account for nearly half 
+(48 %) of all research activity in this domain, indicating their substantial 
+investments in renewable energy infrastructure and AI research capa -
+bilities. Iran ’ s contribution of 56 publications (8.3 %) positions it as a 
+significant player in the Middle East and North Africa (MENA) region. In 
+addition, contributions from European research countries such as Italy 
+(36 publications, 5.3 %), Spain (34 publications, 5.0 %), and Germany 
+(14 publications, 2.1 %) show an average contribution within this 
+interdisciplinary field.
+The research contribution from developing nations shows an inter -
+esting pattern, with Brazil and Mexico each contributing 21 publications 
+(3.1 % each), Indonesia and Saudi Arabia each with 19 publications (2.8 
+%), and Egypt with 18 publications (2.7 %). However, the figure shows a 
+troubling pattern when examining the contribution of African countries. 
+The entire African continent contributes only 36 publications combined 
+(about 5.3 % of global output), with Egypt leading at 18 publications, 
+South Africa and Cameroon each with 4 publications (0.6 %), Algeria 
+with 5 publications (0.7 %), Morocco with 3 publications (0.4 %), and 
+Ethiopia and Tunisia each with a single publication (0.1 %). This mar -
+ginal contribution is alarming due to Africa ’ s enormous solar energy 
+potential, with the continent recording more hours of bright sunshine 
+annually and the pressing need for sustainable, affordable water heating 
+solutions across African communities.
+Africa faces significant challenges in energy access, with over 600 
+million people lacking electricity [ 67 ] and many more relying on inef -
+ficient, polluting energy sources for basic needs, including water heat -
+ing. The application of AI to optimise solar water heating systems could 
+transform energy access, reduce carbon emissions, and improve the 
+quality of life across the continent. However, with African nations 
+contributing less than 6 % of research in this field, there is a critical risk 
+that AI-driven solar water heating solutions will be designed without 
+consideration for African contexts, climatic conditions, economic con -
+straints, and specific user requirements. This could lead to technology 
+transfer failures, suboptimal system performance, and missed opportu -
+nities for indigenous innovation. Therefore, building African research 
+capacity in AI-enhanced SWHS is not merely an academic imperative but 
+an existential necessity for sustainable development, energy indepen -
+dence, and climate change mitigation across the continent.
+Furthermore, China, India, and the USA emerging as the major 
+contributors to this research domain could be attributed to funding and 
+access to experimental and simulation infrastructure. In contrast, 
+limited research capacity, data availability, and high equipment costs 
+could hinder similar progress in regions such as Africa and parts of Latin 
+America. This disparity highlights a pressing need for targeted funding, 
+regional test facilities, and open-data collaborations to democratise AI- 
+based SWHS research globally.
+The collaboration map in Fig. 6 shows the international research 
+partnerships and the complex network of global scientific cooperation. 
+The map depicts varying intensities of collaboration through shades of 
+blue, with darker blue indicating stronger research partnerships. China 
+and the United States are the research central hubs in this collaborative 
+network, as shown by their darker blue colouring and the connecting 
+lines, suggesting substantial bilateral research cooperation. The map 
+demonstrates research activity across North America, Europe, and Asia, 
+with notable interconnections between these regions as indicated by the 
+connecting lines. European nations maintain active collaboration net -
+works, as suggested by the consistent light blue shading, indicating 
+moderate levels of international cooperation. The Asia-Pacific region, 
+mainly centred around China, shows strong research partnerships 
+extending to Western and neighbouring Asian countries. The collabo -
+ration patterns suggest a mostly Northern Hemisphere-centric research 
+community. However, there is evidence of participation from countries 
+in the Southern Hemisphere, as indicated by the lighter blue shading in 
+regions such as Australia and parts of South America. The connecting 
+lines on the map primarily emanate from major research centres, sug -
+gesting that smaller nations often collaborate with these larger research 
+hubs rather than directly with each other. This pattern suggests a typical 
+flow of knowledge and resources in international research, where 
+Fig. 4. Annual distribution of article production on AI applications in 
+SWHS research.
+F. Odoi-Yorke                                                                                                                                                                                                                                    Energy Conversion and Management: X 28 (2025) 101378 
+5 
+--- PAGE 6 ---
+established research institutions often serve as bridges for global 
+collaboration.
+In some cases, the intensity of collaboration appears to be influenced 
+by geographical proximity. However, long-distance partnerships, spe -
+cifically those across continents, are also evident through the connecting 
+lines crossing oceans. The map shows relatively less intensive 
+Fig. 5. Country-wise contribution to AI applications in SWHS research.
+Fig. 6. Scientific collaboration map of AI applications in SWHS research.
+Fig. 7. Word cloud of keywords.
+F. Odoi-Yorke                                                                                                                                                                                                                                    Energy Conversion and Management: X 28 (2025) 101378 
+6 
+--- PAGE 7 ---
+collaboration in Africa and South America, as shown by the lighter 
+shading or grey areas, suggesting potential opportunities for expanding 
+research partnerships in these regions. The overall pattern of collabo -
+ration demonstrates the global nature of research in this field, high -
+lighting how countries are working together to advance the integration 
+of AI in SWHS, though with varying degrees of involvement and part -
+nership intensity across different geographical regions. This map effec -
+tively captures the international dimension of scientific cooperation in 
+sustainable energy research, showing the strengths of existing research 
+networks and areas where collaborative relationships could be further 
+developed.
+Word cloud visualisation of dominant keywords
+Fig. 7 presents the word cloud of the top 50 author keywords. It can 
+be seen that the most dominant terms in the figure are “optimisation,” 
+“solar energy,” and “artificial neural networks.” This highlights the 
+fundamental role of AI-driven optimisation approaches in advancing 
+solar thermal technologies. The presence of various AI methodologies, 
+including genetic algorithms, machine learning, deep learning, and 
+particle swarm optimisation, demonstrates the various computational 
+tools employed to enhance system performance and efficiency. These 
+advanced algorithms are applied to multiple aspects of SHWS, from 
+design optimisation to operational control strategies.
+The emphasis on “multi-objective optimisation” indicates that re -
+searchers are addressing complex problems requiring the consideration 
+of multiple competing factors, such as system efficiency, cost- 
+effectiveness, and environmental impact. The presence of specific 
+solar technology terms like “solar thermal collector,” “evacuated tube 
+solar collector,” and “flat plate collector” emphasises the components 
+optimised through AI applications. In contrast, the “solar water heating 
+system” represents the integrated system-level approach. The inclusion 
+of “life cycle cost” and “economic” among the keywords suggests the 
+crucial consideration of financial viability and long-term sustainability 
+in system design and implementation. Performance-related terms such 
+as “thermal performance,” “energy efficiency,” and “heat collection 
+rate” indicate the key metrics targeted for improvement through AI 
+optimisation techniques. The appearance of “exergy analysis” suggests 
+that researchers conduct detailed thermodynamic evaluations to assess 
+and optimise system performance from an energy quality perspective. 
+The presence of “simulation” points to the vital role of computational 
+modelling in developing and testing AI-driven solutions before real- 
+world implementation.
+Combining “renewable energy” with various AI techniques indicates 
+a broader focus on sustainable energy solutions, with SWHS indicating a 
+specific application area within this domain. The terms “support vector 
+machine” and “neural network” suggest that researchers leverage 
+traditional and modern machine learning approaches to develop intel -
+ligent control systems and prediction models. Terms like “distributed 
+energy systems” and “combined cooling, heating, and power” indicate 
+that the research extends beyond standalone solar water heaters to more 
+complex integrated energy systems. The interconnection of these key -
+words shows a research ecosystem where AI is systematically applied to 
+enhance every aspect of SWHS, from component design to system 
+integration and operational optimisation. The diversity of AI techniques 
+demonstrates researchers’ comprehensive approach to addressing the 
+challenges in solar thermal energy systems. The integration of AI with 
+solar technology aims to improve system efficiency, reduce costs, 
+enhance reliability, and contribute to the broader goal of sustainable 
+energy development. The research area depicted by these keywords 
+suggests a strong focus on developing intelligent, efficient, and 
+economically viable solar water heating solutions by applying cutting- 
+edge AI methodologies, signifying a vital intersection of renewable en -
+ergy technology and computational intelligence.
+Keyword clustering analysis
+Fig. 8 shows the network visualisation of keyword co-occurrence 
+obtained via VOSviewer software. It is worth noting that a minimum 
+threshold of four occurrences was applied, resulting in 26 keywords 
+from a total of 650 that met this criterion. The network visualisation was 
+generated using the association strength normalisation method with 
+default layout parameters (attraction: 2, repulsion: 0). For clustering 
+analysis, a resolution of 1 and a minimum cluster size of 1 were set, with 
+the option to merge small clusters enabled. Each cluster, characterised 
+by its collective set of keywords and thematic focus, is discussed in detail 
+to highlight its significance within the research landscape. In addition, 
+qualitative insights from the relevant literature are integrated to sub -
+stantiate and enrich the interpretation of each cluster. The following 
+sub-sections present an in-depth discussion of the five identified clusters.
+Computational intelligence and optimisation framework
+Cluster 1 comprises keywords such as “artificial neural network 
+(ANN)”, “machine learning”, “multi-objective optimisation”, “particle 
+swarm optimisation (PSO)”, “renewable energy”, “solar energy”, and 
+“solar thermal collector”. This cluster indicates the foundational 
+computational intelligence methodologies underpinning modern solar 
+water heating research. Artificial neural networks and machine learning 
+are pivotal in predictive modelling and pattern recognition, allowing 
+accurate forecasting of complex, nonlinear interactions in solar thermal 
+systems. Sundar and Chandra Mouli [ 68 ] applied a Levenberg- 
+Marquardt artificial neural network to predict heat transfer and fric -
+tion factors in thermosyphon flat plate collectors using MgO/water 
+nanofluids, achieving correlation coefficients above 0.98, confirming 
+high predictive accuracy between experimental and simulated data. 
+Similarly, Mausam et al. [ 69 ] employed an ANN to model the thermal 
+performance of solar flat plate collectors using Cu-MWCNTs hybrid 
+nanofluids, attaining coefficient of determination (R2) values up to 
+0.9989. Machine learning’s versatility extends to ensemble methods, 
+where Said et al. [ 70 ] utilised Boosted Regression Tree and XGBoost 
+algorithms to predict Nusselt numbers, friction factors, and efficiencies 
+in hybrid nanofluid-based collectors. The authors obtained near-perfect 
+R
+2 
+values (0.9914–0.9997), indicating their capacity to generalise per -
+formance behaviour across diverse flow conditions. Farhadi et al. [ 71 ] 
+advanced this domain by integrating analytical modelling and machine 
+learning to predict the performance of heat pipe evacuated tube solar 
+collectors, identifying Extra Trees and LightGBM as best in accuracy 
+with a correlation coefficient of 0.995. Uniyal et al. [ 72 ] reinforced this 
+by comparing nine machine learning models to predict U-tube PCM solar 
+collector performance. The ANN and support vector regression (SVR) 
+yielded higher accuracies (R
+2 
+up to 0.9540), highlighting the impor -
+tance of model selection for system-specific optimisation.
+Similarly, including multi-objective optimisation and PSO in this 
+cluster highlights the critical role of metaheuristic optimisation in 
+refining solar collector performance. For example, Rey and Zmeureanu 
+[ 73 ] applied micro-time variant multi-objective PSO to a residential 
+solar thermal combisystem, balancing life-cycle cost and energy con -
+sumption. The results showed that increasing solar collectors from one 
+to ten decreased life-cycle energy use by 63 % but increased cost by 84 
+%, emphasising the necessity of trade-off decision-making. Mohan et al. 
+[ 74 ] adopted multi-objective PSO to optimise a solar minichannel flat 
+plate collector, identifying optimal flow rates of 0.01–0.015 kg/s and 
+improving efficiency by 10–12 % compared to conventional systems. 
+Likewise, Dong et al. [ 75 ] implemented an enhanced PSO algorithm for 
+a hybrid photovoltaic/thermal (PV/T) collector, achieving a 17.93 % 
+reduction in pump energy consumption and improved thermal effi -
+ciency by 7.86 %. Summ et al. [ 76 ] integrated machine learning meta -
+models and a genetic algorithm for optimising insulating glass flat-plate 
+collectors. The authors identified argon concentration and collector 
+geometry as key parameters influencing efficiency and cost- 
+F. Odoi-Yorke                                                                                                                                                                                                                                    Energy Conversion and Management: X 28 (2025) 101378 
+7 
+--- PAGE 8 ---
+effectiveness, marking a methodological advancement in multi- 
+objective optimisation frameworks. Mousa et al. [ 77 ] applied multi- 
+objective optimisation to determine the optimal technological mix of 
+solar PV and thermal collectors for industrial applications. It was 
+observed that hybrid configurations outperform single-technology sys -
+tems in energy, cost, and environmental indicators, reinforcing optimi -
+sation ’ s strategic role in solar system design. It worth mentioning that 
+these studies emphasize that multi-objective optimisation and PSO offer 
+efficient solutions for balancing conflicting objectives, enabling intelli -
+gent and adaptive control strategies in renewable energy systems.
+Furthermore, the broader contextual keywords such as renewable 
+energy, solar energy, and solar thermal collectors define the application 
+domain driving this technological transformation. Solar thermal col -
+lectors are the principal hardware elements that convert solar radiation 
+into usable heat, with ongoing innovations enhancing operational effi -
+ciency. Hajabdollahi [ 78 ] optimised an integrated liquid solar thermal 
+collector with a cross-flow heat exchanger, achieving maximum effi -
+ciency of 0.6359 by adjusting collector geometry and mass flow rates. 
+Raja Sekhar et al. [ 79 ] applied explainable AI to evaluate grooved 
+absorber tubes in solar flat plate collectors. The study identified groove 
+pitch and solar radiation as critical factors that improved efficiency by 
+up to 20 % compared to plain tubes. Skheel et al. [ 80 ] combined ANNs 
+and genetic algorithms for geometry optimisation of solar collectors, 
+identifying parabolic-curved designs as globally optimal, improving 
+energy absorption by 15 % compared to conical designs, reinforcing the 
+integration between computational intelligence and design innovation. 
+Sridharan [ 81 ] applied the XGBoost algorithm to predict the thermal 
+performance of modified flat-plate water collectors, achieving an accu -
+racy of 99.8 %.
+It is worth noting that Cluster 1 shifts from empirical experimenta -
+tion to intelligent, data-driven solar energy system optimisation. ANNs 
+and machine learning methods allow precise performance predictions; 
+multi-objective optimisation and PSO balance efficiency and cost trade- 
+offs; and renewable energy-focused design innovations extend the 
+applicability of solar thermal collectors. As demonstrated in the studies, 
+integrating these techniques improves energy conversion efficiency and 
+ensures sustainability and adaptability across varying environmental 
+and operational contexts. This convergence of computational intelli -
+gence and solar energy research underlines an advancement in renew -
+able energy engineering, propelling the development of self-optimising, 
+predictive, and efficient SWHS suited for global deployment.
+Intelligent systems and performance analysis
+Cluster 2 contains the following terms: “ ANNs, ” artificial intelli -
+gence, “ energy efficiency ” , “ solar water heater ” , and “ thermal perfor -
+mance ” . Cluster 2 applies AI, specifically ANNs, to evaluate and enhance 
+performance characteristics. Due to their universal approximation ca -
+pabilities, ANNs have become the primary AI technique for modelling 
+solar water heater behaviour. These networks learn from empirical data 
+without requiring explicit mathematical formulations of complex 
+physical processes. Xu et al. [ 82 ] demonstrated ANN efficiency in 
+optimising energy parameters for a carbon dioxide (CO
+2
+) air source heat 
+pump water heater. The authors validated that the ANN provided energy 
+predictions for optimisation of the non-dominated sorting genetic al -
+gorithm under low ambient temperatures. The final optimised solution 
+achieved CO
+2 
+emissions of 8599.4 kg and a total annual cost of 1626.9 
+USD/yr. Sadeghi et al. [ 83 ] employed multi-layer perceptron and radial 
+basis function techniques for predicting modified evacuated tube solar 
+collector performance. The empirical data-driven approach predicted 
+temperature differences and energetic efficiency with maximum mean 
+relative percentage errors of 0.576 and 0.907, respectively. The results 
+demonstrated that both multilayer perceptron (MLP) and radial basis 
+function (RBF) reliably predict thermal characteristics of solar collectors 
+using nanofluids.
+The keyword “ energy efficiency ” in this cluster occupies a central 
+position, showing the primary objective of AI applications in solar water 
+heating optimisation. Energy efficiency considerations include heat 
+transfer efficiency, insulation performance, optimisation of circulation, 
+and temporal energy supply – demand matching. In view of this, 
+Fig. 8. Network visualisation of keyword co-occurrence relationships.
+F. Odoi-Yorke                                                                                                                                                                                                                                    Energy Conversion and Management: X 28 (2025) 101378 
+8 
+--- PAGE 9 ---
+Prakasam et al. [ 84 ] investigated flat-plate SWHS performance using 
+cerium oxide – water nanofluid through holistic analytical approaches. 
+The study refined the ANN model with a 3 – 10-2 architecture, which 
+achieved a mean squared error (MSE) of 8.2 × 10
+-3
+. In addition, the 
+system achieved a maximum thermal efficiency of 78.2 % at a 2 L/min 
+flow rate. Heat transfer coefficient enhancements led to 21.5 % thermal 
+efficiency increases compared to plain water systems. Pathak et al. [ 85 ] 
+applied machine learning insights to fin-integrated heat pipe evacuated 
+tube solar collector systems with thermal battery backup. The ANN 
+model effectively aligned experimental results with comprehensive 
+thermal performance and sustainability assessment predictions. It was 
+observed that porous aluminium fin-based systems achieved maximum 
+energy enhancement ratios of 24.07 % under full-day operation.
+The inclusion of “ thermal performance ” in Cluster 2 indicates how 
+effectively solar water heaters fulfil intended functions under real-world 
+conditions. This comprises outlet water temperature, response time, 
+thermal storage capacity, and overall system stability characteristics. In 
+view of this, Saravanan et al. [ 86 ] evaluated V-trough solar water heater 
+thermal performance using four distinct neural models, including 
+adaptive neuro-fuzzy inference system (ANFIS), generalised linear 
+regression, and support vector machines (SVM). The ANFIS model 
+achieved 0.9990, 0.9966, and 0.9997 correlation coefficients for Nusselt 
+number, friction factor, and efficiency, respectively. ANFIS out -
+performed other models with root mean square error (RMSE) values of 
+0.0805, 0.0004, and 0.4534, demonstrating the highest prediction ac -
+curacy. Chidiac et al. [ 87 ] developed adaptive overheating covers for 
+solar water heaters using an ANN to optimise control system designs. 
+The system ’ s self-organising map network automatically adjusted solar 
+collector temperatures through fabric screen coverage depending on 
+weather conditions and demand. Amasyali et al. [ 88 ] proposed model- 
+free deep reinforcement learning approaches for smart water heater 
+control to reduce electricity consumption and emissions. The study used 
+deep Q-networks algorithm trained reinforcement learning agents, 
+achieving electricity savings ranging from 12 % to 22 %. Emission 
+reduction-focused agents reduced CO
+2 
+emissions by 18 % to 37 % by 
+leveraging variable marginal operating emissions rates. Bouguergour 
+et al. [ 89 ] investigated combined solar underfloor heating and domestic 
+hot water systems using machine learning-based identification ap -
+proaches. The PieceWise Affine Auto-Regressive eXogenous model 
+identified four distinct operational states correlating solar radiation with 
+thermal responses.
+The specific mention of “ solar water heater ” as a distinct keyword 
+emphasises this research cluster ’ s practical, application-oriented nature. 
+Unlike more theoretical computational methods, this grouping demon -
+strates empirical studies where AI techniques directly solve concrete 
+engineering challenges. The integration of these keywords suggests 
+research focused on developing intelligent diagnostic tools, predictive 
+maintenance systems, and performance optimisation algorithms. The 
+significance of this cluster lies in its potential to bridge gaps between 
+theoretical AI development and practical renewable energy applica -
+tions. These methodological advances contribute to more reliable, effi -
+cient, and economically viable solar thermal systems for residential and 
+commercial deployments.
+Economic optimisation and evolutionary algorithms
+Cluster 3 contains the following terms: “ exergy ” , “ genetic algo -
+rithm ” , “ life cycle cost ” , “ optimisation ” , and “ solar water heating sys -
+tem ” . Cluster 3 suggests a research focus emphasising economic viability 
+and thermodynamic excellence through evolutionary computational 
+approaches. The presence of “ exergy ” as a keyword distinguishes this 
+cluster with its focus on second-law thermodynamic analysis. Exergy 
+analysis assesses the quantity and quality of energy transformations 
+within SWHS. This approach provides insights into irreversibilities and 
+thermodynamic inefficiencies that conventional energy analysis might 
+overlook. Ponnusamy et al. [ 90 ] conducted exergetic characterisation of 
+flat plate solar collectors employing genetic algorithms to optimise 
+exergetic efficiency. The study controlled the loss coefficient using four 
+decision variables: heat flux rate and collector plate temperature. Exergy 
+correlations were developed across comprehensive operating ranges 
+comprising mass flow rates, inlet temperatures, collector plate areas, 
+and incident solar energy. The results revealed that exergy efficiency 
+increased by 0.01 % to 0.08 % over 24-hour periods. Through experi -
+mental testing, Wenceslas and Ghislain [ 91 ] validated exergy optimi -
+sation of flat-plate solar collectors in thermosyphon solar water heaters. 
+The genetic algorithm-based computational code identified optimal 
+design parameter combinations that maximised exergy efficiency and 
+achieved high performance with reduced collector surface area.
+Genetic algorithm serves as the primary computational methodology 
+in this cluster, representing an evolutionary optimisation approach 
+inspired by natural selection processes. Genetic algorithms are well- 
+suited for optimising SWHS because they handle discrete and contin -
+uous variables simultaneously. These algorithms accommodate multiple 
+constraints and avoid premature convergence to suboptimal solutions 
+through population-based search strategies. Ko [ 92 ] demonstrated a 
+genetic algorithm to optimise indirect forced circulation SWHS based on 
+life cycle cost. The optimisation method incorporated installation and 
+operation-related design variables alongside capacity-related parame -
+ters. The authors found that variable inclusion reduced life cycle cost by 
+about 3.2 % and 6.1 %, compared to methods considering only capacity- 
+related variables. Ko [ 93 ] further employed genetic algorithms to opti -
+mise SWHS configuration and sizing for an office building in South 
+Korea. The study integrated three constraint conditions: energy balance, 
+solar fraction, and available space for solar collector installation. It was 
+observed that low solar fractions do not always present life cycle cost 
+decreases. Trade-offs between equipment and energy cost resulted in 
+optimal designs yielding minimum life cycle cost values.
+The inclusion of “ life cycle cost ” introduces a critical economic 
+dimension to the optimisation framework. Life cycle cost analysis 
+comprehensively comprises initial capital investment, operational ex -
+penses, maintenance costs, system lifespan, and salvage value [ 94 ]. 
+When integrated with AI-driven optimisation, life cycle cost consider -
+ations can identify economically optimal system configurations over 
+entire lifetimes. Silva et al. [ 95 ] performed parametric optimisation of 
+stamped longitudinal vortex generators inside circular tubes using ge -
+netic algorithms. Their Non-dominated Sorting Genetic Algorithm II 
+(NSGA-II) optimisation method and finite volume numerical simulation 
+enhanced heat transfer for solar water heaters at low Reynolds numbers. 
+Optimal longitudinal vortex generator shapes improved heat transfer by 
+over 50 % across all evaluated Reynolds numbers. The highest 
+augmentation of 62 % occurred at Reynolds number 900, with the best 
+thermo-hydraulic efficiency at Reynolds number 600.
+The broader term “ optimisation ” as a standalone keyword indicates 
+the central methodological theme unifying this cluster. Ahmadi et al. 
+[ 96 ] employed a multi-objective NSGA-II for optimising vacuum mem -
+brane distillation and compact SWHS. The optimisation minimised 
+water production cost and maximised water production through 
+simultaneous parameter adjustment. The NSGA II algorithm identified 
+optimal system parameters, including 20 membrane rows per collector 
+and 334.4 kg feed mass. Optimised conditions achieved a daily pro -
+duction capacity of 92.5 kg water with a 12.2 USD/m
+3 
+production cost. 
+Ramesh et al. [ 97 ] utilised Red-Billed Blue Magpie optimisation along -
+side NSGA for optimising heat transfer fluid flow rates and PCM melting 
+points. The comparative analysis yields 90 % efficiency with error rates 
+of only 0.035 %. Summ et al. [ 76 ] optimised the multi-objective design 
+of insulating glass flat-plate collectors using elitist genetic algorithms. 
+The optimisation identified argon concentration, collector length, and 
+width as critical parameters influencing efficiency and cost- 
+effectiveness. The results revealed 7.7 % point efficiency increases, 
+19.4 % material cost reductions, and 14.5 % weight decreases compared 
+to market-available collectors. Skheel et al. [ 80 ] synergistically 
+deployed ANN and genetic algorithms for optimising multi-objective 
+F. Odoi-Yorke                                                                                                                                                                                                                                    Energy Conversion and Management: X 28 (2025) 101378 
+9 
+--- PAGE 10 ---
+solar collector geometric parameters. The optimisation convergence 
+revealed that parabolically curved collectors constituted the global op -
+timum, yielding at least 15 % efficiency gains over conical designs.
+The implications of this cluster are highly relevant to policymakers, 
+investors, and system designers who require robust economic and 
+thermodynamic justification for solar thermal projects. Researchers 
+have developed decision-support tools that enable more rational and 
+evidence-based investments in solar thermal technologies by integrating 
+genetic algorithms with exergy analysis and lifecycle cost assessment. 
+This cluster highlights ongoing research to determine the system con -
+figurations that yield the highest long-term economic returns. It further 
+explores how thermodynamic efficiency can be balanced with financial 
+limitations and identifies the design parameters most strongly influ -
+encing lifecycle performance.
+Neural network architectures and system components
+Cluster 4 includes “ artificial neural networks ” , “ neural network ” , 
+“ solar collector ” , “ solar water heaters ” , and “ TRNSYS ” (Transient Sys -
+tem Simulation Tool). Cluster 4 focuses uniquely on neural network 
+methodologies and their integration with solar water heating analysis 
+simulation environments. The presence of both “ artificial neural net -
+works ” and “ neural network ” as separate keywords suggests variations 
+in terminology across different research communities or emphasis on 
+different neural network architectures. This redundancy also indicates 
+the absolute centrality of neural network approaches in this research 
+subdomain, potentially comprising feedforward networks, recurrent 
+neural networks, radial basis function networks, and deep learning ar -
+chitectures. TRNSYS is a critical software platform widely employed in 
+solar thermal research for dynamic system simulation [ 98 – 100 ]. The 
+appearance of TRNSYS in this cluster suggests research integrating AI 
+methodologies with established simulation frameworks, creating hybrid 
+modelling approaches that combine physics-based simulation with data- 
+driven learning. Souliotis et al. [ 34 ] demonstrated this integration by 
+combining ANN with TRNSYS to model an integrated collector storage 
+prototype. The ANN was trained using experimental data from outdoor 
+tests and implemented through the TRNSYS Excel interface for annual 
+performance prediction. This approach effectively merged TRNSYS ra -
+diation processing capabilities with the advantages of a neural net -
+work ’ s black box modelling.
+The terms “ solar collector ” and “ solar water heaters ” denote the 
+specific hardware components and integrated systems under investiga -
+tion. Solar collectors show complex thermal behaviour influenced by 
+solar geometry, optical properties, thermal losses, and fluid dynamics. 
+Neural networks can model these intricate relationships, potentially 
+replacing computationally expensive simulation runs with rapid surro -
+gate models. Wongsuwan and Kumar [ 101 ] compared TRNSYS and ANN 
+methods for predicting forced circulation solar water heater perfor -
+mance under tropical conditions. The study evaluated collector outlet 
+temperature and useful energy predictions across clear, partly cloudy, 
+and cloudy conditions. Both methods yielded satisfactory prediction 
+accuracy for hourly and daily estimations, validating neural networks as 
+viable alternatives to traditional simulation approaches. He et al. [ 102 ] 
+advanced this field by developing a real-time fault detection system for 
+solar hot water systems. The hierarchical adaptive resonance theory 
+(ART) neural network was trained using TRNSYS-generated data from 
+verified system models. Using only standard operational sensors, the 
+system detected anticipated faults, including pump failures, impeller 
+degradation, and thermosyphon issues.
+Likewise, cluster 4 suggests a methodological bridge between 
+component-level analysis and system-level performance evaluation. 
+Neural networks trained on collector performance data can be compu -
+tationally efficient models within larger system simulations. System- 
+level neural networks can predict integrated performance based on 
+component characteristics and operating conditions. Correa-Jullian 
+et al. [ 31 ] explored deep learning techniques, including recurrent 
+neural networks (RNNs) and LSTM architectures for solar thermal sys -
+tem prognosis. The TRNSYS-generated synthetic data allowed training 
+under various meteorological conditions. The LSTM models achieved 
+the best performance with a mean absolute error (MAE) of 0.55 
+◦
+C and 
+RMSE of 1.27 
+◦
+C for temperature predictions. Al-Mamun et al. [ 10 ] 
+utilised TRNSYS to simulate SWHS coupled with absorption heat 
+transformers for continuous water heating. Their simulations across 
+Mexican cities showed that integrated systems achieved higher solar 
+fractions up to 99.6 % with reduced collector areas. Rehman et al. [ 103 ] 
+employed TRNSYS to optimise centralised and semi-decentralised solar 
+district heating systems in Finnish conditions. The multi-objective 
+optimisation revealed that decentralised systems achieved 35 % life 
+cycle cost reductions and maintained 90 % renewable energy fractions. 
+Narayanan et al. [ 104 ] developed coupled TRNSYS-MATLAB frame -
+works for model predictive control of integrated residential renewable 
+energy systems. The PSO algorithm performed better for complex time- 
+varying system optimisation problems.
+The significance of this cluster lies in its contribution to advancing 
+practical engineering design tools. By integrating the flexibility of neural 
+networks with the robust simulation capabilities of TRNSYS, researchers 
+have developed hybrid models that can accurately predict system per -
+formance and maintain relatively low computational demands. These 
+tools allow rapid design iterations, sensitivity analyses, and optimisation 
+studies that would otherwise be costly and time-consuming if conducted 
+solely through experimental or full-scale simulations. The methodolog -
+ical innovations highlighted in this cluster have the potential to accel -
+erate advancements in solar thermal technologies by effectively 
+bridging empirical data with theoretical modelling. This multi-scale 
+modelling approach is crucial for the comprehensive analysis and opti -
+misation of SWHS.
+Advanced artificial intelligence methodologies and emerging technologies
+Cluster 5 comprises “ deep learning ” , “ genetic algorithms ” , “ photo -
+voltaic ” , and “ solar water heating ” . This cluster suggests the research 
+frontier, incorporating advanced artificial intelligence methodologies 
+and broader solar energy technologies. Deep learning distinguishes this 
+cluster as incorporating state-of-the-art AI techniques characterised by 
+multiple hidden layers and sophisticated architectures. These architec -
+tures include convolutional neural networks, recurrent neural networks, 
+and transformer models capable of hierarchical feature learning. Deep 
+learning ’ s inclusion suggests research addressing more complex chal -
+lenges that benefit from representation learning capabilities. Correa- 
+Jullian et al. [ 31 ] exemplified this advancement by exploring deep 
+learning techniques for solar thermal system prognosis. The study 
+compared ANN, recurrent neural networks (RNN), and LSTM architec -
+tures for performance prediction under varying meteorological condi -
+tions. The LSTM models yielded better temporal behaviour replication 
+with a MAE of 0.55 
+◦
+C and a RMSE of 1.27 
+◦
+C. These results out -
+performed naïve predictors and traditional regression models, including 
+Bayesian ridge, Gaussian process, and linear regression. Ahmad and 
+Alsalmah [ 105 ] further advanced deep learning applications by training 
+RNN models on numerical simulation data. The RNN model predicted 
+temperature distribution across solar-irradiated cylindrical heat ex -
+changers with accuracy. The model achieved a mean squared error 
+(MSE) below 10
+-4 
+and a relative percentage error of about 2.5 %.
+Likewise, the reappearance of genetic algorithms in this cluster 
+suggests its versatility and continued relevance alongside newer AI 
+methodologies. The co-occurrence of genetic algorithms with deep 
+learning potentially indicates hybrid approaches where evolutionary 
+algorithms optimise deep learning architectures. Bahlawan et al. [ 106 ] 
+demonstrated the use of a genetic algorithm in optimising hybrid energy 
+plant designs incorporating solar thermal collectors. The optimisation 
+minimised primary energy consumption throughout the plant life cycle 
+by integrating cumulative energy demand assessments. The results 
+showed that life cycle assessment integration achieved about 12 % 
+F. Odoi-Yorke                                                                                                                                                                                                                                    Energy Conversion and Management: X 28 (2025) 101378 
+10 
+--- PAGE 11 ---
+higher primary energy savings. As a key term, “ photovoltaic ” introduces 
+an intriguing cross-technology dimension, suggesting research exploring 
+integrating solar thermal and solar electric technologies. This indicates 
+studies on hybrid photovoltaic-thermal (PV/T) systems that simulta -
+neously generate electricity and useful heat [ 107 ]. In view of this, Dimri 
+and Ramousse [ 108 ] employed genetic algorithms for thermoeconomic 
+optimisation of solar combined heating and power systems. The study 
+compared four solar configurations, including PV panels with solar- 
+assisted heat pump and PV/T hybrid collectors. Genetic algorithm- 
+based optimisation determined optimal solar panel numbers and elec -
+trical and thermal storage capacities for each configuration. Solar- 
+assisted heat pump with PV panels achieved 41 % lower unit product 
+costs than reference systems. Ren et al. [ 109 ] proposed a novel planning 
+method for hybrid energy systems integrating PV/T collectors. The 
+modified NSGA with adaptive simulated binary crossover optimised 
+multi-objective models considering economic, energy, and environ -
+mental performance. The optimal PV panel capacity reached 465 kW in 
+baseline scenarios but reduced to 357 kW when electrical matching 
+performance was prioritised.
+Furthermore, Zeng and Long [ 110 ] conducted multi-objective opti -
+misation studies of combined cooling, heating, and power systems in -
+tegrated with PV/T collectors. The genetic algorithm-based optimisation 
+was applied across five Chinese climate zones. Beijing ’ s cold climate 
+achieved optimal performance with 46.06 % primary energy saving 
+rates and 60.4 % CO
+2 
+emission reduction rates. The implications of 
+Cluster 5 are forward-looking regarding breakthrough potential in 
+complex fault diagnosis and predictive control. Deep learning method -
+ologies provide solutions where traditional approaches have plateaued, 
+mainly in weather pattern recognition for large-scale installations. The 
+inclusion of photovoltaic terminology indicates the broader renewable 
+energy ecosystem within which solar water heating research is situated. 
+This cluster essentially maps the trajectory of future research, indicating 
+that SWHS optimisation will leverage cutting-edge developments. These 
+developments integrate artificial intelligence with comprehensive solar 
+energy challenges, expanding the scope to comprise broader integration 
+objectives.
+Conceptual structure (factorial analysis, thematic evolution and mapping)
+Fig. 9 displays the factorial analysis. The factorial analysis shows 
+individual clusters and relationships in the research area. The analysis is 
+presented in a two-dimensional space, where different aspects of the 
+research domain are organised into colour-coded clusters.
+The upper portion (shown in cyan) focuses on optimisation strate -
+gies, highlighting the connection between Pareto optimal solutions, 
+genetic algorithms, and non-dominated sorting, which are crucial for 
+energy-saving applications in lifecycle analysis. The central and largest 
+cluster (shown in purple) demonstrates the core research concentration, 
+comprising several interconnected elements: multi-objective optimisa -
+tion, artificial neural networks, support vector machines, and optimi -
+sation design specifically for SWHS. This cluster also includes life cycle 
+cost considerations and aquaculture system applications, suggesting a 
+broad scope of implementation scenarios. This central cluster indicates 
+that researchers integrate various AI techniques to address multiple 
+aspects of SWHS design and operation.
+The lower portion of the analysis (shown in green) focuses on tech -
+nical performance metrics, including heat collection rate, heat loss co -
+efficient, specific considerations for evacuated tube solar water heaters, 
+and portable test instruments for system evaluation. On the right side (in 
+red), experimental and simulation-based research components are con -
+nected through exergy analysis, including flat-plate collector design and 
+water heater implementation. These elements ’ spatial distribution and 
+clustering suggest that research in this field is well-structured across 
+multiple dimensions, from theoretical AI implementations to practical 
+engineering applications. The positioning of artificial neural networks 
+and support vector machines near the centre of the purple cluster in -
+dicates their fundamental role in advancing this field. At the same time, 
+their connections to optimisation design and multi-objective optimisa -
+tion show the integrated approach researchers are taking to solve 
+Fig. 9. Factorial mapping of keywords.
+F. Odoi-Yorke                                                                                                                                                                                                                                    Energy Conversion and Management: X 28 (2025) 101378 
+11 
+--- PAGE 12 ---
+complex problems in SWHS. The analysis also demonstrates how life 
+cycle considerations and system optimisation are closely intertwined 
+with AI implementation, suggesting a holistic approach to system 
+development that considers both immediate performance metrics and 
+long-term sustainability factors. The clear yet logical connection be -
+tween experimental aspects and AI-driven optimisation techniques in -
+dicates a well-balanced research field combining theoretical 
+advancement with practical validation.
+The thematic mapping of keywords in Fig. 10 visualises the research 
+themes based on two bibliometric indicators: density and centrality. 
+Density suggests a theme ’ s internal strength and cohesion, indicating the 
+extent to which the associated keywords co-occur within the research 
+domain. In contrast, centrality indicates a theme ’ s relevance within the 
+broader research network and its connectivity to other thematic areas. 
+The thematic map is divided into four quadrants: basic themes (lower 
+right quadrant), niche themes (upper left quadrant), motor themes 
+(upper right quadrant) and declining/emerging themes (lower left 
+quadrant).
+The basic themes quadrant contains fundamental concepts with high 
+centrality but lower density, including solar energy, artificial neural 
+networks, machine learning, photovoltaic, and solar water heating. 
+These terms denote the core foundations of the field that are well- 
+established and widely understood. Both traditional solar technologies 
+and modern AI approaches suggest a blend of established knowledge and 
+contemporary methods. These themes form the essential building blocks 
+upon which more advanced research is built, and while they may not be 
+experiencing rapid development, they remain crucial to the field ’ s 
+overall progress. Including genetic algorithms and renewable energy in 
+this quadrant emphasises their fundamental importance to the field.
+Likewise, the motor themes quadrant denotes well-developed and 
+highly central themes, indicating that they are the driving forces of the 
+research field. The motor themes comprise artificial neural networks, 
+energy efficiency, and heat collection rate, which are crucial for opti -
+mising SWHS. The presence of cost considerations alongside technical 
+aspects like exergy and flat-plate collector simulation demonstrates the 
+balanced approach between technical performance and economic 
+viability. These themes indicate the mature and well-developed areas 
+actively advancing the field. AI-related terms in this quadrant suggest 
+that artificial intelligence is central to improving system performance 
+and efficiency.
+Similarly, the niche themes quadrant contains highly specialised 
+topics with high density but lower centrality. Themes in the quadrant 
+include evacuated tube solar collectors, particle swarm optimisation, 
+distributed energy systems, and optimal control. These themes indicate 
+specialised research areas that, while potentially important, may not be 
+as broadly connected to other research topics. Optimisation techniques 
+and specific collector technologies suggest that researchers explore 
+advanced solutions for specific challenges in solar water heating sys -
+tems. These themes might represent future breakthrough areas or spe -
+cialised applications that could become more central to the field as 
+technology advances.
+Furthermore, the declining theme quadrant features lower develop -
+ment and centrality themes, including genetic algorithms, heat pump 
+water heaters, seasonal storage, neural networks, and CFD (computa -
+tional fluid dynamics). These themes indicate established topics that, 
+despite having been widely studied for decades and once receiving 
+significant attention, are now attracting less research interest. Tradi -
+tional technologies (heat pumps) and computational methods (CFD) 
+suggest combining conventional approaches. These themes might 
+denote areas that are superseded by newer technologies.
+Fig. 11 displays the thematic evolution of keywords, illustrating the 
+dynamic progression of research themes. It can be seen that the initial 
+period (2000 – 2013) was primarily dominated by fundamental concepts, 
+including artificial neural networks, solar energy, and basic optimisation 
+techniques, establishing the groundwork for future developments.
+The period from 2014 to 2018 showed a significant expansion in 
+research themes, with the emergence of genetic algorithms as a notable 
+optimisation tool, alongside continued development in solar energy 
+Fig. 10. Keyword-based thematic mapping.
+F. Odoi-Yorke                                                                                                                                                                                                                                    Energy Conversion and Management: X 28 (2025) 101378 
+12 
+--- PAGE 13 ---
+applications and solar water heater technology. The artificial neural 
+networks research stream maintained its presence while becoming more 
+sophisticated in its applications. During 2019 – 2020, the research 
+domain witnessed a notable shift towards renewable energy integration 
+and the introduction of deep learning techniques. Solar thermal collec -
+tors and solar water heating systems became key research focuses, 
+emphasising practical applications. The period of 2021 – 2023 showed a 
+clear evolution towards optimisation approaches, with multi-objective 
+optimisation becoming a distinct research theme alongside continued 
+development in artificial neural networks and deep learning applica -
+tions. The latest period (2024) demonstrates the field ’ s growth with the 
+emergence of machine learning as a distinct theme, alongside deep 
+learning and multi-objective optimisation. The figure shows continuity 
+in some research streams in optimisation and neural network applica -
+tions, and also reveals how newer technologies and methodologies have 
+been incorporated.
+The evolution of these themes suggests a gradual shift from more 
+straightforward, single-objective optimisation approaches to more 
+complex, multi-objective strategies capable of handling multiple system 
+parameters simultaneously. The continued presence of solar energy and 
+solar water heating themes throughout all periods indicates their 
+fundamental importance to the field. At the same time, the emergence of 
+newer AI techniques denotes the field ’ s adaptation to advancing 
+technology.
+Advances in optimising SWHS with artificial intelligence
+This section systematically analyses relevant studies to identify the 
+strengths, limitations, and gaps in existing research on AI applications in 
+SWHS. In view of this, a range of AI methodologies, from traditional 
+approaches such as artificial neural networks and genetic algorithms to 
+advanced deep learning architectures and hybrid intelligent systems, are 
+discussed. Each methodology provides unique perspectives on applying 
+computational intelligence to improve SWHS efficiency, reliability, and 
+economic viability. The studies discussed are grouped into the following 
+thematic areas: (1) performance prediction, modelling, and temperature 
+forecasting using neural networks and machine learning, (2) multi- 
+Objective optimisation, system design, and parameter sizing using 
+evolutionary algorithms, (3) intelligent control systems, fault detection, 
+and real-time monitoring, and (4) hybrid Systems, advanced materials 
+integration, and specialised applications. It is worth mentioning that 
+each thematic area indicates an individual approach to addressing 
+specific challenges in solar water heating technology and demonstrates 
+the breadth and depth of AI applications in this domain.
+Performance prediction, modelling, and temperature forecasting using 
+neural networks and machine learning
+Performance prediction, modelling, and temperature forecasting are 
+foundational pillars for advancing SWHS, where the integration of ANNs 
+and machine learning techniques has revolutionised traditional analyt -
+ical approaches to provide unprecedented accuracy, computational ef -
+ficiency, and adaptability to complex non-linear relationships that 
+characterise solar thermal processes. For example, ANNs have shown 
+significant capabilities in predicting solar water heater performance 
+across different configurations and operational conditions. However, 
+variations in methodology, accuracy metrics, and application contexts 
+show these computational techniques ’ complexity. Liu et al. [ 111 ] 
+pioneered high-throughput screening methods using ANN models to 
+evaluate over 350 million design combinations for water-in-glass evac -
+uated tube solar water heaters. The authors achieved experimental 
+validation with heat collection rates of 11.32 and 11.44 MJ/m
+2 
+and 
+prediction errors below 2 %. The results imply that machine learning 
+can effectively navigate enormous design spaces that would be compu -
+tationally prohibitive through conventional simulation approaches. Li & 
+Liu [ 112 ] conducted comparative evaluations of four algorithms: gen -
+eral regression neural network (GRNN), multilayer feedforward neural 
+network (MLFN), support vector machine (SVM), and extreme learning 
+machine (ELM) and found that all achieved 100 % accuracy within ± 30 
+% tolerance. However, MLFN yielded the lowest RMSE of 0.14 for heat 
+collection rate prediction. At the same time, ELM performed best for 
+heat loss coefficients with an RMSE of 0.67, highlighting that algorithm 
+selection depends critically on the specific performance parameter being 
+predicted rather than the universal advantage of any single approach. 
+This finding contrasts with Razavi et al. [ 30 ], who found that ANNs 
+outperformed conventional heat transfer correlations with R
+2 
+of 0.993 
+for training data and 0.978 for validation, compared to the conventional 
+method ’ s significantly reduced R
+2 
+of 0.522 during validation. Liu et al. 
+[ 28 ] developed a neural network that predicts solar collector thermal 
+performance by processing eight input parameters (tube specifications, 
+geometric configurations, and operating conditions) through two hid -
+den layers that learn complex relationships between design variables 
+and system behaviour, outputting the heat collection rate or heat loss 
+coefficient to optimise collector efficiency as shown in Fig. 12 . The 
+optimal models achieved RMSE values of 0.2049 for heat collection rates 
+and 0.9246 for heat loss coefficients. However, Casteleiro-Roca et al. 
+[ 113 ] employed hybrid intelligent models combining ANNs and SVM 
+across nine local models. The authors achieved predictions with less 
+than 4 
+◦
+C MAE and 14.5 % MAPE. The temporal dimension of solar 
+thermal system behaviour has motivated investigation of recurrent ar -
+chitectures, with Correa-Jullian et al. [ 31 ] revealing that LSTM models 
+achieved higher performance with MAE of 0.55 
+◦
+C, RMSE of 1.27 
+◦
+C, and 
+variance of 0.520
+◦
+C
+2 
+compared to standard ANNs, RNNs, and conven -
+tional regression models, including Bayesian Ridge and Gaussian Pro -
+cess methods. This implies that memory-capable networks can better 
+capture sequential dependencies and temporal patterns inherent in 
+solar-assisted systems subject to diurnal cycles and weather fluctuations.
+In the work of Sadeghi et al. [ 83 ], the authors investigated modified 
+Fig. 11. Keyword-based thematic evolution analysis.
+F. Odoi-Yorke                                                                                                                                                                                                                                    Energy Conversion and Management: X 28 (2025) 101378 
+13 
+--- PAGE 14 ---
+evacuated tube collectors with nanofluid working media, comparing 
+MLP and RBF techniques. The authors neural network model predicts 
+thermal system performance by processing three input parameters 
+(storage tank volume, bypass tube diameter, and nanofluid concentra -
+tion) through a hidden layer to simultaneously predict two output 
+metrics: temperature difference and energy efficiency of the thermal 
+storage system utilizing Cu
+2
+O/W nanofluid technology ( Fig. 13 ) . The 
+MLP yielded better performance, recording a maximum mean relative 
+percentage error (MRPE) of only 0.576 compared to RBF ’ s 0.907. The 
+choice between different collector technologies and operational condi -
+tions has influenced model performance characteristics, as evidenced by 
+Mohana et al. [ 114 ], who analysed parabolic trough collectors and 
+found that SVM achieved 50.99 % accuracy, substantially out -
+performing neural networks at 17.12 % and multivariate adaptive 
+regression splines at 48.26 %. However, compared to simpler multiple 
+linear regression approaches, these relatively modest absolute accuracy 
+values raise questions about the circumstances under which complex 
+nonlinear models provide meaningful advantages over traditional sta -
+tistical methods. Prakasam et al. [ 84 ] developed an optimised ANN 
+model with a 3 – 10-2 architecture, achieving an MSE of 8.2 × 10
+-3 
+and 
+correlation coefficients ranging from 0.96 to 0.98 for flat-plate collectors 
+using cerium oxide – water nanofluid. Comparative studies between data- 
+driven and physics-based modelling approaches have revealed comple -
+mentary strengths and weaknesses, with Shafieian et al. [ 115 ] showing 
+that ANN is the most accurate predictor for heat pipe solar collectors 
+with an autumn Variance Accounted For (VAF) of 0.99489 and R
+2 
+of 
+0.989, significantly outperforming ANFIS and Thermal Resistance 
+Network methods. It was also noted that prediction accuracy varied 
+seasonally, with maximum divergences of 3.56 % for thermal efficiency 
+and 1.52 % for exergy efficiency. Tamizharasan et al. [ 116 ] imple -
+mented deep neural networks for systems incorporating PCM, achieving 
+training accuracy values ranging from 0.83888 to 0.98692 with RMSE 
+values below the 15 % threshold and MAPE values mainly below 5 %. 
+These results were substantially better than industry standards of 20 – 30 
+% MAPE and confirmed deep learning architectures ’ statistical signifi -
+cance and reliability through chi-square analysis.
+Similarly, Elmasry et al. [ 117 ] developed second-order polynomial 
+correlations using ANNs and group method data handling with a high 
+coefficient of correlation (R
+2 
+of 0.99824) and low RMSE (0.05109) for 
+estimating outlet temperature. The computational efficiency advantages 
+of machine learning have been emphasised in studies comparing 
+training requirements and deployment complexity, with Liu et al. [ 118 ] 
+showing that ELM models using 31 hidden nodes achieved an average 
+RMSE of 0.30 for heat collection rates, slightly higher than previous 
+MLFN results of 0.14 but with significantly reduced training time. In 
+contrast, ELM with 5 hidden nodes achieved RMSE of 0.67 for heat loss 
+coefficients, lower than all previous methods including SVM, GRNN, and 
+MLFN. Integration with physical simulation platforms has produced 
+hybrid modelling strategies, as Souliotis et al. [ 34 ] combined group 
+method data handling neural networks with TRNSYS simulation for 
+integrated collector storage systems, achieving training accuracy (R
+2 
+=
+0.9392) and validation (R
+2 
+= 0.9383), with TRNSYS providing radiation 
+processing capabilities. At the same time, ANNs handled black-box 
+modelling of components that were difficult to characterise analyti -
+cally. Similarly, Wongsuwan & Kumar [ 101 ] compared TRNSYS and 
+ANN predictions for forced circulation systems. The results show that for 
+Fig. 12. Schematic ANN diagram of a neural network model for predicting SWHS heat collection rate and heat loss coefficient [ 28 ] (Published under open access).
+Fig. 13. ANN model for thermal storage system performance prediction (Published under open access) [ 83 ].
+F. Odoi-Yorke                                                                                                                                                                                                                                    Energy Conversion and Management: X 28 (2025) 101378 
+14 
+--- PAGE 15 ---
+hourly collector outlet temperature TRNSYS achieved maximum errors 
+of 1.5 
+◦
+C MAE and 1.7 
+◦
+C RMSE. In comparison, ANN showed 1.7 
+◦
+C 
+MAE and 2.1 
+◦
+C RMSE. However, both achieved efficiency indices and 
+R
+2 
+values exceeding 0.95, with TRNSYS performing better during vari -
+able cloudiness but ANN showing higher prediction during very cloudy 
+conditions due to sufficient training data spread.
+Likewise, other studies have assessed long-term performance pre -
+diction capabilities. For instance, Kalogirou & Panteliou [ 29 ] trained 
+ANNs on 30 thermosiphon systems and obtained an R
+2 
+value of 0.9993 
+for training and 0.9913 for validation when predicting solar energy 
+output. The results imply that networks trained on standardised test data 
+can predict performance across collector areas ranging from 1.81 to 
+4.38 m
+2 
+and multiple system configurations, including open and closed 
+thermosiphonic designs with horizontal and vertical storage tanks. 
+Specialised applications have motivated the development of specific 
+predictive models, with Alade et al. [ 119 ] proposing Bayesian support 
+vector regression for estimating specific heat capacity of alumina/ 
+ethylene glycol nanofluids, recording Pearson ’ s correlation coefficient 
+of 99.95 % and absolute average relative deviation of 0.1888. Ben Ali 
+et al. [ 120 ] applied machine learning with a local regression approach, 
+with an R
+2 
+above 95 % for absorptance prediction in graphene-based 
+solar absorbers. PCM integration has been successfully modelled, as 
+Kanimozhi et al. [ 121 ] developed ANN models for thermal energy 
+storage systems using paraffin and honey waxes. The results agree with 
+experimental results from 265 trials with Chi-square values ranging 
+from 1.5 to 4.8, MAPE values less than 12 %, and RMSE values between 
+0.65 and 1.9, with statistical analysis identifying time as the dominant 
+factor contributing more than 40 % to heat improvement during both 
+charging and discharging processes.
+In addition, photovoltaic-integrated systems have been addressed, 
+with Asiri et al. [ 122 ] achieving an ANN accuracy (R
+2 
+= 0.9998) with 
+less than 5 % error for predictions of solar water heaters with variable 
+speed photovoltaic circulating pumps. Lillo-Bravo et al. [ 123 ] used 
+random forest models to replace experimental tests required by ISO 
+9459 – 5:2007, training on 36 thermosiphon systems and testing on four 
+systems, obtained MAPE between 2.94 % and 5.86 % and R
+2 
+between 
+0.995 and 0.998 for annual energy supplied. Advanced fluid dynamics 
+applications have emerged, with Shafiq et al. [ 124 ] investigating Darcy- 
+Forchheimer tangent hyperbolic flow in parabolic trough collectors 
+using the Levenberg-Marquardt technique and backpropagated neural 
+networks. The authors created a dataset through Runge-Kutta fourth- 
+order methods with model deviations closely clustered around zero, 
+indicating that neural networks can capture complex rheological 
+behaviour relevant to non-Newtonian heat transfer fluids. Thermal 
+resistance network approaches have been enhanced through machine 
+learning integration, as Nokhosteen & Sobhansarbandi [ 125 ] presented 
+a resistance network-based proper orthogonal decomposition method 
+for heat pipe evacuated tube collectors, obtaining predictions of pe -
+ripheral temperature distribution with a maximum error of 10 %, 
+combining geographical and meteorological characteristics with proper 
+orthogonal decomposition for desired temporal accuracy.
+Furthermore, storage tank design has benefited from neural network 
+applications. Kulkarni et al. [ 126 ] used back-propagation learning with 
+the Levenberg-Marquardt algorithm trained on 608 known values to 
+predict the overall conductance of hot water storage tanks. A maximum 
+error of 2.62 % was obtained, facilitating rapid and accurate generation 
+of various possible designs considering tank diameter, insulation 
+thickness, and thermal conductivity parameters. Thermal stratification 
+prediction has been investigated, with G ´eczy-Víg & Farkas [ 127 ] 
+comparing TRNSYS and ANN models for determining temperature dis -
+tribution across eight storage tank layers and found average deviations 
+of 1.9 
+◦
+C for TRNSYS compared to 0.53 
+◦
+C during training and 0.76 
+◦
+C 
+during validation for the ANN approach. In addition, fuzzy logic alter -
+natives have been explored, with Kishor et al. [ 128 ] developing fuzzy 
+models with three inputs achieving improved prediction performance 
+compared to neural network techniques. Heidari and Khovalyg [ 33 ] 
+achieved MAE reductions of 25 %, 28 %, and 41 % compared to feed- 
+forward models for LSTM, attention-based LSTM, and attention-based 
+LSTM with decomposition, respectively. He et al. [ 129 ] ANN models 
+for forecasting irreversibility rates inside turbulator-inserted solar col -
+lector tubes achieved high accuracy for estimating total entropy gen -
+eration rate as functions of Reynolds number and pitch distance. This 
+allows the identification of high entropy generation regions requiring 
+geometric modifications. Roberto et al. [ 130 ] used graybox identifica -
+tion and adaptive linear neural network models to infer steady-state 
+efficiency curves from transient measurements, which recorded errors 
+below 0.5 % and 2.2 %, respectively. Alosaimy and Hamed [ 131 ] ANN 
+models for solar water heaters coupled with air humidifiers for liquid 
+desiccant regeneration recorded a maximum uncertainty of 2 % in 
+temperature measurements.
+Multi-objective optimisation, system design, and parameter sizing using 
+evolutionary algorithms
+Traditional design approaches often rely on simplified heuristic 
+methods that may fail to capture the intricate trade-offs between 
+competing objectives such as thermal efficiency, economic viability, 
+spatial constraints, and environmental impact. Studies in this field sys -
+tematically investigate how algorithmic approaches can enhance system 
+performance through optimal sizing of collectors, storage tanks, and 
+auxiliary components and minimise lifecycle costs while maximising 
+energy savings. Applying evolutionary algorithms to SWHS optimisation 
+shows diversity in methodological approaches and optimisation objec -
+tives across different contexts and scales. Hajabdollahi and Hajabdollahi 
+[ 132 ] employed PSO to maximise efficiency and minimise total annual 
+cost for flat plate collectors. The study identified mass flow rate and 
+insulator thickness as critical decision variables causing objective 
+function conflicts, with efficiency changes of only 0.123 % to   1.506 % 
+across different heat transfer rates but cost variations of 44.30 % to 
+  77.87 %. Similarly, Yaman and Arslan [ 133 ] utilised a PSO/Hooke- 
+Jeeves hybrid algorithm for optimising SWHS across Turkish regions. 
+The authors achieved a lifecycle cost reduction of 3.3 %-5.8 % annually 
+and 1.8 %-4.8 % during summer. Also, they revealed that optimisation 
+parameters differ substantially between seasonal periods, with summer 
+optimisation favouring cost savings and winter optimisation enhancing 
+thermal performance. Ouhammou et al. [ 134 ] used a genetic algorithm 
+to optimise active solar water heaters under varying climatic conditions, 
+achieving a maximum thermal efficiency of 75.28 % by optimising plate 
+emissivity, glass cover number, and air velocity parameters. Zhang et al. 
+[ 135 ] optimised Fresnel and flat-plate collectors using NSGA-II, 
+achieving 19 % cost reduction and 2.9 % area reduction compared to 
+single-collector systems. Dimri and Ramousse [ 108 ] developed a genetic 
+algorithm optimisation based on total unit product cost, revealing that a 
+solar-assisted heat pump with photovoltaic panels achieved 41 % lower 
+costs than reference systems. Yoshida and Ueda [ 136 ] developed a 
+multi-objective PSO for a hybrid PV-SHWS system, which improved 
+power grid dependence by 7.59 %, self-consumption rate by 1.41 %, and 
+electric charge by 127.89 JPY compared to simultaneous optimisation. 
+Novotny and Matuska [ 137 ] employed TRNSYS-MATLAB integration 
+with NSGA-II for Czech households, revealing that electric heaters with 
+minimal solar systems yielded the lowest costs (15 k USD). At the same 
+time, heat pumps with extensive coverage cost the highest (43 k USD), 
+and notably that no Pareto-optimal solution included solar thermal 
+collectors alone due to high investment costs and low savings.
+Likewise, Cao et al. [ 138 ] optimised direct-expansion solar-assisted 
+heat pump water heaters using NSGA-II, which maximised the coeffi -
+cient of performance to 95.21 % but decreased solar collector efficiency 
+by 13.5 %. Shirinbakhsh et al. [ 139 ] reported that applying a genetic 
+algorithm to optimise PCM integration in solar domestic hot water 
+systems revealed that thermal stratification enhances the auxiliary solar 
+fraction by 9 % under non-uniform high consumption conditions. In 
+contrast, PCM integration alone increased the auxiliary solar fraction by 
+F. Odoi-Yorke                                                                                                                                                                                                                                    Energy Conversion and Management: X 28 (2025) 101378 
+15 
+--- PAGE 16 ---
+4 %, though the improvement was highly case-dependent, with demand 
+variations causing up to an 8 % change in the auxiliary solar fraction. 
+Silva et al. [ 95 ] employed CFD and the NSGA-II optimisation algorithm 
+to optimise stamped longitudinal vortex generators in circular tubes. 
+Their results showed that heat transfer was enhanced by more than 50 % 
+compared to smooth tubes, with the highest improvement of 62 % at a 
+Reynolds number of 900. However, the optimal thermo-hydraulic effi -
+ciency was achieved at a Reynolds number of 600, where the heat 
+transfer gain accounted for 55 % of the corresponding pressure drop 
+penalty. Mayer et al. [ 140 ] applied a multi-objective genetic algorithm 
+to optimise waffle-shaped flat-plate collectors. The optimal configura -
+tion achieved a solar absorptance of 97.8 % and a thermal emittance of 
+4.8 %, representing significant improvements compared to flat config -
+urations, which showed 84.9 % absorptance and 1.7 % emittance. Atia 
+et al. [ 141 ] employed a genetic algorithm to optimise the solar collector 
+area, achieving an annual solar fraction of 98 %. Seasonal variations 
+were observed, with solar fractions ranging from 90-99 % in summer 
+and 44.9 – -2.8 % in winter. In comparison, economic analysis revealed 
+system costs increased 157 % when interest rates increased from 5 % to 
+20 %. Ponnusamy et al. [ 90 ] performed an exergetic characterisation 
+using a genetic algorithm to minimise the overall loss coefficient 
+through optimisation of heat flux rate and glass cover temperatures, 
+finding that exergy efficiency increased slightly (0.01 – 0.08 %) over 12 
+h, with the minimum loss coefficient occurring during peak hours. 
+Ahmadi et al. [ 96 ] NSGA-II optimisation distillation and compact solar 
+water heaters identified optimal parameters of 20 membrane rows, 
+334.4 kg feed mass, and 0.027 kg/s flow rate, achieving 92.5 kg daily 
+production at 12.2 USD/m
+3 
+cost with gain output ratio of 1.6.
+Similarly, Fong et al. [ 142 ] applied evolutionary programming with 
+10 individuals and a maximum of 50 epochs, achieving annual energy 
+savings of 1561.9 GJ at optimal conditions comprising a 20.6
+◦
+tilt angle, 
+15.5
+◦
+southwest orientation, 41.6 m
+3 
+storage capacity, and a pump flow 
+rate of 20,427 kg/h. Adun et al. [ 143 ] employed a genetic algorithm to 
+optimise ternary nanofluids in parabolic trough collectors integrated 
+with Kalina cycles, attaining a maximum power output of 61.21 kW and 
+an optimum exergetic efficiency of 25.1 %, outperforming conventional 
+thermal oils and salts. Kumar et al. [ 144 ] experimentally demonstrated 
+that angled perforated baffles increased the Nusselt number and friction 
+factor by factors of 3.82 and 7.14, respectively, achieving optimal per -
+formance at a 55
+◦
+attack angle and a Reynolds number of 9,000, with a 
+thermohydraulic performance of 1.94. The central composite design and 
+ANN models accurately predicted the thermal parameters, with de -
+viations within ± 9.7 % and ± 5.0 %, respectively. Khargotra et al. 
+[ 145 ] identified the optimal configuration with a 0.5 pitch ratio, 0.2 
+blockage ratio, 45
+◦
+attack angle, and 0 mm spacer length, where 
+empirical correlations and ANN predictions showed bias errors of 10.9 
+% for the Nusselt number and 9.5 % for the friction factor.
+Intelligent control systems, fault detection, and real-time monitoring
+This section highlights studies integrating intelligent control sys -
+tems, fault detection, and real-time monitoring in SWHS. For example, 
+Cardona et al. [ 146 ] developed a wireless IoT-based temperature 
+monitoring system utilising machine learning algorithms for intelligent 
+alarm triggering, including water leak detection and efficiency loss 
+identification, delivering real-time data through local Wi-Fi networks 
+for user notification and automation integration. Chidiac et al. [ 87 ] 
+employed an adaptive self-organising map neural network that achieved 
+convergence after 200 training iterations using 2,208 samples. The 
+optimal approach, utilising adaptive shading of 0 %, 20 %, 25 %, or 32 
+%, maintained collector temperatures within 2.05 
+◦
+C of the 80 
+◦
+C limit 
+and prevented unacceptable nighttime temperature drops observed with 
+more aggressive shading strategies. Akbari and Shadlu [ 147 ] addressed 
+temperature profile control challenges through fuzzy logic-modified 
+model predictive control. The speed and accuracy recorded were 
+higher than those of traditional model predictive control in MATLAB/ 
+Simulink simulations, with the fuzzy logic component calculating state 
+variable references while modified model predictive control regulated 
+temperature parameters despite system disturbances and delays. The 
+model-free paradigm advances further in Pataro et al. [ 148 ], where 
+reinforcement Q-Learning achieved adaptive optimal control of solar 
+collector fields using only plant measurements (working fluid temper -
+ature, flow rate, and reference trajectory). The algorithm converged to 
+optimal linear quadratic tracking (LQT) controller gains, showing less 
+than 15 % average discrepancy across 18,000 data points while out -
+performing LQT in managing steady-state errors during smooth solar 
+irradiance conditions. Ahmed et al. [ 149 ] optimised PV/T hybrid col -
+lectors using fuzzy logic monitoring reflective mirrors, glass covers, and 
+lower reflector angles as inputs with PV temperature and efficiency as 
+outputs, achieving thermal efficiency variations from 82 % to 50 % 
+depending on angle configurations.
+Likewise, Nguyen et al. [ 150 ] employed a PID temperature controller 
+for passive systems to obtain less than 3 % overshoot, approximately 
+110-second settling time, and ± 1
+◦
+C temperature error and maintained 
+desired outlet temperatures through hot – cold water mixing ratio ad -
+justments. Atia et al. [ 151 ] compared neural network control against 
+adaptive fuzzy logic control (AFLC) for aquaculture applications trained 
+via Levenberg-Marquardt back-propagation and obtained a perfect R =
+1.0 regression and maintained exactly 34 
+◦
+C throughout 24-hour periods 
+in both seasons. In contrast, the AFLC recorded an initial 2 
+◦
+C overshoot, 
+potentially harmful to aquaculture organisms. The comparative analysis 
+of control strategies extends to Araújo et al. [ 152 ], who revealed that 
+proportional flow rate control outperforms on – off control across 
+medium-to-high collector areas, with proportional control achieving 
+maximum solar fractions exceeding on – off control by factors of 
+1.45 – 1.78 at a standard 5 m
+2 
+collector area, depending on location and 
+collector type. However, on – off control proved marginally higher only 
+for impractically small areas (A ≲ 0.15 m
+2
+) where solar fractions 
+remained extremely low at 0.05 – 0.07.
+Other studies have assessed fault detection capabilities utilising 
+different machine learning architectures and sensor fusion strategies. 
+For example, Jiang et al. [ 153 ] achieved 89.7 % minimum accuracy with 
+a 93.7 % mean across 100 tests using SVM-Dempster-Shafer fusion to 
+detect four fault types (dusty collectors, heating empty collectors, heat 
+transfer inefficiency, and leakage). The Dempster-Shafer evidence the -
+ory fusion yielded fused basic belief values of 0.9234 – 0.9630 with un -
+certainties below 1 %, representing improvements over individual 
+evidence sources, where audio features alone showed 0.6533 confidence 
+and temperature evidence only 0.4378 for dusty collector faults. Kalo -
+girou et al. [ 154 ] developed eight ANNs ( Fig. 14 ) for fault detection, 
+achieving R
+2 
+values of 0.8258 – 0.9996 for validation datasets, with the 
+M
+10
+a method proving more stable than M
+5
+c due to ten-consecutive- 
+measurement averaging. The models detected collector efficiency 
+degradation at approximately 5 % loss (F
+0 
+coefficient declining from 
+0.70 to 0.67) at the 76th-80th functioning hours and insulation deteri -
+oration at 5 % degradation levels at the 67th-99th hours, depending on 
+the detection method and circuit location. He et al. [ 155 ] implemented 
+Fig. 14. A schematic of an ANN model for SWHS fault predicting temperatures 
+[ 154 ] (Reproduced with permission from Elsevier, License number: 
+5924950460908).
+F. Odoi-Yorke                                                                                                                                                                                                                                    Energy Conversion and Management: X 28 (2025) 101378 
+16 
+--- PAGE 17 ---
+hierarchical ART networks trained on five-year TRNSYS January simu -
+lations using only two sensors (collector plate and tank heat exchanger 
+outlet temperature). With vigilance parameters ranging from 0.65 to 
+0.87, creating 3 – 14 pattern categories across four hierarchical layers, 
+the model detected pump failure rapidly, pump degradation progres -
+sively at 40 % flow reduction, thermosyphoning at low-to-medium 
+severity during nighttime reverse circulation, and persistent shading 
+requiring 5-day mean and standard deviation inputs to distinguish from 
+transient cloud coverage. The application of advanced computer vision 
+techniques emerges in Tao et al. [ 156 ], who developed TMACNet based 
+on modified YOLOv8 Siamese architecture with feature difference 
+branch, temporal mutual attention layer, and contextual attention 
+module for small object change detection in UAV imagery of rooftop 
+solar water heaters. TMACNet achieved F1 improvements exceeding 
+5.96 % compared to alternative change detection methods and 1 – 3 % AP 
+metric improvements over single-temporal detection models, and shows 
+resistance to image registration errors and building height displacement.
+Hybrid Systems, advanced materials integration, and specialised 
+applications
+Studies discussed in this section highlight hybrid systems combining 
+multiple solar technologies, such as PV/T collectors, absorption heat 
+transformers, or PCM integration, to address the inherent limitations, 
+such as intermittency challenges, temperature elevation constraints, and 
+spatial footprint requirements. Integrating PCM have substantial per -
+formance enhancements across different collector configurations and 
+operational settings in this context. For example, Pathak et al. [ 157 ] 
+evaluated annular copper fin integration with U-tube evacuated tube 
+collectors incorporating PCMs. The annular copper fin U-tube evacuated 
+tube collector with PCM achieved 73.85 – 87.84 % for simultaneous 
+charging mode and 71.23 85.44 % for midday charging mode thermal 
+output, enhancing performance by 9 – 21 % over the reference system 
+and reducing heat loss. Chopra et al. [ 158 ] integrated myristic acid 
+within novel manifold designs for evacuated tube solar collectors. The 
+authors attained daily efficiencies of 62.42 %-79.12 % during half-day 
+charging and 71.49 %-85.21 % during whole-day charging, depending 
+on flow rates (0.066 – 0.20 L/min), representing 42.85 % and 61 % im -
+provements over conventional systems, respectively, with higher flow 
+rates recommended for maximising daily efficiency. In comparison, 
+lower rates produced higher outlet temperatures suitable for late eve -
+ning demand.
+The hybrid system paradigm advances significantly in L ´opez-P ´erez 
+et al. [ 159 ], who evaluated SWHS coupled with absorption heat trans -
+formers (AHT) across three Mexican climates. The results show that 
+SWHS-AHT configurations attained collector area reductions of 42.9 
+%-60 % and sustained comparable auxiliary heat requirements, with the 
+most notable results in Tapachula requiring only 150 m
+2 
+versus 375 m
+2 
+for conventional systems (60 % reduction) and generating potential 
+investment savings of € 86,512.5. At the same time, the AHT maintained 
+a COP of 0.44 and achieved an average temperature lift of 12.9 
+◦
+C across 
+all locations. In the work of [ 160 ], the authors proposed a hybrid solar 
+deep learning approach incorporating automatic sun-tracking and 
+defective tube lamps with methane gas heat conduction. The model 
+claims 86 – 92 % performance rates across input sizes and management 
+categories, representing improvements of 10 – 20 % points over tradi -
+tional building-integrated photovoltaic systems. Deepanraj et al. [ 32 ] 
+modified shallow swarm optimisation with deep learning employing 
+restricted Boltzmann machine models with quasi-oppositional-based 
+learning for hyperparameter optimisation, achieving prediction accu -
+racy with MSE of 0.0066, RMSE of 0.0811, and MAE of 0.0616. The 
+computational modelling sophistication reaches new heights in 
+Nokhosteen and Sobhansarbandi [ 161 ], who developed an innovative 
+hybrid CFD model combining resistance network-based proper orthog -
+onal decomposition for daytime operation with the Lattice Boltzmann 
+method for nighttime simulation. The model agreed well with 
+experimental data (average error 5.16 %) while operating several orders 
+of magnitude faster than traditional direct numerical simulation 
+methods, addressing the computational intensity challenge inherent in 
+modelling complex heat transfer processes within evacuated tube col -
+lectors across full operational cycles. Shaban et al. [ 162 ] employed 
+optimised deep neural network (ODNN) enhanced with the sand cat 
+swarm optimisation (SCSO) algorithm to determine the optimal design 
+of PV/T cooling systems. The findings revealed that the ODNN model 
+achieved high predictive accuracy with MAE, MSE, and R
+2 
+values of 
+approximately 0.0075, 0.00251, and 0.9972, respectively.
+Summary and future research directions
+This section summarises the bibliometric and systematic review 
+findings and identifies potential directions for future research. The 
+bibliometric analysis revealed that China leads with 22 % of the total 
+research output, followed by India with 16 % and the United States with 
+10 %. In contrast, Africa contributes only 5.3 %, emphasising a signifi -
+cant knowledge gap despite the continent ’ s vast solar energy potential. 
+ANNs achieved prediction accuracies with R
+2 
+values exceeding 0.99 for 
+performance forecasting across multiple system configurations. Table 1
+summarises AI methodologies applied to SWHS for performance pre -
+diction, fault detection, and intelligent control, including their param -
+eters, performance metrics, and key outcomes. Advanced architectures, 
+including LSTM networks, revealed higher temporal prediction capa -
+bilities with MAE as low as 0.55 
+◦
+C [ 31 ]. Evolutionary algorithms have 
+addressed multi-objective optimisation challenges, balancing thermal 
+efficiency, lifecycle costs, and environmental impacts. Genetic algo -
+rithms and PSO identified Pareto-optimal designs that reduced lifecycle 
+costs by 3 – 20 % and maintained performance [ 92 , 108 , 133 ]. Intelligent 
+control systems incorporating fuzzy logic, reinforcement learning, and 
+neural networks supported adaptive operation that outperformed con -
+ventional controllers [ 147 , 148 , 151 ]. Fault detection systems achieved 
+accuracies exceeding 89 % using sensor fusion and machine learning 
+[ 153 , 154 ]. PCM integration enhanced energy storage by 5 – 62 % 
+depending on materials and configurations [ 140 , 141 , 158 ]. Hybrid 
+photovoltaic-thermal systems and absorption heat transformer coupling 
+reduced collector areas by 43 – 60 % and maintained thermal perfor -
+mance [ 159 ].
+Despite these advances, critical limitations persist and require 
+further investigation. The transferability of trained models across 
+geographical locations and climatic zones remains insufficiently 
+explored, as most studies validated algorithms using site-specific data 
+[ 29 , 83 , 101 ]. Future research could develop generalised models trained 
+on multi-location datasets representing several climate classifications 
+and operational conditions similar to approaches that achieved high 
+accuracy across varying environmental parameters [ 70 , 123 ]. Long-term 
+model degradation and recalibration requirements warrant systematic 
+investigation since solar systems operate for 15 – 25 years under chang -
+ing environmental conditions. Further studies could establish mainte -
+nance protocols for retraining algorithms as system performance 
+evolves, given demonstrated capability to detect efficiency degradation 
+at approximately 5 % loss levels [ 154 ]. Uncertainty quantification is 
+another critical gap, as most studies reported deterministic predictions 
+without confidence intervals or probabilistic forecasts [ 111 , 112 , 118 ]. 
+Future work should integrate Bayesian approaches or ensemble 
+methods, providing prediction uncertainty estimates essential for risk- 
+informed decision-making for applications requiring precise tempera -
+ture control [ 119 , 151 ].
+Likewise, the computational intensity of deep learning architectures 
+limits deployment on low-cost embedded systems common in solar in -
+stallations [ 31 , 116 ]. Further research could focus on model compression 
+techniques, edge computing implementations, and hardware-aware 
+neural architecture search, enabling real-time optimisation on 
+resource-constrained platforms, addressing challenges where advanced 
+controllers demonstrated better performance but required substantial 
+F. Odoi-Yorke                                                                                                                                                                                                                                    Energy Conversion and Management: X 28 (2025) 101378 
+17 
+--- PAGE 18 ---
+Table 1 
+Summary of AI techniques for SWHS performance prediction, fault detection, and intelligent control.
+AI methods used Key parameters/variables Performance metrics Main outcomes Reference
+ANN, RNN, LSTM Meteorological conditions, system 
+performance
+MAE = 0.55 
+◦
+C, RMSE = 1.27 
+◦
+C, 
+Variance = 0.520
+◦
+C
+2
+, Relative error 
+= 3.45 %
+LSTM models outperformed ANN and RNN 
+with the lowest prediction errors for 
+temperature sequences; Temporal behaviour 
+replication
+[ 31 ]
+GRNN, MLFN, SVM, ELM Heat collection rate, heat loss 
+coefficient
+100 % accuracy at ± 30 % tolerance; 
+RMS: 0.14 – 0.33 (heat collection), 
+0.67 – 0.73 (heat loss)
+MLFN is best for heat collection (0.14), ELM is 
+best for heat loss (0.67)
+[ 112 ]
+ANN-based high-throughput 
+screening
+Extrinsic properties of water-in- 
+glass evacuated tube solar water 
+heater (3.538 × 10
+8 
+combinations)
+Prediction error: 1.35 – 1.90 %, Heat 
+collection: 11.32 – 11.44 MJ/m
+2
+Screened millions of designs efficiently; two 
+new designs showed higher rates than all 915 
+measured samples
+[ 111 ]
+Attention-based LSTM + Time-series 
+decomposition (ALSTM-D)
+Demand pattern, solar radiation 
+(stochastic phenomena)
+MAE reduction: 41 % vs Feed- 
+Forward, 28 % vs LSTM, 25 % vs 
+ALSTM
+Novel attention mechanism for solar-assisted 
+systems; Higher handling of stochastic inputs
+[ 33 ]
+MLP and RBF Tank volume (5 – 8 L), bypass pipe 
+diameter (6 – 10 mm), nanofluid 
+concentration (0 – 0.04)
+MLP: MRPE = 0.576 %, RBF: MRPE 
+= 0.907 %; Energy efficiency 
+improvement: 4 %
+MLP higher than RBF; validated with a 
+modified evacuated tube collector using 
+Cu
+2
+O/DW nanofluid
+[ 83 ]
+Modified shallow swarm optimisation 
++ Deep Learning (MSSODL-EUP) 
+with restricted Boltzmann machine 
+(RBM)
+Energy use prediction using RBM MSE = 0.0066, RMSE = 0.0811, 
+MAE = 0.0616
+The MSSODL technique with QOBL 
+optimisation outperformed competing 
+algorithms in energy utilisation prediction.
+[ 32 ]
+Back-propagation neural network Tube length, number, diameter, 
+tank volume, angle, final 
+temperature
+RMSE = 0.2049 (heat collection), 
+0.9246 (heat loss); Prediction error 
+< 0.5 %
+Reduced testing time from 15 days to real- 
+time; 915 samples analysed; computers and 
+Android platforms
+[ 28 ]
+Feed-forward ANN (6 – 6-1 
+configuration)
+Tube material, flow rate, 
+temperature, and solar radiation
+R
+2 
+= 0.993 (training), 0.978 
+(validation) vs 0.808 – 0.522 
+(conventional)
+ANN outperformed conventional heat transfer 
+correlations by 18.5 – 45.6 % points
+[ 30 ]
+ANN (3 – 10-2 architecture) Flow rate (1 – 3 L/min), CeO
+2
+/ 
+water nanofluid (0.01 % 
+concentration)
+MSE = 8.2 × 10
+-3
+, Correlation =
+0.96 – 0.98, Max efficiency = 78.2 % 
+at 2 L/min
+21.5 % thermal efficiency increase vs plain 
+water; holistic approach combining analytical 
+and field testing
+[ 84 ]
+Deep neural network (DNN) Inlet/outlet temps, ambient temp, 
+tank temps, hot water flow, 
+electricity demand
+Training accuracy: 0.839 – 0.987, 
+Testing: 0.720 – 0.987; RMSE: 
+0.0131 – 0.3126, MAPE < 15 %
+DNN model for SWHS with PCM; all error 
+metrics below 15 % threshold
+[ 116 ]
+ANNs (2 networks) Collector area (1.81 – 4.38 m
+2
+), 
+system characteristics, climatic 
+data, and demand temperature
+R
+2 
+= 0.9993 (network 1), 
+0.9848 – 0.9926 (network 2); 
+Validation: 0.9913 – 0.9940
+30 thermosiphon domestic SWHS tested per 
+ISO 9459 – 2; pioneering long-term 
+performance prediction
+[ 29 ]
+ANN, ANFIS, thermal resistance 
+network
+Seasonal variations, thermal/ 
+exergy efficiency
+ANN: R
+2 
+= 0.989 (autumn), VAF =
+0.99489; Max divergence: 3.56 %
+Comprehensive comparison across 4 seasons; 
+ANN is higher based on the R
+2 
+parameter; heat 
+pipe solar collectors
+[ 163 ]
+Hybrid: ANN + SVMs (9 local models) Solar thermal collector output 
+temperature for smartgrid/ 
+buildings
+MAE < 4
+◦
+C, MAPE < 14.5 %, MSE =
+30.5010, NMSE = 0.1144
+Hybrid configuration with clustering 
+approach; more accurate than global models
+[ 113 ]
+TRNSYS + ANN (comparative study) Dual storage tanks (200 + 216 L), 
+collector outlet temp, useful 
+energy
+TRNSYS: MAE = 1.5 
+◦
+C, ANN: MAE 
+= 1.7 
+◦
+C; Both R
+2 
+> 0.95
+14-day tropical climate study; ANN better for 
+very cloudy days, TRNSYS better for partly 
+cloudy
+[ 101 ]
+SVM-DS fusion (SVM + Dempster- 
+Shafer)
+Audio features (8-dim), 
+temperature (5-dim), flow (5-dim), 
+heat transfer rate (5-dim)
+Accuracy: 89.7 – 93.7 % (proposed) 
+vs 77.6 – 84.7 % (traditional); 
+Confidence > 90 %, Uncertainty < 1 
+%
+Multi-feature fusion for soft fault detection; 4 
+fault types detected; PSO optimisation (c =
+6.673, g = 0.154)
+[ 153 ]
+ANNs (8 networks) Collector efficiency degradation, 
+pipe insulation deterioration
+R
+2 
+= 0.8258 – 0.9996; Detection at ~ 
+5 % efficiency loss
+Fault diagnostic system using TRNSYS; M
+10
+a 
+method is more stable than M
+5
+c; early alarm 
+capability
+[ 154 ]
+ELM Heat collection rate, heat loss 
+coefficient (915 samples)
+RMSE = 0.30 (heat collection), 0.67 
+(heat loss); 85 % training, 15 % 
+testing
+ELM provided lower RMSE for heat loss 
+coefficients than SVM, GRNN, and MLFN, 
+making it practical for industrial applications
+[ 118 ]
+ANN with Levenberg-Marquardt (608 
+known values)
+Tank diameter, insulation 
+thickness, conductivity, and 
+Overall Conductance
+Max error = 2.62 % Innovative design approach for hot water 
+storage tank; 612 design combinations 
+analysed
+[ 126 ]
+ANN + group model data handling Reynolds number (800 – 2000), 
+twisted pitch distance ξ (100 – 200 
+mm)
+R
+2 
+= 0.99824, RMSE = 0.05109 Second-order polynomial with six coefficients 
+for outlet temperature prediction; double- 
+twisted tape turbulator
+[ 117 ]
+Neural network control (NNC) vs 
+Adaptive fuzzy logic control (AFLC)
+Air temperature, pond 
+temperature, error signal, and 
+aquaculture application
+NNC: R = 1.0, perfect 34 
+◦
+C control; 
+AFLC: 36 
+◦
+C overshoot
+NNC superior with 3-input/7-hidden/1- 
+output architecture; Levenberg-Marquardt 
+training; 24-hour control
+[ 151 ]
+Random forest System characteristics, climatic 
+data, and daily load volume
+MAPE: 2.94 – 5.86 %, MAE: varies, 
+R
+2
+: 0.995 – 0.998 (energy), 
+0.973 – 0.976 (solar fraction)
+Random forest model replaced ISO 9459 – 5 
+experimental tests; 36 thermosiphon SWHS 
+training, 4 testing
+[ 123 ]
+ART neural networks (hierarchical) Collector plate temp, tank heat 
+exchanger outlet temp (only 2 
+sensors)
+4 severity layers; vigilance 
+parameters: 0.65 – 0.87
+Detected 4 fault types (pump failure, 
+degradation, thermosyphoning, shading); 
+TRNSYS training (2000 – 2004)
+[ 155 ]
+Graybox state space model + Dynamic 
+adaptive linear neural network 
+(ALNN)
+Transient measurements (solar 
+radiation, mass flow, temperature)
+Graybox: < 0.5 % error, ALNN: < 2.2 
+% error vs certified values; 94 % 
+correspondence (Graybox)
+Inferred steady-state efficiency from 4 days of 
+transient data; evacuated tube Dewar pipe 
+collector
+[ 130 ]
+( continued on next page )
+F. Odoi-Yorke                                                                                                                                                                                                                                    Energy Conversion and Management: X 28 (2025) 101378 
+18 
+--- PAGE 19 ---
+computational resources [ 148 ]. Physics-informed neural networks 
+combining first-principles knowledge with data-driven learning remain 
+underexplored despite potential advantages for extrapolation beyond 
+training data ranges [ 34 , 101 ]. Future investigations could develop 
+hybrid modelling frameworks incorporating thermodynamic con -
+straints, energy balance equations, and material properties within neu -
+ral network architectures, building on the demonstrated success of 
+TRNSYS-neural network integration that achieved R
+2 
+exceeding 0.93 
+[ 34 , 102 ]. The training data requirements and optimal sampling strate -
+gies lack systematic characterisation, with studies employing datasets 
+ranging from hundreds to hundreds of thousands of samples 
+[ 28 , 87 , 111 ]. Further studies should establish minimum data re -
+quirements across different algorithms, system types, and prediction 
+objectives and develop active learning strategies that minimise experi -
+mental testing burdens, relevant given demonstrated capability to 
+reduce conventional testing time from 15 days to instantaneous pre -
+dictions [ 28 , 123 ].
+Similarly, Africa ’ s lower contribution to this research domain de -
+mands urgent capacity-building initiatives and contextualised research 
+programmes. Future studies should investigate system adaptations for 
+off-grid rural communities, integration with existing energy infrastruc -
+ture, and cost-reduction strategies suitable for developing economies, 
+addressing the critical risk that AI-driven solutions will be designed 
+without consideration for African contexts, climatic conditions, and 
+economic constraints. Multi-objective optimisation studies focused on 
+thermal efficiency and lifecycle costs while neglecting environmental 
+impact indicators, embodied energy, and social acceptance factors 
+[ 92 , 132 , 138 ,[ 58,73,92,132,138 ]. Future research should incorporate 
+comprehensive sustainability metrics, including carbon footprint, water 
+consumption, and circular economy considerations extending beyond 
+approaches that achieved substantial primary energy savings but did not 
+fully quantify environmental benefits [106,109] . Practical validation of 
+intelligent control systems remains limited, as most demonstrations 
+occurred in simulation environments or short-duration experiments 
+[147,148,152] . Long-term field studies across different climates, build -
+ing types, and user behaviours should validate performance claims and 
+identify practical implementation challenges, notably since demon -
+strated laboratory achievements, including 12 – 22 % electricity savings, 
+require validation under realistic operating conditions [88,146] . In 
+addition, integrating smart grid infrastructure, demand response pro -
+grammes, and multi-energy systems is an emerging opportunity inade -
+quately addressed in current literature [75,110,136] . Future research 
+could explore predictive control strategies leveraging weather forecasts, 
+dynamic electricity pricing, and building thermal models for holistic 
+energy management, building on successful model predictive control 
+demonstrations that balanced multiple objectives simultaneously 
+[104,147,148] . These coordinated research directions would accelerate 
+solar thermal technology deployment and ensure equitable global access 
+to sustainable water heating solutions.
+Conclusion
+This study systematically assessed the integration of AI methodolo -
+gies into SWHS through a dual framework combining bibliometric and 
+systematic review analyses. The findings indicate a fast-expanding 
+research area that has evolved from early experimental approaches to 
+advanced data-driven optimisation and intelligent control strategies. 
+The publication trends indicate a growth in research activity, after 2019, 
+driven by the global interest in renewable energy technologies and AI ’ s 
+proven capability to enhance system performance. China, India, and the 
+United States account for nearly half of the global research output. In 
+contrast, Africa ’ s marginal contribution of only 5.3 % highlights a crit -
+ical knowledge gap that must be addressed to ensure equitable techno -
+logical diffusion and local adaptation of AI-enhanced SWHS across solar- 
+rich but energy-poor regions. The thematic and keyword analyses 
+revealed five main research clusters comprising performance prediction 
+using neural networks and machine learning, multi-objective optimisa -
+tion through evolutionary algorithms, intelligent control and fault 
+detection, neural network-simulation hybridisation using TRNSYS, and 
+the emerging application of deep learning and hybrid photovoltaic- 
+thermal systems. These clusters consistently focus on improving en -
+ergy efficiency, thermal performance, and cost-effectiveness, exploring 
+new frontiers in predictive maintenance and real-time adaptive control. 
+Nevertheless, the review identified significant research gaps, including 
+limited experimental validation of AI models, a lack of standardised 
+datasets, minimal integration of hybrid physics-informed AI models, and 
+weak interdisciplinary collaboration between computer science and 
+solar engineering communities. In addition, socio-economic and policy 
+dimensions remain scarcely explored, particularly in cost-benefit anal -
+ysis, scalability, and adoption in developing regions. The study ’ s bib -
+liometric insights show an uneven global research network dominated 
+by Northern Hemisphere countries, with limited South-South collabo -
+rations. This imbalance highlights the urgent need to strengthen inter -
+national partnerships and capacity building in regions with limited 
+research visibility, especially Africa and parts of Latin America. AI- 
+enabled SWHS requires technological innovation, institutional sup -
+port, data-sharing frameworks, and inclusive research funding mecha -
+nisms. This review establishes that AI transforms SWHS from static, 
+manually controlled devices into dynamic, intelligent, and self- 
+optimising systems capable of delivering higher efficiency, reliability, 
+and sustainability. AI facilitates smarter utilisation of solar resources, 
+reduces operational costs, and extends system lifespan by integrating 
+predictive analytics, optimisation algorithms, and intelligent control. 
+Future research should prioritise hybrid AI-physics models, real-world 
+validation, and socio-technical applications to ensure that these intelli -
+gent systems contribute meaningfully to global energy decarbonisation 
+and sustainable development goals.
+CRediT authorship contribution statement
+Flavio Odoi-Yorke: Writing – review & editing, Writing – original 
+draft, Software, Resources, Methodology, Investigation, Formal anal -
+ysis, Data curation, Conceptualization, Validation, Visualization.
+Declaration of competing interest
+The author declares that he has no known competing financial in -
+terests or personal relationships that could have appeared to influence 
+the work reported in this paper..
+Table 1 ( continued )
+AI methods used Key parameters/variables Performance metrics Main outcomes Reference
+ANN PV array voltage, radiation 
+intensity, and flow output for 
+variable speed pump
+R
+2 
+= 0.9998, error < 5 % for vast 
+majority
+ANN sensitivity modelling for PV arrays; 
+hydraulic/thermal modelling with Crank- 
+Nicolson method
+[ 122 ]
+TRNSYS + ANN (8-layer model) 8-layer thermal stratification, solar 
+radiation, water consumption, 
+ambient temp, mass flow rate
+TRNSYS deviation: 1.9 
+◦
+C, ANN 
+training: 0.53 
+◦
+C, validation: 0.76 
+◦
+C
+ANN model (8 tansig + 8 linear neurons) 
+outperformed TRNSYS in predicting thermal 
+stratification
+[ 127 ]
+F. Odoi-Yorke                                                                                                                                                                                                                                    Energy Conversion and Management: X 28 (2025) 101378 
+19 
+--- PAGE 20 ---
+Acknowledgement
+This research received no specific grant from funding agencies in the 
+public, commercial, or not-for-profit sectors.
+Data availability
+No data was used for the research described in the article.
+References
+[1] Bilgili F, Kuskaya S, Magazzino C, Khan K, Hoque ME, Alnour M, et al. The 
+mutual effects of residential energy demand and climate change in the United 
+States: a wavelet analysis. Environ Sustain Indic 2024;22:100384. https://doi. 
+org/10.1016/j.indic.2024.100384 .
+[2] Papadis E, Tsatsaronis G. Challenges in the decarbonization of the energy sector. 
+Energy 2020;205:118025. https://doi.org/10.1016/j.energy.2020.118025 .
+[3] Tripathi V, Reddy RM, Bhadauria A, Bandhu D, Prashanth KS, Saxena KK. 
+Sustainable decision-making approach for operational excellence considering 
+emerging technologies and energy sources: a review. Discov Sustain 2024;5:240. 
+https://doi.org/10.1007/s43621-024-00446-5 .
+[4] U.S. Energy Information Administration. EIA projections indicate global energy 
+consumption increases through 2050, outpacing efficiency gains and driving 
+continued emissions growth 2023. https://www.eia.gov/pressroom/releases/ 
+press542.php (accessed November 13, 2024).
+[5] Odoi-Yorke F, Akpahou R, Opoku R, Mensah LD. Technical, financial, and 
+emissions analyses of solar water heating systems for supplying sustainable 
+energy for hotels in Ghana. Sol Compass 2023;7:100051. https://doi.org/ 
+10.1016/j.solcom.2023.100051 .
+[6] Wyllie JOY, Essah EA, Ofetotse EL. Barriers of solar energy uptake and the 
+potential for mitigation solutions in Barbados. Renew Sustain Energy Rev 2018; 
+91:935 – 49. https://doi.org/10.1016/j.rser.2018.04.100 .
+[7] Faisal Ahmed S, Khalid M, Vaka M, Walvekar R, Numan A, Khaliq Rasheed A, 
+et al. Recent progress in solar water heaters and solar collectors: a comprehensive 
+review. Therm Sci Eng Prog 2021;25:100981. https://doi.org/10.1016/j. 
+tsep.2021.100981 .
+[8] Fern ´andez L. Capacity of solar water heating (SWH) systems worldwide from 
+2009 to 2023 2024. https://www.statista.com/statistics/260688/forecast- 
+capacity-of-csp-plants-worldwide-until-2050/#:~:text = Global%20solar% 
+20water%20heating%20(SWH,biggest%20solar%20water%20heating% 
+20market. (accessed November 13, 2024).
+[9] Rawat K. Water Heater Market: A Rapidly Growing Industry 2024. https://blog. 
+bccresearch.com/water-heater-market-a-rapidly-growing-industry#:~: 
+text = Market%20Size%20%26%20Growth,5.2%25%20from%202024% 
+20through%202029. (accessed November 13, 2024).
+[10] Al-Mamun MR, Roy H, Islam MS, Ali MR, Hossain MI, Saad Aly MA, et al. State- 
+of-the-art in solar water heating (SWH) systems for sustainable solar energy 
+utilization: a comprehensive review. Sol Energy 2023;264:111998. https://doi. 
+org/10.1016/j.solener.2023.111998 .
+[11] Anupam Rao Y, Somwanshi A. A comprehensive review on integrated collector- 
+storage solar water heaters. Mater Today Proc 2022;63:15 – 26. https://doi.org/ 
+10.1016/j.matpr.2021.12.424 .
+[12] Fadzlin WA, Hasanuzzaman Md, Rahim NA, Amin N, Said Z. Global challenges of 
+Current Building-Integrated Solar Water heating Technologies and its prospects: a 
+Comprehensive Review. Energies 2022;15:5125. https://doi.org/10.3390/ 
+en15145125 .
+[13] Botpaev R, Louvet Y, Perers B, Furbo S, Vajen K. Drainback solar thermal systems: 
+a review. Sol Energy 2016;128:41 – 60. https://doi.org/10.1016/j. 
+solener.2015.10.050 .
+[14] SHC. Solar Heat Worldwide - 2023 2024. https://pubs.iea-shc.org/solar-heat- 
+worldwide-2023 (accessed November 13, 2024).
+[15] Gearino D. A New Solar Water Heating System Goes Online as Its Developer 
+Enters the US Market 2023. https://insideclimatenews.org/news/23112023/ 
+solar-thermal-heat/ (accessed November 13, 2024).
+[16] Kurukuru VSB, Haque A, Khan MA, Sahoo S, Malik A, Blaabjerg F. A Review on 
+Artificial Intelligence applications for Grid-Connected Solar Photovoltaic 
+Systems. Energies 2021;14:4690. https://doi.org/10.3390/en14154690 .
+[17] Gul E, Baldinelli G, Wang J, Bartocci P, Shamim T. Artificial intelligence based 
+forecasting and optimization model for concentrated solar power system with 
+thermal energy storage. Appl Energy 2025;382:125210. https://doi.org/ 
+10.1016/j.apenergy.2024.125210 .
+[18] Wang Y, Yu Y, Cao S, Zhang X, Gao S. A review of applications of artificial 
+intelligent algorithms in wind farms. Artif Intell Rev 2020;53:3447 – 500. https:// 
+doi.org/10.1007/s10462-019-09768-7 .
+[19] Feierl L, Unterberger V, Rossi C, Gerardts B, Gaetani M. Fault detective: 
+Automatic fault-detection for solar thermal systems based on artificial 
+intelligence. Sol Energy Adv 2023;3:100033. https://doi.org/10.1016/j. 
+seja.2023.100033 .
+[20] Fera FT, Spandonidis C. An Artificial Intelligence and Industrial internet of 
+Things-based Framework for Sustainable Hydropower Plant Operations. Smart 
+Cities 2024;7:496 – 517. https://doi.org/10.3390/smartcities7010020 .
+[21] Ahmed R, Shehab SA, Elzeki OM, Darwish A, Hassanein AE. An explainable AI for 
+green hydrogen production: a deep learning regression model. Int J Hydrog 
+Energy 2024;83:1226 – 42. https://doi.org/10.1016/j.ijhydene.2024.08.064 .
+[22] Conti S. Artificial intelligence for weather forecasting. Nat Rev Electr Eng 2024;1: 
+8. https://doi.org/10.1038/s44287-023-00009-2 .
+[23] Xu H, Zhao Y, Zhao D, Duan Y, Xu X. Improvement of disastrous extreme 
+precipitation forecasting in North China by Pangu-weather AI-driven regional 
+WRF model. Environ Res Lett 2024;19:054051. https://doi.org/10.1088/1748- 
+9326/ad41f0 .
+[24] Lam R. GraphCast: AI model for faster and more accurate global weather 
+forecasting 2023. https://deepmind.google/discover/blog/graphcast-ai-model- 
+for-faster-and-more-accurate-global-weather-forecasting/ (accessed December 
+11, 2024).
+[25] Heikkil ¨a M. New AI systems could speed up our ability to create weather forecasts 
+2023. https://www.technologyreview.com/2023/07/05/1075897/new-ai- 
+systems-could-speed-up-our-ability-to-create-weather-forecasts/ (accessed 
+December 11, 2024).
+[26] Li H, Liu Z. Performance Prediction and Optimization of Solar Water Heater via a 
+Knowledge-Based Machine Learning Method 2017. https://doi.org/10.48550/ 
+ARXIV.1710.02511.
+[27] Du B, D. Lund P. Application of Artificial Neural Network in Solar Energy. In: Chi 
+Leung Hui P, editor. Artif. Intell., vol. 13, IntechOpen; 2023. https://doi.org/ 
+10.5772/intechopen.106977.
+[28] Liu Z, Liu K, Li H, Zhang X, Jin G, Cheng K. Artificial neural networks-based 
+software for measuring heat collection rate and heat loss coefficient of water-in- 
+glass evacuated tube solar water heaters. PLoS One 2015;10:e0143624. https:// 
+doi.org/10.1371/journal.pone.0143624 .
+[29] Kalogirou SA, Panteliou S. Thermosiphon solar domestic water heating systems: 
+long-term performance prediction using artificial neural networks. Sol Energy 
+2000;69:163 – 74. https://doi.org/10.1016/S0038-092X(00)00058-X .
+[30] Razavi J, Riazi MR, Raoufi F, Sadeghi A. Comparison of performance prediction 
+of solar water heaters between Artificial Neural Networks and conventional 
+correlations. Int J Glob Energy Issues 2009;31:122. https://doi.org/10.1504/ 
+IJGEI.2009.023889 .
+[31] Correa-Jullian C, Cardemil JM, L ´opez Droguett E, Behzad M. Assessment of Deep 
+Learning techniques for Prognosis of solar thermal systems. Renew Energy 2020; 
+145:2178 – 91. https://doi.org/10.1016/j.renene.2019.07.100 .
+[32] Deepanraj B, Syam Sundar L, Sharma P, Ravikumar NT. Energy Use Prediction in 
+Solar Water Heaters: Modified Shallow Swarm Optimization with Deep Learning 
+Approach. 2024 Int. Conf. Distrib. Comput. Optim. Tech. ICDCOT, Bengaluru, 
+India: IEEE; 2024, p. 1 – 7. https://doi.org/10.1109/ 
+ICDCOT61034.2024.10515731.
+[33] Heidari A, Khovalyg D. Short-term energy use prediction of solar-assisted water 
+heating system: Application case of combined attention-based LSTM and time- 
+series decomposition. Sol Energy 2020;207:626 – 39. https://doi.org/10.1016/j. 
+solener.2020.07.008 .
+[34] Souliotis M, Kalogirou S, Tripanagnostopoulos Y. Modelling of an ICS solar water 
+heater using artificial neural networks and TRNSYS. Renew Energy 2009;34: 
+1333 – 9. https://doi.org/10.1016/j.renene.2008.09.007 .
+[35] Shamsul Azha NI, Hussin H, Nasif MS, Hussain T. Thermal performance 
+enhancement in flat plate solar collector solar water heater: a review. Processes 
+2020;8:756. https://doi.org/10.3390/pr8070756 .
+[36] Vengadesan E, Senthil R. A review on recent development of thermal 
+performance enhancement methods of flat plate solar water heater. Sol Energy 
+2020;206:935 – 61. https://doi.org/10.1016/j.solener.2020.06.059 .
+[37] Uniyal A, Prajapati YK, Ranakoti L, Bhandari P, Singh T, Gangil B, et al. Recent 
+advancements in evacuated tube solar water heaters: a critical review of the 
+integration of phase change materials and nanofluids with ETCs. Energies 2022; 
+15:8999. https://doi.org/10.3390/en15238999 .
+[38] Aggarwal S, Kumar R, Lee D, Kumar S, Singh T. A comprehensive review of 
+techniques for increasing the efficiency of evacuated tube solar collectors. 
+Heliyon 2023;9:e15185. https://doi.org/10.1016/j.heliyon.2023.e15185 .
+[39] Nanda IR, Pambudi NA, Aziz M. Review on the progress of solar water heaters 
+and their future perspectives. Energy Technol 2023;11:2300191. https://doi.org/ 
+10.1002/ente.202300191 .
+[40] Singh B, Rai RS, Yadav P, Srivastava S, Yadav C. Application of phase change 
+materials in solar water heating systems- a comprehensive review. Sol Energy 
+Mater Sol Cells 2025;293:113888. https://doi.org/10.1016/j. 
+solmat.2025.113888 .
+[41] Naveenkumar R, Venkateshkumar R, Mohanavel V, Franklin C, Ismail SO, 
+Ravichandran M, et al. Recent developments in solar water heaters and solar 
+collectors: a review on experimental and neural network analyses. Results Eng 
+2025;25:104394. https://doi.org/10.1016/j.rineng.2025.104394 .
+[42] Jamar A, Majid ZAA, Azmi WH, Norhafana M, Razak AA. A review of water 
+heating system for solar energy applications. Int Commun Heat Mass Transf 2016; 
+76:178 – 87. https://doi.org/10.1016/j.icheatmasstransfer.2016.05.028 .
+[43] Herez A, Jaber H, Hage HE, Lemenand T, Chahine K, Ramadan M, et al. Solar 
+water heating: comprehensive review, critical analysis and case study. Int J 
+Thermofluids 2023;20:100503. https://doi.org/10.1016/j.ijft.2023.100503 .
+[44] Jaiswal P, Kumar Y, Das L, Mishra V, Pagar R, Panda D, et al. Nanofluids guided 
+energy-efficient solar water heaters: recent advancements and challenges ahead. 
+Mater Today Commun 2023;37:107059. https://doi.org/10.1016/j. 
+mtcomm.2023.107059 .
+[45] Kumar Pathak S, Tyagi VV, Chopra K, Kumar SR. Recent development in thermal 
+performance of solar water heating (SWH) systems. Mater Today Proc 2022;63: 
+778 – 85. https://doi.org/10.1016/j.matpr.2022.05.502 .
+F. Odoi-Yorke                                                                                                                                                                                                                                    Energy Conversion and Management: X 28 (2025) 101378 
+20 
+--- PAGE 21 ---
+[46] Li J, Li X, Ding L, Wang Y, Tu J. Performance of a new tank design with variable 
+outlet port in a thermosiphon solar water heating system. Appl Therm Eng 2021; 
+189:116681. https://doi.org/10.1016/j.applthermaleng.2021.116681 .
+[47] Danehkar S, Yousefi H. A comprehensive overview on water-based energy storage 
+systems for solar applications. Energy Rep 2022;8:8777 – 97. https://doi.org/ 
+10.1016/j.egyr.2022.06.057 .
+[48] Frid SE, Lisitskaya NV. State-of-the-art solar collectors: typical parameters and 
+trends. Appl Sol Energy 2018;54:279 – 86. https://doi.org/10.3103/ 
+S0003701X18040059 .
+[49] Pandey KM, Chaurasiya R. A review on analysis and development of solar flat 
+plate collector. Renew Sustain Energy Rev 2017;67:641 – 50. https://doi.org/ 
+10.1016/j.rser.2016.09.078 .
+[50] Vahidhosseini SM, Rashidi S, Hsu S-H, Yan W-M, Rashidi A. Integration of solar 
+thermal collectors and heat pumps with thermal energy storage systems for 
+building energy demand reduction: a comprehensive review. J Energy Storage 
+2024;95:112568. https://doi.org/10.1016/j.est.2024.112568 .
+[51] Shafieian A, Khiadani M, Nosrati A. A review of latest developments, progress, 
+and applications of heat pipe solar collectors. Renew Sustain Energy Rev 2018;95: 
+273 – 304. https://doi.org/10.1016/j.rser.2018.07.014 .
+[52] Page MJ, McKenzie JE, Bossuyt PM, Boutron I, Hoffmann TC, Mulrow CD, et al. 
+Updating guidance for reporting systematic reviews: development of the PRISMA 
+2020 statement. J Clin Epidemiol 2021;134:103 – 12. https://doi.org/10.1016/j. 
+jclinepi.2021.02.003 .
+[53] Odoi-Yorke F, Abbey AA, Abaase S, Mahama M. Evaluation of research progress 
+and trends in mini-grids for rural electrification: a bibliometric analysis. Energy 
+Rep 2024;12:4083 – 104. https://doi.org/10.1016/j.egyr.2024.09.074 .
+[54] Odoi-Yorke F, Opoku R, Davis F, Obeng GY. Optimisation of thermal energy 
+storage systems incorporated with phase change materials for sustainable energy 
+supply: a systematic review. Energy Rep 2023;10:2496 – 512. https://doi.org/ 
+10.1016/j.egyr.2023.09.044 .
+[55] Martín-Martín A, Thelwall M, Orduna-Malea E, Delgado L-C ´ozar E. Google 
+Scholar, Microsoft Academic, Scopus, Dimensions, Web of Science, and 
+OpenCitations ’ COCI: a multidisciplinary comparison of coverage via citations. 
+Scientometrics 2021;126:871 – 906. https://doi.org/10.1007/s11192-020-03690- 
+4 .
+[56] Abusaada H, Elshater A. Beyond keywords: effective strategies for building 
+consistent reference lists in scientific research. Publications 2024;12:25. https:// 
+doi.org/10.3390/publications12030025 .
+[57] Caputo A, Kargina M. A user-friendly method to merge Scopus and Web of 
+Science data during bibliometric analysis. J Mark Anal 2022;10:82 – 8. https://doi. 
+org/10.1057/s41270-021-00142-7 .
+[58] Sekyere CKK, Odoi-Yorke F, Baah B, Oppon JA, Agbenorhevi AE, Atepor L. 
+Mapping urban climate change research: Insights from 20 years of global research 
+trends, thematic evolution, and future perspectives. Nat-Based Solut 2025: 
+100271. https://doi.org/10.1016/j.nbsj.2025.100271 .
+[59] Odoi-Yorke F, Agyekum EB, Tarawneh B, Rashid FL, Nyarkoh R, Mensah E, et al. 
+Hydrovoltaic energy harvesting: a systematic review and bibliometric analysis of 
+technological innovations, research trends, and future prospects. Energy Convers 
+Manag X 2025;27:101126. https://doi.org/10.1016/j.ecmx.2025.101126 .
+[60] Aria M, Cuccurullo C. bibliometrix: an R-tool for comprehensive science mapping 
+analysis. J Informetr 2017;11:959 – 75. https://doi.org/10.1016/j. 
+joi.2017.08.007 .
+[61] Odoi-Yorke F, Abbey AA, Frimpong TA, Asante E, Amewornu EM, Davis JE, et al. 
+A bird ’ s eye view of pumped hydro energy storage: a bibliometric analysis of 
+global research trends and future directions. J Energy Storage 2024;103:114339. 
+https://doi.org/10.1016/j.est.2024.114339 .
+[62] Agyekum EB, Odoi-Yorke F. Liquid air energy storage (LAES) – Systematic review 
+of two decades of research and future perspectives. J Energy Storage 2024;102: 
+114022. https://doi.org/10.1016/j.est.2024.114022 .
+[63] Bueno PT, Salvia AL, Rebelatto BG, Brandli LL. Promoting sustainability in the 
+solar industry: bibliometric and systematic analysis of alternatives for the end-of- 
+life of photovoltaic modules. Discov Sustain 2024;5:147. https://doi.org/ 
+10.1007/s43621-024-00280-9 .
+[64] Odoi-Yorke F, Agyekum EB, Tahir M, Abbey AA, Jangir P, Rashid FL, et al. 
+Review of the trends, evolution, and future research directions of green hydrogen 
+production from wastewaters – Systematic and bibliometric approach. Energy 
+Convers Manag X 2024:100822. https://doi.org/10.1016/j.ecmx.2024.100822 .
+[65] Liu Q, Ali NL, Lee HY. Applying VOSviewer in a bibliometric review on English 
+language teacher education research: an analysis of narratives, networks and 
+numbers. Cogent Educ 2025;12:2449728. https://doi.org/10.1080/ 
+2331186X.2025.2449728 .
+[66] Ju F. Mapping the knowledge structure of image recognition in cultural heritage: 
+a scientometric analysis using CiteSpace, VOSviewer, and Bibliometrix. J Imaging 
+2024;10:272. https://doi.org/10.3390/jimaging10110272 .
+[67] Osei LK, Opoku R, Odoi-Yorke F, Sekyere CKK, Obeng GY, Forson FK. Optimising 
+mini-grid efficiency in Ghana: a techno-economic analysis of hydrogen 
+production from redundant solar energy for fuel cell power generation. Energy 
+Convers Manag X 2025:101309. https://doi.org/10.1016/j.ecmx.2025.101309 .
+[68] Sundar LS, Chandra Mouli KVV. Experimental analysis and Levenberg-Marquardt 
+artificial neural network predictions of heat transfer, friction factor, and 
+efficiency of thermosyphon flat plate collector with MgO/water nanofluids. Int J 
+Therm Sci 2023;194:108555. https://doi.org/10.1016/j. 
+ijthermalsci.2023.108555 .
+[69] Mausam K, Singh S, Ghosh SK, Singh RP. Thermal performance modelling of solar 
+flat plate parallel tube collector using ANN. Energy 2024;303:131940. https:// 
+doi.org/10.1016/j.energy.2024.131940 .
+[70] Said Z, Sharma P, Sundar LS, Li C, Tran DC, Khoa Pham ND, et al. Improving the 
+thermal efficiency of a solar flat plate collector using MWCNT-Fe3O4/water 
+hybrid nanofluids and ensemble machine learning. Case Stud Therm Eng 2022; 
+40:102448. https://doi.org/10.1016/j.csite.2022.102448 .
+[71] Farhadi S, Seresht HA, Aghakhani H, Baghapour B. Performance prediction of 
+heat pipe evacuated tube solar collectors: Analytical modeling and data-driven 
+machine learning/ANN approach with developing web application. Energy 2025; 
+321:135512. https://doi.org/10.1016/j.energy.2025.135512 .
+[72] Uniyal A, Bose S, Dutt N, Kumar A, Ranakoti L, Painuly A. Experimental 
+investigation and machine learning modeling for thermal performance prediction 
+of U-tube PCM solar collectors. J Energy Storage 2025;129:117306. https://doi. 
+org/10.1016/j.est.2025.117306 .
+[73] Rey A, Zmeureanu R. Micro-time variant multi-objective particle swarm 
+optimization (micro-TVMOPSO) of a solar thermal combisystem. Swarm Evol 
+Comput 2017;36:76 – 90. https://doi.org/10.1016/j.swevo.2017.04.005 .
+[74] Mohan S, Dinesha P, Iyengar AS. Modeling and analysis of a solar minichannel 
+flat plate collector system and optimization of operating conditions using particle 
+swarms. Therm Sci Eng Prog 2021;22:100855. https://doi.org/10.1016/j. 
+tsep.2021.100855 .
+[75] Dong S, Long H, Guan J, Jiang L, Zhuang C, Gao Y, et al. Performance 
+investigation of a hybrid PV/T collector with a novel trapezoidal fluid channel. 
+Energy 2024;288:129594. https://doi.org/10.1016/j.energy.2023.129594 .
+[76] Summ T, Oyinlola M, Khattak S, Ehrenwirth M, Trinkl C, Z ¨orner W. Towards 
+maximum cost-effectiveness: multi-objective design optimisation of insulating 
+glass flat-plate collectors. Appl Therm Eng 2025;258:124594. https://doi.org/ 
+10.1016/j.applthermaleng.2024.124594 .
+[77] Bany Mousa O, Taylor RA, Shirazi A. Multi-objective optimization of solar 
+photovoltaic and solar thermal collectors for industrial rooftop applications. 
+Energy Convers Manag 2019;195:392 – 408. https://doi.org/10.1016/j. 
+enconman.2019.05.012 .
+[78] Hajabdollahi H. Thermoeconomic assessment of integrated solar flat plat 
+collector with cross flow heat exchanger as solar air heater using numerical 
+analysis. Renew Energy 2021;168:491 – 504. https://doi.org/10.1016/j. 
+renene.2020.12.080 .
+[79] Raja Sekhar Y, Chilambarasan L, Sharma KV, Kanti PK, Sharma P, Paramsivam P, 
+et al. Solar flat plate collectors with internally grooved absorber tubes for 
+enhanced efficiency: Application of eXplainable artificial intelligence using 
+cooperative game theory-based Shapley values. Case Stud Therm Eng 2025;68: 
+105912. https://doi.org/10.1016/j.csite.2025.105912 .
+[80] Skheel OR, Resen IS, Ali MFM, Alsayah AM, Ibrahim T, Khaled M, et al. Geometry 
+optimization and comparative analysis of solar collectors using ANN and GA 
+techniques. Results Eng 2025;28:107234. https://doi.org/10.1016/j. 
+rineng.2025.107234 .
+[81] Sridharan M. Performance augmentation study on a solar flat plate water 
+collector system with modified absorber flow design and its performance 
+prediction using the XGBoost algorithm: a machine learning approach. Iran J Sci 
+Technol Trans Mech Eng 2024;48:133 – 44. https://doi.org/10.1007/s40997-023- 
+00648-8 .
+[82] Xu Y, Mao C, Huang Y, Shen X, Xu X, Chen G. Performance evaluation and multi- 
+objective optimization of a low-temperature CO2 heat pump water heater based 
+on artificial neural network and new economic analysis. Energy 2021;216: 
+119232. https://doi.org/10.1016/j.energy.2020.119232 .
+[83] Sadeghi G, Pisello AL, Nazari S, Jowzi M, Shama F. Empirical data-driven multi- 
+layer perceptron and radial basis function techniques in predicting the 
+performance of nanofluid-based modified tubular solar collectors. J Clean Prod 
+2021;295:126409. https://doi.org/10.1016/j.jclepro.2021.126409 .
+[84] Prakasam MJS, Murugesan P, Pasupathi MK, Rapuru L, Balaji P, Murugesan V. 
+Investigating the performance of a flat-plate solar water-heating system using 
+CeO2/water nanofluid: a holistic approach. J Enhanc Heat Transf 2024;31:47 – 72. 
+https://doi.org/10.1615/JEnhHeatTransf.2023048767 .
+[85] Pathak SK, Tyagi VV, Chopra K, Sari A, Pandey AK. Energy matrices, techno- 
+economic and environmental assessment of fin-integrated HP-ETSC systems with 
+thermal battery backup: machine learning insights from experimental data. 
+J Energy Storage 2025;117:115827. https://doi.org/10.1016/j.est.2025.115827 .
+[86] Saravanan A, Sree SR, Reddy MS, Pv E, Karthik K, Cheeli AK, et al. Thermal 
+performance prediction of a V-trough solar water heater with a modified twisted 
+tape using ANFIS, G.L.R., R.T. and SVM models of machine learning. Sci Rep 
+2024;14:27206. https://doi.org/10.1038/s41598-024-75907-y .
+[87] Chidiac N, Nehme B, Said W, Jelwan J, Akiki T, Zeghondy B. Adaptive 
+overheating cover for a solar water heater. Clean Energy 2022;6:573 – 84. https:// 
+doi.org/10.1093/ce/zkac036 .
+[88] Amasyali K, Munk J, Kurte K, Zandi H. Deep Reinforcement Learning Based Smart 
+Water Heater Control for Reducing Electricity Consumption and Carbon 
+Emission. In: Wang LL, Ge H, Zhai ZJ, Qi D, Ouf M, Sun C, et al., editors. Proc. 5th 
+Int. Conf. Build. Energy Environ., Singapore: Springer Nature Singapore; 2023, p. 
+989 – 97. https://doi.org/10.1007/978-981-19-9822-5_105.
+[89] Bouguergour Y, Menhoudj S, Mokhtari AM, Dehina K, Zairi A, Mege R, et al. 
+Experimental and machine learning-based identification of a solar thermal system 
+for domestic hot water and direct solar floor heating. Case Stud Therm Eng 2025; 
+69:105935. https://doi.org/10.1016/j.csite.2025.105935 .
+[90] Ponnusamy S, Kalaiarasu B, Gangadharan SSK. Exergetic characterization of flat 
+plate solar collector using genetic algorithm. Proc Inst Mech Eng Part E J Process 
+Mech Eng 2024:09544089241282135. https://doi.org/10.1177/ 
+09544089241282135 .
+F. Odoi-Yorke                                                                                                                                                                                                                                    Energy Conversion and Management: X 28 (2025) 101378 
+21 
+--- PAGE 22 ---
+[91] Wenceslas KY, Ghislain T. Experimental validation of exergy optimization of a 
+flat-plate solar collector in a thermosyphon solar water heater. Arab J Sci Eng 
+2019;44:2535 – 49. https://doi.org/10.1007/s13369-018-3227-x .
+[92] Ko M. A novel design method for optimizing an indirect forced circulation solar 
+water heating system based on life cycle cost using a genetic algorithm. Energies 
+2015;8:11592 – 617. https://doi.org/10.3390/en81011592 .
+[93] Ko M. Analysis and optimization design of a solar water heating system based on 
+life cycle cost using a genetic algorithm. Energies 2015;8:11380 – 403. https://doi. 
+org/10.3390/en81011380 .
+[94] Bahmei F, De Buruaga AS, Bautista SP, Olarte J, Ajuria J, Varzi A, et al. Life cycle 
+assessment and life cycle costing of supercapacitors: a comprehensive review and 
+assessment of environmental and economic impacts. ChemSusChem 2025: 
+e202500583. https://doi.org/10.1002/cssc.202500583.
+[95] Silva FAS, Júnior L, Silva J, Kambampati S, Salviano L. Parametric optimization 
+of a stamped longitudinal vortex generator inside a circular tube of a solar water 
+heater at low Reynolds numbers. SN Appl Sci 2021;3:736. https://doi.org/ 
+10.1007/s42452-021-04723-0 .
+[96] Ahmadi H, Ziapour BM, Ghaebi H, Nematollahzadeh A. Optimization of vacuum 
+membrane distillation and advanced design of compact solar water heaters with 
+heat recovery. J Water Process Eng 2024;67:106212. https://doi.org/10.1016/j. 
+jwpe.2024.106212 .
+[97] Ramesh C, Vijayakumar M, Kumaresan G, Benjamin FS. Advancing solar thermal 
+energy efficiency with role of phase change materials in heat pipe evacuated tube 
+collectors for superior storage. Mech Based Des Struct Mach 2025;53:6946 – 66. 
+https://doi.org/10.1080/15397734.2025.2492302 .
+[98] Kamrani F, Montazeri M, Banakar A, Ghobadian B, Pasdarshahri H. Experimental 
+performance and evaluation of direct evaporative cooling system coupled with a 
+desiccant wheel in a closed greenhouse. Energy Convers Manag X 2023;20: 
+100497. https://doi.org/10.1016/j.ecmx.2023.100497 .
+[99] Qadar Chaudhary G, Waheed Azam M, Bozzoli F, Sajjad U, Vocale P, Cattani L, 
+et al. Transient analysis of an efficient solar assisted air-conditioning system for 
+subtropical climate with various solar thermal collectors. Energy Convers Manag 
+X 2024;23:100634. https://doi.org/10.1016/j.ecmx.2024.100634 .
+[100] Ul Rehman N, Farzaneh H. Techno-economic analysis of a hybrid heat recovery- 
+renewable energy system for enhancing power reliability in cement factories in 
+Pakistan. Energy Convers Manag X 2023;20:100492. https://doi.org/10.1016/j. 
+ecmx.2023.100492 .
+[101] Wongsuwan W, Kumar S. Forced circulation solar water heater performance 
+prediction by TRNSYS and ANN. Int J Sustain Energy 2005;24:69 – 86. https://doi. 
+org/10.1080/14786450512331329565 .
+[102] He H, Menicucci D, Caudell T, Mammoli A. Real-time fault detection for solar hot 
+water systems using adaptive resonance theory neural networks. ASME 2011 5th 
+Int. Conf. Energy Sustain. Parts B C, Washington, DC, USA: ASMEDC; 2011, p. 
+1059 – 65. https://doi.org/10.1115/ES2011-54885.
+[103] Rehman HU, Hirvonen J, Sir ´en K. Performance comparison between optimized 
+design of a centralized and semi-decentralized community size solar district 
+heating system. Appl Energy 2018;229:1072 – 94. https://doi.org/10.1016/j. 
+apenergy.2018.08.064 .
+[104] Narayanan M, De Lima AF, De Azevedo Dantas AFO, Commerell W. Development 
+of a coupled TRNSYS-MATLAB simulation framework for model predictive 
+control of integrated electrical and thermal residential renewable energy system. 
+Energies 2020;13:5761. https://doi.org/10.3390/en13215761 .
+[105] Ahmad S, Alsalmah HA. Intelligent-simulation of solar irradiation in the 
+axisymmetric cylindrical heat exchanger for renewable energy systems. Int 
+Commun Heat Mass Transf 2025;169:109523. https://doi.org/10.1016/j. 
+icheatmasstransfer.2025.109523 .
+[106] Bahlawan H, Morini M, Pinelli M, Poganietz W-R, Spina PR, Venturini M. Optimal 
+design of a hybrid energy plant by accounting for the cumulative energy demand. 
+Energy Procedia 2019;158:2834 – 40. https://doi.org/10.1016/j. 
+egypro.2019.02.046 .
+[107] Barzigar A, Hosseinalipour SM, Mujumdar AS. AI for Enhanced Solar Dryer 
+Performance: Integration of PV/T Panels, Solar collectors, Energy Storage, 
+Biomass, and Desalination Units. Dry Technol 2025;43:1879 – 80. https://doi.org/ 
+10.1080/07373937.2025.2540730 .
+[108] Dimri N, Ramousse J. Thermoeconomic optimization and performance analysis of 
+solar combined heating and power systems: a comparative study. Energy Convers 
+Manag 2021;244:114478. https://doi.org/10.1016/j.enconman.2021.114478 .
+[109] Ren F, Lin X, Wei Z, Zhai X, Yang J. A novel planning method for design and 
+dispatch of hybrid energy systems. Appl Energy 2022;321:119335. https://doi. 
+org/10.1016/j.apenergy.2022.119335 .
+[110] Zeng R, Long X. Multi-objective optimization study of CCHP-GSHP-PV-ST system 
+under different climatic zone conditions. J Phys Conf Ser 2023;2584:012098. 
+https://doi.org/10.1088/1742-6596/2584/1/012098 .
+[111] Liu Z, Li H, Liu K, Yu H, Cheng K. Design of high-performance water-in-glass 
+evacuated tube solar water heaters by a high-throughput screening based on 
+machine learning: a combined modeling and experimental study. Sol Energy 
+2017;142:61 – 7. https://doi.org/10.1016/j.solener.2016.12.015 .
+[112] Li H, Liu Z. Performance Prediction and Optimization of Solar Water Heater via a 
+Knowledge-Based Machine Learning Method: In: Management Association IR, 
+editor. Res. Anthol. Mach. Learn. Tech. Methods Appl., IGI Global; 2022, p. 
+714 – 33. https://doi.org/10.4018/978-1-6684-6291-1.ch038.
+[113] Casteleiro-Roca J-L, Chamoso P, Jove E, Gonz ´alez-Briones A, Quinti ´an H, 
+Fern ´andez-Ib ´a ˜nez M-I, et al. Solar thermal collector output temperature 
+prediction by hybrid intelligent model for smartgrid and smartbuildings 
+applications and optimization. Appl Sci 2020;10:4644. https://doi.org/10.3390/ 
+app10134644 .
+[114] Mohana N, Karunamurthy K, Suresh IR. Analysis of outlet temperature of 
+parabolic trough collector solar water heater using machine learning techniques. 
+IOP Conf Ser: Earth Environ Sci 2023;1161:012001. https://doi.org/10.1088/ 
+1755-1315/1161/1/012001 .
+[115] Shafieian A, Parastvand H, Khiadani M. Comparative and performative 
+investigation of various data-based and conventional theoretical methods for 
+modelling heat pipe solar collectors. Sol Energy 2020;198:212 – 23. https://doi. 
+org/10.1016/j.solener.2020.01.056 .
+[116] Tamizharasan A, Ramanath Kini MG, Suresh Kumar B, Manjunath R, Shafi S, 
+Taqui SN, et al. Smart performance evolution of a solar water heating system with 
+PCM by using deep learning approach. Electr Power Compon Syst 2023;51: 
+2210 – 9. https://doi.org/10.1080/15325008.2023.2243458 .
+[117] Elmasry Y, Chaturvedi R, Solomin E, Smaisim GF, Hadrawi SK. The numerical 
+investigation of a solar thermal collector with double-twisted tape insert absorber 
+tube; the prediction of outlet temperature through a machine learning model. Eng 
+Anal Bound Elem 2024;161:247 – 55. https://doi.org/10.1016/j. 
+enganabound.2024.01.015 .
+[118] Liu Z, Li H, Tang X, Zhang X, Lin F, Cheng K. Extreme learning machine: a new 
+alternative for measuring heat collection rate and heat loss coefficient of water-in- 
+glass evacuated tube solar water heaters. Springerplus 2016;5:626. https://doi. 
+org/10.1186/s40064-016-2242-1 .
+[119] Alade IO, Abd Rahman MA, Saleh TA. Predicting the specific heat capacity of 
+alumina/ethylene glycol nanofluids using support vector regression model 
+optimized with Bayesian algorithm. Sol Energy 2019;183:74 – 82. https://doi.org/ 
+10.1016/j.solener.2019.02.060 .
+[120] Ben Ali N, Agravat D, Patel SK, Armghan A, Aliqab K, Alsharari M. Investigation 
+of graphene based disk-square integration resonator for enhanced solar 
+absorption using machine learning for solar heaters. Alex Eng J 2024;102:192 – 9. 
+https://doi.org/10.1016/j.aej.2024.05.083 .
+[121] Kanimozhi B, Ramesh Bapu BR, Pranesh V. Thermal energy storage system 
+operating with phase change materials for solar water heating applications: DOE 
+modelling. Appl Therm Eng 2017;123:614 – 24. https://doi.org/10.1016/j. 
+applthermaleng.2017.05.122 .
+[122] Asiri SA, Salilih EM, Alfawaz KM, Alogla AF, Abu-Hamdeh NH, Nusier OK. 
+Improve the performance of renewable energy conversion and storage via ANN in 
+a system of solar water heater with variable speed photovoltaic circulating pump. 
+Int J Energy Res 2022;46:21309 – 25. https://doi.org/10.1002/er.8268 .
+[123] Lillo-Bravo I, Vera-Medina J, Fernandez-Peruchena C, Perez-Aparicio E, Lopez- 
+Alvarez JA, Delgado-Sanchez JM. Random Forest model to predict solar water 
+heating system performance. Renew Energy 2023;216:119086. https://doi.org/ 
+10.1016/j.renene.2023.119086 .
+[124] Shafiq A, Çolak AB, Sindhu TN. Comparative analysis to study the 
+Darcy – Forchheimer Tangent hyperbolic flow towards cylindrical surface using 
+artificial neural network: an application to Parabolic Trough Solar Collector. 
+Math Comput Simul 2024;216:213 – 30. https://doi.org/10.1016/j. 
+matcom.2023.09.014 .
+[125] Nokhosteen A, Sobhansarbandi S. Thermal Performance Evaluation of a Solar 
+Collector Utilizing a Novel Resistance Network Model. ASME 2020 Power Conf., 
+Virtual, Online: American Society of Mechanical Engineers; 2020, p. 
+V001T08A013. https://doi.org/10.1115/POWER2020-16579.
+[126] MaheshV K, Deshmukh DS, Shekhawat SP. An innovative design approach of hot 
+water storage tank for solar water heating system using artificial neural network. 
+Mater Today Proc 2021;46:5400 – 5. https://doi.org/10.1016/j. 
+matpr.2020.09.058 .
+[127] G ´eczy-Víg P, Farkas I. Different models for determination of thermal stratification 
+in a solar storage tank. In: Goswami DY, Zhao Y, editors. Proc. ISES World Congr. 
+2007 Vol – Vol V, Berlin, Heidelberg: Springer Berlin Heidelberg; 2008, p. 
+2746 – 50. https://doi.org/10.1007/978-3-540-75997-3_554.
+[128] Kishor N, Das MKr, Narain A, Prakash Ranjan V. Fuzzy model representation of 
+thermosyphon solar water heating system. Sol Energy 2010;84:948 – 55. https:// 
+doi.org/10.1016/j.solener.2010.03.002.
+[129] He Y, Geng Y, Guo S, Ma R, Li Z. A machine learning approach and numerical 
+investigation for intelligent forecasting of entropy generation rate inside a 
+turbulator-inserted solar collector tube. Eng Anal Bound Elem 2024;158:375 – 84. 
+https://doi.org/10.1016/j.enganabound.2023.11.006 .
+[130] Roberto B, Ubaldo C, Stefano M, Roberto I, Elisa S, Paolo M. Graybox and 
+adaptative dynamic neural network identification models to infer the steady state 
+efficiency of solar thermal collectors starting from the transient condition. Sol 
+Energy 2010;84:1027 – 46. https://doi.org/10.1016/j.solener.2010.03.011 .
+[131] Alosaimy AS, Hamed AM. Theoretical and experimental investigation on the 
+application of solar water heater coupled with air humidifier for regeneration of 
+liquid desiccant. Energy 2011;36:3992 – 4001. https://doi.org/10.1016/j. 
+energy.2011.05.002 .
+[132] Hajabdollahi Z, Hajabdollahi H. Thermo-economic modeling and multi-objective 
+optimization of solar water heater using flat plate collectors. Sol Energy 2017; 
+155:191 – 202. https://doi.org/10.1016/j.solener.2017.06.023 .
+[133] Yaman K, Arslan G. Modeling, simulation, and optimization of a solar water 
+heating system in different climate regions. J Renew Sustain Energy 2018;10: 
+023703. https://doi.org/10.1063/1.5004069 .
+[134] Ouhammou B, Ggourma, Daouchi B.. Optimization of the thermal performance of 
+the solar water heater (SWH) using stochastic technique. Int J Renew Energy Res 
+2018. https://doi.org/10.20508/ijrer.v8i3.7666.g7439 .
+[135] Zhang L, Chen H, Liu C, He Y, Cao L. Optimal distribution of heat collecting area 
+of two collectors in solar water heating systems. IOP Conf Ser: Earth Environ Sci 
+2020;555:012008. https://doi.org/10.1088/1755-1315/555/1/012008 .
+F. Odoi-Yorke                                                                                                                                                                                                                                    Energy Conversion and Management: X 28 (2025) 101378 
+22 
+--- PAGE 23 ---
+[136] Yoshida Y, Ueda Y. Optimization of residential PV and water heating system ’ s 
+configration and operation using Multi-Objective Particle Swarm Optimization. 
+2016 IEEE Power Energy Soc. Innov. Smart Grid Technol. Conf. ISGT, 
+Minneapolis, MN, USA: IEEE; 2016, p. 1 – 5. https://doi.org/10.1109/ 
+ISGT.2016.7781227.
+[137] Novotny J, Matuska T. Multi-objective optimization of solar system sizing in 
+households with common heat sources. IOP Conf Ser: Earth Environ Sci 2020;505: 
+012010. https://doi.org/10.1088/1755-1315/505/1/012010 .
+[138] Cao Y, Mihardjo LWW, Parikhani T. Thermal performance, parametric analysis, 
+and multi-objective optimization of a direct-expansion solar-assisted heat pump 
+water heater using NSGA-II and decision makings. Appl Therm Eng 2020;181: 
+115892. https://doi.org/10.1016/j.applthermaleng.2020.115892 .
+[139] Shirinbakhsh M, Mirkhani N, Sajadi B. A comprehensive study on the effect of hot 
+water demand and PCM integration on the performance of SDHW system. Sol 
+Energy 2018;159:405 – 14. https://doi.org/10.1016/j.solener.2017.11.008 .
+[140] Mayer A, Gaouyat L, Nicolay D, Carletti T, Deparis O. Multi-objective genetic 
+algorithm for the optimization of a flat-plate solar thermal collector. Opt Express 
+2014;22:A1641. https://doi.org/10.1364/OE.22.0A1641 .
+[141] Atia DM, Fahmy FH, Ahmed NM, Dorrah HT. Optimal sizing of a solar water 
+heating system based on a genetic algorithm for an aquaculture system. Math 
+Comput Model 2012;55:1436 – 49. https://doi.org/10.1016/j.mcm.2011.10.022 .
+[142] Fong KF, Chow TT, Hanby VI. Development of Optimal Design of Solar Water 
+Heating System by Using Evolutionary Algorithm. Sol. Energy, Orlando, Florida, 
+USA: ASMEDC; 2005, p. 333 – 41. https://doi.org/10.1115/ISEC2005-76189.
+[143] Adun H, Adedeji M, Adebayo V, Shefik A, Bamisile O, Kavaz D, et al. Multi- 
+objective optimization and energy/exergy analysis of a ternary nanofluid based 
+parabolic trough solar collector integrated with kalina cycle. Sol Energy Mater Sol 
+Cells 2021;231:111322. https://doi.org/10.1016/j.solmat.2021.111322 .
+[144] Kumar R, Nadda R, Kumar S, Razak A, Sharifpur M, Aybar HS, et al. Influence of 
+artificial roughness parametric variation on thermal performance of solar thermal 
+collector: an experimental study, response surface analysis and ANN modelling. 
+Sustain Energy Technol Assess 2022;52:102047. https://doi.org/10.1016/j. 
+seta.2022.102047 .
+[145] Khargotra R, Kumar S, Singh T, Lee D, Kumar R. Correlation proposing and ANN 
+modelling of thermohydraulic performance for delta-shaped winglet-type solar 
+water heating system. J Therm Anal Calorim 2024;149:6459 – 81. https://doi.org/ 
+10.1007/s10973-024-13221-5 .
+[146] Cardona M, Romo VH, Gutierrez S, Rodrigo PM, Ponce H, Kumar R. Wireless 
+Temperature Monitoring System through IoT for Domestic Solar Water Heaters. 
+2019 IEEE 39th Cent. Am. Panama Conv. CONCAPAN XXXIX, Guatemala City, 
+Guatemala: IEEE; 2019, p. 1 – 4. https://doi.org/10.1109/ 
+CONCAPANXXXIX47272.2019.8977014.
+[147] Akbari E, Shadlu MS. Intelligent Control of a Domestic Solar Water Heating 
+System with Thermal Storage Using Fuzzy Logic-Modified Model Predictive 
+Controller. 2023 8th Int. Conf. Technol. Energy Manag. ICTEM, Mazandaran, 
+Babol, Iran, Islamic Republic Of: IEEE; 2023, p. 1 – 7. https://doi.org/10.1109/ 
+ICTEM56862.2023.10084188.
+[148] Pataro IML, Cunha R, Gil JD, Guzm ´an JL, Berenguel M, Lemos JM. Optimal 
+model-free adaptive control based on reinforcement Q-Learning for solar thermal 
+collector fields. Eng Appl Artif Intel 2023;126:106785. https://doi.org/10.1016/ 
+j.engappai.2023.106785 .
+[149] Ahmed OK, Daoud RW, Bawa SM, Ahmed AH. Optimization of PV/T solar water 
+collector based on fuzzy logic control. Int J Renew Energy Dev 2020;9:303 – 10. 
+https://doi.org/10.14710/ijred.9.2.303-310.
+[150] Nguyen C-N, The NT, Danh LVQ. A PID Temperature Controller for Passive Solar 
+Water Heaters with a Low-Cost Three-Way Valve. In: Reddy VS, Prasad VK, 
+Mallikarjuna Rao DN, Satapathy SC, editors. Intell. Syst. Sustain. Comput., vol. 
+289, Singapore: Springer Nature Singapore; 2022, p. 101 – 14. https://doi.org/ 
+10.1007/978-981-19-0011-2_10.
+[151] Atia DM, Fahmy FH, Ahmed NM, Dorrah HT. Artificial Intelligence Techniques 
+based on aquaculture solar thermal water heating system control. RE & PQJ 2024; 
+9. https://doi.org/10.24084/repqj09.536 .
+[152] Araújo A, Silva R, Pereira V. Solar thermal modeling for rapid estimation of 
+auxiliary energy requirements in domestic hot water production: On-off versus 
+proportional flow rate control. Sol Energy 2019;177:68 – 79. https://doi.org/ 
+10.1016/j.solener.2018.11.003 .
+[153] Jiang S, Lian M, Lu C, Ruan S, Wang Z, Chen B. SVM-DS fusion based soft fault 
+detection and diagnosis in solar water heaters. Energy Explor Exploit 2019;37: 
+1125 – 46. https://doi.org/10.1177/0144598718816604 .
+[154] Kalogirou S, Lalot S, Florides G, Desmet B. Development of a neural network- 
+based fault diagnostic system for solar thermal applications. Sol Energy 2008;82: 
+164 – 72. https://doi.org/10.1016/j.solener.2007.06.010 .
+[155] He H, Caudell TP, Menicucci DF, Mammoli AA. Application of Adaptive 
+Resonance Theory neural networks to monitor solar hot water systems and detect 
+existing or developing faults. Sol Energy 2012;86:2318 – 33. https://doi.org/ 
+10.1016/j.solener.2012.05.015 .
+[156] Tao S, Yang M, Wang M, Yang R, Shen Q. Small object change detection in UAV 
+imagery via a Siamese network enhanced with temporal mutual attention and 
+contextual features: a case study concerning solar water heaters. ISPRS J 
+Photogramm Remote Sens 2024;218:352 – 67. https://doi.org/10.1016/j. 
+isprsjprs.2024.09.027 .
+[157] Pathak SK, Tyagi VV, Popli S, Chopra K, Pandey AK. Optimizing the thermal 
+performance and heat losses of self-stored U-tube based ETC for residential water 
+heating applications: a combined experimental and theoretical approach. 
+J Energy Storage 2024;84:110617. https://doi.org/10.1016/j.est.2024.110617 .
+[158] Chopra K, Tyagi VV, Popli S, Kumawat P, Pandey P, Kumar Pathak S, et al. Impact 
+of myristic acid on novel designed manifold assimilated with domestic solar water 
+heater: an experimental approach. Appl Therm Eng 2024;252:123560. https:// 
+doi.org/10.1016/j.applthermaleng.2024.123560 .
+[159] L ´opez-P ´erez LA, Torres-Díaz T, P ´erez Grajales SG, Flores Prieto JJ, Ju ´arez 
+Romero D, Hern ´andez P ´erez JA, et al. Solar water heating system with absorption 
+heat transformer for annual continuous water heating. Processes 2024;12:1650. 
+https://doi.org/10.3390/pr12081650 .
+[160] M L B, Sripriya T, Muthuraj B, Kumar DS, Venkatesh V, Sridevi BS, et al. Deep 
+Learning-Based Smart Hybrid Solar Water Heater Erection Model to Extract 
+Maximum Energy. Int J Photoenergy 2022;2022:1 – 8. https://doi.org/10.1155/ 
+2022/2943386.
+[161] Nokhosteen A, Sobhansarbandi S. Numerical modeling and experimental cross- 
+validation of a solar thermal collector through an innovative hybrid CFD model. 
+Renew Energy 2021;172:918 – 28. https://doi.org/10.1016/j.renene.2021.03.070 .
+[162] Shaban WM, Kabeel AE, El Hadi AM, Talaat FM. Optimizing photovoltaic thermal 
+solar systems efficiency through advanced artificial intelligence driven thermal 
+management techniques. Appl Therm Eng 2024;247:123029. https://doi.org/ 
+10.1016/j.applthermaleng.2024.123029 .
+[163] Ahmad MW, Reynolds J, Rezgui Y. Predictive modelling for solar thermal energy 
+systems: a comparison of support vector regression, random forest, extra trees and 
+regression trees. J Clean Prod 2018;203:810 – 21. https://doi.org/10.1016/j. 
+jclepro.2018.08.207 .
+F. Odoi-Yorke                                                                                                                                                                                                                                    Energy Conversion and Management: X 28 (2025) 101378 
+23 
