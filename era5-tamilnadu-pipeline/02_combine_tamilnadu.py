@@ -28,17 +28,24 @@ import pandas as pd
 import xarray as xr
 import pvlib
 
+from config import (
+    RAW_GRID_DIR,
+    PROCESSED_DIR,
+    PROCESSED_NAMED_DIR,
+    PROCESSED_GRID_DIR,
+    ensure_data_dirs,
+)
+
 # ═══════════════════════════════════════════════════════════
 # CONFIG
 # ═══════════════════════════════════════════════════════════
 
-INPUT_DIR        = "data/raw/era5/grid"
-OUTPUT_NAMED     = "data/processed/by_location"
-OUTPUT_GRID      = "data/processed/grid"
-OUTPUT_COMBINED  = "data/processed"
+INPUT_DIR        = str(RAW_GRID_DIR)
+OUTPUT_NAMED     = str(PROCESSED_NAMED_DIR)
+OUTPUT_GRID      = str(PROCESSED_GRID_DIR)
+OUTPUT_COMBINED  = str(PROCESSED_DIR)
 
-for d in [OUTPUT_NAMED, OUTPUT_GRID, OUTPUT_COMBINED]:
-    os.makedirs(d, exist_ok=True)
+ensure_data_dirs()
 
 YEARS  = ["2024", "2025"]
 MONTHS = [f"{m:02d}" for m in range(1, 13)]
