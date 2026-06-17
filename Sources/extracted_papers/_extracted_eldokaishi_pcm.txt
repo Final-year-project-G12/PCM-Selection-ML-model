@@ -1,0 +1,1187 @@
+pages: 10
+
+---PAGE 1---
+Applied Thermal Engineering 204 (2022) 118009
+Available online 30 December 2021
+1359-4311/© 2021 Elsevier Ltd. All rights reserved.
+Modeling of water-PCM solar thermal storage system for domestic hot 
+water application using Artificial neural networks 
+A.O. Eldokaishi, M.Y. Abdelsalam
+*
+, M.M. Kamal, H.A. Abotaleb 
+Department of Mechanical Power Engineering, Ain Shams University, Cairo, Egypt   
+ARTICLE INFO  
+Keywords: 
+Artificial neural networks 
+Thermal storage 
+Solar domestic water heating 
+Phase change materials 
+Numerical modeling 
+ABSTRACT  
+Numerical modeling of solar thermal storage systems is often challenged with limitations on the computational 
+effort due to their transient non-linear behavior that dictates accurate modeling of the physics over long-term 
+operations (i.e., annual). Such challenges result into scarcity of literature on comprehensive design guidelines 
+for solar thermal storage systems. This study presents a framework through which the potential of artificial 
+neural network (ANN) modeling of a hybrid solar thermal storage system involving phase change materials is 
+extensively investigated. An experimentally validated numerical model for the system is used to generate the 
+training and testing datasets for the ANN model. The effect of changing the sampling method and the number of 
+training samples is studied on the ANN model prediction. The results show that Sobol sequence sampling is 
+superior to other sampling methods especially for low number of samples. The best sampling method is utilized 
+to generate the training dataset with which the hyperparameters of the learning algorithm are optimized. The 
+optimized ANN model is ultimately used to predict the system solar fraction under various design conditions to 
+develop design maps that offer better visualization and sizing guidelines for the hybrid solar thermal storage 
+systems. ANN is shown to offer a potential candidate for accurate and computationally efficient modeling of 
+complex thermal systems. Upon proper configuration and training, the ANN model can accurately (i.e., a co -
+efficient of determination of 0.9999) predict the performance of the hybrid thermal storage system with 
+approximately five orders of magnitude reduction in computational time compared to conventional numerical 
+models.   
+1. Introduction 
+Solar radiation is an abundant and clean source of renewable energy; 
+however, its intermittent nature poses limitations on utilizing its full 
+potential. This created significant research attraction toward thermal 
+energy storage as a means to bridge the mismatch between the avail -
+ability of solar energy and the thermal demand. Water tank storage is the 
+most prominent in domestic heating applications due primarily to 
+design simplicity and low cost. Besides being an abundant and cheap 
+storage medium, water is privileged with superior thermal properties (i. 
+e., heat capacity and thermal conductivity) compared to other storage 
+mediums. The primary drawback manifested by sensible energy storage 
+mediums, like water, when compared to latent energy storage is their 
+lower storage densities, resulting in large operating temperature swings, 
+and thus shorter discharge periods. This necessitates significantly larger 
+tank volumes per unit stored energy. 
+Phase Change Materials (PCMs) qualify as an energy storage medium 
+that stores thermal energy in the form of latent heat. This paper focuses 
+on solid – liquid PCMs that melt during the charging periods and solidify 
+during the discharging periods. There is a large body of literature that 
+focuses on the impact of integrating PCMs in solar thermal storage ap -
+plications. Mazman et al. [1] experimentally investigated the effect of 
+incorporating three different PCM materials at the top of a stratified 
+solar domestic hot water (SDHW) storage tank. It was shown that 
+paraffin wax and stearic acid provided significant enhancement in the 
+thermal performance of the SDHW system. Cabeza et al. [2] incorpo -
+rated cylindrical granular graphite PCM compound in a stratified SDHW 
+tank while varying the number of PCM modules. Their results showed 
+that increasing the number of PCM modules increased the storage den -
+sity thus allowing the use of smaller tanks for the same purpose. Mehling 
+et al. [3] showed that integrating cylindrical PCM modules at the top of a 
+storage tank increased the storage density by 20 – 40%. Abdelsalam et al. 
+[4] showed that introducing PCM modules in solar domestic hot water 
+tanks resulted in around 40% reduction in tank volume compared to 
+sensible storage. Although integrating PCM modules in the storage tanks 
+* Corresponding author. 
+E-mail address: abdelsmy@mcmaster.ca (M.Y. Abdelsalam).  
+Contents lists available at ScienceDirect 
+Applied Thermal Engineering 
+journal homepag e: www.el sevier.com/loc ate/aptherm eng 
+https://doi.org/10.1016/j.applthermaleng.2021.118009 
+Received 4 September 2021; Received in revised form 21 November 2021; Accepted 27 December 2021   
+
+---PAGE 2---
+Applied Thermal Engineering 204 (2022) 118009
+2
+seems appealing, it poses multiple challenges due to the inherently low 
+sensible heat capacity and thermal conductivity of PCMs. 
+In addition, there is still a gap in the literature about the suitability of 
+PCMs and the optimum design parameters such as PCM volume fraction, 
+melting temperature, and module geometry for various applications, 
+especially solar thermal systems. Suresh and Saini [5] experimentally 
+investigated the effect of varying PCM volume fractions (i.e., 20 – 80%) 
+on the performance of thermal energy storage during charging and 
+discharging periods. The results showed an increase in the charging and 
+discharging periods with the increase of PCM volume fraction. Besides, 
+larger PCM volume fractions were shown to exhibit improved thermal 
+stratification inside the tank. Najafian et al. [6] numerically simulated 
+the performance of a thermal storage tank with PCM modules. Artificial 
+neural network (ANN) was used to correlate the design parameters and 
+the discharge time. The results showed that the best location of PCM 
+modules was near the top. Also, increasing the amount of PCM inside the 
+tank prolonged the discharging periods. 
+To fully harness the benefits of PCM integration, the effect of the key 
+design parameters of the thermal storage system such as storage tank 
+volume, PCM melting temperature, and PCM volume fraction must be 
+investigated. Detailed numerical modeling and simulation of such sys -
+tems can be computationally expensive due to the transient dynamic 
+behavior of the storage system and the non-linearity introduced by the 
+phase change process. The power of ANNs can be utilized to provide 
+computationally efficient, yet accurate modeling of solar thermal stor -
+age system, thus offering effective means for design optimization. 
+Although ANN existed for a long time, they were implemented for pre -
+dicting solar systems performance in the late 90
+′
+s. Alzahrani et al. [7] 
+utilized recurrent neural networks to predict total solar irradiance with a 
+root mean squared error of 0.0513 and 0.0680 for training and testing 
+datasets, respectively. Ozgoren et al. [8] utilized ANN to estimate the 
+monthly mean daily sum global solar radiation in Turkey with a mean 
+absolute percentage error of 5.34% and an R
+2 
+value of 0.9936. Dorvlo 
+et al. [9] utilized ANN methods like radial basis functions (RBF) and 
+multi-layer perceptron (MLP) to predict the total solar irradiance in 
+Oman with both methods showing similar performance. However, RBF 
+method was recommended as it required less computational power and 
+time. 
+Other researchers attempted utilizing ANN models to predict the 
+performance of solar thermal energy storage systems. Sridharan and 
+Shenbagaraj [10] utilized generalized regression neural networks 
+(GRNN) to predict the power output and collector efficiency of a 
+standalone, series connected, and parallel connected solar flat plate 
+collector. The results showed a prediction accuracy exceeding 97.64% 
+for collector power output and 94.80% for collector efficiency. Karaa ˘gaç 
+et al. [11] experimentally studied a concentrated photovoltaic-thermal 
+solar dryer using nano-enhanced PCM. Moisture content and moisture 
+ratio were predicted using two learning machine algorithms. It was 
+shown that the ANN method outperformed the support vector machines 
+(SVM) method. Motahar [12] experimentally investigated the melting 
+process of a rectangular PCM enclosure subjected to a uniform heat flux 
+boundary condition. A multi-layered perceptron feed-forward neural 
+model was used to predict the Nusselt number and the melted fraction of 
+the PCM. The ANN model predicted the PCM melting characteristics 
+with a mean square error of 4.42 × 10
+-6 
+and a correlation coefficient 
+value of 0.999. Kalogirou et al. [13] implemented ANN to predict the 
+daily average energy output as well as the storage tank temperature 
+levels for large solar storage systems. The results showed that the ANN 
+predicted the daily average energy output and tank temperature with R
+2 
+higher than 0.95 and 0.96, respectively. Yaïci and Entchev [14] 
+deployed a back-propagation ANN to forecast the performance of a solar 
+thermal energy system for domestic hot water and space heating. The 
+ANN model predicted the stratification temperatures and solar fraction 
+with accuracies of ± 3% and ± 10%, respectively. G ´eczy-Víg and Farkas 
+[15] utilized a multi-layer perceptron back-propagation neural network 
+to predict the layer temperature of a solar domestic water heating tank 
+using MATLAB neural network toolbox. The ANN model provided pre -
+dictions with average deviations of 0.22 ℃ and 0.24 ℃ for training and 
+validation datasets, respectively. Kalogirou [16] utilized group method 
+data handling neural networks and genetic algorithm to optimize the 
+collector area and the tank size for a solar industrial process heat system 
+with the objective of maximizing life-cycle savings. The training R
+2 
+was 
+0.9986. 
+The literature shows promising utility of ANNs in accurate modeling 
+dynamic coupled thermal systems. Nevertheless, there is still lacking in 
+research studies and investigations on the applicability of ANN modeling 
+to PCM-integrated solar-thermal storage system. This article presents an 
+extensive framework for configuring, training, and testing an ANN 
+Nomenclature 
+Symbols: 
+A
+c 
+Solar collector area [m
+2
+] 
+C
+w 
+Water specific heat capacity [J/kgK] 
+F
+’ 
+Collector efficiency factor 
+F
+R 
+Collector heat removal factor 
+˙m Collector mass flow rate [kg/s] 
+n Number of data points 
+R
+2 
+Coefficient of determination 
+T
+l 
+Load setpoint temperature [K] 
+T
+p 
+PCM melting temperature [K] 
+T
+w 
+Water mains temperature [K] 
+U
+L 
+Collector loss coefficient [W/m
+2
+K] 
+U
+st 
+Tank loss coefficient [W/m
+2
+K] 
+V
+f 
+PCM volume fraction 
+V
+st 
+Tank volume [L] 
+X Raw input data point 
+X Average of input data 
+X
+’ 
+Normalized input data point 
+y Actual output 
+y
+’ 
+Predicted output 
+ΔT
+of f 
+Temperature difference at which the collector circulation 
+pump is shut down [K] 
+ΔT
+on 
+Temperature difference at which the collector circulation 
+pump is operated [K] 
+Greek Symbols: 
+α Absorptance 
+ρ
+p 
+PCM density [kg/m
+3
+] 
+ρ
+w 
+Water density [kg/m
+3
+] 
+σ standard deviation of input data 
+τ Transmittance 
+Acronyms: 
+ANN Artificial neural network 
+LHS Latin hypercube sampling 
+LR Learning rate 
+MAE Mean absolute error 
+MC Monte Carlo sampling 
+MSE Mean squared error 
+PCM Phase change material 
+RMSE Root mean squared error 
+SF Solar fraction  
+A.O. Eldokaishi et al.                                                                                                                                                                                                                          
+
+---PAGE 3---
+Applied Thermal Engineering 204 (2022) 118009
+3
+model for a water-PCM solar thermal storage system for domestic water 
+heating applications. A validated numerical model is used to generate 
+the training and testing datasets for the ANN model. The current study 
+demonstrates a deep dive into the configuration and tuning of an open- 
+source ANN model, exploring the effects of different sampling methods, 
+number of samples per dataset, and hyperparameters tuning on the 
+predictive capability of the ANN model. The tuned model is then 
+deployed to create a design map for the solar thermal storage system 
+that illustrates the effects of the tank volume and the PCM volume 
+fraction and melting temperature on the efficiency (i.e., solar fraction) of 
+the solar thermal storage system. 
+2. System description 
+The current study uses the validated numerical model developed by 
+Abdelsalam et al. [4,17] for the water-PCM thermal storage system 
+(referred to herein as the hybrid storage system) to generate the training 
+and testing cases for the ANN model. Fig. 1 shows the layout of the 
+hybrid storage system connected to a flat-plate solar collector loop and a 
+demand-side loop. The hybrid storage tank is equipped with an 
+immersed coil heat exchangers at the bottom for charging and another at 
+the top for discharging. The solar collector side is considered the 
+charging loop and the demand side is considered the discharging loop. 
+Heat collected by the solar collector is transferred to the storage tank via 
+the bottom coil heat exchanger. The stored energy is recovered and 
+delivered to the load via the top coil heat exchanger. Water circulates in 
+the collector loop by means of a circulation pump operated by an ON/ 
+OFF controller; the pump is operated when there is a sufficient tem -
+perature difference between the collector plate and the return from the 
+bottom of the storage tank [18] . The following equation governs the 
+relationship between ΔT
+on 
+and ΔT
+of f
+: 
+ΔT
+of f
+≤
+A
+c
+× F
+R
+× U
+L
+˙m × C
+w
+× ΔT
+on
+(1) 
+ΔT
+on 
+and ΔT
+of f 
+are the temperature difference between the collector 
+plate and the return from the bottom of the storage tank at which the 
+circulation pump is turned ON and OFF. Whereas F
+R 
+is the collector heat 
+removal factor calculated using [18] : 
+F
+R
+=
+˙m × C
+w
+( 1   e
+  A c × U
+L
+× F
+’
+˙m × C w
+)
+A
+c
+× U
+L
+(2) 
+The area of the collector is denoted as A
+c
+, whereas ˙m, U
+L 
+and F
+’ 
+represent the collector mass flow rate, loss coefficient and efficiency 
+factor, respectively. The heat removal factor F
+R 
+is then multiplied by the 
+transmittance-absorptance product ( τα ) and Collector loss coefficient 
+( U
+L
+) to produce F
+R
+τα and F
+R
+U
+L 
+values respectively. An overheating 
+limiting control is applied on the supply from the collector to prevent the 
+supply temperature to the tank from exceeding 90 
+◦
+C thus prevents 
+boiling in the collector loop. The load side is fitted with an auxiliary 
+heater and a tempering valve to ensure the temperature of the water 
+delivered to the load does not deviate from the set point. If the delivered 
+water temperature exceeds the setpoint temperature; then the tempering 
+switch will allow mains water to mix with the hot water before being 
+delivered to the load side. However, if the delivered water temperature 
+is lower than the setpoint temperature; then the auxiliary heater pro -
+vides the required energy to raise the temperature to the required value. 
+Cylindrical PCM modules, 20 mm in diameter, are installed vertically 
+inside the storage tank. 
+3. System parameters 
+In this study the system parameters are varied over a wide range of 
+values to investigate the ANN predictive capability. The area of the solar 
+collector ranges from 1 to 8 m
+2
+. The storage tank volume is varied from 
+50 to 240 L, and the setpoint temperature for the hot water delivered to 
+load is varied from 55 to 60 
+◦
+C. Table 1 summarizes the proposed system 
+parameters for the current study. 
+A python script is developed to simulate multiple cases with various 
+operating conditions. The following parameters are varied: collector 
+area, tank volume, load temperature, PCM melting temperature, and 
+PCM volume fraction (the ratio of PCM volume to the total tank vol -
+ume). The solar radiation and ambient temperature profiles are obtained 
+from ( https://weather.gc.ca/canada_e.html ) for a typical spring day in 
+the city of Toronto, Canada, shown in Fig. 2 . A dispersed hot water 
+demand profile [19] is assumed to represent a typical household usage 
+with a fixed draw rate of 8 L/min and a daily total of 189 L, shown in 
+Fig. 3 . 
+4. Artificial neural network modeling 
+Artificial neural networks are data processing systems capable of 
+analyzing and correlating input and output data. The fundamental ele -
+ments that make up the ANN are called neurons. These neurons are 
+interconnected with synaptic weights. Each neuron applies certain 
+mathematical functions to its inputs and then communicates the results 
+with other neurons as shown in Fig. 4 . ANN has the capability of 
+recognizing patterns of multi-dimensional complex datasets and 
+providing a generalized correlation between the inputs and outputs that 
+enables predicting the output of new data points. For more details about 
+ANN modeling, refer to [20] . 
+Fig. 1. Solar hybrid thermal storage system with cylindrical PCM modules and immersed coil heat exchangers. Adapted from Abdelsalam et al. [4] .  
+A.O. Eldokaishi et al.                                                                                                                                                                                                                          
+
+---PAGE 4---
+Applied Thermal Engineering 204 (2022) 118009
+4
+a. Data pre-processing 
+Raw data often requires pre-processing and transformation before 
+introduction to neural networks. Scaling and normalization of the data 
+are often required to ensure the stability and robustness of the ANN 
+training [21] . The following formula is used to normalize and scale the 
+training data: 
+X
+’
+=
+X   X
+σ
+(3)  
+where, X
+’ 
+is the normalized input data point, X is the raw input data 
+point, X is the raw dataset average, and σ is the raw input dataset 
+standard deviation. The processed data is then sampled to create a 
+training set for the ANN model. The literature presents various data 
+sampling techniques for the training sets. This study explores using three 
+different sampling methods: the Monte Carlo (MC), the Latin hypercube 
+(LHS), and the Sobol sequence sampling.  
+b. Training process 
+After data pre-processing, the ANN model is introduced to the entire 
+training dataset and the synaptic weights are randomly initialized to 
+predict an output value for each data point. The output is then subjected 
+to a predefined loss function, and the error between the actual and the 
+predicted values is calculated. Among the common loss functions are the 
+mean squared error (MSE), the root mean squared error (RMSE), and the 
+mean absolute error (MAE). Eqs. (4 – 6) present the mathematical defi -
+nitions of the three loss functions. The optimizer (also referred to as the 
+learning algorithm) adjusts the synaptic weights with the purpose of 
+minimizing the loss function, this is considered as one “ epoch ” . 
+MAE =
+∑
+n
+i = 1
+⃒
+⃒
+y
+i
+  y
+’
+i
+⃒
+⃒
+n
+(4)  
+MSE =
+∑
+n
+i = 1
+( y
+i
+  y
+’
+i
+)
+2
+n
+(5)  
+RMSE =
+̅̅̅̅̅̅̅̅̅̅̅̅̅̅ ̅̅̅̅̅̅̅̅̅̅ ̅
+∑
+n
+i = 1
+( y
+i
+  y
+’
+i
+)
+2
+n
+√
+√
+√
+√
+√
+(6)  
+where, n is the number of data points and y
+i 
+and y
+’
+i 
+are the actual and the 
+predicted output values, respectively. The optimizer performs a pre -
+defined number of epochs with the target of improving the accuracy of 
+the model. However, excessive increase of the number of epochs often 
+leads to model overfitting, by which the increase in the validation loss 
+outweighs the decrease in the training loss. That is, the overfitted ANN 
+model performs extremely well on training data but underperforms on 
+new data, thus loses its generality [22] .  
+c. Development of ANN models 
+KERAS and TensorFlow, open-source ANN modeling packages 
+developed by Google, are used in this study [23] . A feed-forward multi- 
+layer ANN type is chosen for this study [24] . A particular difficulty that 
+is sometimes overlooked in current machine learning applications is the 
+optimization of internal model parameters, also referred to as the 
+hyperparameters such as the learning rate, the number of hidden layers, 
+Table 1 
+Proposed system parameters.  
+Parameters Value 
+Solar collector  
+Collector area ( A
+c
+)  1 to 8 [m
+2
+]
+a 
+Collector mass flow rate ( ˙m )  0.05 [kg/s] 
+Collector fluid specific heat capacity ( C
+w
+)  4.18 [kJ/kgK] 
+ΔT
+of f  
+2 [K]
+b 
+Transmittance-absorptance product ( τα ) 0.8
+c 
+Collector loss coefficient ( U
+L
+)  5.0 [W/m
+2
+K]
+c 
+Collector efficiency factor ( F
+’
+)  0.84
+c 
+Storage tank  
+Storage tank volume ( V
+st
+)  50 to 240 [L] 
+Tank aspect ratio 2:1 
+Number of tanks 1 
+Tank surrounding temperature ( T
+a
+)  20 [
+◦
+C] 
+Tank loss coefficient ( U
+st
+)  0.5 [W/m
+2
+K] 
+Phase change material (PCM)  
+PCM Latent heat 182 [kJ/kg]
+d 
+PCM Density ( ρ
+p
+)  870 [kg/m
+3
+]
+d 
+PCM Melting temperature ( T
+p
+)  25 to 35 [
+◦
+C]
+d 
+PCM Volume fraction ( V
+f
+)  0.0 to 0.7 
+Water properties  
+Load temperature ( T
+l
+)  55 to 60 [
+◦
+C] 
+Water Mains temperature ( T
+w
+)  8 [
+◦
+C] 
+Water density ( ρ
+w
+)  993 [kg/m
+3
+] 
+Water conductivity 0.63 [W/mK]  
+a
+Assuming 0.35 – 2.67 m
+2
+/person. 
+b
+This value was used to minimize the cycling frequency on the circulation 
+pump [18] . 
+c
+The values were calculated based on 45
+◦
+slope flat plate collector facing 
+south [18] . 
+d
+The PCM properties are similar to Capric acid [33] . 
+Fig. 2. Hourly solar incident radiation and dry bulb temperature for a typical 
+spring day in the city of Toronto, Canada. 
+Fig. 3. Dispersed hot water draw profile reported by [19] , scaled to a total 
+daily demand of 189 L. The time “ 0
+′′
+represents 12:00 AM. 
+A.O. Eldokaishi et al.                                                                                                                                                                                                                          
+
+---PAGE 5---
+Applied Thermal Engineering 204 (2022) 118009
+5
+the number of neurons per hidden layer, and the activation functions 
+[25] . Proper configuration of the model hyperparameters is key to the 
+performance and the predictive capabilities of the ANN model. As such, 
+the current study investigates the impact of hyperparameters tuning on 
+the prediction accuracy of the thermal storage system performance. The 
+metric of performance of the solar thermal storage system is chosen to be 
+the solar fraction (SF) defined as the ratio of the thermal energy deliv -
+ered to the load to the total thermal demand: 
+SolarFraction ( SF ) =
+Thermal energy delivered to the load
+Total thermal demand
+(7) 
+The solar fraction (SF) for solar thermal storage system approaches 
+unity as higher fraction of the thermal demand is satisfied by the solar 
+thermal storage system rather than the auxiliary heater. 
+5. Results and discussion 
+This section is organized to show the effect of different sampling 
+techniques, number of samples, and hyperparameters tuning on the 
+predictive capabilities of the neural network. Then, the utility of the 
+optimized ANN model is demonstrated through the generation of design 
+maps for the solar hybrid storage system.  
+a. Sampling method and number of samples 
+For the ANN model to accurately simulate the solar thermal storage 
+system, it must train on a set of data strategically selected to cover the 
+studied range summarized in Table 1 . Each data point (training sample) 
+contains different values for the five input parameters (collector area, 
+storage tank volume, load temperature, PCM melting temperature, and 
+PCM volume fraction) and the corresponding output (solar fraction). As 
+such, there are two parameters that need to be carefully determined: 
+which sampling method to be utilized to sample the studied range and 
+what is the minimum number of training samples required to adequately 
+train the ANN model. Three sampling techniques were investigated: 
+Sobol sequence, Latin hypercube, and Monte Carlo. A python code is 
+developed to sample the studied range. A training set up to 10,000 
+training samples was generated utilizing each sampling method. ANN 
+model was created and trained using each sampling method at the 
+following number of training sample increments (250, 500, 1000, 1500, 
+2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000) totaling 13 
+models for each sampling method (39 models overall). A comprehensive 
+testing set of 84,480 samples covering the entire studied range was 
+created (these testing samples were not introduced to the ANN models 
+during the training phase and thus will test the predictive and general -
+ization ability of each model). The testing MAE, RMSE, and the coeffi -
+cient of determination ( R
+2
+) for the sampling methods are plotted against 
+the number of samples, as shown in Figs. 5-7 , respectively. 
+It is observed that the Sobol sequence sampling outperforms other 
+sampling techniques, providing 44% and 16% reduction in the testing 
+mean absolute error (MAE) compared to LHS models and MC models, 
+respectively. This is found to agree with Burhenne et al. [26] whose 
+results showed favorable performance of the Sobol-based sampling over 
+other techniques. Increasing the number of training samples results in a 
+more accurate ANN predictions. However, In the limit of larger number 
+of samples, the different sampling techniques provide similar prediction 
+Fig. 4. ANN diagram showing the relationship between neuron inputs and output. The neuron output is the sum of all inputs multiplied by synaptic weights.  
+Fig. 5. Mean absolute error (MAE) for the three sampling methods versus the 
+number of samples. 
+Fig. 6. Root mean squared error (RMSE) for the three sampling methods versus 
+the number of samples. 
+A.O. Eldokaishi et al.                                                                                                                                                                                                                          
+
+---PAGE 6---
+Applied Thermal Engineering 204 (2022) 118009
+6
+accuracy among the generated ANN models. It is observed that 
+increasing the number of training samples beyond 3,000 samples 
+slightly reduces the MAE.  
+b. Hyperparameter optimization 
+Hyperparameter optimization is the process of configuring the ANN 
+hyperparameters. An ANN model with a properly configured hyper -
+parameters will lead to an accurate ANN predictions (the ANN will 
+mimic the studied system accurately). The optimization of the model 
+hyperparameters is carried out for the Sobol sequence sampling ANN 
+model with a total of 3,000 training samples. The optimizer is a machine 
+learning algorithm used to adjust the synaptic weights during the 
+training process with the goal of minimizing the loss function. Adaptive 
+moment estimation learning algorithm, known as “ Adam ” algorithm 
+[27] , is simple and computationally efficient for gradient-based opti -
+mization of stochastic objective functions. It is well poised for machine 
+learning problems with large datasets and/or multi-dimensional 
+parameter spaces. As such, this study employs the Adam learning al -
+gorithm to minimize the loss function. A methodical approach is 
+developed to optimize the key hyperparameters of the learning algo -
+rithm: the learning rate, the number of hidden layers, the number of 
+neurons per hidden layer, and the activation function, to enhance the 
+predictive capability of the ANN model.  
+i. Learning rate 
+The learning rate (LR) in machine learning is the step size after each 
+epoch towards minimizing the loss function. Higher learning rates often 
+results in faster training on the expense of model training stability. 
+Conversely, smaller learning rates yields slower yet more stable training 
+process, but it might cause the loss function to get stuck in an undesir -
+able local minimum [28] . Therefore, an optimum learning rate is 
+required to reach the global minimum value of the loss function while 
+preserving the model training stability. Table 2 shows the LR optimi -
+zation process. A learning rate of 0.005 is seen to achieve the lowest 
+testing error.  
+ii. ANN topology 
+ANN consists of layers of interconnected neurons. A typical ANN 
+consists of an input layer, one or multiple hidden layers, and an output 
+layer. Varying the number of hidden layers and the neurons in each 
+hidden layer has a great effect on the performance of ANN models [29] . 
+Lower number of hidden layers simplifies the model on the expense of its 
+ability to effectively capture the complexities and non-linearities in the 
+modelled system. On the other hand, increasing the number of hidden 
+layers beyond a certain value can lead to model overfitting. Table 3 
+shows the effect of varying the number of hidden layers from 1 to 4 and 
+the number of neurons in each hidden layer to 30, 40, and 50. It is 
+observed that 3 hidden layers with 50 neurons in each hidden layer 
+provide the optimum structure to achieve improved predictions.  
+iii. Activation function 
+Activation functions also known as “ transfer functions ” are used to 
+limit the neuron output within a reasonable range of values [30] . 
+Without activation functions the ANN will simply be a linear regression 
+model. Activation functions are applied after the mathematical pro -
+cesses in the neuron. There is a variety of activation functions available 
+in the literature, each having its advantages and limitations. For 
+example, rectified linear activation function (RELU) is computationally 
+efficient but not suitable for inputs that approach zero or negative 
+values, whereas Softmax activation function is suitable for classification 
+problems. Table 4 shows a comparison of the ANN model performance 
+under various activation functions. It is observed that sigmoid activation 
+function is the most suitable for this study.  
+iv. Single vs. Multi-ANN models for prediction 
+To further improve the predictive capabilities of the ANN model, the 
+best three models during the training and the testing stages are selected 
+for prediction. The outlier prediction out of the three is eliminated for 
+each data point and the average of the other two is considered as the 
+output. This method further reduces MAE by approximately 10% and 
+the maximum absolute error by 21% compared to single ANN model 
+predictions, shown in Table 5 . This approach reduces the maximum 
+error significantly while the improvements in MAE are minor. This is 
+possible since the maximum error for each ANN model occurs at 
+different input values. Fig. 8 shows a good agreement between the actual 
+and the predicted values of the solar fraction of the storage system as all 
+values are near the line of equal actual and predicted solar fraction. 
+Fig. 7. Coefficient of determination ( R
+2
+) for the three sampling methods versus 
+the number of samples. 
+Table 2 
+ANN testing performance for different learning rates.  
+Learning rate Testing performance  
+MAE RMSE R
+2  
+0.100  0.00248  0.003474  0.99960  
+0.010  0.00203  0.003099  0.99973  
+0.005  0.00190  0.002729  0.99976  
+0.001  0.00395  0.006725  0.99897  
+Table 3 
+ANN testing performance for different ANN topologies.  
+Hidden layers Neurons Testing performance   
+MAE RMSE R
+2  
+1 30  0.00388  0.006226  0.99912 
+40  0.00356  0.005735  0.99922 
+50  0.00387  0.006133  0.99909      
+2 30  0.00183  0.002662  0.99978 
+40  0.00208  0.002994  0.99976 
+50  0.00173  0.002498  0.99980      
+3 30  0.00175  0.002476  0.99979 
+40  0.00145  0.002081  0.99985 
+50  0.00142  0.002044  0.99986      
+4 30  0.00169  0.002443  0.99981 
+40  0.00159  0.002205  0.99985 
+50  0.00142  0.002103  0.99985  
+A.O. Eldokaishi et al.                                                                                                                                                                                                                          
+
+---PAGE 7---
+Applied Thermal Engineering 204 (2022) 118009
+7
+v. Data fitting and correlations 
+A regression model is developed to fit the training data and provide a 
+correlation between the system solar fraction and the controllable var -
+iables: the collector area, the storage tank volume, the load temperature, 
+the PCM melting temperature, and the PCM volume fraction. The 
+following equation represents the regression model: 
+SF =   0 . 009248A
+2
+c
++ 0 . 000055A
+c
+V
+st
+  0 . 001532A
+c
+T
+l 
++ 0 . 000589A
+c
+T
+p
++ 0 . 001477A
+c
+V
+f
+  0 . 000003V
+2
+st
++ 0 . 000004V
+st
+T
+p 
+  0 . 000242V
+st
+V
+f
+  0 . 000068T
+2
+p
++ 0 . 002308T
+p
+V
+f
+  0 . 04611V
+2
+f 
++ 0 . 21993A
+c
++ 0 . 000779V
+st
++ 0 . 000112T
+l
++ 0 . 00086T
+p
+  0 . 01V
+f
+  0 . 1908
+(14)  
+where, A
+c 
+= collector area, V
+st 
+= storage tank volume, T
+l 
+= load tem -
+perature, T
+p 
+= PCM melting temperature, and V
+f 
+= PCM volume frac -
+tion. The results are summarized in Table 6 and Fig. 9 represents the 
+MAE distribution for ANN versus regression model which highlights the 
+superiority of ANN modeling over regression. Fig. 9 shows that 80% of 
+the predicted testing data has a MAE less than 2 × 10
+  3 
+for the ANN 
+model, whereas 80% of the predicted testing data for the regression 
+model has a MAE less than 3 . 2 × 10
+  2
+.  
+c. Design maps for the solar hybrid storage system 
+The ANN model is deployed to predict the solar fraction (SF) for the 
+hybrid storage system with different tank volumes, PCM volume frac -
+tions, and PCM melting temperatures. Table 7 presents the optimized 
+model hyperparameters used in this study. Fig. 10 shows the selected 
+ANN topology. 
+Mapping the solar fraction contours with respect to the various 
+design parameters of the hybrid storage system requires numerous 
+simulations that are computationally intensive. Such a challenge can be 
+circumvented by the utilization of a well-trained ANN model that is 
+capable of generating high-resolution performance contours of the solar 
+storage system with high accuracy and significantly lower computa -
+tional effort. Fig. 11 presents the solar fraction contours for different 
+storage tank volumes and PCM volume fraction where the collector area 
+Table 4 
+ANN testing performance for different activation functions.  
+Activation 
+function 
+Formula Testing performance   
+MAE RMSE R
+2  
+RELU [34] 
+f ( x ) =
+{
+0 , x ≤ 0
+x , x > 0  
+(8) 0.00165 0.002717 0.99976 
+sigmoid 
+f ( x ) =
+1
+1 + e
+  x  
+(9) 0.00126 0.001943 0.99987 
+Softplus [35] f ( x ) = ln ( 1 + e
+x
+) (10) 0.00155 0.002683 0.99977 
+tanh 
+f ( x ) =
+e
+x
+  e
+  x
+e
+x
++ e
+  x  
+(11) 0.00167 0.002565 0.99979 
+SELU [36] 
+f ( x ) =
+{
+α ( e
+x
+  1 ) , x ≤ 0
+x , x > 0  
+(12) 0.00238 0.003294 0.99967 
+ELU [37] 
+f ( x ) =
+λ
+{
+α ( e
+x
+  1 ) , x ≤ 0
+x , x > 0  
+(13) 0.00159 0.002369 0.99982  
+Table 5 
+ANN testing performance for single- versus multi-ANN model.  
+ANN model Testing performance  
+MAE RMSE MAX. MAE R
+2  
+Single ANN  0.00126  0.001943  0.0256  0.99987 
+Multi-ANN  0.00114  0.001745  0.0203  0.99990  
+Fig. 8. Actual versus predicted solar fraction.  
+Table 6 
+Testing performance for multi-ANN versus regression model.  
+Model type Testing performance  
+MAE RMSE MAX. MAE R
+2  
+Multi-ANN  0.00114  0.001745  0.0203  0.99990 
+Regression  0.02010  0.024866  0.0893  0.98481  
+Fig. 9. Mean absolute error distribution for Multi-ANN versus regres -
+sion model. 
+Table 7 
+Optimized ANN model hyperparameters.  
+Hyperparameter Selected value 
+ANN type Feed-forward multi-layer 
+Number of input neurons 5 
+Number of output neurons 1 
+Number of hidden layers 3 
+Neurons per hidden layer 50 
+Learning algorithm (optimizer) Adam 
+Learning rate 0.005 
+Activation function sigmoid  
+A.O. Eldokaishi et al.                                                                                                                                                                                                                          
+
+---PAGE 8---
+Applied Thermal Engineering 204 (2022) 118009
+8
+is fixed at 4 m
+2
+, the load temperature is 55 
+◦
+C and the PCM melting 
+temperature is chosen at 28 
+◦
+C. Following a horizontal line on the con -
+tour plot shows the solar fraction approaching a peak with the increase 
+of the tank volume followed by a drop. Such a behavior was proved in 
+previous studies to be due to effect of the increased thermal losses 
+associated with the larger surface area of the larger storage tanks [31] . 
+Fig. 12 shows the solar fraction contours for different PCM melting 
+temperature and PCM volume fraction while keeping collector area and 
+load temperature constant at 4 m
+2 
+and 55 
+◦
+C, respectively. It is shown 
+that for a chosen PCM melting temperature of 28 
+◦
+C, increasing the PCM 
+volume fraction from 0 (Point A on the left plot of Fig. 12 ) to 0.5 (Point B 
+on the left plot of Fig. 12 ) in a 90-L tank increases the solar fraction by 
+about 13%, compared to around 5% for a 150-L tank (Points C and D on 
+the right plot of Fig. 12 ). This highlights that integrating PCM modules 
+in the storage tank increases the storage density of the tank, resulting 
+into prolonged discharging periods, hence improving the solar fraction. 
+However, such an improvement is more prominent in lower tank vol -
+umes due primarily to the adverse effects of thermal losses and larger 
+storage capacity associated with larger tank volumes [32] . The contour 
+plots in Fig. 12 also show an optimum value of PCM volume fraction 
+beyond which the system solar fraction drops. This is attributed to the 
+inherently low thermal characteristics (i.e., thermal conductivity and 
+specific heat capacity) of PCM compared to water, often resulting into 
+Fig. 10. ANN topology showing input, hidden, and output layers and neurons.  
+Fig. 11. Solar fraction contours for various PCM volume fractions and tank 
+volumes. The collector area is 4 m
+2
+, the load temperature is 55 
+◦
+C and the PCM 
+melting temperature is 28 
+◦
+C. 
+Fig. 12. Solar fraction contours for various PCM volume fractions and melting temperatures. The collector area is 4 m
+2 
+and the load temperature is 55 
+◦
+C. Left: the 
+tank volume is 90 L, Right: the tank volume is 150 L. 
+A.O. Eldokaishi et al.                                                                                                                                                                                                                          
+
+---PAGE 9---
+Applied Thermal Engineering 204 (2022) 118009
+9
+incomplete melting and solidification of the PCM during the charging 
+and discharging cycles. This is found in agreement with the results by 
+Suresh and Saini [5] . Improper selection of the PCM melting tempera -
+ture also contributes to partial phase transformation during the charging 
+and discharging processes, thus hindering the full utilization of the PCM 
+latent heat capacity. As such, the majority of the PCM will act as a 
+sensible heat storage medium with inherently inferior thermal charac -
+teristics compared to water, thus degrading the overall system perfor -
+mance. This shows that the benefits of incorporating PCM modules in 
+storage tank is noticeable at low storage tank volumes. In fact, if PCM 
+melting temperature and volume fraction are selected properly, PCM 
+integration can yield up to 57% reduction in tank volume. As seen in 
+Fig. 11 incorporating PCM modules in a 90 L tank yields the same solar 
+fraction as a 210 L tank without PCM. 
+6. Conclusions 
+The potential of ANN modeling is extensively investigated for a 
+hybrid solar thermal storage system involving PCMs for domestic water 
+heating applications. The effects of using different sampling methods, 
+number of samples, and hyperparameters tuning are studied. A total of 
+39 ANN models are developed to investigate the effect of sampling 
+methods and number of samples on the predictive capabilities of the 
+ANN models. The results show that the Sobol sequence sampling pro -
+vides less overall error in the testing sets compared to the Latin hyper -
+cube and the Monte Carlo sampling methods, especially for low number 
+of data points in the training set. Hyperparameter optimization shows 
+the effect of tuning the ANN hyperparameters on the predictive capa -
+bilities of the ANN models. The results show that ANN can be used 
+successfully to model the hybrid solar thermal storage systems with an 
+R
+2 
+value of 0.9999. The optimized ANN model is then deployed to 
+generate design maps for the system, offering accessible sizing and se -
+lection guidelines for the key design parameters: the storage tank vol -
+ume, the PCM volume fraction and the PCM melting temperature. PCM 
+parameter visualization shows that proper selection of the tank volume 
+and the PCM melting temperature and volume fraction is essential to 
+improve the system solar fraction. One of the main benefits of using ANN 
+modeling is the significant reduction in the computational effort. The 
+time spent to simulate the entire testing set (84,480 testing samples) 
+using the numerical model by Abdelsalam et al. [4] is recorded to be 
+over 120 h compared to around 5 s using the ANN model. As such, with 
+careful configuration and training, ANN modeling can provide compu -
+tationally efficient means to predict the performance of highly transient 
+and non-linear systems. The framework presented in this article can be 
+extended to involve other design and operational parameters such as the 
+solar collector area, the weather profile, the demand profile to develop 
+more comprehensive design maps for solar thermal storage systems. 
+Declaration of Competing Interest 
+The authors declare that they have no known competing financial 
+interests or personal relationships that could have appeared to influence 
+the work reported in this paper. 
+References 
+[1] M. Mazman, L.F. Cabeza, H. Mehling, M. Nogues, H. Evliya, H.
+¨
+O. Paksoy, 
+Utilization of phase change materials in solar domestic hot water systems, Renew. 
+Energy 34 (6) (2009) 1639 – 1643, https://doi.org/10.1016/j.renene.2008.10.016 . 
+[2] L.F. Cabeza, M. Ib ´a ˜nez, C. Sol ´e, J. Roca, M. Nogu ´es, Experimentation with a water 
+tank including a PCM module, Sol. Energy Mater. Sol. Cells 90 (9) (2006) 
+1273 – 1282, https://doi.org/10.1016/j.solmat.2005.08.002 . 
+[3] H. Mehling, L.F. Cabeza, S. Hippeli, S. Hiebler, PCM-module to improve hot water 
+heat stores with stratification, Renew. Energy 28 (5) (2003) 699 – 711, https://doi. 
+org/10.1016/S0960-1481(02)00108-8 . 
+[4] M.Y. Abdelsalam, H.M. Teamah, M.F. Lightstone, J.S. Cotton, Hybrid thermal 
+energy storage with phase change materials for solar domestic hot water 
+applications: Direct versus indirect heat exchange systems, Renew. Energy 147 
+(2020) 77 – 88, https://doi.org/10.1016/j.renene.2019.08.121 . 
+[5] C. Suresh, R.P. Saini, Experimental study on combined sensible-latent heat storage 
+system for different volume fractions of PCM, Sol. Energy 212 (2020) 282 – 296, 
+https://doi.org/10.1016/j.solener.2020.11.013 . 
+[6] A. Najafian, F. Haghighat, A. Moreau, Integration of PCM in domestic hot water 
+tanks: Optimization for shifting peak demand, Energy Build. 106 (2015) 59 – 64, 
+https://doi.org/10.1016/j.enbuild.2015.05.036 . 
+[7] A. Alzahrani, P. Shamsi, C. Dagli, M. Ferdowsi, Solar Irradiance Forecasting Using 
+Deep Neural Networks, Procedia Comput. Sci. 114 (2017) 304 – 313, https://doi. 
+org/10.1016/j.procs.2017.09.045 . 
+[8] M. Ozgoren, M. Bilgili, B. Sahin, Estimation of global solar radiation using ANN 
+over Turkey, Expert Syst. Appl. 39 (5) (2012) 5043 – 5051, https://doi.org/ 
+10.1016/j.eswa.2011.11.036 . 
+[9] A.S.S. Dorvlo, J.A. Jervase, A. Al-Lawati, Solar radiation estimation using artificial 
+neural networks, Appl. Energy 71 (4) (2002) 307 – 319, https://doi.org/10.1016/ 
+S0306-2619(02)00016-8 . 
+[10] M. Sridharan, S. Shenbagaraj, Application of generalized regression neural network 
+in predicting the thermal performance of solar flat plate collector systems, 
+J. Therm. Sci. Eng. Appl. 13 (2021) 1 – 11, https://doi.org/10.1115/1.4047824 . 
+[11] M.O. Karaa ˘gaç, A. Ergün, Ü. A ˘gbulut, A.E. Gürel, 
+˙
+I. Ceylan, Experimental analysis 
+of CPV/T solar dryer with nano-enhanced PCM and prediction of drying 
+parameters using ANN and SVM algorithms, Sol. Energy 218 (2021) 57 – 67, 
+https://doi.org/10.1016/j.solener.2021.02.028 . 
+[12] S. Motahar, Experimental study and ANN-based prediction of melting heat transfer 
+in a uniform heat flux PCM enclosure, J. Energy Storage 30 (2020) 101535, 
+https://doi.org/10.1016/j.est.2020.101535 . 
+[13] S.A. Kalogirou, E. Mathioulakis, V. Belessiotis, Artificial neural networks for the 
+performance prediction of large solar systems, Renew. Energy 63 (2014) 90 – 97, 
+https://doi.org/10.1016/j.renene.2013.08.049 . 
+[14] W. Yaïci, E. Entchev, Performance prediction of a solar thermal energy system 
+using artificial neural networks, Appl. Therm. Eng. 73 (1) (2014) 1348 – 1359, 
+https://doi.org/10.1016/j.applthermaleng.2014.07.040 . 
+[15] P. G ´eczy-Víg, I. Farkas, Neural network modelling of thermal stratification in a 
+solar DHW storage, Sol. Energy 84 (5) (2010) 801 – 806, https://doi.org/10.1016/j. 
+solener.2010.02.003 . 
+[16] S.A. Kalogirou, Optimization of solar systems using artificial neural-networks and 
+genetic algorithms, Appl. Energy 77 (4) (2004) 383 – 405, https://doi.org/10.1016/ 
+S0306-2619(03)00153-3 . 
+[17] M.Y. Abdelsalam, M.F. Lightstone, J.S. Cotton, A novel approach for modelling 
+thermal energy storage with phase change materials and immersed coil heat 
+exchangers, Int. J. Heat Mass Transf. 136 (2019) 20 – 33, https://doi.org/10.1016/ 
+j.ijheatmasstransfer.2019.02.047 . 
+[18] J. a. Duffie, W. a. Beckman, W.M. Worek, Solar Engineering of Thermal Processes, 
+4nd ed., J. Solar Energy Eng. (2003). https://doi.org/10.1115/1.2930068. 
+[19] S. Edwards, I. Beausoleil-Morrison, A. Laperri `ere, Representative hot water draw 
+profiles at high temporal resolution for simulating the performance of solar 
+thermal systems, Sol. Energy 111 (2015) 43 – 52, https://doi.org/10.1016/j. 
+solener.2014.10.026 . 
+[20] I. Goodfellow, Y. Bengio, A. Courville, Deep Learning, MIT Press, 2016 . 
+[21] S.-C. Wang, in: Interdisciplinary Computing in Java Programming, Springer US, 
+Boston, MA, 2003, pp. 81 – 100, https://doi.org/10.1007/978-1-4615-0377-4_5 . 
+[22] X. Ying, An Overview of Overfitting and its Solutions, J. Phys. Conf. Ser. 1168 
+(2019) 022022, https://doi.org/10.1088/1742-6596/1168/2/022022 . 
+[23] A. Gulli, S. Pal, Deep Learning with Keras, Packt Publishing, 2017 . 
+[24] D. Svozil, V. Kvasnicka, J. Pospichal, Introduction to multi-layer feed-forward 
+neural networks, Chemom. Intell. Lab. Syst. 39 (1) (1997) 43 – 62, https://doi.org/ 
+10.1016/S0169-7439(97)00061-0 . 
+[25] Zhan, H., Gomes, G., Li, X.S., Madduri, K., Wu, K., 2018. Efficient Online 
+Hyperparameter Optimization for Kernel Ridge Regression with Applications to 
+Traffic Time Series Prediction. 
+[26] S. Burhenne, D. Jacob, G.P. Henze, SAMPLING BASED ON SOBOL SEQUENCES 
+FOR MONTE CARLO TECHNIQUES APPLIED TO BUILDING SIMULATIONS 
+Fraunhofer Institute for Solar Energy Systems , Freiburg , Germany University of 
+Colorado , Boulder , USA Corresponding author . E-mail address : sebastian.burhen. 
+Proc. Build. Simul. 2011 12th Conf. Int. Build. Perform. Simul. Assoc. 14 – 16 
+(2011). 
+[27] D.P. Kingma, J. Ba, Adam: A Method for Stochastic Optimization (2017). 
+[28] N. Buduma, N. Locascio, Fundamentals of deep learning: Designing next- 
+generation machine intelligence algorithms. “ O ’ Reilly Media, Inc. ” (2017). 
+[29] D. Stathakis, How many hidden layers and nodes? Int. J. Remote Sens. 30 (8) 
+(2009) 2133 – 2147, https://doi.org/10.1080/01431160802549278 . 
+[30] I.N. da Silva, D. Hernane Spatti, R. Andrade Flauzino, L.H.B. Liboni, S.F. dos Reis 
+Alves, in: Artificial Neural Networks, Springer International Publishing, Cham, 
+2017, pp. 21 – 28, https://doi.org/10.1007/978-3-319-43162-8_2 . 
+[31] M.C. Rodríguez-Hidalgo, P.A. Rodríguez-Aumente, A. Lecuona, M. Legrand, 
+R. Ventas, Domestic hot water consumption vs. solar thermal energy storage: The 
+A.O. Eldokaishi et al.                                                                                                                                                                                                                          
+
+---PAGE 10---
+Applied Thermal Engineering 204 (2022) 118009
+10
+optimum size of the storage tank, Appl. Energy 97 (2012) 897–906, https://doi. 
+org/10.1016/j.apenergy.2011.12.088. 
+[32] H.-A. Teamah, M.F. Lightstone, J.S. Cotton, Numerical Investigation and 
+Nondimensional Analysis of the Dynamic Performance of a Thermal Energy 
+Storage System Containing Phase Change Materials and Liquid Water, J. Sol. 
+Energy Eng. 139 (2) (2017), https://doi.org/10.1115/1.4034642. 
+[33] A. Abhat, Low temperature latent heat thermal energy storage: Heat storage 
+materials, Sol. Energy 30 (4) (1983) 313–332, https://doi.org/10.1016/0038- 
+092X(83)90186-X. 
+[34] V. Nair, G.E. Hinton, Rectified linear units improve restricted boltzmann machines, 
+in: Icml (2010). 
+[35] X. Glorot, A. Bordes, Y. Bengio, Deep sparse rectifier neural networks, in: in: 
+Proceedings of the Fourteenth International Conference on Artificial Intelligence 
+and Statistics. JMLR Workshop and Conference Proceedings, 2011, pp. 315–323. 
+[36] G. Klambauer, T. Unterthiner, A. Mayr, S. Hochreiter, Self-normalizing neural 
+networks. Adv. Neural Inf. Process. Syst. 2017-December, 972–981 (2017). 
+[37] D.A. Clevert, T. Unterthiner, S. Hochreiter, Fast and accurate deep network 
+learning by exponential linear units (ELUs). 4th Int. Conf. Learn. Represent. ICLR 
+2016 - Conf. Track Proc. 1–14 (2016). 
+A.O. Eldokaishi et al.                                                                                                                                                                                                                          
+

@@ -1,0 +1,1689 @@
+
+--- PAGE 1 ---
+Energy 267 (2023) 126338
+Available online 14 December 2022
+0360-5442/© 2022 Elsevier Ltd. All rights reserved.
+Technical & financial feasibility assessment of heat pipe evacuated tube 
+collector for water heating using Monte Carlo technique for buildings 
+K. Chopra
+a , b , *
+, V.V. Tyagi
+b , **
+, Sakshi Popli
+c
+, A.K. Pandey
+d , e 
+a
+School of Mechanical Engineering, Shri Mata Vaishno Devi University, Katra, 182320, India 
+b
+School of Energy Management, Shri Mata Vaishno Devi University, Katra, 182320, India 
+c
+School of Computer Science & Engineering, Shri Mata Vaishno Devi University, Katra, 182320, India 
+d
+Research Centre for Nano-Materials and Energy Technology (RCNMET), School of Engineering and Technology, Sunway University, No. 5, Jalan Universiti, Bandar 
+Sunway, Petaling Jaya, 47500, Selangor Darul Ehsan, Malaysia 
+e
+Center for Transdisciplinary Research (CFTR), Saveetha Institute of Medical and Technical Services, Saveetha University, Chennai, India   
+ARTICLE INFO  
+Keywords: 
+Evacuated tube collector 
+Monte Carlo technique 
+Net present value 
+Payback period 
+Economic analysis 
+ABSTRACT  
+The main objective of this work is to clear the economic condition of heat pipe based solar water heating 
+technology in India. For this, a techno-economic analysis has been carried out which offers the facts for the 
+investment in this sector. A computation model has been developed by the amalgamation of the Monte Carlo 
+Technique (MCT) and Multi-energy/economic relations that take into consideration the risks and integrated 
+uncertainties of different variables. The results reveal that LCWH and PP are found to be lowest for Zone-V and 
+will require the least collector area. Since the highest solar radiation in Zone-V eventually reduces the ratio of 
+annual energy demand to annual solar radiation. Thus Zone-V is the most favorable place for the installation of 
+the solar water heater. The mean values of LCWH, NPV, and PP are found to be 5.14 INR/kWh, 663788.48 INR, 
+and 5.84 years respectively. However, values of LCWH, NPV, and PP through optimization were found to be 
+lesser by 25 – 33%, higher by 9 – 28%, and lower by 37 – 47% respectively. 
+The MCT is efficient to defeat discrepancies in the results of conventional techniques by taking into consid -
+eration the range of states according to their probability to offer more accurate forecasts.   
+1. Introduction 
+1.1. Necessity and options for solar water heating technology 
+In the present time, the economic progress of any country depends on 
+the consumption of energy. Primarily, energy is generated through the 
+burning of fossil fuels which leads to the emission of greenhouse gases 
+into the atmosphere that is responsible for the increase in temperature of 
+the atmosphere [ 1 ]. The contrary consequences of global warming are 
+witnessed in across the world. It is expected that surface temperatures 
+will increase by 1.5 
+◦
+C between 2030 and 2052 if greenhouse gas 
+emissions continue to increase at this rate [ 2 ]. The only possible way out 
+is to replace fossil fuels with renewable energy based technologies. 
+Solar energy is extensively available in almost all parts of the world. 
+India being a tropical country receives abundant solar energy 
+throughout the year. India receives almost 5 × 10
+3 
+trillion kWh of solar 
+energy per year amounting to daily average solar energy received in the 
+range of 4 – 7 kWh/m
+2
+. This is a good indication for employing solar 
+energy operating systems in India [ 3 ]. 
+In a realistic scenario, the hot water demand in different sectors of 
+India is presented in Fig. 1 . It is evident that the requirement for hot 
+water is increasing over time. Among the other sectors, the hot water 
+demand in the residential sector is highest for the years 2010, 2013, 
+2017 & 2022, which is on average 80% of the total hot demand [ 4 ]. 
+Whereas demand for hot water in the commercial/Institutional and 
+industry sector is 13% and 6% of total demand respectively [ 4 ]. It means 
+the residential sector is the biggest one for the prospective imple -
+mentation of solar water heating systems. Thus, more emphasis should 
+be given to the installation of solar water heating systems in the resi -
+dential sector in India. Presently, this demand is fulfilled by either 
+burning LPG gas or an electric heater [ 5 ]. 
+Solar energy based water heating is a well-proven and widespread 
+technology in the domestic sector that can reduce the consumption of 
+* Corresponding author. School of Mechanical Engineering, Shri Mata Vaishno Devi University, Katra, 182320, India. 
+** Corresponding author. 
+E-mail addresses: k.choprares@gmail.com (K. Chopra), vtyagi16@gmail.com (V.V. Tyagi).  
+Contents lists available at ScienceDirect 
+Energy 
+journal homepag e: www.el sevier.com/loc ate/energy 
+https://doi.org/10.1016/j.energy.2022.126338 
+Received 24 March 2022; Received in revised form 14 November 2022; Accepted 3 December 2022   
+--- PAGE 2 ---
+Energy 267 (2023) 126338
+2
+fossil fuels and the emission of carbon dioxide [ 6 ]. A lot of development 
+in solar energy based systems have been carried out and more advanced 
+level solar energy based water heating systems are commercializing in 
+the market. In the present scenario, due to easy installation and higher 
+performance, the demand for ETC (evacuated tube collector) based solar 
+water systems are tremendously increasing. Such types of collectors 
+offer minimal radiative & convective losses. Among different types of 
+ETC based SWH (solar water heater), heat pipe based system is one of 
+the most advanced and efficient ones. It may be noted that HP-ETC 
+based SWH is suitable to supply hot water in any climate zone due to 
+its desired characteristics such as anti-freezing properties, higher per -
+formance, and almost constant temperature level [ 7 ]. 
+Despite a lot of benefits of utilizing heat pipe ETC, mostly thermo -
+syphon type evacuated tube solar collector based solar water heating 
+system has been installed for domestic and industrial sectors in India. 
+This is because of the association of some crucial challenges with heat 
+pipe ETC based SWH. The main challenges for the adoption of heat pipe 
+evacuated tube based solar water heater in a country like India is its 
+higher initial capital investment and maintenance cost due to the 
+complexity of designing and production of heat pipes. Another major 
+drawback is the overheating problem in heat pipes which generally 
+occurs due to the low flow rate of heat transfer fluid or if the installed 
+system is oversized. In addition to this, when these types of solar water 
+heaters are utilized in domestic sectors then they have to maintain at a 
+temperature lower than 100 
+◦
+C, or else overheating problems are 
+eventually responsible for the breaking of vacuum tubes. Furthermore, 
+due to the high temperature of heat pipes, scaling on the condenser is 
+also one of the major issues responsible for the blockage of the manifold 
+of the heat pipe solar water heater. 
+These problems forced the negation of heat pipe based SWHs in 
+developing countries like India. However, the authors wish to bring to 
+notice that despite having high initial investment and maintenance 
+costs, its high performance results in a low LCWH, high NPV, and low 
+payback period. Besides this, overheating and scaling problems can also 
+be overcome by using a highly efficient heat transfer or nanofluid which 
+has a high boiling point and thermal conductivity. These solutions can 
+enlighten the adoption of heat pipe based solar water heaters instead of 
+thermosyphon and other designs. 
+1.2. Method selection for techno-economic analysis 
+Various studies are available concerning techno-economic calcula -
+tions of different types of solar water heaters within various scenarios. In 
+most of the studies, the thermal performance of solar water heaters has 
+been assessed in different regions, and then evaluated the financial 
+profits based on input economic influencing factors through various 
+modeling techniques [ 8 – 11 ]. Numerous economic parameters such as 
+LCWH (Levelized cost of water heating) [ 12 ], NPV (net present value) 
+[ 13 ], ROI (rate of return) [ 14 ], IRR (internal rate of return) [ 15 ], UCE 
+(unit cost of energy) [ 13 ], BCR (Benefit to cost ratio) [ 16 ] and PP 
+(payback period) [ 17 ] have been evaluated by various economist, 
+among these parameters, LCWH, NPV, and PP are observed to be key 
+and most popular parameters. Other than the variety of economic fac -
+tors, there is a significant discrepancy in the financial impact parame -
+ters, such as discount rate electricity cost, electricity inflation rate, 
+inflation rate, life, bank interest, locality, etc. These parameters are 
+responsible for a remarkable effect on the calculation of economic per -
+formance and investment decisions. 
+In previous literature, economic analysis of solar based water heating 
+systems has been carried out by either self-developed models [ 18 ] or by 
+commercialized software such as MATLAB [ 10 ], TRNSYS [ 19 ], etc. Even 
+though these studies have appropriately used the performance param -
+eters of the main economy, mostly used simplified models of economics 
+to determine the performance-economic of solar water heaters. These 
+are generally excessively optimistic due to confined series of 
+input-assumptions and overlooking the impreciseness of each input 
+variable [ 20 , 21 ]. This results in a deviation of calculated values from 
+real cases. Therefore, the estimation of the sensitivity of the 
+performance-economic input variable of solar water heater is not so 
+clear and required to evolve modeling clarification to enhance the 
+robustness of the economic valuations of system technology. The MCT is 
+the only solution to encounter these issues. This method is a compara -
+tively simple and proven technique for considering risk and uncertainty 
+in a quantifiable model. In this method, estimation is carried out by 
+selecting each input variable from Pre-set distributions for each calcu -
+lation [ 13 ]. Presently, there are very few studies are available con -
+cerning to economics study of the solar water heater using MCT [ 13 , 22 , 
+Abbreviation 
+A
+col 
+Collector area, m
+2 
+BLC
+N 
+bank loan cost for Nth year, INR 
+C
+o 
+Capital cost, INR 
+C
+N 
+annual cost of solar system, INR 
+CF
+N 
+cash flow for Nth year, INR 
+d
+r 
+degradation rate, % 
+DE
+r 
+debt-equity ratio, % 
+EI
+r 
+electricity inflation rate, % 
+EP electricity price, INR 
+I
+T 
+solar radiation, kWh/m
+2
+/day 
+i
+r 
+bank ’ s interest rate, % 
+if
+r 
+inflation rate, % 
+IEC
+o 
+initial equity cost, INR 
+LCWH Levelized cost of water heating, INR/kWh 
+N
+L 
+useful life of system, year 
+OM
+N 
+operating & maintenance cost of system, INR 
+MD
+r 
+market discount rate, % 
+NPV net present value, INR 
+PP payback period, year 
+Q
+N 
+energy generation in Nth year, kWh 
+η
+th 
+thermal efficiency, % 
+HPT-ETCS heat pipe technology based evacuated tube collector 
+system  
+Fig. 1. Hot water demand in different sectors of India [ 4 ].  
+K. Chopra et al.                                                                                                                                                                                                                                 
+--- PAGE 3 ---
+Energy 267 (2023) 126338
+3
+23 ], particularly no study has been found regarding the economic 
+analysis of HPT-ETCS using MCT. For instance, Rout et al. [ 13 ] carried 
+out a scenario analysis of solar water heater in the east-coastal region of 
+India by taking three types of scenarios namely pessimistic, current and 
+optimistic to understand the behavior of NPV (net present value). They 
+also did the risk valuation of SWHs by using the Monte Carlo simulation 
+model. Based on the assessment they concluded that the installation of 
+solar collectors in the east-costal region of India is an economically 
+viable solution. Rezvani et al. [ 23 ] performed Monte Carlo analysis of 
+flat plate solar water heater to estimate the reliability and 
+techno-economic profits. Also, based on the probability model, the 
+mutable maintenance cost of a flat plate solar water heater has been 
+determined by the authors. In addition to this, a sensitivity investigation 
+was done to demonstrate the influence of auxiliary/supplementary 
+heating on the economic feasibility of the collector. The investigation 
+revealed that a flat plate solar water heater can offer remarkably 
+long-term economic feasibility in comparison to an electricity based 
+water heater. Inamdar and Gandhare [ 24 ] used multi-criteria and 
+analytical hierarchy process approaches to assess four alternatives (fuel 
+or gas, coal or biomass, solar water heater, and electricity) for water 
+heating and also rank these alternatives. They performed this assessment 
+based on ten identified criteria i.e. social impact, cost, technical 
+(maintenance, availability, design, training, and safety), environment 
+(influence on pollution & ecosystem), location plant size (flexibility & 
+size). They found fruitful conclusions that during the selection of water 
+heating, pollution is the least important criterion, followed by mainte -
+nance and then safety. Rout et al. [ 22 ] did an economic assessment of 
+solar water heater using Monte Carlo based technique. In this study, 
+operating/maintenance cost, capital cost, operation time and service life 
+were recognized as extremely sensitive input factors. Using the Monte 
+Carlo method, average values of exergy and mass costs of hot water were 
+found to be 0.310 US cent/kg and 0.302 US cent/kg respectively. They 
+suggested that the methodological method can be extended to investi -
+gate the probabilistic exergo-economic cost of a group of solar collectors 
+when parametric uncertainties play the main role. Zhang et al. [ 14 ] 
+provided an insight view of the different existing techniques of 
+techno-economic for solar water heating systems. They found that the 
+payback period of solar water heating systems is highly influenced by 
+policy support, natural conditions, auxiliary energy type, and technol -
+ogy type. To conduct a techno-economic analysis of solar water heaters, 
+a regression model was developed by them. They found that there are 
+seven positive impacts (consumption configuration of hot water, hot 
+water temperature, experiment, simulation, case study, investigation 
+done in South America and Asia) and nine negative impacts (area of 
+solar collector, evacuated tube collector, solar radiation, diesel as an 
+auxiliary fuel, residential area, particular region, computer modeling 
+and study done in Europe) on payback period of solar water heater. 
+1.3. Novelty of manuscript 
+One of the foremost barriers to denying the adoption of solar water 
+heating systems in India is its high initial cost. In other words, there is an 
+opinion among Indian people that it is uneconomical. The main aim of 
+this study is to check the validity of this observation using Monte Carlo 
+Analysis. In existing economic analysis techniques, the estimation of 
+output matrices such as LCWH, NPV & PP has not taken into consider -
+ation the uncertainty as each input parameter provides merely an 
+“ optimal performance ” value. This is because input parameters are 
+influenced by many factors that can dramatically vary the value of 
+considered input parameters. 
+In previous models, authors generally used the average value of input 
+parameters, however, MCT is efficient to defeat this discrepancy by 
+taking into consideration the range of states according to their proba -
+bility. Therefore, this technique offers a more accurate forecast [ 25 ]. To 
+date, no study particularly addresses the economic estimation of 
+HPT-ETCS for different zones of India. Still, there are challenges to the 
+deployment of HPT-ETCS in India, such as uncertain position/size of the 
+solar market, different zones of India with suitable solar radiation levels, 
+undefined policy/pricing influence & performance of economic and 
+weak strategy of development, etc. 
+Therefore, the present work bridge these research gaps, by economic 
+estimation of HPT-ETCS in India. Hence, based on the amalgamation of 
+MCT and multi-energy/financial relations, a mathematical model has 
+been developed that takes into consideration the risk and inherent un -
+certainties of different input parameters. In this model, nine critical 
+input parameters, i.e. solar radiation, electricity price, thermal effi -
+ciency, capital cost, bank interest rate, inflation rate, O & M cost, market 
+discount rate, and debt-to-equity ratio have been considered for the 
+estimation of LCWH, NPV, and PP. In combination with a market study 
+of solar water heater technology in India, it is anticipated that the pre -
+sent work could clear the economic condition of solar water heating 
+technology in India and offers facts for the investment in solar water 
+heater in the building sector. 
+2. Market trend of solar water heating systems 
+It may be possible that today ’ s results of the economic analysis would 
+not be the same if the study is carried out in another nation/location or 
+even in the same nation/location as policies, costs & tariffs are contin -
+uously varying. To make the correct evaluation, the market structure 
+and local policies are required to be judged [ 26 ]. Presently, the Indian 
+solar market is very large and the deployment of solar water heaters 
+continuously increasing. As shown in Fig. 2 , according to a report sub -
+mitted by the Ministry of New and Renewable Energy (MNRE), in 2010, 
+a total of 2.58 and 0.2915 million m2 capacity of solar water was 
+installed in the residential & commercial sectors respectively. In 2013, 
+the installation of solar water heaters almost grew by 65% and 77% in 
+Fig. 2. Cumulative installed capacity of solar water in (a) Residential sector 
+and (b) Commercial sector. 
+K. Chopra et al.                                                                                                                                                                                                                                 
+--- PAGE 4 ---
+Energy 267 (2023) 126338
+4
+the residential and commercial sectors respectively. The cumulative 
+deployment of solar water heaters in the residential sector is predicted to 
+grow from 2.58 million m2/year in 2013 to 15.73 million m2/year in 
+2022. Whereas in the commercial section it is expected to grow from 
+0.29 million m2/year in 2013 to 1.39 million m2/year in 2022 [ 4 ]. 
+The reason for the growth in the installation of solar water heaters 
+between 2013 and 2022 is due to the introduction of government sub -
+sidy on initial capital cost, awareness among the local public, decreasing 
+bank interest rates, and reforming policies by the government to 
+simplify the rules & regulation for manufacturer [ 27 ]. 
+According to a recent report, an ETC solar water heating system 
+dominates the solar market over other solar water heating systems. 
+Moreover, almost 87% of the total newly installed solar energy based 
+water heating system that has been installed are ETC based solar water 
+heating systems. Moreover, sales of flat plate solar collector based solar 
+water heating systems sharply declined by 24% due to less demand. On 
+the other hand, due to the closing of the national support scheme for the 
+concentrated collector, their demand also got significantly lower in 
+2019 [ 28 ]. Hence solar market in the thermal field is shifting towards an 
+evacuated tube collector system for low/medium temperature 
+applications. 
+To attain the success of solar water heating systems in India, explicit 
+information such as risks of investment, suggesting innovative models, 
+the fixed suitable price of solar water heating systems, and estimated 
+working policies of companies will be required. 
+3. Monte Carlo based model 
+The Monte Carlo analysis method has been established on Oracle 
+Crystal Ball software. It is an application based on a spreadsheet for 
+forecasting, optimization, simulation, and predictive modeling. This 
+software offers an accessible and realistic technique for modeling un -
+certainty assisting in insight into the crucial parameters influencing risk 
+so that the decision-makers could take a factual decision [ 29 ]. In the 
+present model, the considered input parameters have been expressed as 
+the triangular probability distribution, varying between maximum and 
+minimum values (displayed in Table 1 ). Then these input parameters 
+have been inserted into formulas of estimation matrics expressed in 
+forecast cells. In this work, simulation has been repeated for 10,000 
+trials. These have been expressed in graphical form to analyze the reli -
+ability and sensitivity of different input parameters and to evaluate the 
+certainty/probability of different economic output matrices [ 29 ]. 
+The objective of the present study is to spread awareness of the cost 
+bear for the installation of solar water heaters in a particular zone. This 
+investigation is very beneficial to discover the financial viability of 
+different zones of India. In this study techno-economic analysis of HPT- 
+ETCS has been done in which the term techno specifies the technical 
+information about components of a solar collector such as type of solar 
+collector, model no, manufacturer, etc and the term economic specifies 
+financial parameters such as LCWH, NPV, and PP. 
+The present section develops a Monte Carlo based techno-economic 
+model for HPT-ETCS because of the present value of annual savings from 
+the collector. A heat pipe based evacuated tube collector (ETC-10) from 
+the Apricus Company has been taken as a reference for heat supplies in 
+the building. In comparison to other options available for water heating 
+applications, HPT-ETCS has numerous benefits as elaborated in the 
+introduction section. The Monte Carlo based techno-economic model for 
+HPT-ETCS can be illustrated in Fig. 3 . 
+3.1. Reference HPT-ETCS 
+Fig. 4 illustrates the basic configuration of reference HPT-ETC 
+technology. The heat pipe evacuated tube collector system is 
+comprised of main four components heat pipe, evacuated tube, manifold 
+& mounting frame. The solar radiation incident on the evacuated tube 
+converted into useful thermal energy. The vacuum across the outer and 
+inner glass tubes insulates against convection/radiation losses. The fins 
+around the heat pipe assist in transferring the absorbed heat by the 
+absorber tube to the evaporator of a heat pipe. Further, heat is trans -
+ferred from the evaporator to the condenser of a heat pipe. 
+Finally, heat is transferred to flowing water in an insulated manifold 
+through the condenser. The mounting frame is used to support the 
+different components of the collector. In this study, ETC-10 with 
+dimension ( L × W × H ) of 2005 × 796 × 136 mm has been used as a 
+reference collector whose aperture and gross areas are 0.947 m
+2 
+and 
+1.59 m
+2
+. 
+Based on the bulletin released by the manufacturer, the thermal ef -
+ficiency of the collector is the function of inlet water temperature, 
+ambient temperature, and solar radiation, which can be expressed as η =
+η
+o
+  1 . 4 ( T
+m
+  T
+amb
+/ I
+T
+)   0 . 007 I
+T
+( T
+m
+  T
+amb
+/ I
+T
+)
+2
+. The technical spec -
+ification of reference HPT-ETCS is given in Table 1 . 
+3.2. Energy & exergy production model 
+The model for thermal energy production is the function of daily 
+average solar radiation, thermal efficiency, collector area, and rate of 
+degradation. The model of energy generation can be defined through the 
+following equations [ 28 ]. 
+Q
+N
+= ( 365 × I
+T
+× η
+th
+× A
+col
+× Δ τ ) × ( 1   d
+r
+)
+N
+(1)  
+3.3. Economic estimation matrices 
+The Levelized cost of water heating (LCWH) measures the unit costs 
+of working a system throughout its whole life. All financial elements like 
+debt-equity ratio, electricity price, inflation rate, initial capital cost, 
+bank interest rate, operating and maintenance cost, rate of degradation, 
+and discount rate are taken into consideration while estimating LCWH. 
+The equation for the calculation of LCWH can be expressed as: 
+LCWH =
+∑
+N
+N = 0
+C
+N
+( 1 + MD r )
+N
+∑
+N
+N = 0
+Q
+N
+( 1 + MD r )
+N
+(2) 
+While the total yearly cost of the thermal collector could be given as: 
+C
+N
+= ( IEC
+o
+| N = 0 ) + BLC
+N
++ OM
+N
+(3) 
+The initial capital investment ( ICC
+o
+) on the thermal collector could 
+be defined through the following equation: 
+IEC
+o
+= C
+o
+× ( 1   DE
+r
+) (4)  
+whereas, bank loan installment for an N
+th 
+year could be defined as 
+expressed through the following equations: 
+BLC
+N
+= C
+o
+× DE
+r
+×
+(
+1
+N
+L
++
+(
+N
+L
+  N
+N
+L
+)
+× i
+r
+)
+(5) 
+Table 1 
+Technical specification of selected evacuated tube collector based solar water 
+heater.  
+S. No Particular Specification/Value 
+1 Manufacturer Apricus 
+2 Model no. ETC-10 
+3 Dimensions ( L × W × H ) 2005 × 796 × 136 mm 
+4 Gross area 1.59 m
+2 
+5 Aperature area 0.947 m
+2 
+6 Peak output 671 W 
+7 Max operating pressure 8 bar 
+8 Gross dry weight 35 kg 
+9 Y-Intercept ( η
+0
+) 0.656 
+10 First coefficient of loss (a
+1
+) 1.4 
+11 Second coefficient of loss (a
+1
+) 0.007  
+K. Chopra et al.                                                                                                                                                                                                                                 
+--- PAGE 5 ---
+Energy 267 (2023) 126338
+5
+Fig. 3. Monte Caro based techno-economic model.  
+Fig. 4. (a) Heat pipe evacuated tube collector system (b) Assembly of heat pipe with evacuated tube (c) cross-section of heat pipe with evacuated tube.  
+K. Chopra et al.                                                                                                                                                                                                                                 
+--- PAGE 6 ---
+Energy 267 (2023) 126338
+6
+The NPV is a crucial factor of economic analysis that weighs the 
+calculation of cumulative revenue evaluated by cash inflow from cash 
+outflow over the life of the product. It helps in the prediction of the 
+feasibility of investment in a business project. For investment in the 
+project, the NPV value with a positive value will be acceptable else an 
+investment with its negative value is rejected. 
+NPV =
+∑
+N
+N = 0
+CF
+N
+( 1 + MD
+r
+)
+N
+  C
+o
+(6) 
+The payback period (PP) is the time required to recover the initial 
+capital investment in a venture. This matric of economic analysis is used 
+to compute the economic viability of the initial capital investment. If the 
+payback period of investment is larger than the life span of the project, 
+then installation of the project is not admissible. In this study, if the 
+payback period is higher than the life of the collector then it is equal to 
+15 years. 
+3.4. Vital input elements 
+The vital input elements to investigate the solar water heater are 
+subdivided into metrological, technical, & financial ones. Table 1 
+demonstrated the basic input parameters that have been used in the 
+simulation model, wherein the minimum & maximum values of each 
+considered parameter have been calculated with applicable possibilities. 
+For illustration, the daily average solar radiation of India has been 
+considered to fit with the incessant curve of probability. In the present 
+study, metrological data of five different climatic zones have been 
+gathered to cover all weather conditions of India and simulation has 
+been done based on the average of different zones. The daily average 
+solar insolation fluctuates between 3.50 and 6.98 kWh/m
+2
+/day and its 
+yearly average value is 5.24 kWh/m
+2
+/day. It can be then expressed to 
+abide by the continuous probability distribution oscillating amongst 
+maximum & minimum values (presented in Table 1 ). Therefore, it is 
+probable to further run the probabilistic investigation by MCT, directing 
+various combinations that abide by the probability graph of various 
+input variables. Based on the India market survey, other input param -
+eters such as electricity price, thermal efficiency capital cost, bank in -
+terest rate, inflation rate, O & M cost, market discount rate, and debt- 
+equity ratio vary between 6 and 7 INR/kWh, 51 – 69%, 30,000 – 35000 
+INR/m
+2
+-Aperture area, 8 – 10%, 4 – 5%, 1 – 1.5%, 4.5 – 5.5% and 50 – 90% 
+respectively and their average values abide the continuous probability 
+distribution oscillating amongst maximum & minimum values (pre -
+sented in Table 2 ). The total estimation approach in the MCT is defined 
+by input-output vectors in Equation (7) . 
+4. Results and discussion 
+In the current study, five cities located in five different climatic zones 
+(shown in Fig. 5 ) have been selected for a techno-economic estimation of 
+a heat pipe solar water heating system to clear the economic condition of 
+solar water heating technology. A computation model has been devel -
+oped by the amalgamation of the Monte Carlo Technique (MCT) & 
+Multi-energy/economic relations that take into consideration the risks 
+and integrated uncertainties of different variables. The simulation has 
+been done based on gathered metrological data from these five cities. 
+Table 3 presents the detail of selected cities located in different zones of 
+India. In subsequent sub-sections monthly variations of metrological 
+data then sensitivity/reliability analysis and finally optimization anal -
+ysis have been well presented and discussed. 
+4.1. Variation of metrological parameters 
+The metrological data such as solar irradiance and ambient tem -
+perature of selected cities have been gathered from the NASA database 
+for the techno-economic analysis of the solar water heater. The monthly 
+fluctuation of solar radiation and ambient temperature in Srinagar, 
+Jaipur, Chennai, and Bengaluru is depicted in Fig. 6 (a), (b), (c), (d), and 
+(e) respectively. These metrological data are very crucial for the energy 
+modeling of the solar water heater. The global horizontal irradiance in 
+Zone-I, Zone-II, Zone-III, Zone-IV & Zone-V was found to be in the range 
+of 2.71 – 6.73 kWh/m
+2
+/day, 3.79 – 7.08 kWh/m
+2
+/day, 3.95 – 6.50 kWh/ 
+m
+2
+/day, 4.40 – 6.53 kWh/m
+2
+/day and 4.21 – 7.55 kWh/m
+2
+/day 
+respectively. 
+Whereas, fluctuation of solar radiation on the tilted collector (at 
+respective latitude) in Zone-I, Zone-II, Zone-III, Zone-IV & Zone-V has 
+been observed in the range of 4.27 – 6.98 kWh/m
+2
+/day, 4.30 – 6.72 kWh/ 
+m
+2
+/day, 3.88 – 6.68 kWh/m
+2
+/day, 4.48 – 6.71 kWh/m
+2
+/day and 
+3.54 – 7.12 kWh/m
+2
+/day respectively. Among the selected cities, on 
+average, Ahmedabad and Srinagar achieve the highest (5.615 kWh/m
+2
+/ 
+day) and lowest (4.695 kWh/m
+2
+/day) daily average solar radiation 
+respectively. The yearly mean value of ambient temperature in Zone-I, 
+Zone-II, Zone-III, Zone-IV & Zone-V varied in the range of   5.93 
+◦
+C 
+(in January) to 19.04 
+◦
+C (in August), 13.10 
+◦
+C (in January) to 34.13 
+◦
+C 
+(in June), 24.59 
+◦
+C (in December) to 31.18 
+◦
+C (in May), 19.74 
+◦
+C (in 
+December) to 28.43 
+◦
+C (in May) and 17.49 
+◦
+C (in January) to 35.71 
+◦
+C 
+(in May) respectively. This signifies that Zone-I and Zone-III are the 
+Table 2 
+Key Input Parameters for the simulation model. 
+⎡
+⎢
+⎢
+⎢
+⎢
+⎣
+LCWH
+1
+NPV
+1
+PP
+1
+LCWH
+2
+NPV
+2
+PP
+2
+LCWH
+3
+NPV
+3
+PP
+3
+⋮ ⋮ ⋮
+LCWH
+N
+NPV
+N
+PP
+N
+⎤
+⎥
+⎥
+⎥
+⎥
+⎦
+=
+⎡
+⎢
+⎢
+⎢
+⎢
+⎢
+⎢
+⎢
+⎢
+⎢
+⎣
+I
+1
+T
+EP
+1
+η
+1
+th
+C
+1
+0
+i
+1
+r
+if
+1
+r
+OM
+1
+c
+MD
+1
+r
+DE
+1
+r
+I
+2
+T
+EP
+2
+η
+2
+th
+C
+2
+0
+i
+2
+r
+if
+2
+r
+OM
+2
+c
+MD
+2
+r
+DE
+2
+r
+I
+3
+T
+EP
+3
+η
+3
+th
+C
+3
+0
+i
+3
+r
+if
+3
+r
+OM
+3
+c
+MD
+3
+r
+DE
+3
+r
+⋮ ⋮ ⋮ ⋮ ⋮ ⋮ ⋮ ⋮ ⋮
+I
+N
+T
+EP
+N
+η
+N
+th
+C
+N
+0
+i
+N
+r
+if
+N
+r
+OM
+N
+c
+MD
+N
+r
+DE
+N
+r
+⎤
+⎥
+⎥
+⎥
+⎥
+⎥
+⎥
+⎥
+⎥
+⎥
+⎦
+(7)   
+Parameter Minimum Maximum Average Unit 
+Metrological Parameters 
+Average solar radiation 3.50 6.98 5.24 kWh/m
+2
+/day 
+Electricity price 6 7 6.50 INR/kWh 
+Technical Parameters 
+Aperture area of 
+collector 
+– – 6.32 m
+2
+/collector 
+No. of Evacuated Tubes – – 67 – 
+Operational period – – 15 year 
+Average thermal 
+efficiency 
+51 69 60 % 
+Seasonal efficiency of 
+electricity 
+– – 90 % 
+Degradation rate – – 1 % 
+Financial Parameters 
+Initial capital cost 
+(Include direct & 
+indirect cost) 
+30,000 35,000 32,500 INR/m
+2
+- 
+Aperture area 
+Bank interest rate 8 10 9 % 
+Inflation rate 4 5 4.5 % 
+O & M cost 1 1.5 1.25 % 
+Market discount rate 4.5 5.5 5 % 
+Loan period – – 15 year 
+Debt to equity ratio 50 90 70 % 
+Electricity inflation rate – – 10 % 
+Other Parameters 
+Average number of 
+people in a House 
+– – 6 – 
+Daily Hot Water 
+Requirement 
+– – 60 L/day/ 
+Person 
+Occupancy rate – – 100 % 
+Desired hot water 
+temperature 
+– – 60 
+o
+C 
+Solar tracking mode – – Fixed – 
+Azimuth – – 0
+◦
+– 
+Inclination angle of 
+Collector 
+– – Latitude – 
+Domestic solar water 
+heating technology 
+– – ETC – 
+Traditional fuel type – – Electricity –  
+K. Chopra et al.                                                                                                                                                                                                                                 
+--- PAGE 7 ---
+Energy 267 (2023) 126338
+7
+coldest and hottest zones among the selected zones. 
+4.2. Sensitivity/reliability investigation 
+In this section, a sensitivity investigation has been carried out to 
+gauge the sensitivity of the fluctuation in vital input parameters for the 
+estimation of output matrices (LCWH, NPV & PP). In this investigation 
+impact of considered input parameters on the output matrices (LCWH, 
+NPV, and PP) has been analyzed (as depicted in Fig. 7 ). 
+As shown in Fig. 7 (a), an average value of LCWH is found to be at 
+5.14 INR/kWh. At the highest frequency, there is approximately a 6% 
+probability that the value of LCWH is found to be around 5 INR/kWh. 
+Moreover, there is nearly 90.65% certainty that the value of LCWH 
+swings between 3.80 and 6.00 INR/kWh over the life (15 years) of HTP- 
+ETCS (heat pipe evacuated tube collector system). However, the average 
+value of LCWH by conventional energy source (electricity) is falling in 
+the range of 6.50 – 28.05 INR/kWh for the said period. This is because 
+HTP-ETCS bear lower annual costs to accomplish annual energy demand 
+than conventional energy based systems. On the other hand, the average 
+value of NPV of HTP-ETCS was observed to be 663788.48 INR after 15 
+years of working (as depicted in Fig. 7 (b)). 
+It is more interesting to note that there is 100% certainty to 
+accomplish the positive value of NPV when it is worked in India. Under 
+the judgment rule of NPV, a value of NPV greater than zero specifies that 
+investment in the HPT-ETCS will be a profitable one as the estimated 
+profit surpasses the predicted costs. 
+As depicted in Fig. 7 (c), the mean value of the payback period is 
+approximately 5.84 years when the calculated cash flow turns positive. 
+Also, there is 100% certainty for HPT-ETCT to have a payback period of 
+less than 15 years. Also at the highest frequency, there 8.5% probability 
+to have a payback period of 6 years. 
+The sensitivity analysis is very easier to discover which input vari -
+able affects the most the forecasted output and decreases the time 
+required to improve estimates. In another way, the input variables 
+whose influence is least on the forecast can be discarded or ignored 
+together. Consequently, a more realistic model can be constructed that 
+significantly enhance the preciseness of the results. 
+The sensitivity of considered input variables on the output parameter 
+is depicted in Figs. 8 – 10 . The key variables that govern the positive 
+results of commercial/business cases concerning heat pipe evacuated 
+tube solar collector systems are average solar radiation, electricity price, 
+average thermal efficiency, initial capital cost, nominal interest rate, 
+inflation rate, O & M cost, market discount rate, debt to equity ratio and 
+electricity inflation rate. As depicted in Fig. 8 , the average solar inso -
+lation assumption has the utmost impact on the uncertainty of LCWH by 
+79.47%, followed by the thermal efficiency assumption (15.65%). The 
+capital cost has also marginally influenced the uncertainty of the LCWH 
+Fig. 5. Different climatic zones of India.  
+Table 3 
+Detail of selected cities falls in different climatic zones of India.  
+Zone Climatic 
+Zone Type 
+Location 
+(Longitude, 
+Latitude 
+Average 
+Relative 
+Humidity 
+(%) 
+Average 
+Precipitation 
+(mm) 
+Elevation 
+(m) 
+Zone- 
+I 
+Cold 
+(Sunny/ 
+Cloudy) 
+Srinagar 
+(74.80
+◦
+E, 
+34.1
+◦
+N) 
+70.4 651.56 1593 
+Zone- 
+II 
+Composite Jaipur 
+(75.78
+◦
+E, 
+26.91
+◦
+N) 
+50.0 497.42 390 
+Zone- 
+III 
+Warm & 
+Humid 
+Chennai 
+(80.27
+◦
+E, 
+13.08
+◦
+N) 
+73.6 1213.94 25 
+Zone- 
+IV 
+Temperate/ 
+Moderate 
+Bengaluru 
+(77.59
+◦
+E, 
+12.97
+◦
+N) 
+68.6 852.4 919 
+Zone- 
+V 
+Hot & Dry Ahmedabad 
+(72.57
+◦
+E, 
+23.02
+◦
+N) 
+56.7 689.98 55  
+K. Chopra et al.                                                                                                                                                                                                                                 
+--- PAGE 8 ---
+Energy 267 (2023) 126338
+8
+by 3.05%. This means that before offering the predicted value of LCWH 
+in front of buyers, the company ’ s priority is to take the daily average 
+solar radiation data of the particular location. 
+As it governs the generation of hot water production and yearly 
+savings of HPT-ETCS. The capital cost and thermal efficiency have less 
+degree of influence on the uncertainty of LCWH. Since the total yearly 
+cost of the solar system is greatly influenced by capital cost and thermal 
+efficiency. However, the rest of the assumptions have the least impact on 
+the uncertainty of LCWH. 
+Similarly, the uncertainty of NPV (as depicted in Fig. 9 ) is intensely 
+impacted by the average daily solar radiation by 50.31%. The uncer -
+tainty of NPV is also significantly sensitive to electricity price, thermal 
+efficiency, discount rate, and capital cost by 31.10%, 9.48%, 5.82%, and 
+2.17% respectively. As NPV is the function of discount rate and cash 
+flow and these components directly contribute to the cash flow and 
+yearly savings. Therefore, these components based on priority should be 
+considered before calculating NPV. The rest of the components have a 
+very mere impact on the uncertainty of NPV. 
+The payback period is the period of recovery of initial investment on 
+any business project. This wholly depends on the profit gained by 
+installing HPT-ETC. The profit from the solar system is directly con -
+nected to the amount of energy generation (which directly depends on 
+the incident of average daily solar radiation), followed by thermal effi -
+ciency, debt-equity ratio, electricity price, and capital cost. As shown in 
+Fig. 10 , the remaining components are not so important and their in -
+fluence on the PP is so limited and can be discarded. 
+Fig. 6. Monthly fluctuation of solar irradiance on tilted/horizontal surface and ambient temperature for (a) Zone-I (b) Zone-II (c) Zone-III (d) Zone-IV and (e) 
+Zone-V. 
+K. Chopra et al.                                                                                                                                                                                                                                 
+--- PAGE 9 ---
+Energy 267 (2023) 126338
+9
+Fig. 7. Frequency and Probability forecast chart of (a) Levelized cost of water heating (b) Net present value (c) Payback period.  
+K. Chopra et al.                                                                                                                                                                                                                                 
+--- PAGE 10 ---
+Energy 267 (2023) 126338
+10
+Fig. 8. (a) Sensitivity and (b) Tornado chart of LCWH.  
+K. Chopra et al.                                                                                                                                                                                                                                 
+--- PAGE 11 ---
+Energy 267 (2023) 126338
+11
+4.3. Optimization analysis 
+In this section, to measure the potential influence of each input 
+parameter on economic output matrices (LCWH, NPV, & PP), the 
+variation of each variable has been put in a definite range while keeping 
+other assumptions the same. The outcomes of the simulation will be 
+beneficial in the forecasting of future solar market position and pene -
+tration of the HPT-ETCS. The discussion of this section has been 
+Fig. 9. (a) Sensitivity and (b) Tornado chart of NPV.  
+K. Chopra et al.                                                                                                                                                                                                                                 
+--- PAGE 12 ---
+Energy 267 (2023) 126338
+12
+Fig. 10. (a) Sensitivity and (b) Tornado chart of PP.  
+K. Chopra et al.                                                                                                                                                                                                                                 
+--- PAGE 13 ---
+Energy 267 (2023) 126338
+13
+followed by the optimization of LCWH, NPV, and PP using the genetic 
+algorithm method. 
+4.3.1. Effect of daily average solar radiation 
+The impact of daily average solar radiation on LCWH, NPV, and PP 
+has been depicted in Fig. 11 when only average daily solar radiation 
+increased from 1 to 7 kWh/m
+2
+/day by keeping other assumptions the 
+same in the designed model. It may be noted that only daily average 
+solar radiation has been supposed as a static value for each simulation 
+and the other variables follow triangular distributions. 
+Fig. 3 shows that NPV increases, whereas both LCWH and PP 
+decrease with an increase in average daily solar radiation. It has been 
+observed that NPV increases from   462546.33 to 737880.25 INR ( y =
+1833 . 2 x
+3
+  50497 x
+2
++ 468783 x   815246 , R
+2
+= 0 . 9871) in a poly -
+nomial way. It is also observed that NPV turns positive when the average 
+daily solar radiation becomes higher than approximately 1 kWh/m
+2
+/ 
+day. 
+LCWH was found to decrease from 21.17 to 4.09 INR/kWh ( y =
+22 . 346 x
+  0 . 657
+, R
+2
+= 0 . 998). Similar to the NPV, the PP in a polynomial 
+way ( y =   0 . 0028 x
+4
++ 0 . 082 x
+3
+  0 . 7508 x
+2
++ 1 . 122 x + 14 . 79 , R
+2
+=
+0 . 9963) decreased from 16.97 years to 4.13 years. 
+As shown in the figure, the payback period of the collector would be 
+less than 15 years when the daily average solar insolation will be higher 
+than 1.5 kWh/m
+2
+/day. It will be the minimum value of 4.13 years when 
+the mean daily solar irradiation reached almost 6.98 kWh/m
+2
+/day. 
+Results inferred that higher solar radiation results in more generation of 
+energy & surges the yearly savings and NPV. Furthermore, higher solar 
+radiation has a positive influence on economic parameters and provides 
+better results for the business. 
+Hence, heat pipe evacuated tube collectors are suggested to be 
+installed where at least average daily solar radiation is higher than 2 
+kWh/m
+2
+/day to attain positive NPV and low value of LCWH and a 
+payback period of less than 15 years. 
+4.3.2. Effect of capital price 
+Fig. 12 has been illustrated the impact of variation of capital price 
+when increasing the capital price of the collector from 25,000 to 41,000 
+and keeping the other assumption the same in the proposed model. In 
+this case, only capital price has been supposed as the static value for 
+each simulation in place of triangular distribution. 
+This figure shows that variation in capital cost has a significant 
+impact on LCWH, NPV, and PP. LCWH increases linearly from 4.17 to 
+6.04 INR/kWh ( y = 0 . 234 x + 3 . 9344 , R
+2
+= 1), NPV decreases linearly 
+from 732508.39 to 600886.53 ( y =   16453 x + 748961 , R
+2
+= 1), 
+whereas the payback period increases polynomial from 4.27 to 7.18 
+years ( y =   0 . 0035 x
+2
++ 0 . 3994 x + 3 . 9049 , R
+2
+= 0 . 9975). The higher 
+capital cost of the collector results in a higher loan amount; For this 
+reason, it has a diverse impact on economic output parameters. The 
+simulation outcomes show that the capital cost of the collector is an 
+important factor for the decision to invest in the solar water heater and it 
+also advised that capital cost must be regulated as possible for better 
+penetration of the market. 
+4.3.3. Effect of discount rate 
+Varying the discount rate & keeping other conventions the same, 
+Fig. 13 depicts the variation trend of LCWH, NPV & PP under this 
+condition. The discount rate has been regarded as a static value in place 
+of triangular distribution during each simulation. 
+It has a large influence on the NPV, limited impact on LCWH, and no 
+impact on PP. With an increase in the discount rate from 4% to 10%, 
+NPV reduces almost linearly from 741259.3 to 417440.19 ( y =  
+26805 x + 750357 , R
+2
+= 0 . 9913); while LCWH increases linearly from 
+5.02 to 5.20 INR/kWh ( y = 0 . 0003 x
+2
++ 0 . 0097 x + 5 . 0122 , R
+2
+=
+0 . 9972). 
+It has been observed that a higher discount rate abates the energy 
+generation factor and cash flow and it finally decreases NPV & increases 
+LCWH. It can also be seen that; a lower value discount rate is highly 
+appreciable for the initial investment in the HPT-ETCS. 
+4.3.4. Effect of debt-equity ratio 
+The fluctuation of LCWH, NPV, & PP with reference to the increase in 
+debt-equity ratio has been demonstrated in Fig. 14 when the other input 
+variables are continued as the same conventions. The D-E ratio has been 
+regarded as the static value in the proposed model in place of triangular 
+distribution during each simulation. It may also be noted that the effect 
+of the D-E ratio is not as much as compared to daily average solar ra -
+diation. Both LCWH and PP increase with an increase in the D – E ratio, 
+while the NPV decreases. As shown in Fig. 14 , the variation of D-E ratio 
+from 10% to 100% put a limited impact on LCWH and NPV. The LCWH 
+increases from 4.72 to 5.21 INR/kWh in a linear fashion ( y = 0 . 054 x +
+4 . 668 , R
+2
+= 0 . 997), whereas NPV declines from 693504.04 to 
+659463.87 INR in a perfectly linear way (697286 , R
+2
+= 1). On the other 
+Fig. 11. Impact of variation of daily average solar radiation on LCWH, NPV, and PP.  
+K. Chopra et al.                                                                                                                                                                                                                                 
+--- PAGE 14 ---
+Energy 267 (2023) 126338
+14
+hand, PP exponentially goes up with increasing in D-E ratio from 4.19 to 
+6.63 years ( y = 4 . 0037 e
+0 . 05 y =  3782 . 2 x + 06 x
+, R
+2
+= 0 . 9975). 
+Because, a higher D-E ratio means a lowering of down payment, and 
+higher loan cost, which results in higher LCWH, PP, and lower NPV due 
+to a negative impact on cash flow. These results significantly boost In -
+dian clients to have more credits from the bank if they want to invest in 
+solar water heating systems which is beneficial for the expansion of 
+advanced business models among various stakeholders. 
+4.3.5. Effect of electricity price 
+When varying the electricity price only, its effect on the LCWH, NPV, 
+and PP has been depicted in Fig. 15 . It requires to be noted that the 
+electricity price has been regarded at a fixed value in place of triangular 
+distribution while other input variables abide by triangular distribu -
+tions. It can be seen that NPV and PP are highly sensitive to variations in 
+electricity price while there is a limited effect on LCWH. By variation of 
+electricity price from 4 to 8 INR/kWh, LCWH linearly ( y = 0 . 0963 x +
+4 . 4672 , R
+2
+= 0 . 9999) increases from 4.56 to 5.33 INR/kWh, while NPV 
+greatly increases from 308976.65 to 886337.13 INR in a perfectly linear 
+fashion ( y = 72128 x + 237368 , R
+2
+= 1), on the contrary, the payback 
+period significantly polynomial decreases ( y = 0 . 043 x
+2
+  0 . 9925 x +
+10 . 076 , R
+2
+= 0 . 999) from 9.18 to 4.56 years. 
+This is because higher electricity price leads to increases the cash 
+flow and annual savings which consequently increases the NPV and 
+decreases the payback period. In contrast, with an increase in electricity 
+price, there is no impact on the generation of electricity but the total 
+annual cost of the solar system increases that ’ s why LCWH increases. 
+The results showed that the installation of solar water heaters should be 
+prioritized in those municipalities or regions of India where electricity 
+prices are high. 
+4.3.6. Effect of thermal efficiency 
+Considering the variation of thermal efficiency only & keeping other 
+conventions the same, the fluctuation of LCWH, NPV & PP with respect 
+to the increase of thermal efficiency has been depicted in Fig. 16 . The 
+thermal efficiency has been set as a static value (in place of triangular 
+distribution) during each simulation. It was found that the increase in 
+Fig. 12. Impact of variation of capital cost on LCWH, NPV, and PP.  
+Fig. 13. Impact of variation of discount rate on LCWH, NPV, and PP.  
+K. Chopra et al.                                                                                                                                                                                                                                 
+--- PAGE 15 ---
+Energy 267 (2023) 126338
+15
+thermal efficiency has a positive impact on LCWH, NPV, and PP. LCWH 
+linearly ( y = 0 . 0047 x
+2
+  0 . 212 x + 6 . 5142 , R
+2
+= 0 . 9998) decreases from 
+6.32 to 4.38 INR/kWh, NPV increases polynomial from 581231.54 to 
+717796.77 INR ( y =   332 . 62 x
+2
++ 14923 x + 567887 , R
+2
+= 0 . 9997), 
+while the payback period decreases in a polynomial way ( y =
+0 . 0069 x
+2
+  0 . 3243 x + 7 . 959 , R
+2
+= 0 . 9976) from 7.65 to 4.63 years 
+when thermal efficiency increases from 45% to 73%. This is because 
+higher thermal efficiency leads to increases in the cash flow and annual 
+savings which consequently increases the NPV and decreases the 
+payback period. In contrast, with an increase in thermal efficiency 
+electricity generation increases, and solar cost decreases which in 
+combined decreases the LCWH. 
+The results of the simulation reveal that a solar water heater with a 
+solar collector of higher thermal efficiency should be preferred for the 
+higher value of NPV and lower value of LCWH/PP. 
+4.3.7. Single-objective optimization 
+Three output parameters namely Levelized cost of water heating 
+(LCWH), net present value (NPV) & payback period (PP) have been 
+considered to be optimization objectives. On the other hand cost of 
+collector ( C
+0
+), the debt-equity ratio ( DE
+r
+) , interest rate ( i
+r
+) , operational 
+and maintenance costs ( OM
+N
+) , inflation rate ( if
+r
+) , solar irradiance ( I
+T
+) , 
+collector efficiency ( η
+th
+) , electricity price ( EP ) , and market discount rate 
+( MD
+r
+) have been considered to be decision variables. 
+In the EES software, several optimization methods have been pre -
+sented. In this study, for optimization purposes, the Genetic Algorithm 
+(GA) method has been considered. Many research studies have shown 
+that the Genetic algorithm (GA) is more efficacious in comparison to the 
+traditional mathematical & direct search methods [ 30 , 31 ]. To compute 
+better approximations of the optimal solution, the GA method runs on a 
+populace of potential solutions. GA method used in EES is procured from 
+the PIKAIA optimization program written in FORTRAN 77. The genetic 
+algorithm parameters for the optimization of objective functions are 
+Fig. 14. Impact of variation of D-E ratio on LCWH, NPV, and PP.  
+Fig. 15. Impact of variation of electricity rate on LCWH, NPV, and PP.  
+K. Chopra et al.                                                                                                                                                                                                                                 
+--- PAGE 16 ---
+Energy 267 (2023) 126338
+16
+given in Table 4 . The detailed procedure of the optimization is presented 
+in Fig. 17 . 
+The optimization is performed for the maximization of NPV and 
+minimization of LCWH and payback period separately with the 
+following considered constraints or restrictions as follows: 
+Optimize LCWH or NPV or PBP
+ 
+C
+0 ,
+DE
+r ,
+i
+r ,
+OM
+N ,
+if
+r ,
+I
+T ,
+η
+th
+, EP , MD
+r
+)
+Subjected to 
+30000 ≤ C
+0
+≤ 35000  
+50 ≤ DE
+r
+≤ 90  
+8 ≤ i
+r
+≤ 10  
+1 ≤ OM
+N
+≤ 1 . 25  
+3 . 5 ≤ I
+T
+≤ 6 . 98  
+51 ≤ η
+th
+≤ 69  
+6 ≤ EP ≤ 7  
+4 . 5 ≤ MD
+r
+≤ 5 . 5 
+Table 5 provides the optimal values of objective functions & decision 
+variables, for comparison purposes, the base case or non-optimized 
+values have also been presented in the same table. It is revealed that 
+in respect of the base case, the value of LCWH was found to be lower by 
+33.46%, 25.34%, and 26.93% for LCWHOL, NPVOL, and PPOL cases 
+respectively. Whereas NPV has increased by approximately 9%, 28.43%, 
+and 26.35% for LCWHOL, NPVOL, and PPOL cases respectively. 
+Furthermore, the value of the payback period was observed to be low -
+ered by 37.76%, 41.43%, and 47.37% for LCWHOL, NPVOL, and PPOL 
+cases respectively. 
+4.3.8. Detailed output matrices of different zones 
+Table 6 displayed the output parameters of the scenario model for 
+five different zones according to the Indian market. Based on the input 
+assumption, the mean value of LCWH, NPV, and PP are found to be 5.14 
+INR/kWh, 663788.48 INR, and 5.84 years respectively. 
+This table shows that the yearly energy demand to accomplish hot 
+water demand is highest for Zone-I due to the lowest average inlet 
+temperature of the water. Whereas due to the highest average inlet 
+water temperature, the yearly energy demand for Zone-III is the lowest 
+one. 
+It has been found that Zone-V would require the least collector area 
+to meet the yearly energy demand for water heating whereas Zone-I 
+required the largest collector area. This is because the collector area 
+for a specific location is proportional to the ratio of yearly energy de -
+mand to the average yearly solar irradiance incident in the same loca -
+tion. This ratio was found to be the lowest for Zone-V due to the incident 
+of the highest solar radiation and observed to be highest for Zone-I due 
+to the highest yearly energy demand. 
+Furthermore, both LCWH and PP were found to be lowest and 
+highest for Zone-V and Zone-III respectively. While NPV was observed to 
+be highest for Zone-I and lowest for Zone-III. Because both LCWH & PP 
+are indirectly proportional to solar radiation. The reason for the highest 
+value of both LCWH and PP for Zone-III is because falling of the lowest 
+average yearly solar irradiance. 
+However, due to the falling highest average yearly solar irradiance, 
+the value of both LCWH and PP was found to be lowest for Zone-III. 
+On the other hand, NPV is the net present value of a system that 
+depends on the total revenue generation at the end of its life. Since total 
+revenue generation of a solar collector depends on the yearly energy 
+demand which was found to be highest in Zone-I and lowest in Zone-III. 
+Therefore, NPV was found to be highest for Zone-I and lowest for Zone- 
+III. 
+5. Conclusions 
+In the present study, a computation model has been developed by the 
+amalgamation of the Monte Carlo Technique (MCT) & Multi-energy/ 
+economic relations that take into consideration the risks and inte -
+grated uncertainties of different variables. The present work sheds light 
+on the financial status of solar water heating technologies and provides 
+Fig. 16. Impact of variation of thermal efficiency on LCWH, NPV, and PP.  
+Table 4 
+Genetic Algorithm parameters.  
+S. No Parameter Value 
+1 No. of individuals in the model 9 
+2 Highest rate of mutation 0.25 
+3 No. of generations 64 
+4 Lowest rate of mutation 0.0005 
+5 Crossover rate (probability) 0.85 
+6 Initial rate of mutation 0.005  
+K. Chopra et al.                                                                                                                                                                                                                                 
+--- PAGE 17 ---
+Energy 267 (2023) 126338
+17
+facts for investment in India. Based on the simulation study, crucial 
+conclusions have been drawn here as below: 
+❖ It has been found that daily average solar radiation made the 
+greatest impact on output economic matrices (LCWH, NPV, and PP). 
+Therefore, higher daily average solar radiation will lead to better 
+business results. 
+❖ Based on the results, It is suggested that solar water heaters should 
+be installed in a location where the daily average solar radiation 
+exceeds 1 kWh/m2/day. Fortunately, all zones of India receive daily 
+average solar radiation higher than 1 kWh/m2/day which is a good 
+sign for the installation of the solar water heater. 
+❖ Based on the input assumption, the mean value of LCWH, NPV, and 
+PP are found to be 5.14 INR/kWh, 663788.48 INR, and 5.84 years 
+respectively. 
+❖ Zone-V would require the least collector area to meet the yearly 
+energy demand for water heating up to desired temperature range 
+whereas the largest area will be required for Zone-I. 
+❖ Both LCWH and payback period were found to be lowest and 
+highest for Zone-V and Zone-III respectively, While NPV was 
+observed to be highest for Zone-I and lowest for Zone-III. 
+❖ Among the selected cities, Ahmedabad and Srinagar achieve the 
+highest (5.615 kWh/m2/day) and lowest (4.695 kWh/m2/day) daily 
+average solar radiation respectively. It signifies that Zone-V is the 
+most favorable place for the installation of the solar water heater. 
+❖ Based on the optimization analysis, it is revealed that in respect of 
+the base case, the value of LCWH was found to be lower by 33.46%, 
+25.34%, and 26.93% for LCWHOL, NPVOL, and PPOL cases respec -
+tively. Whereas NPV has increased by approximately 9%, 28.43%, 
+and 26.35% for LCWHOL, NPVOL, and PPOL cases respectively. 
+Furthermore, the value of the payback period was observed to be 
+lowered by 37.76%, 41.43%, and 47.37% for LCWHOL, NPVOL, and 
+PPOL cases respectively. 
+❖ The Monte Carlo method considers the integration of risk and 
+uncertainties of key input variables whose simulation outcomes 
+would be more beneficial for realistic investment decisions on HPT- 
+ETCS technologies in the Indian building sector. 
+It is expected that the above discussion boosts business tycoons to 
+have more investment in solar water heaters. The installation of solar 
+water heaters should be prioritized in those municipalities or regions of 
+India where electricity prices are high. In addition to this, for healthier 
+market penetration, the Indian government may provide a suitable 
+subsidy on solar water heaters. 
+Fig. 17. Algorithm for optimization of output economic parameters.  
+Table 5 
+Comparison of optimized and non-optimized values for output matrices.  
+Decision 
+Variables/ 
+Objective 
+Functions 
+Non- 
+Optimized 
+Value 
+Optimized Values Unit 
+LCWHOL NPVOL PPOL 
+C
+0 
+32,500 30,140 31,145 30,267 INR/m
+2
+- 
+Aperture 
+area 
+DE
+r 
+70 72.14 74.64 52.63 % 
+i
+r 
+9 8.07 8.29 9.64 % 
+OM
+N 
+1.25 1.02 1.02 1.22 % 
+if
+r 
+4.5 4.42 4.56 4.21 % 
+I
+T 
+5.24 6.98 6.80 6.72 kWh/m
+2
+/ 
+day 
+η
+th 
+60 68.72 66.79 69 % 
+EP 6.50 6.03 7 6.92 INR/kWh 
+MD
+r 
+5 4.77 4.70 4.80 % 
+LCWH 5.05 3.36 3.77 3.69 INR/kWh 
+NPV 670,810 730,716 861,574 847,573 INR 
+PP 5.72 3.56 3.35 3.01 Year  
+K. Chopra et al.                                                                                                                                                                                                                                 
+--- PAGE 18 ---
+Energy 267 (2023) 126338
+18
+Credit author statement 
+K. Chopra: Conceptualization, Formal analysis, Writing – original 
+draft, Supervision.V. V. Tyagi: Methodology, Data curation, Conceptu -
+alization, Supervision, Writing – review & editing Sakshi Popli: Data 
+curation, Data Validation.A. K. Pandey: Validation, Writing – review & 
+editing, 
+Declaration of competing interest 
+The authors declare that they have no known competing financial 
+interests or personal relationships that could have appeared to influence 
+the work reported in this paper 
+Data availability 
+No data was used for the research described in the article. 
+References 
+[1] Anand A, Shukla A, Sharma A. Recapitulation on latent heat hybrid buildings. Int J 
+Energy Res 2020;44:1370 – 407 . 
+[2] Stocker TF, Qin D, Plattner GK, Tignor MMB, Allen SK, Boschung J, Nauels A, 
+Xia Y, Bex V, Midgley PM. Climate change 2013 – the physical science basis: 
+working group I contribution to the fifth assessment report of the 
+intergovernmental panel on climate change. Clim. Chang. 2013 Phys. Sci. Basis 
+Work. Gr. I Contrib. to Fifth Assess. Rep. Intergov. Panel Clim. Chang. 2014; 
+9781107057999:1 – 1535 . 
+[3] Velayudhan SK. Dissemination of solar photovoltaics: a study on the government 
+programme to promote solar lantern in India. Energy Pol 2003;31:1509 – 18 . 
+[4] Solar water heaters in India: market assessment studies and surveys for different 
+sectors and demand segments. 2010. https://mnre.gov.in/img/documents/uploa 
+ds/2cd570c26ddd4f54aacf840bdf388b5b.pdf . [Accessed 9 September 2021]. 
+accessed. 
+[5] Chopra K, Tyagi VV, Pandey AK, Sari A. Global advancement on experimental and 
+thermal analysis of evacuated tube collector with and without heat pipe systems 
+and possible applications. Appl Energy 2018;228:351 – 89 . 
+[6] Kalogirou SA. Environmental benefits of domestic solar energy systems. Energy 
+Convers Manag 2004;45:3075 – 92 . 
+[7] Chopra K, Pathak AK, Tyagi VV, Pandey AK, Anand S, Sari A. Thermal performance 
+of phase change material integrated heat pipe evacuated tube solar collector 
+system: an experimental assessment. Energy Convers Manag 2020;203:112205 . 
+[8] Said Z, Ghodbane M, Tiwari AK, Ali HM, Boumeddane B, Ali ZM. 4E (Energy, 
+Exergy, Economic, and Environment) examination of a small LFR solar water 
+heater: an experimental and numerical study. Case Stud Therm Eng 2021;27: 
+101277 . 
+[9] Muthuraman U, Shankar R, Nassa VK, Karthick A, Malla C, Kumar A, Kumar PM, 
+Rahim R, Bharani M. Energy and economic analysis of curved, straight, and spiral 
+flow flat-plate solar water collector. Int J Photoenergy 2021;2021 . 
+[10] Hohne PA, Kusakana K, Numbi BP. Optimal energy management and economic 
+analysis of a grid-connected hybrid solar water heating system: a case of 
+Bloemfontein, South Africa. Sustain Energy Technol Assessments 2019;31:273 – 91 . 
+[11] Yılmaz 
+˙
+IH. Residential use of solar water heating in Turkey: a novel thermo- 
+economic optimization for energy savings, cost benefit and ecology. J Clean Prod 
+2018;204:511 – 24 . 
+[12] Sharma N, Hunter J, Lackner KS, Sharma N, Hunter J, Lackner KS. Transitioning to 
+solar water heaters in Phoenix residential sector: the extent of realism associated 
+with sectoral based transformation. AGUFM 2018;2018. PA33A-13, https://ui.adsa 
+bs.harvard.edu/abs/2018AGUFMPA33A..13S/abstract . [Accessed 28 January 
+2022]. accessed. 
+[13] Rout A, Sahoo SS, Thomas S. Risk modeling of domestic solar water heater using 
+Monte Carlo simulation for east-coastal region of India. Energy 2018;145:548 – 56 . 
+[14] Zhang R, Shen GQP, Ni M, Wong JKW. Techno-economic feasibility of solar water 
+heating system: overview and meta-analysis. Sustain Energy Technol Assessments 
+2018;30:164 – 73 . 
+[15] Cetina-Qui ˜nones AJ, Xam ´an J, Bassam A, Escalante Soberanis MA, Perez- 
+Quintana I. Thermo-economic analysis of a flat solar collector with a phase 
+changing material under tropical climate conditions: residential and industrial 
+case. Appl Therm Eng 2021;182:116082 . 
+[16] Sadiq M. Solar water heating system for residential consumers of Islamabad, 
+Pakistan: a cost benefit analysis. J Clean Prod 2018;172:2443 – 53 . 
+[17] Anto Joseph Deeyoko L, Balaji K, Iniyan S, Sharmeela C. Exergy, economics and 
+pumping power analyses of flat plate solar water heater using thermal performance 
+enhancer in absorber tube. Appl Therm Eng 2019;154:726 – 37 . 
+[18] Hajabdollahi Z, Hajabdollahi H. Thermo-economic modeling and multi-objective 
+optimization of solar water heater using flat plate collectors. Sol Energy 2017;155: 
+191 – 202 . 
+[19] Shrivastava RL, Kumar V, Untawale SP. Modeling and simulation of solar water 
+heater: a TRNSYS perspective. Renew Sustain Energy Rev 2017;67:126 – 43 . 
+[20] Alsayed MF. Solar water heater sizing and economic evaluation for local hospital, 
+2021 12th. Int. Renew. Eng. Conf. IREC 2021;2021 . 
+[21] Kalogirou S. Thermal performance, economic and environmental life cycle analysis 
+of thermosiphon solar water heaters. Sol Energy 2009;83:39 – 48 . 
+[22] Rout A, Sahoo SS, Khatiwada D, Singh S, Solanki CS. A Monte Carlo based 
+approach for exergo-economic modeling of solar water heater. 2020. https://doi. 
+org/10.1080/15567036.2020.1822955 . 
+[23] Rezvani S, Bahri PA, Urmee T, Baverstock GF, Moore AD. Techno-economic and 
+reliability assessment of solar water heaters in Australia based on Monte Carlo 
+analysis. Renew Energy 2017;105:774 – 85 . 
+[24] Inamdar GK, Gandhare BS. Multi-criteria evaluation of water heating alternatives 
+for promoting solar water heater in solapur district, techno-societal 2018 -. Proc. 
+2nd Int. Conf. Adv. Technol. Soc. Appl. 2020;1 1:653 – 61 . 
+[25] Ahn H, Rim D, Pavlak GS, Freihaut JD. Uncertainty analysis of energy and 
+economic performances of hybrid solar photovoltaic and combined cooling, 
+heating, and power (CCHP + PV) systems using a Monte-Carlo method. Appl 
+Energy 2019;255:113753 . 
+[26] Poppi S, Sommerfeldt N, Bales C, Madani H, Lundqvist P. Techno-economic review 
+of solar heat pump systems for residential heating applications. Renew Sustain 
+Energy Rev 2018;81:22 – 32 . 
+[27] Building sector policies and regulation for promotion of solar water heating system 
+content acknowledgement. 2010. www.ctranconsulting.com . [Accessed 31 
+January 2022]. accessed. 
+[28] Opposing trends in India ’ s solar thermal market 2020 - Solarthermalworld, (n.d.). 
+https://solarthermalworld.org/news/opposing-trends-indias-solar-thermal-market 
+-2020/ (accessed January 30, 2022). 
+[29] Crystal Ball | applications | Oracle India, (n.d.). https://www.oracle.com/in/applic 
+ations/crystalball/ (accessed February 4, 2022). 
+[30] Baghernejad A, Yaghoubi M. Exergoeconomic analysis and optimization of an 
+integrated solar combined cycle system (ISCCS) using genetic algorithm. Energy 
+Convers Manag 2011;52:2193 – 203 . 
+[31] Maschio C, Vidal AC, Schiozer DJ. A framework to integrate history matching and 
+geostatistical modeling using genetic algorithm and direct search methods. J Pet 
+Sci Eng 2008;63:34 – 42 . 
+Table 6 
+Parameters of scenario model for different zones of India.  
+S. No Parameters Zone-I Zone-II Zone-III Zone-IV Zone-V 
+1 No. of Evacuated Tubes 65 45 47 50 42 
+2 Collector Area (m
+2
+) 6.09 4.28 4.45 4.68 3.99 
+3 Capital Investment (INR) 197,925 139,100 144,625 152,100 129,675 
+4 Total Loan Cost (INR) 285209.96 200443.05 208404.71 219176.10 186861.71 
+5 Total O & M Cost (INR) 51421.01 36138.17 37573.66 39515.86 33689.48 
+6 Energy Generated by Solar System (kWh) 111431.86 81257.72 75793.45 84676.05 76934.77 
+7 Auxiliary Energy Cost (INR) 169618.33 122888.49 114243.64 129529.25 115033.49 
+8 Total Cost by Solar System (INR) 506249.30 359469.49 360222.01 388221.21 335584.68 
+9 Total Cost by Conventional System (INR) 1801439.49 1312835.95 1224171.7 1369535.18 1241675.32 
+10 Life Cycle Savings (INR) 1295190.19 953366.24 863949.69 981313.97 906090.64 
+11 LCWH (INR/kWh) 4.57 4.44 4.80 4.62 4.38 
+12 NPV (INR) 779965.47 575569.42 517497.43 590477.53 547584.45 
+13 PP (Year) 4.99 4.76 5.28 5.06 4.66  
+K. Chopra et al.                                                                                                                                                                                                                                 
