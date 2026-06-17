@@ -1,0 +1,2677 @@
+
+--- PAGE 1 ---
+The contribution of artificial intelligence to phase change materials in 
+thermal energy storage: From prediction to optimization
+Shuli Liu
+a
+, Junrui Han
+a
+, Yongliang Shen
+b , *
+, Sheher Yar Khan
+a
+, Wenjie Ji
+a
+, Haibo Jin
+b
+,  
+Mahesh Kumar
+a
+a
+School of Mechanical Engineering, Beijing Institute of Technology, Beijing, 100081, China
+b
+School of Materials Science and Engineering, Beijing Institute of Technology, Beijing, 100081, China
+ARTICLE INFO
+Keywords:
+Thermal energy storage
+Phase change materials
+Artificial intelligence
+Prediction
+Optimization
+ABSTRACT
+Artificial Intelligence (AI) is leading the charge in revolutionizing research methodologies within the field of 
+latent heat storage (LHS) by using phase change materials (PCMs) and elevating their overall efficiency. This 
+comprehensive review delves into AI applications within the domain of PCM for TES systems, mainly including 
+prediction and optimization. The review article emphasizes the crucial role of AI in predicting physical properties 
+of composite PCM and its performance in LHS systems. Also, the review article highlights the significance of AI in 
+optimizing the structure and layout, as well as the operation and control strategies of latent heat storage systems 
+using PCMs across various research fields. The study at hand discusses literature encompassing both experi -
+mental and theoretical articles that detail the integration of AI techniques within TES systems by using PCM, and 
+compares the advantages and limitations of AI prediction models and optimization algorithms with existing 
+typical technologies in the field of LHS. The summarization of the limitations in prior research has been pre -
+sented, along with the proposal of potential avenues for performance enhancement of AI applied in LHS system. 
+Additionally, the primary directions and challenges for future investigations have been emphasized, accompa -
+nied by suggested strategies.
+Nomenclature
+AI Artificial Intelligence CART Classification and 
+Regression Tree
+TES Thermal energy storage SGD Stochastic gradient 
+descent
+PCM Phase change material ELM Extreme learning 
+machines
+LHS Latent heat storage RFR Random Forest Regression
+ML Machine learning GBR Gradient Augmented 
+Regression
+DL Deep learning DNN Deep Neural Networks
+ANN Artificial neural network HTF Heat transfer fluid
+KNN k-nearest neighbor MLP Multilayer perceptron
+LASSO least absolute shrinkage and 
+selection operator
+BP Back propagation
+XGBoost eXtreme gradient boosting GA Genetic algorithm
+SVM Support vector machine PSO Particle swarm 
+optimization
+CPCM Composite phase change 
+material
+COP Coefficient of performance
+( continued on next column )
+( continued )
+Nomenclature
+NEPCM Nano-enhanced phase change 
+material
+CFD Computational fluid 
+dynamics
+MARS Multiple Adaptive Regression 
+Spline
+MO Multi-objective
+1. Introduction
+The rapid industrial development has led to a persistent reliance on 
+fossil fuels, resulting in both an energy crisis and a substantial increase 
+in greenhouse gas emissions [ 1 , 2 ]. To mitigate this deteriorating situa -
+tion, various measures have been implemented, such as the adoption of 
+renewable energy sources [ 3 , 4 ] and the utilization of waste heat from 
+industrial processes [ 5 , 6 ]. Nevertheless, the intermittent and unstable 
+nature of the renewable energy sources remains an inherent challenge 
+that hinders the progress of these two technologies. The swift 
+* Corresponding author.
+E-mail address: shenyl0104@163.com (Y. Shen). 
+Contents lists available at ScienceDirect
+Renewable Energy
+journal homepag e: www.el sevier.com/loc ate/renene
+https://doi.org/10.1016/j.renene.2024.121973
+Received 22 August 2024; Received in revised form 17 November 2024; Accepted 20 November 2024  
+Renewable Energy 238 (2025) 121973 
+Available online 22 November 2024 
+0960-1481/© 2024 Elsevier Ltd. All rights are reserved, including those for text and data mining, AI training, and similar technologies. 
+--- PAGE 2 ---
+advancement of energy storage technology has engendered optimism 
+regarding the effective exploitation of renewable energy and industrial 
+waste heat. By the conclusion of 2021, the collective installed capacity 
+of worldwide energy storage has attained 209.4 GW, exhibiting a 
+year-on-year growth of 9.6 % [ 7 ]. Notably, pumped storage constitutes 
+approximately 86.2 % of this capacity. Given the expeditious progress of 
+the electric vehicle sector, electrochemical energy storage is poised to 
+emerge as the principal impetus behind the fresh installed capacity of 
+global energy storage [ 8 , 9 ]. However, statistical data indicates that 
+thermal energy constitutes 50 % of terminal energy utilization [ 10 ]. 
+Consequently, the advancement of thermal energy storage technology is 
+assuming a progressively significant role in both production and daily 
+life [ 11 ]. This is evident in Fig. 1 , which illustrates the widespread 
+implementation and continuous evolution of TES systems across diverse 
+domains.
+Based on the specific heat storage material, TES can be classified into 
+three distinct categories, namely sensible heat storage, latent heat 
+storage (LHS), and thermochemical heat storage [ 24 , 25 ], which is pre -
+sented in Fig. 2 . Currently, sensible heat storage technology has suc -
+cessfully reached commercial operation, with solar hot water systems 
+being the most notable example [ 26 , 27 ]. On the other hand, thermo -
+chemical energy storage is still in the experimental stage due to the 
+intricate nature of the device, material and the high costs associated 
+with its operation [ 28 , 29 ]. In contrast, LHS technology, which utilizes 
+phase change materials (PCMs), which is currently experiencing a 
+period of rapid development and is anticipated to have promising 
+prospects [ 30 , 31 ].
+The growing need for high-quality energy supply has posed 
+Fig. 1. The application of thermal energy storage systems [ 12 – 23 ].
+Fig. 2. Classification of thermal storage technology.
+S. Liu et al.                                                                                                                                                                                                                                       Renewable Energy 238 (2025) 121973 
+2 
+--- PAGE 3 ---
+challenges to the technical economic performance and flexibility of TES 
+systems. In response, the utilization of artificial intelligence (AI) tech -
+nology in the TES domain has emerged as a means to mitigate human 
+errors, expedite decision-making processes, and offer digital support. 
+Lee et al. [ 32 ] successfully integrated sensible heat storage tanks into 
+building energy systems, resulting in enhanced energy flexibility and 
+cost effectiveness. The authors presented a novel prediction model that 
+utilizes artificial neural network (ANN), which was then integrated with 
+the ε DE-RJ metaheuristic algorithm to optimize the charging and dis -
+charging rates of the TES system with the objective of minimizing 
+operational costs. The implementation of a model predictive control 
+scheme, grounded in AI, resulted in a significant reduction of operating 
+costs ranging from 9.1 % to 14.6 %. Shadma Tasneem et al. [ 33 ] 
+employed five robust machine learning (ML) algorithms, namely 
+k-nearest neighbor (KNN), least absolute shrinkage and selection oper -
+ator (LASSO), eXtreme gradient boosting (XGBoost), support vector 
+machine (SVM), and Bayesian ridge exact model, to develop a dynamic 
+behavior prediction framework for systems based on reversible ther -
+mochemical reactions. The authors successfully derived the optimal 
+formula and model for NH
+4
+NO
+3 
+and KOH, and further established a 
+calculation formula and model to assess the impact of KOH and water on 
+NH
+4
+NO
+3
+.
+As shown in Table 1 , there have been a few review articles in recent 
+years summarizing the latest progress of AI technology in thermal en -
+ergy storage applications. These reviews collectively suggest that AI 
+technology holds significant potential and utility in various domains, 
+including energy storage performance modeling, system design and 
+evaluation, as well as system control and operation. However, it is worth 
+noting that there is currently a dearth of specific reviews dedicated to 
+exploring the application of AI in PCM energy storage.
+The objective of this review is to systematically gather and analyze 
+literature pertaining to the utilization of AI in PCM energy storage. All 
+monitored publications are categorized based on the specific function -
+alities and application contexts of AI. Subsequently, this article de -
+liberates on the research findings, summarizes the identified limitations, 
+and proposes potential avenues for improvement. Furthermore, it 
+highlights the primary directions and obstacles for future investigations, 
+along with offering recommendations.
+2. Overview of the application of AI in PCM energy storage
+Experiments and numerical simulations are the prevailing research 
+methodologies employed in the field of PCM energy storage, as evi -
+denced by previous studies [ 40 , 41 ]. These approaches primarily aim to 
+investigate the thermal properties of diverse composite phase change 
+materials (CPCM) [ 25 , 42 ], as along with the dynamic characteristics 
+and thermodynamic performance of theses CPCM in LHS units and 
+systems [ 43 ]. The utilization of these two conventional methodologies 
+has significantly facilitated the identification of advanced PCMs and the 
+implementation of energy storage systems. However, it has been pro -
+gressively ascertained that the exploration of phase change energy 
+storage laws, encompassing experimental design and construction, as 
+well as the establishment and computation of physical and mathemat -
+ical models, has entailed substantial time and financial resources 
+through experiments and numerical investigations. Notably, the heat 
+transfer model of PCMs entails intricate partial differential equations 
+[ 44 ]. Over the past two decades, the rapid advancement of ML and deep 
+learning technology has led to an increasing need for the integration of 
+AI tools as partial substitutes for certain traditional research method -
+ologies [ 45 , 46 ].
+Fig. 3 illustrates the primary applications of AI technology in PCM 
+energy storage, encompassing solar thermal utilization, electronic de -
+vice thermal management, and building energy conservation. In 
+essence, these applications can be categorized into two overarching 
+functions: prediction and optimization. Concerning prediction, ML al -
+gorithms are commonly employed to investigate the physical properties, 
+phase transition behavior, and thermal performance of LHS units and 
+PCM systems. In terms of optimization, advanced numerical optimiza -
+tion algorithms based on AI are used to investigate the physical prop -
+erties of PCMs, the configuration of LHS, as well as the boundary 
+conditions and operating strategies of the system. Therefore, this review 
+will focus on analyzing the applications of AI technology in these two 
+areas.
+3. AI for prediction in PCM energy storage
+3.1. Physical properties of PCM
+Currently, AI is extensively employed for the prediction of the 
+physical characteristics of composite CPCMs. The primary objective 
+behind the development of CPCMs typically revolves around addressing 
+the inherent physical deficiencies observed in pure PCMs, including the 
+inadequate thermal conductivity of organic PCMs and the elevated 
+melting point or reduced decomposition temperature of solar molten 
+salts. These limitations associated with pure PCM significantly impede 
+their practical applicability. Furthermore, the integration of PCM with 
+various other materials has been shown to significantly enhance their 
+overall performance, leading to increased utilization in specific domains 
+[ 47 ]. A comprehensive analysis of recent scholarly publications reveals 
+that AI predictions have successfully categorized the physical attributes 
+of CPCMs into three distinct categories: high-temperature composite 
+molten salts for solar thermal power plants, PCM-based composites for 
+improved thermal conductivity, and low melting point PCM-concrete 
+composites for building energy conservation in construction 
+applications.
+In the field of CPCM prediction, ML stands out as the predominant AI 
+technique employed. Typically, these ML algorithms necessitate input 
+and output variables for both model training and data prediction. The 
+input variables typically comprise crucial parameters that exert an in -
+fluence on the material’s physical properties, while the output param -
+eters generally represent the parameters to be predicted. Hence, the 
+establishment of a correspondence between output variables and input 
+variables can be accomplished by utilizing the classification and 
+regression functions inherent in diverse ML models or algorithms. The 
+architectural depiction of the ML model for forecasting CPCMs is 
+Table 1 
+Review articles on the latest progress of AI technology in thermal energy storage 
+applications.
+Refs. Topic Research gap
+[ 34 ,
+35 ]
+Review on the ML for the design 
+and control of building cooling 
+systems with PCM.
+These studies specifically 
+concentrate on the utilization of ML 
+techniques to enhance the cooling 
+efficiency of buildings through the 
+incorporation of PCM.
+[ 36 ] A comprehensive overview of the 
+classification, design optimization 
+methods, and applications of 
+energy storage systems in power 
+systems; The utilization of AI in 
+optimizing system configuration 
+and energy control strategies
+This article briefly introduces the 
+application of heat storage 
+technology in the power system 
+using a short paragraph. In the 
+review of AI technology, only the 
+regulation and optimization of the 
+power system are considered.
+[ 37 ,
+38 ]
+A literature review and analysis for 
+the application of AI technology in 
+TES.
+These studies focused on the 
+application of AI technology in all 
+TES technologies ignoring PCM 
+latent energy storage technology.
+[ 39 ] An overview of ML algorithms used 
+in materials science and the 
+structure of each algorithm
+The focused of this study is only on 
+comparing the advantages and 
+disadvantages of each AI algorithm 
+for various functional materials 
+with limited discussion on 
+application of ML in PCMs.
+S. Liu et al.                                                                                                                                                                                                                                       Renewable Energy 238 (2025) 121973 
+3 
+--- PAGE 4 ---
+illustrated in Fig. 4 . In nearly all investigations, the phase change tem -
+perature ( T
+m
+) and latent heat ( Δ H ) of PCM are commonly regarded as 
+indispensable input variables. This is primarily due to the consistent 
+phase transition temperature and substantial latent heat that charac -
+terize the fundamental attributes of PCMs.
+3.1.1. Eutectic molten salt
+The primary attribute of high-temperature molten salts lies in their 
+dissociation into ions upon melting, and the ensuing interplay between 
+these ions significantly influences the physical and chemical properties 
+of the molten salts [ 48 , 49 ]. Consequently, when employing ML to 
+forecast the physical properties of composite molten salts, parameters 
+Fig. 3. Application of AI for PCM in energy storage.
+Fig. 4. Architectures of the ML model for the prediction of CPCMs.
+S. Liu et al.                                                                                                                                                                                                                                       Renewable Energy 238 (2025) 121973 
+4 
+--- PAGE 5 ---
+pertaining to ions were employed as input variables for the models. As 
+shown in Fig. 5 , Wang [ 50 ], Tian [ 51 ] and Sang [ 52 ] all considered the 
+input variables including electronegativity ( E ), electronegativity differ -
+ence ( Δ E ), cation radius ( r ), cationic charge ( Z ), and cationic char -
+ge/radius ratio ( Z / r ). These researchers employed various algorithms to 
+successfully forecast the phase transition temperature, latent heat, and 
+composition of unidentified eutectic salts. Experimental validation was 
+conducted in all three studies to confirm the dependability and precision 
+of the predicted outcomes.
+Wang et al. [ 50 ] employed artificial neural networks (ANN) to 
+forecast the melting point and latent heat of KCl-NaF eutectic salts, 
+drawing upon a literature dataset [ 53 – 59 ]. The predicted values for the 
+melting point and latent heat were determined to be 648 ± 2 
+◦
+C and 365 
+± 5 kJ/kg, respectively. Furthermore, the salts demonstrated excep -
+tional thermal stability when exposed to high temperatures, specifically 
+800 
+◦
+C. Similarly, Tian et al. [ 51 ] utilized three distinct ANN method -
+ologies to estimate the melting point and latent heat of chloride eutectic 
+salts. In comparison to the BP algorithm and BP-GA algorithm, the 
+proposed BP-PBO algorithm demonstrated a reduction in prediction 
+errors for the melting point by 42 % and 38 % respectively, as well as a 
+reduction in prediction errors for the latent heat by 71 % and 68 % 
+respectively. Sang et al. [ 52 ] integrated the BP algorithm with the ge -
+netic algorithm to forecast the eutectic composition and melting point of 
+NaNO
+3
+-KNO
+3
+-KCl and NaNO
+3
+-KNO
+3
+-K2CO
+3
+. Based on experimental 
+evidence from DSC, the melting points of the two nitrate-based ternary 
+molten salts were determined to be 206.12 
+◦
+C and 207.24 
+◦
+C respec -
+tively, with an increased decomposition temperature exceeding 640 
+◦
+C.
+Phase diagram technology is utilized as an additional approach for 
+forecasting the properties of molten salts. These diagrams are instru -
+mental in illustrating the equilibrium liquid phase lines of molten salts, 
+thereby facilitating the examination of various properties such as 
+melting point, specific heat capacity, solubility, and eutectic composi -
+tion [ 60 , 61 ]. Historically, phase diagrams of molten salt have predom -
+inantly been constructed through experimental measurement of liquidus 
+lines. Nonetheless, this method is limited in its ability to provide precise 
+and comprehensive phase diagrams, while also necessitating extensive 
+time and labor for data collection. In the contemporary age character -
+ized by rapid advancements in computer technology, the phase diagram 
+thermodynamic calculation, commonly referred to as the CALPHAD 
+method, has emerged as a novel approach to the development of phase 
+diagrams [ 62 ]. This method leverages thermodynamic principles to 
+elucidate the diverse thermodynamic characteristics of a material sys -
+tem across different phase states within the realm of phase equilibrium. 
+Fundamentally, the CALPHAD method aims to construct phase equi -
+librium and phase diagrams based on empirical data. The CALPHAD 
+method offers the advantage of extrapolating binary system phase dia -
+grams to calculate ternary systems, yet its predictive capabilities are 
+typically limited to melting point, specific heat capacity, and eutectic 
+composition [ 63 ]. In the realm of energy storage, AI technology has 
+demonstrated superior accuracy in predicting latent heat. In the most 
+recent study [ 64 ], AI-generated data was utilized as the primary source 
+for developing phase diagrams through the CALPHAD method. The 
+integration of the CALPHAD approach with AI prediction technology is 
+employed to enhance prediction efficiency and precision.
+3.1.2. Thermal conductivity enhanced composite PCM
+Incorporating metal or carbon-based nanoparticles as additives to 
+organic PCM serves as a viable approach for augmenting their thermal 
+conductivity. In the case of nano-enhanced PCMs (NEPCM), the thermal 
+conductivity of both the nanoparticles and PCM should be taken into 
+Fig. 5. The sketch map of the (a) ANN model [ 50 ] and (b) BP model [ 51 ].
+S. Liu et al.                                                                                                                                                                                                                                       Renewable Energy 238 (2025) 121973 
+5 
+--- PAGE 6 ---
+account as input parameters when estimating the overall thermal con -
+ductivity of NEPCM [ 65 ]. It is worth noting that the thermal conduc -
+tivity of PCM typically varies between its solid and liquid states, with the 
+phase transition temperature serving as the demarcation point. To 
+enhance the precision of forecasting, the input parameters encompassed 
+the phase and temperature of PCM [ 66 , 67 ]. Furthermore, the input 
+variables commonly comprised the physical property parameters of the 
+nanoparticles, such as concentration [ 67 – 69 ], size [ 67 ], heat capacity, 
+and latent heat [ 70 ]. Farzad [ 66 ] considered a combination of 11 
+nanoparticles and 11 organic PCMs, and used three ML methods 
+including Multiple Adaptive Regression Spline (MARS), Classification 
+and Regression Tree (CART), and ANN to predict the effective thermal 
+conductivity of NEPCM ( Fig. 6 ). It was found that the thermal conduc -
+tivity of PCM is the main effective parameter for predicting the thermal 
+conductivity of NEPCM, and the phase of NEPCM is the second vital 
+variable.
+Various metal oxide nanoparticles (including CuO, Al
+2
+O
+3
+, TiO
+2
+, SiO
+2
+, 
+and Fe
+2
+O
+3
+) were used to enhance the thermal conductivity of organic 
+PCM. Sadegh [ 69 ] developed a BP-ANN with Levenberg-Marquardt al -
+gorithm to predict the thermal conductivity enhancement effect of metal 
+oxide nanoparticles in the mass fraction range of 0.5 – 12 wt% on octa -
+decane. By optimizing the number of hidden layers and neurons, as well 
+as the transfer function of layers, the optimal structure of ANN was 
+obtained, and the thermal conductivity of PCM was accurately predicted 
+with the addition of different nanoparticles. The maximum percentage 
+errors in the liquid and solid phase were only 2.31 % and 0.812 %, 
+respectively. In the study by Mohsen et al. [ 70 ], metal oxide additives in 
+the concentration range of 2 wt% to 8 wt% were used to improve the 
+thermal conductivity of paraffin. The authors used five ML algorithms, 
+namely KNN, decision tree, stochastic gradient descent (SGD) regres -
+sion, SVM, and Huber regression, to establish communication formulas 
+and models between melting and solidification processes. In addition, a 
+relational expression between latent heat, thermal conductivity, and 
+thermal diffusivity was also established.
+For carbon-based CPCMs, the commonly used thermal conductivity 
+enhancers include single-walled carbon nanotubes (SWCNTs), gra -
+phene, Carbon Nanofibers (CNFs), multi-walled carbon nanotubes 
+(MWCNTs), graphene nano-plates (GNP), and nano-graphite (NG). 
+Similar to Sadegh ’ s [ 69 ] research, Mojtaba et al. [ 67 ] used a ANN model 
+with a multi-layer feedforward structure and Levenberg Marquardt BP 
+algorithm to predict the thermal conductivity of NEPCM. The results 
+indicated that the ANN model has a greater predictive ability than the 
+Response Surface Method (RSM) model, achieving an R
+2 
+value of 0.99, 
+which is significantly higher than the RSM ’ s R
+2 
+value of 0.79. In another 
+study, Gao et al. [ 71 ] used automatic relevance determination (ARD), 
+k-nearest neighbor (kNN), and least absolute shrinkage and selection 
+operator (LASSO) models to regress the relationship of thermal con -
+ductivity between liquid and solid carbon-based NEPCM. In addition, 
+the authors also obtained the relationship between thermal conductivity 
+and temperature through regression, as well as the latent heat rela -
+tionship between solidification and melting processes.
+Furthermore, the incorporation of nanoparticles into PCMs is 
+another viable approach to enhance thermal conductivity. Muthya et al. 
+[ 68 ] increased the activation energy of ss-PCMs without leakage by 
+using expanded graphite loaded nutmeg alcohol. Additionally, the au -
+thors have introduced a feedforward backpropagation neural network 
+(FFBPNN) algorithm, which utilizes input variables such as EG loading, 
+heating rate, and conversion rate, to accurately predict the phase tran -
+sition temperature and heat flux of CPCMs. Notably, this algorithm ex -
+hibits a coefficient of determination exceeding 0.989, indicating its high 
+predictive capability.
+The effective medium theory has played a significant role in pre -
+dicting the thermal conductivity of composite PCM over an extended 
+period [ 72 ]. The porous-medium and homogeneous-medium methods, 
+which rely on the assumption of local thermal equilibrium [ 73 ], are 
+widely utilized in this field. Various correlations have been developed to 
+Fig. 6. The process of predicting the thermal conductivity of NEPCM using different models [ 66 ].
+S. Liu et al.                                                                                                                                                                                                                                       Renewable Energy 238 (2025) 121973 
+6 
+--- PAGE 7 ---
+estimate the effective thermal conductivity of composite PCM, typically 
+derived from experimental testing on specific samples. However, the 
+effective thermal conductivity for specific composite PCMs may vary 
+significantly when different correlation equations are utilized, with 
+differences of up to two orders of magnitude [ 74 ]. In comparison to the 
+effective medium theory, AI prediction technology, while requiring 
+more data to generate correlation equations, offers a broader range of 
+predictions for the effective thermal conductivity of various composite 
+PCMs.
+3.1.3. PCM integrated cement-based concrete
+The incorporation of PCMs or microencapsulated PCMs (MPCMs) 
+into concrete offers advantages in terms of temperature regulation and 
+energy consumption reduction in buildings [ 75 , 76 ]. However, it is 
+commonly observed that this integration tends to decrease the 
+compressive strength of the concrete [ 77 , 78 ]. Several studies have 
+demonstrated that the thermal properties and mechanical strength of 
+PCM-concrete based on cement are influenced by a multitude of pa -
+rameters, thus rendering the relationship complex. In addition to the 
+thermal properties of PCM, it also includes the softness of MPCM par -
+ticles, the porosity of concrete caused by MPCM, the damage of micro -
+capsule shells during concrete mixing and pouring, and the load on 
+hardened concrete [ 76 , 79 , 80 ]. The highly nonlinear effects of these 
+parameters on the thermal properties and mechanical strength make ML 
+a promising technology for predicting the performance of PCM inte -
+grated cement-based concrete.
+In terms of predicting compressive strength, the input variables 
+typically included phase transition temperature, latent heat, density, 
+and dose of PCM. In addition, it should also include cement, water, fine/ 
+coarse aggregate, superplasticizer, age, and curing temperature. Afshin 
+Marani et al. [ 81 ] used ML regression algorithms including random 
+forests, additional trees, gradient boosting, and extreme gradient 
+boosting to predict the compressive strength of PCM integrated 
+cement-based composites. The flow chart is shown as Fig. 7 (a). The 
+results indicated that the gradient boosting model had the highest ac -
+curacy, and the content of fine aggregate and PCM microcapsules had a 
+more significant impact on the predicted compressive strength, as it 
+affects the particle packing density in the cementitious matrix. Besides, 
+the age of the test sample and the thermal performance of PCMs 
+(including melting temperature and latent heat) also had a notable 
+impact on the predicted output values. As shown in Fig. 7 (b), Harun 
+et al. [ 82 ] proposed a DL algorithm that combines extreme learning 
+machines (ELM) with automatic encoders to successfully predict the 
+compressive strength of PCM-concrete and conducted a sensitivity 
+analysis. This model improved the prediction accuracy of DL and ach -
+ieved ideal model generalization ability. The research table details that 
+aggregates have the greatest impact on compressive strength, followed 
+by cement and water content.
+In another study [ 83 ], the authors adopted the same number of 
+experimental datasets and input variables as the previous study [ 82 ] to 
+predict the compressive strength of concrete mixed with MPCM. The 
+results suggested that the amount of cement and the density of MPCM 
+have a significant impact on the compressive strength of concrete. 
+Furthermore, the mass ratio of PCM to cement (PCM/C) was highly 
+correlated with compressive strength, and lower ratios achieved higher 
+target compressive strength. Another contribution of this study is the 
+creation of a large synthetic dataset using Generative Adversarial Net -
+works (TGANs) and the training of the synthetic data using ML models 
+including Random Forest Regression (RFR), Gradient Augmented 
+Regression (GBR), and Deep Neural Networks (DNN). This work dem -
+onstrates the feasibility of developing synthetic data to train 
+high-precision ML prediction models when available data is insufficient.
+In addition to focusing on compressive strength, recent studies 
+focused on the prediction of freeze-thaw cycles (FTCs) [ 84 ] and 
+apparent activation energies [ 85 ] of PCM-concrete. Li et al. [ 84 ] utilized 
+a neural network algorithm to provide a reliable continuous mapping 
+between design parameters and the number of FTCs. The input variables 
+considered include the thickness of the protective PCM-concrete layer, 
+the diameter, volume fraction, phase transition temperature, and latent 
+heat of the MPCM. According to the results, the layer ’ s thickness appears 
+to be the most significant factor influencing the FTC ’ s number, followed 
+by the volume fraction of PCM and phase transition temperature. Afshin 
+et al. [ 85 ] showed that DNNs outperform gradient enhanced ensemble in 
+predicting the hydration rate and accumulated heat of cement-based 
+composite PCM. The predicted data is further used to calculate the 
+apparent activation energy. The predicted results indicated that the 
+addition of 10 wt% and 20 wt% MPCM to cement reduces the apparent 
+activation energy by nearly 10 % and 28 %, respectively, indicating that 
+the hydration reaction is less sensitive to temperature.
+3.2. Performance of LHS system
+3.2.1. LHS heat exchanger
+The LHS heat exchanger is one of the crucial devices connecting the 
+heat source and the heating end [ 86 , 87 ]. Nevertheless, 
+macro-encapsulated PCM faces a more severe problem of low heat 
+transfer rate. Therefore, it is almost necessary to add high thermal 
+conductivity materials or devices to enhance PCM heat transfer in the 
+Fig. 7. Flow chart of ML ((a) [ 81 ]) and DL ((b) [ 82 ]) for predicting the compressive strength of PCM integrated cement-based composite materials.
+S. Liu et al.                                                                                                                                                                                                                                       Renewable Energy 238 (2025) 121973 
+7 
+--- PAGE 8 ---
+PCM cavity of LHS heat exchanger, including foam metal [ 88 , 89 ], fins 
+[ 90 , 91 ], heat pipes [ 92–94 ], etc. The nonlinear and dynamic charac -
+teristics of coupled heat transfer and natural convection inside the PCM 
+cavity make it difficult to capture the phase transition behavior of the 
+PCM and the overall thermodynamic performance of the LHS heat 
+exchanger, leading to extremely high computational and experimental 
+costs. In this situation, ML methods have become a promising tool for 
+thermal analysis of the LHS heat exchangers.
+Table 2 shows the studies on ML for predicting LHS heat exchangers 
+in recent years. It can be observed that almost all LHS unit were the 3-D 
+shell-and-tube structures and two-dimensional rectangular cavities. The 
+methods of enhancing heat transfer rate included fin technology 
+[ 95–99 ] and porous structures [ 97 , 100 , 101 ]. In these studies, the phase 
+transition behavior of PCM (temperature, liquid fraction, velocity, and 
+pressure distributions) and the thermal performance of heat exchangers 
+(charged energy) were the most common predictive variables. The 
+studies [ 97 , 101 ] also focused on the Nusselt number and shear stress at 
+the PCM-HTF interface, respectively. The input variables were related to 
+the phase transition process of PCM (melting time [ 97 , 98 ]), boundary 
+conditions (HTF inlet and outlet temperatures [ 95 , 96 , 100 , 102 ] and 
+velocity [ 96 , 100 ]), and operating conditions (flow time [ 95 , 99 , 100 ,
+102 ]). In addition, specific LHS unit structures were also considered 
+when determining input variables. For example, for finned enhanced 
+LHS heat exchangers, the parameters of the fins are also considered 
+important input variables for predicting the performance of LHS heat 
+exchangers, including the number of fins [ 97 , 98 ] and structural pa -
+rameters [ 98 , 99 ] (height, spacing, thickness, and amplitude). For the 
+inclined PCM containers, the inclination angle was also used as an input 
+variable [ 97 ]. In the study by Nithin et al. [ 101 ], the structural pa -
+rameters of pores had a significant impact on the performance of LHS. To 
+this end, the authors adopted porosity, surface area, and the correlation 
+function of two-point surface-void correlation functions as inputs. A 
+statistical review of these studies found that ANN and its derivatives 
+were the most common models and algorithms, providing a general and 
+computationally competitive method for quickly predicting the phase 
+transition behavior and thermodynamic properties of LHS unit with 
+different structures. Although in the study of Vignes et al. [ 102 ], Cat -
+boost model showed higher accuracy in predicting PCM temperature 
+than SVM, Random Forest, XGBoost and ANN.
+3.2.2. Buildings integrated with PCM
+Due to the significant contribution of building energy consumption 
+to overall energy consumption [ 107 , 108 ], the integration of PCMs in 
+buildings holds promise for mitigating peak energy demand, regulating 
+room temperature, enhancing thermal comfort, and partially reducing 
+reliance on air conditioning systems [ 109 ]. The incorporation of PCM in 
+building integration encompasses both passive and active approaches. In 
+passive structures [ 110–112 ], PCM is integrated into the building en -
+velope or prepared as a modular structure within the interior. Despite 
+the space-saving benefits offered by the passive structure, it also pre -
+sents significant challenges in terms of leakage, mechanical properties, 
+and fire resistance of PCM. In contrast, active structures typically 
+incorporate PCM into a distinct LHS unit, in conjunction with ventilation 
+and heating systems [ 113 , 114 ]. However, it is important to note that 
+active systems may decrease building safety requirements but result in 
+larger system dimensions. In academic literature concerning the pre -
+diction of thermal performance in building integrated PCM through the 
+use of AI technique, the focus is primarily on passive structures. Fig. 8
+illustrates the integration of PCM within building walls, interiors, roofs, 
+and light earth. The thermal performance of PCM-integrated building 
+envelope structures is primarily influenced by various parameters, 
+including climate conditions, PCM layer thickness, relative positioning 
+of PCM layers, and the thermal physical properties of the PCM. These 
+parameters were extensively taken into account when predicting the 
+system’s thermal performance.
+In contrast to the prediction of physical properties of building 
+materials, the prediction of PCM performance in building applications 
+places greater emphasis on indoor thermal environment and energy 
+consumption load. A study conducted by A. Urresti et al. [ 120 ] 
+employed a dynamic neural network model to determine the variations 
+in heat flux within the PCM-integrated building envelope structure, 
+Table 2 
+Studies on ML for predicting LHS heat exchangers in recent years.
+Refs. Input variables Output 
+variables
+Model/ 
+Algorithm
+Structure of 
+LHS unit
+[ 103 ] Inlet air 
+temperature, 
+heat transfer 
+fluid, volume 
+fraction of PCM.
+The outlet 
+temperature of 
+the air
+GMDH-type 
+(group method 
+of data 
+handling) ANN
+Rectangular 
+LHS exchanger
+[ 95 ] Heat transfer 
+area, Reynolds 
+number, HTF 
+inlet 
+temperature, 
+time
+Stored energy BP-ANN Finned-tube 
+LHS system
+[ 96 ] HTF inlet 
+temperature 
+and inlet mass 
+flow rate
+HTF outlet 
+temperature 
+from the heat 
+exchanger
+Layered Digital 
+Dynamic Neural 
+(LDDN) 
+network
+Tube-and-fin 
+LHS heat 
+exchanger
+[ 97 ] Melting time, 
+inclination 
+angles, number 
+of fins
+Liquid fraction, 
+Nusselt 
+number
+Feed-forward 
+multilayer 
+perceptron 
+neural network 
+(MLPNN)
+Metal foam-fin 
+hybrid 
+structure in 
+inclination 
+container
+[ 104 ] The time for 
+liquid fraction 
+to reach 30 %, 
+60 %, and 85 %
+The time when 
+the liquid 
+fraction 
+reaches the 
+specified value
+BP-ANN Cylindrical 
+LHS exchanger
+[ 98 ] Number of the 
+fins, Non- 
+dimensional fin 
+height, Non- 
+dimensional fin 
+spacing, Fourier 
+number
+Liquid fraction, 
+stored energy
+Group method 
+of data handling 
+(GMDH) type of 
+(ANNs)
+LHS in finned 
+enclosures
+[ 100 ] HTF inlet 
+velocity and 
+temperature, 
+time
+Liquid fraction 
+and mean 
+temperature of 
+PCM
+LSTM-BP neural 
+network
+Multi-channel 
+LHTS tank 
+with metal 
+foam
+[ 102 ] The inlet and 
+outlet 
+temperatures of 
+HTF, time
+PCM 
+temperature
+SVM, Random 
+Forest, 
+XGBoost, 
+Catboost, and 
+ANN
+Shell-and-tube 
+LHS heat 
+exchanger
+[ 105 ] N/A Liquid fraction 
+and heat 
+storage
+Multilayer 
+perceptron 
+(MLP) network 
+model
+Trapezoidal 
+LHS tank
+[ 101 ] Porosity, 
+surface area, 
+two-point 
+surface-void 
+correlation 
+functions
+The 
+distribution of 
+temperature, 
+pressure, 
+velocity fields 
+Heat flux and 
+shear stress 
+distributions at 
+the PCM–HTF 
+interface
+Geodesic 
+Convolutional 
+Neural Network 
+(GCNN)
+Macro-porous 
+LHS units
+[ 99 ] Fin design 
+parameters (i.e. 
+length, 
+thickness, and 
+amplitude) and 
+flow time
+Liquid fraction 
+and mean 
+temperature of 
+PCM
+Feed-forward 
+neural network 
+(FFNN)
+A rectangular 
+cavity with 
+corrugated fins
+[ 106 ] surface 
+temperature
+Liquid fraction 
+of PCM
+Recurrent 
+neural networks 
+(RNN)
+PCM-based 
+thermal 
+management 
+system in a 
+shell and tube 
+unit
+S. Liu et al.                                                                                                                                                                                                                                       Renewable Energy 238 (2025) 121973 
+8 
+--- PAGE 9 ---
+utilizing surface temperature and the heat flux at specific time as inputs. 
+Similarly, Dnyandip et al. [ 115 ] utilized six ML techniques to forecast 
+the Measure of Key Response (MKR) index based on the thermophysical 
+parameters of PCM. The MKR index is a recently introduced comparative 
+evaluation index that takes into account the ceiling temperature, time 
+lag, decrement factor, and solar thermal gain of integrated roofs [ 121 ]. 
+The prediction results suggested that the ANN model exhibits the highest 
+accuracy. This model demonstrates the lowest average absolute error 
+(0.18) and root mean square error (0.31), and achieves an R
+2 
+value of 
+98.53 % when compared to other ML models.
+Two studies conducted by Badji [ 116 ] and Benzaama [ 118 ] utilized 
+various ANN algorithms to forecast indoor air temperature. PCMs were 
+implemented by directly placing it indoors and incorporating it into 
+light earth cells, respectively. The authors considered climate conditions 
+as the primary determinant of indoor temperature in a fixed system 
+configuration. Additionally, Benzaama et al. [ 118 ] discovered that the 
+CNN model exhibited a nearly instantaneous response to alterations in 
+boundary conditions, rendering it more precise in predicting the phase 
+transition process of PCM compared to the LSTM model.
+In the context of forecasting energy consumption, Naeim Farouk 
+[ 117 ] incorporated PCMs at various positions within the building ’ s 
+walls and ceilings ( Fig (8 c)). The variables taken into account encom -
+passed the PCM ’ s phase transition temperature (ranging from 21 to 
+29 
+◦
+C), PCM thickness (ranging from 2.5 to 10 cm), and the desired 
+indoor set temperature (ranging from 20 to 28 
+◦
+C). By utilizing a data -
+base comprising 324 distinct scenarios, a multi-layer perceptron model 
+was employed to anticipate the cooling load under diverse permuta -
+tions, yielding a precision exceeding 95 %. This research effectively 
+optimized the design parameters for implementing PCM in buildings, 
+thereby accomplishing the objective of substantially reducing con -
+struction expenses. In a separate study, Maksat et al. [ 119 ] developed 
+three ML models, namely multiple regression (MR), SVM, and ANN, for 
+the purpose of forecasting monthly energy savings. The integration of 
+PCM into the roof or wall is illustrated in Fig. 8 (e). The variables that 
+influence this integration included the melting point of PCM, building 
+parameters, and environmental parameters. By conducting sensitivity 
+analysis, it was determined that shape factors have a significant impact 
+on the heating and cooling requirements of buildings. The model pre -
+dicted that the optimal PCM values are 25 and 27, resulting in an annual 
+Energy consumption reduction ranging from 4.7 % to 25.2 %. An 
+another separate investigation [ 122 ] conducted by the aforementioned 
+research team employed multi-expression programming (MEP) and 
+gene-expression programming (GEP) methodologies to forecast the in -
+fluence of initial design parameters on the energy consumption of 
+buildings integrated with PCM. The findings of this research indicated 
+that the roof solar absorption rate, window visible light transmittance, 
+wall solar absorption rate, and PCM melting point were significant 
+factors that impact the early design considerations of PCM integrated 
+buildings. According to this research, it had been found that the models 
+utilizing GEP exhibit greater accuracy in forecasting the energy con -
+sumption of buildings integrated with PCMs, as compared to those 
+employing MEP.
+3.2.3. Solar energy utilization systems
+The utilization of PCM energy storage has gained significance in 
+solar energy systems due to the intermittent and unstable nature of solar 
+energy [ 42 , 123 ]. PCM serves as a storage medium for maintaining 
+continuity and stability in solar energy utilization, encompassing both 
+the heat source and end of the system [ 124 ]. In a study conducted by Ali 
+H.A. et al. [ 125 ] (as depicted in Fig. 9 (a)), the integration of nano-PCM 
+into a solar photovoltaic/thermal (PV/T) concentrator resulted in a 
+substantial reduction in the temperature of the photovoltaic cell, 
+consequently enhancing its thermal and electrical efficiency. The au -
+thors devised a Self-Organizing Feature Map network (SOFM) that relies 
+on the electrical output power of a solar irradiance and environmental 
+temperature prediction system. As depicted in Fig. 9 (a), the model 
+demonstrated minimal errors and a notable level of trend accuracy, 
+thereby expediting the assessment of optimal operational parameters for 
+novel systems and facilitating precise determination of photovoltaic 
+power.
+Ahmad et al. [ 126 ] devised a dish solar distiller (DSD) and incor -
+porated a nano-particle CPCM beneath the disc absorber. The dish solar 
+still ’ s schematic diagram is depicted in Fig. 9 (b). The water production 
+rate of the DSD filled with composite PCM is observed to be 178 % 
+greater than that of conventional distillers. The authors conducted a 
+comparative analysis of the predictive accuracy of ANN, adaptive 
+network fuzzy inference system (ANFIS), and SVM algorithms in esti -
+mating water productivity. According to the findings presented in Fig. 9
+Fig. 8. The integration of PCMs and buildings in the studies of AI prediction (a) [ 115 ] ; (b) [ 116 ] ; (c) [ 117 ]; (d) [ 118 ]; (e) [ 119 ] .
+S. Liu et al.                                                                                                                                                                                                                                       Renewable Energy 238 (2025) 121973 
+9 
+--- PAGE 10 ---
+(b), SVM demonstrated superior prediction accuracy, as indicated by its 
+highest R
+2 
+value (0.99) and lowest RMSE value (2.19 – 3.17). The authors 
+further recommended the integration of advanced ML prediction tools 
+with heuristic optimizers to enhance the performance of distillers.
+Hisham et al. [ 127 ] successfully incorporated PCM into a concen -
+trated solar thermoelectric generator, enabling power generation during 
+nighttime. The integration of PCM between the composite parabolic 
+concentrator and the thermoelectric module, as depicted in Fig. 9 (c), 
+extended the power generation duration by an additional 2 h after 
+sunset. To forecast the output power, energy and exergy efficiency, 
+entropy generation, and system irreversibility of the system, three 
+regression ML algorithms (XGBoost, random forest, and decision tree) 
+were employed, utilizing solar radiation, wind speed, and air tempera -
+ture as input variables. According to the findings depicted in Fig. 9 (c), 
+the random forest regression model demonstrates the lowest Root Mean 
+Square Error (RMSE) value and the highest coefficient of determination 
+(R
+2
+) value.
+4. AI for optimization in PCM energy storage
+The field of LHS encompasses complex nonlinear phase change heat 
+transfer phenomena occurring within PCMs, as well as the interplay of 
+heat transfer between PCM and units or enhanced heat transfer com -
+ponents, alongside the flow and heat transfer characteristics of fluids. 
+Conventional analytical optimization techniques face challenges in 
+achieving precise results of PCM energy storage performance. Re -
+searchers have developed numerous intelligent optimization algorithms 
+to address intricate optimization problems, such as structural optimi -
+zation and operational control strategy optimization, drawing inspira -
+tion from human intelligence, social characteristics of biological 
+communities, or natural phenomena. The optimization algorithms are 
+widely regarded as a crucial subset of AI [ 128 , 129 ], specifically 
+designed to effectively address engineering challenges. Fig. 10 illus -
+trates that evolutionary algorithms and swarm intelligence algorithms 
+are the prevailing optimization algorithms employed in the realm of 
+Fig. 9. Solar thermal utilization systems and predicted results using AI ((a) [ 125 ], (b) [ 126 ] (c) [ 127 ]),
+Fig. 10. Intelligent optimization algorithm for PCM energy storage.
+S. Liu et al.                                                                                                                                                                                                                                       Renewable Energy 238 (2025) 121973 
+10 
+--- PAGE 11 ---
+PCM energy storage.
+Evolutionary algorithms are a class of optimization algorithms that 
+draw inspiration from the biological evolution process [ 130 , 131 ]. These 
+algorithms simulate the mechanisms of biological evolution and employ 
+iterative and gradual optimization techniques to search for the optimal 
+solution. Prominent examples of evolutionary algorithms encompass 
+genetic algorithm (GA), differential evolution algorithm, and immune 
+algorithm, among others. On the other hand, group intelligence pertains 
+to the manifestation of intelligent behavior by non-intelligent agents 
+through cooperative interactions, constituting a computational tech -
+nology grounded in the principles of biological group behavior [ 128 ]. In 
+the realm of swarm intelligence theory research, two prominent algo -
+rithms have been identified: the ant colony algorithm and the particle 
+swarm algorithm.
+4.1. Optimization of structure and layout
+4.1.1. Solar thermal utilization integrated LHS unit
+The incorporation of LHS into energy systems frequently yields un -
+foreseen benefits, particularly in the context of solar energy utilization 
+[ 40 ]. The integration of LHS in such systems contributes to the consis -
+tent and reliable operation of the system, ultimately enhancing its reli -
+ability and economic viability. Table 3 provides an overview of research 
+endeavors focused on optimizing solar system integration with LHS 
+units. These investigations encompassed the integration of LHS into 
+various systems, including solar absorption chillers [ 132 , 133 ], solar 
+power [ 134 , 135 ], and solar domestic hot water [ 136 ] systems.
+The thermodynamic performance of LHS plays a vital role in the 
+overall system performance, necessitating the implementation of 
+advanced optimization techniques to enhance heat transfer efficiency. 
+Among these techniques, GA was widely employed as an optimization 
+method. GA are particularly well-suited for addressing complex and 
+high-dimensional problems, often in conjunction with mathematical 
+models or computational fluid dynamics (CFD) simulations.
+In the context of optimization, the structural parameters and pipeline 
+layout of LHS heat exchangers were commonly considered as variables 
+for optimization, with the objective function typically aimed at 
+enhancing the thermodynamic performance or reducing the operational 
+expenses of the system. GA is capable of addressing multi-objective 
+optimization problems as well. In a particular investigation [ 132 ], the 
+system ’ s investment costs were minimized while simultaneously maxi -
+mizing the coefficient of performance (COP) for the multi-objective 
+optimization of the system. The findings of the optimization analysis 
+indicated a 3.89 % enhancement in the coefficient of performance (COP) 
+of the system, accompanied by a 9.04 % reduction in investment costs. 
+Nevertheless, it is important to note that the optimization variables 
+examined in this study do not pertain to the LHS unit, thereby raising 
+concerns regarding the extent to which the LHS structure influences the 
+overall system performance.
+Additionally, the efficacy of the optimization outcomes in diverse 
+boundary settings or operational circumstances warrants further inves -
+tigation. In the study conducted by Lu et al. [ 136 ], the optimization of a 
+solar household hot water system with an integrated multi-pipe PCM 
+heat exchanger was examined. The system ’ s performance was evaluated 
+under the boundary condition of an HTF flow rate of 1.68 kg/min. The 
+results indicated that the pipeline layout, when optimized, exhibited 
+enhanced performance at the flow rate of 1.68 kg/min. However, it 
+demonstrated a decline in performance when the flow rate was reduced 
+to 0.5 kg/min. This suggests that the outcomes of optimization in spe -
+cific operational circumstances may not be universally applicable to 
+other operational circumstances, particularly in the case of complex 
+systems comprising multiple components, as their performance is 
+greatly influenced by boundary conditions. Regrettably, limited 
+research has been dedicated to addressing the issue of generalizing 
+optimization outcomes.
+4.1.2. Electric vehicle thermal management system
+N. Javani [ 137 ] introduced a novel cooling system designed specif -
+ically for hybrid electric vehicles. This system incorporated a multi-tube 
+LHS system with nanoparticles, which was integrated with an active 
+refrigeration cycle. The integration of these components allowed for a 
+reduction in the heat load of the cooler, consequently decreasing the 
+power required by the compressor. To optimize the performance of the 
+LHS unit, various parameters such as the number of tubes, size, shell 
+diameter, CNT concentration, and CNT series probability were consid -
+ered as optimization variables. The structure of the LHS unit was then 
+optimized using a GA to determine the optimal length of the LHS heat 
+exchanger. The optimal length values for heat exchangers without fin -
+ned tubes and with finned tubes were 32.95 cm and 41.09 cm, respec -
+tively. However, the compactness requirements of the vehicle could not 
+be met by these optimal lengths, primarily due to the lower thermal 
+conductivity of pure PCM. Nevertheless, it is observed that by aug -
+menting the concentration of CNT, the optimal length of the LHS heat 
+exchanger diminishes.
+In a separate study [ 138 ], a battery thermal management system 
+(BTMS) was introduced. This system utilized a coupled PCM and liquid 
+cooling approach, as depicted in Fig. 11 . The BTMS consisted of a series 
+connection of five batteries, with the PCM enveloping the battery 
+Table 3 
+Statistics of studies on the optimization of solar system integrated LHS unit.
+Ref. Optimization 
+algorithm
+Optimization variables Objective function Performance improvement Application scenarios
+[ 132 ] GA Generator, condenser, evaporator 
+temperatures, Isentropic efficiency of 
+pump and motor
+Minimum cost and 
+maximum COP
+Compared to the basic case, the optimized system 
+COP increased by 3.89 % and the total investment 
+cost decreased by 9.04 %.
+Solar absorption chiller 
+with LHS
+[ 134 ] GA Evaporator length ( L
+e
+), PCM length 
+(PCM) ( L ), and Stirling engine 
+condenser length ( L
+1
+)
+Maximum value of 
+exergy efficiency
+The exergy efficiency reached its maximum value of 
+0.97585 when L
+e 
+= 0.36 m, L = 0.41 m, and L
+1 
+=
+0.43 m.
+A heat pipe receiver 
+integrated LHS for solar 
+space power system
+[ 136 ] CFD coupled 
+GA
+Circuitry arrangements The quantity of the 
+equivalent hot water 
+output (EHWO)
+With a mass flow rate of 1.68 kg/min as the 
+optimization condition, EHWO and direct output 
+hot water (DOHW) increased by 5 % and 6 %, 
+respectively. However, at 0.5 kg/min, the 
+performance decreased by 6 % and 5 %, 
+respectively.
+Multi-tube PCM heat 
+exchanger for solar 
+domestic hot water system
+[ 133 ] GA Pipeline length and quantity The minimum cost of 
+PCM
+The total cost of the shell and tube LHTES unit with 
+1.42 kW is as low as $8396 per unit
+A storage unit for solar 
+absorption chiller 
+application
+[ 135 ] GA Length to diameter ratio ( L / d
+o
+), the 
+ratio of outer diameter to inner 
+diameter ( d
+o
+/ d
+i
+), and mass flow rate of 
+heat transfer fluid
+The minimum value 
+of charging time of 
+the LHS unit
+The storage time was 4734 s, and the performance 
+of the LHS unit was improved by 35 %.
+A shell-and-tube LHS unit 
+for a solar power plant 
+with direct steam 
+generation
+S. Liu et al.                                                                                                                                                                                                                                       Renewable Energy 238 (2025) 121973 
+11 
+--- PAGE 12 ---
+Fig. 11. (a) Lithium battery cooling system and (b) BTMS structure [ 138 ].
+Fig. 12. (a) The framework of DDQN; (b) Comparison of optimization results between DRL, NSGA-II, and MOPSO; (c) Implementation of the optimization results in 
+COMSOL model [ 139 ].
+S. Liu et al.                                                                                                                                                                                                                                       Renewable Energy 238 (2025) 121973 
+12 
+--- PAGE 13 ---
+surface and the liquid cooling channel integrated within the PCM 
+structure. The authors employed a multi-objective particle swarm opti -
+mization (PSO) algorithm to enhance the energy density of the battery 
+system, increase the number of batteries, and decrease the space 
+required for temperature control components. This optimization was 
+achieved by optimizing the thickness, coolant flow rate, and number of 
+liquid cooling units for each PCM. The total thickness of the three PCMs 
+was constrained to 30 mm. The optimized structure resulted in a 39.51 
+% reduction in liquid cooling energy consumption, a decrease of 0.38 
+◦
+C 
+in the maximum temperature rise of the BTMS, and a reduction of 19.81 
+% in the maximum temperature difference.
+In the most recent study [ 139 ], a water-cooled channel was 
+implemented within the PCM situated at the core of the battery pack. 
+The utilization of the Deep Reinforcement Learning (DRL) algorithm 
+aims to enhance the thermal efficiency of cooling systems for battery 
+packs. The primary objective of this optimization was to concurrently 
+minimize the highest temperature (MaxT) experienced by the battery, 
+diminish the temperature disparity (dT) among the batteries, and reduce 
+the average temperature of the PCM (AveT). Fig. 12 demonstrates the 
+utilization of the double deep Q-network (DDQN) algorithm in the 
+pursuit of the optimal solution for multi-objective problems. Utilizing 
+the TOPSIS method, a comparative analysis was conducted between the 
+optimization outcomes and the Pareto frontier solutions acquired 
+through the implementation of NSGA-II and MOPSO algorithms. It is 
+Fig. 13. Optimization of geometric parameters of fins integrated into the LHS unit ((a) [ 145 ]; (b) [ 146 ]; (c) [ 147 ]; (d) [ 148 ] (e) [ 149 ]);
+S. Liu et al.                                                                                                                                                                                                                                       Renewable Energy 238 (2025) 121973 
+13 
+--- PAGE 14 ---
+noteworthy that NSGA-II and MOPSO are renowned algorithms 
+employed in the resolution of multi-objective optimization problems. 
+However, the DRL approach yielded scores that were 4.3 % and 1.6 % 
+higher than those achieved by NSGA-II and MOPSO, respectively, thus 
+indicating superior outcomes in comparison to existing optimization 
+methodologies.
+4.1.3. Geometrical parameter of fins integrated into the LHS unit
+Fin technology has been demonstrated to be an effective and cost- 
+efficient approach for addressing the issue of low thermal conductivity 
+in PCM [ 140 ]. Fins are commonly employed in various configurations of 
+LHS units, such as shell-and-tube, rectangular, and spherical structures 
+[ 141 ]. Furthermore, the arrangement and geometric parameters of fins 
+significantly impact the heat transfer rate of PCM [ 142 ]. Previous 
+research has employed single factor analysis methods [ 143 ] or response 
+surface methodology [ 144 ] to optimize the heat transfer performance of 
+PCM or ascertain the influence of geometric parameters. However, the 
+aforementioned optimization methods are limited in their applicability 
+to the analysis of a relatively small number of parameters and struggle to 
+achieve global optimization results, particularly when dealing with 
+complex structural fins in multi-parameter or multi-objective optimi -
+zation problems. Nevertheless, advancements in computer technology 
+and computational fluid dynamics (CFD) have made it possible to utilize 
+intelligent optimization algorithms for achieving global optimization of 
+fin structures integrated within LHS units.
+Fig. 13 presents the optimization studies of geometric parameters of 
+fins integrated into the LHS unit. Maleki et al. [ 145 ] and Xu et al. [ 146 ] 
+implemented rectangular fins in rectangular and square PCM cavities. 
+Maleki et al. considered the number, length, and volume fraction of fins 
+as optimization variables, and performed multi-objective optimization 
+with phase change time and heat storage as objective functions. The 
+mathematical relationship between the optimization variables and the 
+objective function was established based on the ANN model ’ s prediction 
+of CFD simulation data. This study successfully achieved Pareto opti -
+mality of fin parameters across various target weights. It was observed 
+that around 60 % of the Pareto optimal non-dimensional fin lengths (l =
+L
+f
+/ L
+e
+) exceeded 0.98, whereas approximately 79 % of the Pareto optimal 
+fins exhibited a volume fraction below 0.1. Furthermore, 81 % of the 
+Pareto optimal fins were found to possess either 4 or 5 fins. In the 
+research conducted by Xu et al. [ 146 ], the optimization variables 
+encompassed the number, position, length, and thickness of fins, while 
+the optimization objective function revolved around the dimensionless 
+melting time. The integration of CFD and GA was employed for 
+addressing the challenges associated with non-stationary nonlinear flow 
+and heat transfer, while also optimizing the arrangement and geometric 
+parameters of fins. The outcomes of the optimization process reveal that, 
+in the absence of constraints on fin thickness, maximizing the length of 
+the fins was recommended. Conversely, when fin thickness was 
+restricted, the optimal number of fins was contingent upon the overall 
+length of the fins.
+Biomimetic techniques have been extensively utilized across various 
+domains of flow and heat transfer [ 150 , 151 ], encompassing the reduc -
+tion of flow resistance, augmentation of heat transfer, and optimization 
+of design. In the investigations conducted by Zheng [ 147 ] and Shen 
+[ 148 ], Y-shaped and tree-shaped fins were employed, respectively, to 
+amplify the heat transfer rate of PCMs in shell-and-tube LHS units. In 
+these two studies, both the length and angle of the branches were 
+regarded as optimization variables while ensuring a constant heat 
+transfer area. Zheng et al. [ 147 ] employed the minimum distance be -
+tween PCM and fins or cold sources as the objective function. They 
+utilized a GA to optimize fins with arrow shapes. Results indicated that 
+when the number of fins is 2, arrow shaped fins outperformed traditional 
+Y-shaped fins by reducing the complete curing time by over 52.8 % and 
+enhancing the heat dissipation rate by more than 110 %. Shen et al. 
+[ 148 ] employed a computational fluid dynamics (CFD) coupled GA 
+approach to optimize the geometric parameters of tree-shaped fins, 
+taking into account the melting and solidification processes of PCM. The 
+optimized tree-shaped fins exhibited a reduction in phase transition time 
+by 38.83 % during the melting process, as well as a shortened solidifi -
+cation process by 32.71 %, when compared to radial fins. Furthermore, 
+the optimization results revealed that the optimized tree fins, designed 
+for various heat transfer processes, displayed a gradual increase in 
+branch length and a gradual decrease in branch angle. In a separate 
+investigation [ 149 ], the researcher examined the collective impacts of 
+incorporating fins on the augmentation of thermal storage rate and 
+reduction of thermal storage capacity. The authors employed the energy 
+stored per unit mass ( E m) and the average power ( P t) as multi-objective 
+functions, and conducted optimization of the width and height of the 
+upper and lower fins of the LHS unit utilizing NSGA-II. Optimization 
+yielded a notable augmentation in power output while upholding a 
+minimal compromise on the stored potential energy. In scenarios where 
+power and stored energy held equal significance, the optimization 
+outcome manifested as a 90.1 % amplification in power-to-mass ratio 
+and a 4.3 % reduction in stored energy.
+The afore-mentioned studies on fin optimization have primarily 
+focused on specific geometric parameters, such as thickness, length, 
+angle, and arrangement position, as design variables. However, these 
+optimizations have been limited in terms of degrees of freedom and 
+direction. In recent years, topology optimization in the field of me -
+chanical design has been introduced into the optimization of fins in LHS 
+units and has received widespread attention. Topology optimization 
+offers a greater number of design degrees of freedom and a larger design 
+space compared to traditional size and shape optimization methods 
+[ 152 , 153 ]. Several studies have demonstrated that the utilization of 
+topology optimized fins leads to a notable enhancement in both the heat 
+transfer rate and the uniformity of temperature distribution within PCM 
+[ 154 – 156 ]. The Method of Moving Asymptote (MMA) algorithm was 
+commonly employed in the topology optimization of LHS fins. MMA is a 
+nonlinear optimization technique that involves the continuous adjust -
+ment of asymptotes while considering constraints, making it applicable 
+for solving diverse engineering and scientific problems. Nevertheless, an 
+excessive number of objective functions or constraints may impede the 
+effectiveness of MMA. Hence, it is recommended that forthcoming 
+studies explore the potential of employing sophisticated AI optimization 
+algorithms to address the multi-objective and multi-constraint optimi -
+zation challenges pertaining to fin structures in LHS systems.
+4.1.4. Arrangement of porous material
+In order to enhance the effective thermal conductivity of PCM, the 
+incorporation of porous materials with high thermal conductivity has 
+been identified as a viable approach [ 157 , 158 ]. Previous research has 
+primarily focused on uniformly distributing porous materials within the 
+PCM. However, subsequent investigations [ 159 – 161 ] revealed that the 
+presence of natural convection can cause the melting front of PCM to 
+deviate from parallel alignment with the heating boundary, leading to 
+accelerated melting of the upper PCM (as depicted in Fig. 14 ). Moreover, 
+the complete coverage of porous materials may impede the natural 
+convection within the PCM. Hence, the utilization of non-uniformly 
+arranged porous materials in the LHS unit can effectively augment the 
+heat transfer rate of the phase change process [ 162 ]. Investigating the 
+optimization of porous material parameters, including type, thickness, 
+and porosity, to maximize the dynamic heat transfer performance of the 
+LHS represents a significant research concern.
+According to Fig. 15 , Yang et al. [ 163 ] introduced a simplified model 
+for a rectangular LHS unit with gradient porous media. The authors 
+employed a combination of the CFD solution process for the simplified 
+phase transition model and GA to optimize the structural parameters of 
+the porous media, aiming to minimize the duration of complete solidi -
+fication. The optimization process considered the porosity of the metal 
+foam in each layer as a variable, constrained within the range of 50 % – 
+98 %. The findings of the optimization study indicated that the 
+strengthening effect is most favorable when the number of gradient 
+S. Liu et al.                                                                                                                                                                                                                                       Renewable Energy 238 (2025) 121973 
+14 
+--- PAGE 15 ---
+layers is four. Compared with the uniform metal foam structure, the 
+solidification time was shortened by 7.62 %.
+MohammadJavad Ganji et al. [ 164 ] investigated the influence of 
+local metal wire mesh on the melting process of PCM within a rectan -
+gular LHS unit, as depicted in Fig. 16 . By manipulating the height and 
+number of metal mesh layers, the researchers were able to regulate the 
+porosity value, which served as a design parameter for optimization 
+using GA. The optimization objective function was defined as the ratio of 
+the reduction in melting time to the reduction in porosity relative to the 
+reference scenario involving pure PCM. The concluding optimized 
+component of the metal wire mesh exhibited a porosity of 62.5 % and 
+occupies 93 % of the overall height of the shell. The optimized design of 
+the metal wire mesh resulted in a 34 % reduction in charging time. 
+Furthermore, the optimized design enhanced the uniformity of tem -
+perature distribution and also improved natural convection.
+4.1.5. Cascaded latent heat storage system
+To improve the heat transfer of PCMs at the system level, a recom -
+mended approach is to employ multiple PCMs in the construction of a 
+cascaded latent heat storage (CLHS) system [ 165 ]. Fig. 17 illustrates the 
+schematic diagrams of the PCM configurations and the distribution of 
+temperature differences in the CLHS system. Throughout the charging 
+process, the temperature of the incoming HTF surpasses the phase 
+transition temperature of all PCMs, with the phase transition tempera -
+ture progressively decreasing along the direction of HTF flow. During 
+the discharging process, the direction of flow for the HTF is opposite to 
+that of the charging process. In the case of a single PCM system, the 
+temperature difference for heat transfer between the HTF and PCM is 
+notably diminished [ 166 ]. In contrast, the CLHS system is capable of 
+sustaining a consistent temperature difference for heat transfer, thereby 
+enhancing the overall heat transfer rate of the system. Based on statis -
+tical data [ 167 ], the CLHS system exhibited notable improvements in 
+various aspects when compared to a solitary PCM heat storage system. 
+Fig. 14. Evolution of melting front under different heating powers [ 161 ].
+Fig. 15. (a) Physical model and (b) optimization process of rectangular LHS with gradient porous media [ 163 ].
+S. Liu et al.                                                                                                                                                                                                                                       Renewable Energy 238 (2025) 121973 
+15 
+--- PAGE 16 ---
+Fig. 16. (a) Metal wire mesh configuration inside the PCM cavity and (b) flowchart of optimization process [ 164 ].
+Fig. 17. Schematic diagrams of (a) the PCM arrangements and (b) temperature difference distribution of CLHS system.
+S. Liu et al.                                                                                                                                                                                                                                       Renewable Energy 238 (2025) 121973 
+16 
+--- PAGE 17 ---
+Specifically, the CLHS system demonstrated an average energy effi -
+ciency enhancement of 13.02 %, an average exergy efficiency increase of 
+11.07 %, a notable average heat transfer rate augmentation of 21.84 %, 
+and a substantial average heat storage/release capacity amplification of 
+32.75 %.
+The thermodynamic performance of the CLHS system is influenced 
+by several crucial factors, namely the selection of materials, the distri -
+bution of melting points, and the distribution of mass or volume of PCM 
+at various stages. Previous studies [ 168–171 ] attempted to optimize the 
+distribution of PCM melting points analytically by simplifying the heat 
+transfer model and employing the Lagrange Multiplier Method. How -
+ever, the reliance on numerous unreasonable assumptions in this 
+approach may result in a lack of accuracy in the optimization results. 
+Subsequently, progressive employment of AI-driven advanced optimi -
+zation algorithms was observed in the pursuit of enhancing the perfor -
+mance optimization of CLHS.
+Table 4 shows the research on optimizing CLHS performance using 
+intelligent algorithms. In line with the preceding sections, the optimi -
+zation process primarily relied on intelligent algorithms such as GA and 
+the Differential Evolution (DE) algorithm. The CLHS system encom -
+passed various structures, including packed bed, shell-and-tube, plate, 
+and others, as depicted in Fig. 18 . The majority of research endeavored 
+concentrate on optimizing the volume distribution of PCMs [ 172–176 ]. 
+This optimization was accomplished by regulating the height or length 
+of each stage. Furthermore, several studies have examined the compo -
+sition of PCM [ 172 ], mass distribution and the number of heat transfer 
+units (NTUs) of each LHS unit [ 177 , 178 ]. In the study conducted by 
+Zhang et al. [ 177 ], the researchers assumed that the latent heat and 
+other physical parameters of PCM were identical, and they utilized the 
+differential evolution (DE) algorithm to optimize the melting point of 
+PCMs, mass, and NTU of each stage. Building upon this research, Shen 
+et al. [ 178 ] further optimized the mass of PCMs and the NTU values of 
+LHS units using a GA based on three confirmed commercial PCMs. This 
+study successfully addressed the limitations of optimization error arising 
+from unfounded assumptions in the research conducted by Zhang et al. 
+[ 177 ].
+The majority of optimization studies in this field primarily focus on 
+maximizing the heat storage or release capacity as objective functions. 
+However, studies [ 177 , 178 ] have also explored objective functions 
+based on exergy and entransy. Both investigations indicated that the 
+utilization of an objective function based on exergy was more appro -
+priate for optimizing the performance of CLHS systems compared to 
+objective functions based on energy and entransy. This is due to the fact 
+that optimization outcomes based on the exergy objective function yield 
+higher energy quality and require a smaller total PCM mass. The sole 
+study [ 176 ] focused on optimizing the temperature rise rate of PCM, as 
+CLHS was used for heat sink in a thermal management system. In gen -
+eral, the intelligent optimization algorithms employed to optimize the 
+CLHS system have resulted in notable enhancements in its heat storage 
+capacity and temperature regulation.
+4.2. Optimization of operation and control strategies
+The performance of the PCM energy storage system is influenced not 
+only by the physical parameters of the PCM and the structural param -
+eters of the LHS unit, but also by the operational control strategy. In 
+particular, in complex systems comprising multiple functional compo -
+nents, the operational control strategies may exert a more substantial 
+influence on the overall performance compared to the structural pa -
+rameters of the LHS unit. Hence, in contrast to the optimization of 
+structural and layout aspects, the optimization of operational control 
+strategies entails not only the consideration of the parameters pertaining 
+to the left-hand side (LHS) unit itself, but also the operational parame -
+ters of the entire system. For instance, as previously mentioned, N. 
+Javani et al. [ 137 ] conducted a study where, in addition to optimizing 
+the structure of the LHS unit, they employed GA to optimize the design 
+of various operating parameters in another investigation [ 179 ]. This was 
+done with the aim of attaining a multi-objective function that maximizes 
+the system’s exergy efficiency while minimizing the total system cost 
+rate. The optimization variables encompassed the evaporator saturation 
+Table 4 
+Research on optimizing CLHS performance using intelligent algorithms.
+Refs. Algorithm Optimization variables Objective function Findings System structure
+[ 172 ] GA The optimal composition of 
+PCMs and the length of stage
+Case 1: The maximum 
+charged energy. 
+Case 2: The maximum 
+discharged energy after 
+continuous charge- 
+discharge cycles.
+Case 1: Compared to a single PCM tank under 
+optimal conditions, this optimized design 
+showed a 5.12 % increase in stored energy. 
+Case 2: 5 % increase in discharged energy.
+High temperature packed bed 
+CLHS system for solar power 
+plant
+[ 177 ] The differential 
+evolution (DE) 
+algorithm
+Melting point, mass of each 
+PCM, NTU of each stage
+Charged/discharged 
+energy, exergy, entransy
+The three objective functions based on the 
+discharge process were superior to those based 
+on the charging process. 
+The stage and maximum discharge time had a 
+significant impact on the optimal efficiency of 
+the system.
+Shell-and-tube CLHS system
+[ 173 ] GA The type of PCMs and the height 
+of each air channel
+The maximum charged 
+energy.
+The optimal structure required more charging 
+time, but it stored 6 %, 18 %, and 11 % more 
+energy than the single PCM of RT50, RT65, and 
+RT80, respectively.
+Flat solar CLHS system
+[ 178 ] GA Mass of each PCM and NTU 
+values of each stage
+The maximum charged 
+energy (f
+Q
+), exergy (f
+E
+) and 
+entransy (f
+G
+) by the PCMs.
+f
+E 
+was more suitable as the objective function 
+than f
+E 
+and f
+G
+Shell-and-tube CLHS system
+[ 174 ] CFD coupled GA The length of each stage The maximum energy, 
+exergy, and entransy 
+stored by PCMs.
+The optimized system increased the charged 
+energy, exergy, and entransy by 13.79 %, 14.85 
+%, and 14.45 %, respectively.
+Shell-and-tube CLHS system
+[ 175 ] GA The height of the unit of each 
+stage
+The maximum energy 
+withdrawn of the LHS unit.
+The optimized configuration increased the 
+energy stored during charging by at least 14 %.
+CLHS system with spherical 
+encapsulated PCM for 
+medium temperature solar 
+energy systems
+[ 176 ] GA The volume fraction of each 
+PCM. The volume was 
+determined by the PCM layer 
+thickness d
+1
+, d
+2
+, and d
+3
+.
+The maximum 
+temperature rising rate of 
+the cascaded PCM heat 
+sink.
+The thermal management time of the optimized 
+cascaded PCM heat sink was 12.4 % longer than 
+that of three single PCM heat sinks. The cooling 
+time of the optimized cascaded PCM heat sink 
+was shortened by 31.9 min.
+Low melting point alloy 
+cascaded PCM heat sink
+S. Liu et al.                                                                                                                                                                                                                                       Renewable Energy 238 (2025) 121973 
+17 
+--- PAGE 18 ---
+temperature, air mass flow rate, condenser saturation temperature, 
+superheating magnet in the evaporator, subcooling magnet in the 
+condenser, and compressor efficiency. The optimization process yielded 
+an exergy efficiency of 0.3351 and a total cost rate of 1.529 $/h, rep -
+resenting the advantageous outcomes achieved through Pareto ’ s 
+cutting-edge optimization.
+Abdul et al. [ 180 ] conducted a study on the utilization of PCM in the 
+recovery of waste heat from non-industrial grey water. The authors 
+employed a two-phase analytical solution of the Stefan problem in 
+conjunction with a particle swarm optimizer (PSO) to determine the 
+optimal thermal parameters of the PCM, namely solid specific heat ca -
+pacity ( C
+ps
+), liquid specific heat capacity ( C
+pl
+), latent heat ( L ), and 
+melting point ( T
+m
+), under specific boundary conditions. The obtained 
+optimal values for these variables were C
+ps 
+= 2.5 kJ/(kgK), C
+pl 
+= 3.1 
+kJ/(kgK), L = 238 kJ/kg, and T
+m 
+= 20.85 
+◦
+C, based on the initial input 
+variables. Additionally, the authors observed that the optimization 
+outcomes were subject to the influence of the parameters employed in 
+the PSO algorithm. It was determined that, when varying the input pa -
+rameters, the optimal temperature for phase transition falls within the 
+range of 20 
+◦
+C – 22 
+◦
+C.
+In a scholarly investigation [ 181 ] concerning PCM cold storage, the 
+researcher employed a GA to optimize the mass flow rate and inlet 
+temperature of the cold storage heat exchanger, aiming to minimize the 
+duration required for PCM charging and discharging. The selection of 
+design variables was based on the outcomes of parameter analysis, while 
+the formulation of the objective function was necessitated by the need to 
+concurrently assess the advantages of reducing the inlet temperature on 
+charging time and the disadvantages on discharge time. The best results 
+Fig. 18. The structure of the CLHS system ((a) Packed bed [ 172 ]; (b) Shell-and-tube unit [ 178 ]; (c) Three-tube LHS unit with double HTF channel [ 174 ]; (d) 
+Spherical encapsulated PCM unit [ 175 ]; (e) Shell-and-tube unit [ 177 ]; (f) Flat solar CLHS system [ 173 ] (g) Rectangular heat sink [ 176 ]);
+S. Liu et al.                                                                                                                                                                                                                                       Renewable Energy 238 (2025) 121973 
+18 
+--- PAGE 19 ---
+were obtained with a water mass flow rate of 0.095 kg/s and a decrease 
+in inlet temperature of 1.25 
+◦
+C. Subsequently, when validating the 
+optimization results, it was found that only 40 % of PCM underwent a 
+complete charging/discharging process. Subsequently, further optimi -
+zation was carried out on the types of pipes and the diameter of the shell 
+to find the optimal configuration that can fully utilize this 40 % PCM. 
+The objective function is the maximum difference between the mini -
+mum heat transfer area and the higher and lower values of the melt 
+fraction. The optimal outcomes were achieved by employing a water 
+mass flow rate of 0.095 kg/s and reducing the inlet temperature by 
+1.25 
+◦
+C. Upon validating the optimization results, it was discovered that 
+merely 40 % of the PCM underwent a thorough charging/discharging 
+process. Consequently, additional optimization was conducted on the 
+pipe types and shell diameter to identify the most advantageous 
+configuration capable of fully exploiting this 40 % PCM. The objective 
+function entailed the minimizing heat transfer area and maximizing the 
+disparity between the extreme values of the melt fraction. The optimi -
+zation program yielded a reduction in shell diameter by 12 cm and 
+achieved a 72 % potential for PCM utilization through the utilization of 
+selected tubes. The process and outcomes of the optimization program 
+are depicted in Fig. 19 .
+Maryam et al. [ 182 ] introduced a hybrid energy system comprising a 
+ground source heat pump (GSHP), a photovoltaic collector, and PCMs. 
+The GSHX was employed to facilitate the conversion from condenser to 
+evaporator, thereby supplying the necessary cooling and heating loads 
+for buildings during summer and winter seasons, respectively. To attain 
+optimal technical and economic performance, the authors utilized 
+NSGA-II for both single objective and multi-objective optimization of 
+Levelized Cost of Energy (LCOE) [ 183 ] and exergy efficiency. The LCOE 
+takes into account the global average electricity price, interest rates, and 
+inflation rates to assess the correlation between projected costs and 
+present prices. Fig. 20 illustrates the hybrid system configuration, 
+optimization variables, and objective function. When the weighting 
+coefficients for both objective values were equal, the multi-objective 
+optimization yielded an annual average exergy efficiency that was 5 % 
+lower than that of single objective optimization and 27 % higher than 
+that of single objective economic optimization. The primary goal of 
+optimizing exergy efficiency in hybrid systems was to attain the 
+maximum solar fraction while minimizing urban electricity 
+consumption.
+In a recent academic study conducted by Francesco PELELLA et al. 
+[ 184 ], a residential heating system utilizing a multi-source heat pump 
+with thermal energy storage was proposed (as shown in Fig. 21 ). The 
+study aimed to optimize the system ’ s design variables under three 
+distinct climatic conditions (Athens, Strasbourg, and Helsinki) using a 
+GA. The objective was to maximize the seasonal coefficient of perfor -
+mance (SCOP) while minimizing the investment cost. It is worth noting 
+that unlike the study conducted by Maryam et al. [ 182 ], this particular 
+investigation did not take into account the influence of interest rates and 
+inflation. In all climatic conditions, the most cost-effective and 
+energy-efficient solution is found in traditional air water heat pumps. In 
+the context of Athens, the optimal solution, as determined by the Utopia 
+criterion, entailed a solar collector with the largest surface area, a 
+storage tank with the smallest volume, and the inclusion of photovoltaic 
+panels. Conversely, in Strasbourg, the most favorable configuration 
+solely relied on solar collectors. In the case of Helsinki, the GSHP 
+Fig. 19. The optimization procedure flowchart and optimization results [ 181 ].
+S. Liu et al.                                                                                                                                                                                                                                       Renewable Energy 238 (2025) 121973 
+19 
+--- PAGE 20 ---
+method was deemed the optimal configuration. This suggests that 
+climate variations have a substantial impact on the optimal operating 
+conditions of the energy system.
+5. Challenges and recommendations for future trends
+5.1. AI prediction
+5.1.1. Number and source of datasets used for prediction
+The preceding literature review demonstrates the extensive 
+utilization of ML techniques in predicting properties of PCMs and 
+thermal performance of LHS systems. ML prediction diverges from 
+deterministic numerical methods by substituting intricate mathematical 
+models with surrogate models. It is important to acknowledge that the 
+precision of the surrogate model significantly hinges on the magnitude 
+of the training database [ 185 ]. An augmentation in the magnitude of the 
+training database has the potential to enhance the precision of pre -
+dictions, albeit at the expense of a substantial rise in the cost associated 
+with generating said training database. Insufficiency in the availability 
+of data may result in diminished prediction accuracy or a deficiency in 
+Fig. 20. The integration of GSHPs and PVT systems with PCMs in a hybrid system.
+Fig. 21. A multi-source heat pump system with thermal storage [ 184 ].
+S. Liu et al.                                                                                                                                                                                                                                       Renewable Energy 238 (2025) 121973 
+20 
+--- PAGE 21 ---
+the model ’ s ability to generalize, commonly referred to as overfitting 
+[ 186 , 187 ]. In the research conducted by S ´anchez et al. [ 188 ], the uti -
+lization of the mass ratio of raw materials served as an input parameter 
+for the estimation of both the latent heat and average particle size of 
+microcapsule paraffin. In instances where the sample size is limited to 
+only 17, it is frequently more advantageous to employ a linear poly -
+nomial model rather than an ANN model.
+The aforementioned published research datasets were subjected to 
+statistical analysis, and the findings are presented in Fig. 22 . It is evident 
+that there exist notable variations in the number of datasets examined 
+across different studies. The minimum number of datasets is merely 16, 
+whereas the maximum number reaches 500,000. Studies involving 
+extensive datasets typically employ input variables as parameters at 
+distinct time intervals, with output variables commonly comprising 
+time-dependent parameters. Among these, the most frequently 
+encountered variables included the liquid fraction and temperature of 
+PCMs [ 99 – 102 , 104 , 105 ]. These datasets were employed in the training, 
+testing, and validation phases of ML models. The distribution of data 
+volume across these stages was not uniformly consistent, with the 
+prevalent practice being that the dataset allocated for training typically 
+constitutes 70 % – 80 % of the overall dataset. However, few studies have 
+specifically investigated the direct influence of dataset size on the ac -
+curacy of predictions. The sole pertinent study [ 104 ] demonstrated that 
+a substantial training dataset size coupled with consistent melting 
+characteristics in each dataset greatly enhances the accuracy and 
+dependability of the ANN model in forecasting liquid fraction. Conse -
+quently, future investigations on predictive modeling for PCM energy 
+storage should prioritize the exploration of a balanced approach that 
+considers both prediction accuracy and the associated costs of training 
+databases.
+The source of the dataset is also a matter of concern. As depicted in 
+Fig. 23 , out of the 38 statistical studies, the training dataset comprises of 
+20 entries (52.6 %) from experimental research and 18 entries (47.4 %) 
+from numerical research, respectively. Among the 14 studies concerning 
+the prediction of PCM physical properties, 13 of them relied on exper -
+imental testing or literature. The primary cause for this is the complexity 
+of numerically simulating composite material properties, making it 
+challenging to guarantee dataset accuracy. Out of the total of 24 studies 
+conducted on performance prediction of the LHS system, 17 were reliant 
+on numerical simulations, whereas only 7 were based on experimental 
+testing. The aforementioned simulation studies were primarily carried 
+out utilizing CFD techniques, incorporating flow and heat transfer cal -
+culations, and employing energy consumption analysis software such as 
+TRNSYS or EnergyPlus. In contrast to the expenses associated with nu -
+merical methods, the computational cost of ML prediction technology 
+can be deemed insignificant. While numerous studies asserted that the 
+anticipated outcomes exhibit a satisfactory margin of error when 
+compared to numerical results, they fail to consider the errors stemming 
+from the numerical research process itself.
+5.1.2. The accuracy and generalizability of the model
+When considering ML prediction, accuracy emerges as the primary 
+factor to be considered. A range of metrics have been utilized to evaluate 
+the proposed model, including coefficient of determination (R
+2
+), root 
+mean squared error (RMSE), mean-square error (MSE), mean absolute 
+error (MAE), mean absolute percentage error (MAPE), sum of squared 
+error (SSE), mean bias error (MBE), and covariance (COV). Among 
+these, R
+2
+, MSE, and RMSE were the most frequently employed stan -
+dards. While the indicators in publicly available studies fall within an 
+acceptable range, it is important to acknowledge that accuracy may 
+diminish in certain instances. Urresti et al. [ 120 ] conducted a study 
+wherein the trained ANN model demonstrated favorable consistency 
+between the predicted PCM heat flux and experimental data, as depicted 
+in Fig. 24 (a). However, notable disparities between the predicted results 
+and the anticipated values emerged when the boundary conditions were 
+altered, as illustrated in Fig. 24 (b). Consequently, the developed ANN 
+exhibited inadequate generalization behavior. Despite the utilization of 
+Bayesian regularization by the authors to augment the network ’ s 
+generalization capacity, it failed to resolve the issue at hand.
+These findings serve as a reminder of the importance of conducting 
+model generalization assessments prior to employing predictive models 
+in contexts that are distant from the training process. Regrettably, a 
+Fig. 22. Statistics on the number of datasets for ML prediction of PCM energy storage.
+S. Liu et al.                                                                                                                                                                                                                                       Renewable Energy 238 (2025) 121973 
+21 
+--- PAGE 22 ---
+majority of studies have neglected to examine the generalization capa -
+bilities of ML models. However, in a limited number of generalization 
+analyses, F Ghani et al. [ 96 ] trained a layered digital dynamic neural 
+network (LDDN) model using experimental data to forecast the outlet 
+fluid temperature of a LHS system based on the inlet fluid temperature 
+and mass flow rate. The authors conducted an analysis on the general -
+ization capability of ANN and presented evidence of a strong corre -
+spondence between simulated and experimental data. When 
+incorporating previously unseen data in the training phase, the neural 
+network exhibited an accuracy of approximately 5 % and 7 % in pre -
+dicting stored and released energy, respectively. However, when con -
+ducting generalization analysis, the boundary condition changes of the 
+system are very simple. Tanyildizi et al. [ 82 ] employed a fusion of ELMs 
+and autoencoders to enhance the predictive accuracy of deep learning 
+models and attain optimal generalization capabilities.
+It is crucial to acknowledge the influence of ML models on prediction 
+outcomes, as various models can yield substantial disparities despite 
+identical input parameters and boundary conditions. In a recent study 
+[ 51 ], it was discovered by the authors that BP-PBO exhibited a greater 
+advantage in accurately predicting the phase transition enthalpy of 
+chloride eutectic salts, resulting in an average error reduction of 71 % 
+and 68 % when compared to BP and BP-GA, respectively. In contrast to 
+other studies [ 84 , 85 ], which have also achieved satisfactory prediction 
+accuracy, the conclusions drawn from different models vary. Notably, 
+even when utilizing the same input variables, the primary factors 
+influencing compressive strength differed significantly. This discrep -
+ancy may be attributed to variations in the number and range of input 
+parameters.
+5.2. AI optimization
+According to the aforementioned analysis, it is evident that AI-based 
+advanced optimization algorithms have been extensively employed in 
+the optimization of PCM energy storage systems. These algorithms 
+encompassed the optimization of both the structural layout of LHS units 
+and the operational parameters of the system. Among the various opti -
+mization techniques, the GA stoods out as the most frequently utilized 
+method, while a minority of studies have also explored the application of 
+particle swarm optimization (PSO) algorithm, differential evolution 
+(DE) algorithm, and other similar approaches. Despite the findings of 
+Cheng et al. ’ s study [ 139 ], which indicated that deep learning based 
+DDQN optimization algorithms exhibit superior performance compared 
+to NSGA-II and MOPSO algorithms, it is important to note that optimi -
+zation algorithms utilizing ML or deep learning techniques are seldom 
+employed in the context of PCM energy storage optimization. Conse -
+quently, future research endeavors should acknowledge this gap and 
+Fig. 23. Dataset source for predicting PCM physical properties and LHS system performance.
+Fig. 24. Comparison between predicted and experimental results ((a) before and (b) after generalization).
+S. Liu et al.                                                                                                                                                                                                                                       Renewable Energy 238 (2025) 121973 
+22 
+--- PAGE 23 ---
+address it accordingly.
+Typically, optimization algorithms incorporate mathematical 
+models of LHS units or systems. Fig. 25 illustrates the optimization 
+flowchart that combines the widely employed mathematical model with 
+GA and PSO algorithms. The thermodynamic parameters in the mathe -
+matical model serve as design variables, while the parameters associated 
+with the dependent variables, which is solved by the mathematical 
+model, are regarded as the objective function. In order to facilitate the 
+solution process through platforms like MATLAB, mathematical models 
+are often simplified, primarily focusing on energy conservation equa -
+tion. In the optimization approach of coupling CFD with GA, a 
+comprehensive resolution of the conservation equations encompassing 
+mass, momentum, and energy has been successfully attained [ 136 , 163 ,
+174 ]. Although this method enhances the precision of the model-solving 
+process, the majority of the optimization time is allocated to the itera -
+tion of the CFD program rather than the GA iteration. Consequently, the 
+most efficient strategy for minimizing the optimization time involves 
+diminishing the reliance on CFD programs. Transient system energy 
+consumption modeling software, such as TRNSYS, is utilized as a crucial 
+tool in the optimization research of building energy systems, aiding in 
+the resolution of simplified mathematical models [ 182 , 189 ].
+One additional challenge encountered in the optimization of PCM 
+energy storage using AI algorithms pertains to the generalizability of the 
+optimization outcomes. It is not guaranteed that the results attained 
+through optimization within specific boundaries and operating condi -
+tions can be universally applied across all operating conditions. Current 
+research predominantly concentrates on optimizing a solitary phase 
+transition process, particularly in relation to the optimization of struc -
+tural parameters of LHS components. The majority of optimizations are 
+predicated upon the melting process of PCM, yet there remained a 
+dearth of evaluation regarding the influence of optimal configuration on 
+the comprehensive performance of the system ’ s charging-discharging 
+cycle. Shen et al. [ 148 ] conducted a study which revealed that the 
+optimal configuration attained through the optimization of charging and 
+discharging processes diverges, despite exhibiting similar distribution 
+characteristics. Furthermore, owing to the protracted duration of the 
+PCM phase transition process, it is imperative to judiciously select an 
+appropriate time point for numerical calculation and optimization. It is 
+challenging to guarantee that the optimal configuration achieved 
+through optimization at a specific time point during the phase transition 
+process will yield optimal performance at other time points or 
+throughout the entire phase transition cycle. In subsequent research, it is 
+imperative to investigate the criteria for selecting appropriate time 
+points for optimization and assess the influence of optimization out -
+comes at different time points on the performance of other time points. 
+When undertaking multi-objective optimization, the objectives that pose 
+the greatest conflict are the maximization of thermodynamic perfor -
+mance parameters and the minimization of investment and operating 
+costs. The prevalent approach to address this is through the utilization of 
+linear weighting and the principles of Pareto optimality as employed in 
+MOGA and MOPSO. It is important to note that the outcomes of a linear 
+weighted model are heavily reliant on the weight coefficients, thus 
+necessitating their careful consideration during the optimization 
+process.
+In the context of hybrid energy systems, a multitude of design vari -
+ables necessitate consideration, encompassing both geometric parame -
+ters of components and system operating parameters. Prior to 
+optimization, it is imperative to conduct sensitivity analysis to ascertain 
+the pivotal factors influencing performance. Nevertheless, it is crucial to 
+also account for practical considerations during application, whereby 
+design variables that prove excessively challenging to modify are 
+deemed unsuitable. When evaluating the objective function in terms of 
+economic parameters, it is crucial to consider variations in energy pri -
+ces, interest rates, and inflation rates across different regions. Previous 
+studies have demonstrated [ 184 ] that optimization outcomes differ 
+significantly depending on the region, primarily due to disparities in 
+climate conditions, energy prices, and economic circumstances.
+5.3. AI for hybrid smart energy system with PCM energy storage
+The findings of the review suggest that there remains a scarcity of 
+research pertaining to the utilization of current AI technologies within 
+hybrid smart energy systems with PCM energy storage. This dearth of 
+research can be attributed to the intricate mathematical models inherent 
+in hybrid smart energy systems, which, when combined with AI pre -
+diction and optimization algorithms, present formidable challenges in 
+terms of computational power and time expenditure. Furthermore, the 
+concerns regarding the precision of the surrogate model and the 
+dependability of the optimization outcomes are noteworthy, as an 
+excessive number of iterations may result in the accumulation of fore -
+cast and optimization inaccuracies. Considering both temporal expenses 
+and dependability, as depicted in Fig. 26 , it is advisable to adopt a route 
+Fig. 25. Optimization flowchart of mathematical model combined with GA and PSO algorithms.
+S. Liu et al.                                                                                                                                                                                                                                       Renewable Energy 238 (2025) 121973 
+23 
+--- PAGE 24 ---
+for AI in constructing hybrid smart energy system with PCM energy 
+storage. The primary focus in hybrid smart energy systems lies in 
+building energy systems, as they are the main application scenario.
+This route encompasses a comprehensive examination of research 
+across three distinct levels, namely materials, devices, and systems. It 
+incorporates a hybrid integration of AI prediction and optimization al -
+gorithms. The fundamental principle guiding this route prioritizes the 
+tech-economic performance of the system, even if it means compro -
+mising the pursuit of the optimal performance of material and device. At 
+the material, device, and system levels, the primary objective is to 
+leverage advanced ML or DL algorithms to establish surrogate model 
+relationships between input and output variables. The surrogate model 
+at the preceding level can be utilized as an input for the subsequent 
+level ’ s surrogate model, thereby facilitating the simplification of vari -
+ables within the ultimate model. It is imperative that all surrogate 
+models undergo rigorous examination through experimental and simu -
+lation data to ascertain their accuracy and capacity for generalization, 
+thereby ensuring the dependability of the final surrogate model. Sub -
+sequently, upon acquiring the surrogate model for the hybrid smart 
+energy system founded on materials and devices, a multi-objective 
+optimization process is conducted on the system employing MOGA/ 
+MOPSO or ML/DL-based optimization algorithms, ultimately yielding 
+the most favorable technological and economic performance.
+Previous studies have indicated that the low thermal conductivity of 
+pure PCM poses challenges in meeting power supply requirements. 
+Consequently, composite PCM materials are being explored as potential 
+energy storage solutions for smart energy systems. The thermal prop -
+erties of interest in this context include phase transition temperature, 
+specific heat capacity, latent heat, and effective thermal conductivity, all 
+of which are notably influenced by both the PCM and the matrix ma -
+terial. At the device level, the primary emphasis lies on the dynamic 
+characteristic of PCM and the parameters associated with energy/ 
+exergy/entransy parameters in the process of charging and discharging. 
+At the system level, alongside technical parameters, economic parame -
+ters must also be considered. Furthermore, carbon emissions and indi -
+vidual thermal comfort, which have been neglected in previous studies, 
+emerge as significant factors.
+Notably, in 2020, buildings constituted approximately one-third of 
+global final energy consumption and total carbon dioxide emissions 
+[ 190 ]. The role of building decarbonization in achieving global carbon 
+neutrality is of utmost importance [ 191 , 192 ]. A significant challenge in 
+incorporating carbon emissions as an output variable or objective 
+function lies in determining the carbon emission factors, which neces -
+sitates the consideration of heat sources in energy storage systems and 
+the various types of auxiliary energy. It is crucial to note that the carbon 
+emission factor is not a fixed value but rather varies over time and in 
+different environmental conditions, thus requiring regular updates and 
+timely corrections [ 193 ].
+Fig. 26. Recommendation of the route of AI for hybrid smart building energy system with PCM energy storage.
+S. Liu et al.                                                                                                                                                                                                                                       Renewable Energy 238 (2025) 121973 
+24 
+--- PAGE 25 ---
+The growing desire for occupant comfort in buildings presents a 
+significant challenge in striking a harmonious equilibrium between 
+minimizing energy consumption and ensuring adequate [ 194 ]. Con -
+ventional control techniques employed in indoor spaces often demon -
+strate notable instability and frequent overshooting of thermostats 
+[ 195 ], resulting in unnecessary energy expenditure. Based on the 
+research conducted by Ghezlane et al. [ 196 ], it has been found that the 
+utilization of AI technology and personalized comfort models between 
+the years 1993 and 2020 led to significant energy savings ranging from 
+21.81 % to 44.36 %, along with notable enhancements in comfort levels 
+ranging from 21.67 % to 85.77 %. Consequently, the pursuit of opti -
+mizing individual thermal comfort within hybrid smart energy systems 
+and establishing an environment that is both thermally comfortable and 
+energy-efficient has emerged as a crucial yet formidable challenge. 
+Presently, numerous studies have concentrated on the integration of AI 
+technology in the prediction [ 197 , 198 ] and control [ 199 , 200 ] of ther -
+mal comfort. Thermal comfort pertains to an individual’s subjective 
+assessment of contentment with the thermal conditions in their vicinity, 
+which is impacted by both climatic and non-climatic elements. 
+Currently, the prevailing approaches for evaluating thermal comfort 
+incorporate models that integrate human perception, such as predicted 
+mean vote (PMV), physiological equivalent temperature (PET), standard 
+effective temperature (SET*), universal thermal climate index (UTCI), 
+and modified physiological equivalent temperature index (mPET) [ 201 ,
+202 ]. In practical scenarios, the perceived comfort conditions are sub -
+ject to variation based on the research context [ 203 ]. The disparities 
+observed between the actual comfort conditions experienced on-site and 
+the predicted comfort conditions can be attributed not only to mea -
+surement inaccuracies and uncertainties in estimating metabolism and 
+clothing insulation, but also to the dynamic interplay between in -
+dividuals and their surroundings [ 204 ]. Hence, the primary obstacle in 
+the examination and enhancement of individual thermal comfort pre -
+diction and optimization within smart energy systems lies in the 
+assessment framework for thermal comfort.
+6. Conclusions
+This study provides a comprehensive review of the utilization of 
+artificial intelligence (AI) technology in phase change material (PCM) 
+energy storage. The review primarily focuses on its application in solar 
+thermal utilization systems, electric vehicle/electronic device thermal 
+management systems, and building energy efficiency systems. Based on 
+the functional aspects of AI in PCM energy storage, the current research 
+on monitoring can be categorized into prediction and optimization. The 
+limitations of previous research have been summarized and potential 
+avenues for improvement have been proposed. Furthermore, the pri -
+mary directions and challenges of future investigations have been 
+highlighted, accompanied by suggested strategies. The main findings 
+can be summarized as follows. 
+1) In the field of AI prediction and optimization research pertaining to 
+PCM energy storage, the most prevalent methods are artificial neural 
+networks (ANN), genetic algorithms (GA), and their respective de -
+rivative models and algorithms.
+2) The effectiveness of the surrogate model, which is generated using 
+machine learning (ML) algorithms, is not consistently reliable and is 
+significantly influenced by the dataset size. The literature review 
+reveals a wide range of dataset sizes, ranging from 16 to 500,000. In 
+the investigation of predicting the physical properties of PCM, the 
+dataset primarily comprises experimental data. Conversely, in the 
+examination of performance prediction for LHS systems, more than 
+70 % of the dataset is derived from numerical studies. In future ac -
+ademic investigations, it is recommended that emphasis be placed on 
+the exploration of a well-balanced approach in PCM energy storage 
+prediction modeling, which effectively addresses both the accuracy 
+of predictions and the associated costs of training databases.
+3) Prior to implementing a predictive model in a dissimilar setting to its 
+training process, it is imperative to assess the model’s capacity for 
+generalization, particularly in environments characterized by sig -
+nificant variations in input variable types and boundary conditions. 
+Regrettably, the investigation of most AI applications in PCM energy 
+storage currently overlooks this crucial aspect. The utilization of 
+Bayesian regularization and hybrid models can enhance both pre -
+diction accuracy and generalization ability.
+4) The predominant focus in the field of AI application in PCM energy 
+storage lies in the optimization of the structural layout of LHS units, 
+as well as the operational parameters and strategies of the system. 
+The primary objective in optimizing the layout of LHS unit structures 
+is to enhance the heat transfer rate of PCM, thereby making the 
+parameter associated with the charging/discharging rate the usual 
+objective function. On the other hand, the optimization of system 
+operating parameters and strategies places greater emphasis on the 
+overall tech-economic performance of the system.
+5) Optimization algorithms incorporating ML or deep learning meth -
+odologies are infrequently employed in the context of PCM energy 
+storage optimization, warranting increased attention in forthcoming 
+research endeavors. This is substantiated by existing studies, which 
+indicate their superior efficacy compared to conventional GA and 
+PSO optimization outcomes.
+6) The combination of computational fluid dynamics (CFD) and GA 
+represents an emerging optimization approach that enhances the 
+precision of the model-solving process. However, this method comes 
+at the expense of increased computational time. To minimize the 
+duration of the optimization process, it is advisable to decrease 
+reliance on CFD programs, as this has been found to be the most 
+effective strategy.
+7) There are differences in the optimal configuration obtained based on 
+PCM melting and solidification process optimization. Nevertheless, 
+most optimizations are based on the single process of PCM melting or 
+solidification, and there is still a lack of evaluation of the compre -
+hensive performance of optimized configurations in charge- 
+discharge cycles.
+8) In the context of multi-objective optimization for PCM energy stor -
+age, the conflicting objective functions involve the maximization of 
+thermodynamic performance parameters and the minimization of 
+investment and operating costs. To address this, a commonly 
+employed approach is the utilization of linear weighting and the 
+Pareto optimality principle. However, it is important to note that the 
+outcomes of linear weighted models heavily rely on the assigned 
+weight coefficients, thus necessitating careful consideration during 
+the optimization process.
+9) A route of AI in hybrid smart energy systems has been proposed, 
+indicating the direction for efficient and flexible energy supply in the 
+future. This route additionally considers carbon emissions and indi -
+vidual thermal comfort as optimization objectives, while also high -
+lighting the particular challenges that this research entails.
+CRediT authorship contribution statement
+Shuli Liu: Writing – review & editing, Writing – original draft, 
+Methodology, Conceptualization. Junrui Han: Writing – original draft, 
+Software, Funding acquisition, Data curation. Yongliang Shen: Writing 
+– review & editing, Project administration, Methodology, Investigation, 
+Formal analysis, Data curation, Conceptualization. Sheher Yar Khan: 
+Writing – review & editing, Software, Investigation. Wenjie Ji: Re -
+sources, Methodology, Conceptualization. Haibo Jin: Writing – review 
+& editing, Validation, Conceptualization. Mahesh Kumar: Writing – 
+review & editing, Software.
+Declaration of competing interest
+The authors declare that they have no known competing financial 
+S. Liu et al.                                                                                                                                                                                                                                       Renewable Energy 238 (2025) 121973 
+25 
+--- PAGE 26 ---
+interests or personal relationships that could have appeared to influence 
+the work reported in this paper.
+Acknowledgments
+The authors would like to acknowledge the financial support for this 
+study provided by the Postdoctoral Fellowship Program of CPSF 
+(GZC20233388) and National Natural Science Foundation of China (No. 
+52406066 and No.52178063).
+Data availability
+Data will be made available on request. 
+References
+[1] M. Zhong, K. Tran, Y. Min, C. Wang, Z. Wang, C.-T. Dinh, P. De Luna, Z. Yu, A. 
+S. Rasouli, P. Brodersen, S. Sun, O. Voznyy, C.-S. Tan, M. Askerka, F. Che, M. Liu, 
+A. Seifitokaldani, Y. Pang, S.-C. Lo, A. Ip, Z. Ulissi, E.H. Sargent, Accelerated 
+discovery of CO2 electrocatalysts using active machine learning, Nature 581 
+(7807) (2020) 178 – 183 .
+[2] T.S. Adebayo, M. Saeed Meo, O. 
+¨
+Ozkan, Scrutinizing the impact of energy 
+transition on GHG emissions in G7 countries via a novel green quality of energy 
+mix index, Renew. Energy 226 (2024) 120384 .
+[3] P.A. Ostergaard, N. Duic, Y. Noorollahi, S. Kalogirou, Renewable energy for 
+sustainable development, Renew. Energy 199 (2022) 1145 – 1152 .
+[4] C. Zhang, B. Lin, Impact of introducing Chinese certified emission reduction 
+scheme to the carbon market: promoting renewable energy, Renew. Energy 222 
+(2024) 119887 .
+[5] E. Woolley, Y. Luo, A. Simeone, Industrial waste heat recovery: a systematic 
+approach, Sustain. Energy Technol. Assessments 29 (2018) 50 – 59 .
+[6] P. Larrinaga, A. Campos-Celador, J. Legarreta, G. Diarce, Evaluation of the 
+theoretical, technical and economic potential of industrial waste heat recovery in 
+the Basque Country, J. Clean. Prod. 312 (2021) .
+[7] Y. Liu, Y. Liu, H. Zhang, Y. Xu, H. Chen, Energy storage policy analysis and 
+suggestions in China, Energy Storage Science and Technology 10 (4) (2021) 
+1463 – 1473 .
+[8] E. Fan, L. Li, Z. Wang, J. Lin, Y. Huang, Y. Yao, R. Chen, F. Wu, Sustainable 
+recycling technology for Li-ion batteries and beyond: challenges and future 
+prospects, Chem. Rev. 120 (14) (2020) 7020 – 7063 .
+[9] L. Liu, P.-L. Taberna, B. Dunn, P. Simon, Future directions for electrochemical 
+capacitors, ACS Energy Lett. 6 (12) (2021) 4311 – 4316 .
+[10] H. Yan, C. Zhang, Z. Shao, M. Kraft, R. Wang, The underestimated role of the heat 
+pump in achieving China ’ s goal of carbon neutrality by 2060, Engineering 23 
+(2023) 13 – 18 .
+[11] Y. Ahmadi, K.-H. Kim, S. Kim, M. Tabatabaei, Recent advances in polyurethanes 
+as efficient media for thermal energy storage, Energy Storage Mater. 30 (2020) 
+74 – 86 .
+[12] S. Narayanan, H. Kim, A. Umans, S. Yang, X. Li, S.N. Schiffres, S.R. Rao, I. 
+S. McKay, C.A. Rios Perez, C.H. Hidrovo, E.N. Wang, A thermophysical battery for 
+storage-based climate control, Appl. Energy 189 (2017) 31 – 43 .
+[13] J. Deng, X.X. Li, G.Q. Zhang, Z.X. Wu, C.B. Li, Q.Q. Huang, C.X. Yang, Flexible 
+composite phase-change material with shape recovery and antileakage properties 
+for battery thermal management, ACS Appl. Energy Mater. 4 (12) (2021) 
+13890 – 13902 .
+[14] V. Madadi Avargani, B. Norton, A. Rahimi, H. Karimi, Integrating paraffin phase 
+change material in the storage tank of a solar water heater to maintain a 
+consistent hot water output temperature, Sustain. Energy Technol. Assessments 
+47 (2021) 101350 .
+[15] H. Shakibi, A. Shokri, B. Sobhani, M. Yari, Numerical analysis and optimization of 
+a novel photovoltaic thermal solar unit improved by Nano-PCM as an energy 
+storage media and finned collector, Renew. Sustain. Energy Rev. 179 (2023) 
+113230 .
+[16] G.G.D. Han, H.S. Li, J.C. Grossman, Optically-controlled long-term storage and 
+release of thermal energy in phase-change materials, Nat. Commun. 8 (2017) .
+[17] T. Ghidini, Materials for space exploration and settlement, Nat. Mater. 17 (10) 
+(2018) 846 – 850 .
+[18] P. Fleuchaus, S. Schüppler, M. Bloemendal, L. Guglielmetti, O. Opel, P. Blum, Risk 
+analysis of high-temperature aquifer thermal energy storage (HT-ATES), Renew. 
+Sustain. Energy Rev. 133 (2020) 110153 .
+[19] E. Khodaei, M. Yari, H. Nami, F. Goravanchi, Techno-economic assessment and 
+optimization of a solar-driven power and hydrogen Co-generation plant 
+retrofitted with enhanced energy storage, Energy Convers. Manag. 301 (2024) 
+118004 .
+[20] M.M. Ismail, I. Dincer, Y. Bicer, M.Z. Saghir, Assessment of a solar-powered 
+trigeneration plant integrated with thermal energy storage using phase change 
+materials, Process Saf. Environ. Protect. 191 (2024) 1339 – 1352 .
+[21] Y.M. Kim, D.G. Shin, C.G. Kim, On-board cold thermal energy storage system for 
+hydrogen fueling process 12 (3) (2019) 561 .
+[22] W. Aftab, A. Usman, J. Shi, K. Yuan, M. Qin, R. Zou, Phase change material- 
+integrated latent heat storage systems for sustainable energy solutions, Energy 
+Environ. Sci. 14 (8) (2021) 4268 – 4291 .
+[23] J.P. Ekka, D. Kumar, A review of industrial food processing using solar dryers 
+with heat storage systems, J. Stored Prod. Res. 101 (2023) 102090 .
+[24] G. Sadeghi, Energy storage on demand: thermal energy storage development, 
+materials, design, and integration challenges, Energy Storage Mater. 46 (2022) 
+192 – 222 .
+[25] Z.-R. Li, N. Hu, L.-W. Fan, Nanocomposite phase change materials for high- 
+performance thermal energy storage: a critical review, Energy Storage Mater. 55 
+(2023) 727 – 753 .
+[26] M. Srinivas, Domestic solar hot water systems: developments, evaluations and 
+essentials for “ viability ” with a special reference to India, Renew. Sustain. Energy 
+Rev. 15 (8) (2011) 3850 – 3861 .
+[27] M.R. Al-Mamun, H. Roy, M.S. Islam, M.R. Ali, M.I. Hossain, M.A. Saad Aly, M. 
+Z. Hossain Khan, H.M. Marwani, A. Islam, E. Haque, M.M. Rahman, M.R. Awual, 
+State-of-the-art in solar water heating (SWH) systems for sustainable solar energy 
+utilization: a comprehensive review, Sol. Energy 264 (2023) 111998 .
+[28] Y. Zhang, R. Wang, Sorption thermal energy storage: concept, process, 
+applications and perspectives, Energy Storage Mater. 27 (2020) 352 – 369 .
+[29] K. Randhir, M. Hayes, P. Schimmels, J. Petrasch, J. Klausner, Zero carbon solid- 
+state rechargeable redox fuel for long duration and seasonal storage, Joule 6 (11) 
+(2022) 2513 – 2534 .
+[30] J. Shi, M. Qin, W. Aftab, R. Zou, Flexible phase change materials for thermal 
+energy storage, Energy Storage Mater. 41 (2021) 321 – 342 .
+[31] M.A. Gerkman, G.G.D. Han, Toward controlled thermal energy storage and 
+release in organic phase change materials, Joule 4 (8) (2020) 1621 – 1625 .
+[32] D. Lee, R. Ooka, Y. Matsuda, S. Ikeda, W. Choi, Experimental analysis of artificial 
+intelligence-based model predictive control for thermal energy storage under 
+different cooling load conditions, Sustain. Cities Soc. 79 (2022) 103700 .
+[33] S. Tasneem, H.S. Sultan, A.A. Ageeli, H. Togun, W.M. Alamier, N. Hasan, M. 
+R. Safaei, Machine learning modeling of reversible thermochemical reactions 
+applicable in energy storage systems, J. Taiwan Inst. Chem. Eng. 148 (2023) 
+104926 .
+[34] Y. Zhou, S. Zheng, G. Zhang, A review on cooling performance enhancement for 
+phase change materials integrated systems — flexible design and smart control 
+with machine learning applications, Build. Environ. 174 (2020) 106786 .
+[35] Y. Zhou, S. Zheng, G. Zhang, A state-of-the-art-review on phase change materials 
+integrated cooling systems for deterministic parametrical analysis, stochastic 
+uncertainty-based design, single and multi-objective optimisations with machine 
+learning applications, Energy Build. 220 (2020) 110013 .
+[36] A.N. Abdalla, M.S. Nazir, H. Tao, S. Cao, R. Ji, M. Jiang, L. Yao, Integration of 
+energy storage system and renewable energy sources based on artificial 
+intelligence: an overview, J. Energy Storage 40 (2021) 102811 .
+[37] Z. He, W. Guo, P. Zhang, Performance prediction, optimal design and operational 
+control of thermal energy storage using artificial intelligence methods, Renew. 
+Sustain. Energy Rev. 156 (2022) 111977 .
+[38] A.G. Olabi, A.A. Abdelghafar, H.M. Maghrabie, E.T. Sayed, H. Rezk, M.A. Radi, 
+K. Obaideen, M.A. Abdelkareem, Application of artificial intelligence for 
+prediction, optimization, and control of thermal energy storage systems, Therm. 
+Sci. Eng. Prog. 39 (2023) 101730 .
+[39] B. Farhadi, J. You, D. Zheng, L. Liu, S. Wu, J. Li, Z. Li, K. Wang, S. Liu, Machine 
+learning for fast development of advanced energy materials, Materials 1 (3) 
+(2023) 100025 .
+[40] J. Qiu, D. Huo, Y. Xia, Phase-change materials for controlled release and related 
+applications, Adv. Mater. 32 (25) (2020) .
+[41] T. Xiong, L. Zheng, K.W. Shah, Nano-enhanced phase change materials (NePCMs): 
+a review of numerical simulations, Appl. Therm. Eng. 178 (2020) .
+[42] W. Aftab, J. Shi, M. Qin, Z. Liang, F. Xiong, A. Usman, S. Han, R. Zou, Molecularly 
+elongated phase change materials for mid-temperature solar-thermal energy 
+storage and electric conversion, Energy Storage Mater. 52 (2022) 284 – 290 .
+[43] B. Eanest Jebasingh, A. Valan Arasu, A comprehensive review on latent heat and 
+thermal conductivity of nanoparticle dispersed phase change material for low- 
+temperature applications, Energy Storage Mater. 24 (2020) 52 – 74 .
+[44] T. Zhang, D. Huo, C. Wang, Z. Shi, Review of the modeling approaches of phase 
+change processes, Renew. Sustain. Energy Rev. 187 (2023) 113724 .
+[45] J. Wei, X. Chu, X.-Y. Sun, K. Xu, H.-X. Deng, J. Chen, Z. Wei, M. Lei, Machine 
+learning in materials science, InfoMat 1 (3) (2019) 338 – 358 .
+[46] P.L. Donti, J.Z. Kolter, Machine learning for sustainable energy systems, in: A. 
+Gadgil, T.P. Tomich (Eds.), ANNUAL REVIEW OF ENVIRONMENT AND 
+RESOURCES, VOL vol. 46, 20212021, pp. 719-747.
+[47] M.Q. Wu, S. Wu, Y.F. Cai, R.Z. Wang, T.X. Li, Form-stable phase change 
+composites: preparation, performance, and applications for thermal energy 
+conversion, storage and management, Energy Storage Mater. 42 (2021) 380 – 417 .
+[48] N. Díez, A.B. Fuertes, M. Sevilla, Molten salt strategies towards carbon materials 
+for energy storage and conversion, Energy Storage Mater. 38 (2021) 50 – 69 .
+[49] M. Watanabe, M.L. Thomas, S.G. Zhang, K. Ueno, T. Yasuda, K. Dokko, 
+Application of ionic liquids to energy storage and conversion materials and 
+devices, Chem. Rev. 117 (10) (2017) 7190 – 7239 .
+[50] Y. Wang, C. Ling, H. Yin, W. Liu, Z. Tang, Z. Li, Thermophysical properties of KCl- 
+NaF reciprocal eutectic by artificial neural network prediction and experimental 
+measurements, Sol. Energy 204 (2020) 667 – 672 .
+[51] Y. Tian, X. Liu, L. Zhang, Q. Luo, Q. Xu, H. Yao, F. Yang, J. Wang, C. Dang, 
+Y. Xuan, Prediction of thermophysical properties of chlorine eutectic salts via 
+artificial neural network combined with polar bear optimization, J. Energy 
+Storage 55 (2022) 105658 .
+S. Liu et al.                                                                                                                                                                                                                                       Renewable Energy 238 (2025) 121973 
+26 
+--- PAGE 27 ---
+[52] L. Sang, X. Lv, Y. Wu, NaNO3-KNO3-KCl/K2CO3 with the elevated working 
+temperature for CSP application: phase diagram calculation and machine 
+learning, Sol. Energy 252 (2023) 322 – 329 .
+[53] J. Songster, A.D. Pelton, Thermodynamic calculation of phase diagrams of the 60 
+common-ion ternary systems containing cations Li, Na, K, Rb, Cs and anions F, Cl, 
+Br, I, J. Phase Equil. 12 (5) (1991) 511 – 537 .
+[54] R.A. Sharma, I. Johnson, Phase diagrams for the systems MgCl2-MgF2, CaCl2- 
+MgF2, and NaCl-MgF2, J. Am. Ceram. Soc. 52 (11) (1969) 612 – 615 .
+[55] G.J. Janz, R.P.T. Tomkins, C.B. Allen, Molten salts: volume 4, Part 4 mixed halide 
+melts electrical conductance, density, viscosity, and surface tension data, J. Phys. 
+Chem. Ref. Data 8 (1) (1979) 125 – 302 .
+[56] A.D. Pelton, P.K. Talley, R.A. Sharma, Thermodynamic evaluation of phase 
+equilibria in the CaCl2-MgCl2-CaF2-MgF2 system, J. Phase Equil. 13 (4) (1992) 
+384 – 390 .
+[57] P. Chartrand, A.D. Pelton, Thermodynamic evaluation and optimization of the Li, 
+Na, K, Mg, Ca//F, Cl reciprocal system using the modified quasi-chemical model, 
+Metall. Mater. Trans. 32 (6) (2001) 1417 – 1430 .
+[58] E. Renaud, C. Robelin, A.E. Gheribi, P. Chartrand, Thermodynamic evaluation 
+and optimization of the Li, Na, K, Mg, Ca, Sr//F, Cl reciprocal system, J. Chem. 
+Therm. 43 (8) (2011) 1286 – 1298 .
+[59] I.K. Garkushin, M.A. Sukharenko, M.S. Ragrina, Cutting triangle NaF – KF – CsCl of 
+the quaternary reciprocal system Na,K,Cs ‖ F,Cl, Russ. J. Inorg. Chem. 62 (12) 
+(2017) 1652 – 1658 .
+[60] Z. Yang, H. Yin, F. Guo, L. Chen, X. Lai, S. Chen, Y. Wang, Z. Tang, Design 
+optimization and key thermo-physical properties of the NaCl-KCl-FeCl3 molten 
+salts for low-temperature thermal energy storage, J. Energy Storage 72 (2023) 
+108255 .
+[61] C. Wu, Q. Wang, X. Wang, S. Sun, D. Cui, S. Pan, H. Sheng, Thermodynamic 
+calculations and experimental studies of ternary molten salts for high- 
+temperature thermal energy storage, J. Energy Storage 73 (2023) 109220 .
+[62] R. Gong, S.-L. Shang, Y. Wang, J. Paz Soldan Palma, H. Kim, Z.-K. Liu, Revisiting 
+thermodynamics in (LiF, NaF, KF, CrF2) – CrF3 by first-principles calculations and 
+CALPHAD modeling, Calphad 85 (2024) 102703 .
+[63] E. Brosh, E. Sabatani, E. Boukobza, Calculation of Littlewood predominance 
+diagrams for metal electrodeposition from molten chlorides using CALPHAD 
+software and databases, Electrochim. Acta 492 (2024) 144322 .
+[64] S. Im, S.-L. Shang, N.D. Smith, A.M. Krajewski, T. Lichtenstein, H. Sun, B. 
+J. Bocklund, Z.-K. Liu, H. Kim, Thermodynamic properties of the Nd-Bi system via 
+emf measurements, DFT calculations, machine learning, and CALPHAD modeling, 
+Acta Mater. 223 (2022) 117448 .
+[65] H.M. Elshehabey, N. Alsedias, A.M. Aly, Artificial intelligence-based ISPH 
+simulation for mass and heat transmission of nano-enhanced phase change 
+material in a porous helix with partial sources, Int. Commun. Heat Mass Tran. 155 
+(2024) 107563 .
+[66] F. Jaliliantabar, Thermal conductivity prediction of nano enhanced phase change 
+materials: a comparative machine learning approach, J. Energy Storage 46 (2022) 
+103633 .
+[67] M. Taheri, F. Pourfayaz, S. Hemmati, A highly accurate model for prediction of 
+thermal conductivity of carbon-based nano-enhanced PCMs using an artificial 
+neural network, Energy Rep. 10 (2023) 1249 – 1258 .
+[68] G.V. Muthya, S.D. Ruben, A comprehensive investigation and artificial neural 
+network modeling of shape stabilized composite phase change material for solar 
+thermal energy storage, J. Energy Storage 48 (2022) 103992 .
+[69] S. Motahar, S. Sadri, Applying artificial neural networks to predict the enhanced 
+thermal conductivity of a phase change material with dispersed oxide 
+nanoparticles 45 (10) (2021) 15092 – 15109 .
+[70] M. Bakouri, H.S. Sultan, S. Samad, H. Togun, M. Goodarzi, Predicting 
+thermophysical properties enhancement of metal-based phase change materials 
+using various machine learning algorithms, J. Taiwan Inst. Chem. Eng. 148 
+(2023) 104934 .
+[71] Y. Gao, I.M.T.A. Shigidi, M.A. Ali, R.Z. Homod, M.R. Safaei, Thermophysical 
+properties prediction of carbon-based nano-enhanced phase change material ’ s 
+using various machine learning methods, J. Taiwan Inst. Chem. Eng. 148 (2023) 
+104662 .
+[72] L. Gong, Y. Wang, X. Cheng, R. Zhang, H. Zhang, A novel effective medium theory 
+for modelling the thermal conductivity of porous materials, Int. J. Heat Mass 
+Tran. 68 (2014) 295 – 298 .
+[73] B. Buonomo, O. Manca, S. Nardini, R.E. Plomitallo, Numerical study on latent 
+heat thermal energy storage system with PCM partially filled with aluminum 
+foam in local thermal equilibrium, Renew. Energy 195 (2022) 1368 – 1380 .
+[74] C. Naldi, M. Dongellini, G.L. Morini, The evaluation of the effective thermal 
+conductivity of metal-foam loaded phase change materials, J. Energy Storage 51 
+(2022) 104450 .
+[75] Y. Shen, S. Liu, C. Zeng, Y. Zhang, Y. Li, X. Han, L. Yang, X.e. Yang, Experimental 
+thermal study of a new PCM-concrete thermal storage block (PCM-CTSB), 
+Construct. Build. Mater. 293 (2021) 123540 .
+[76] A. Marani, M.L. Nehdi, Integrating phase change materials in construction 
+materials: critical review, Construct. Build. Mater. 217 (2019) 36 – 49 .
+[77] A. Jayalath, R. San Nicolas, M. Sofi, R. Shanks, T. Ngo, L. Aye, P. Mendis, 
+Properties of cementitious mortar and concrete containing micro-encapsulated 
+phase change materials, Construct. Build. Mater. 120 (2016) 408 – 417 .
+[78] S. Pilehvar, A.M. Szczotok, J.F. Rodríguez, L. Valentini, M. Lanz ´on, R. Pamies, A.- 
+L. Kj ø niksen, Effect of freeze-thaw cycles on the mechanical behavior of 
+geopolymer concrete and Portland cement concrete containing micro- 
+encapsulated phase change materials, Construct. Build. Mater. 200 (2019) 
+94 – 103 .
+[79] S.G. Sanfelix, J.D. Zea-García, D. Londono-Zuluaga, I. Santacruz, A.G. De la Torre, 
+A.-L. Kj ø niksen, Hydration development and thermal performance of calcium 
+sulphoaluminate cements containing microencapsulated phase change materials, 
+Cement Concr. Res. 132 (2020) 106039 .
+[80] U. Berardi, A.A. Gallardo, Properties of concretes enhanced with phase change 
+materials for building applications, Energy Build. 199 (2019) 402 – 414 .
+[81] A. Marani, M.L. Nehdi, Machine learning prediction of compressive strength for 
+phase change materials integrated cementitious composites, Construct. Build. 
+Mater. 265 (2020) 120286 .
+[82] H. Tanyildizi, A. Marani, K. Türk, M.L. Nehdi, Hybrid deep learning model for 
+concrete incorporating microencapsulated phase change materials, Construct. 
+Build. Mater. 319 (2022) 126146 .
+[83] A. Marani, L. Zhang, M.L. Nehdi, Design of concrete incorporating 
+microencapsulated phase change materials for clean energy: a ternary machine 
+learning approach based on generative adversarial networks, Eng. Appl. Artif. 
+Intell. 118 (2023) 105652 .
+[84] H.-W.-X. Li, G. Lyngdoh, N.M.A. Krishnan, S. Das, Machine learning guided 
+design of microencapsulated phase change materials-incorporated concretes for 
+enhanced freeze-thaw durability, Cement Concr. Compos. 140 (2023) 105090 .
+[85] A. Marani, E. Geranfar, L. Zhang, M.L. Nehdi, Deep learning-assisted calculation 
+of apparent activation energy for cement-based systems incorporating 
+microencapsulated phase change materials, Construct. Build. Mater. 404 (2023) 
+133324 .
+[86] H.-J. Cho, S.-Y. Cheon, J.-W. Jeong, Experimental analysis on energy recovery 
+ventilator with latent heat exchanger using hollow fiber membrane, Energy 
+Convers. Manag. 278 (2023) 116706 .
+[87] D. Chen, R. Zhang, X. Cao, L. Chen, X. Fan, Numerical investigation on 
+performance improvement of latent heat exchanger with sextant helical baffles, 
+Int. J. Heat Mass Tran. 178 (2021) 121606 .
+[88] S. Wu, T. Yan, Z. Kuai, W. Pan, Thermal conductivity enhancement on phase 
+change materials for thermal energy storage: a review, Energy Storage Mater. 25 
+(2020) 251 – 295 .
+[89] M. Aramesh, B. Shabani, Metal foam-phase change material composites for 
+thermal energy storage: a review of performance parameters, Renew. Sustain. 
+Energy Rev. 155 (2022) .
+[90] S. Ahmed, A. Abderrahmane, A.M. Saeed, K. Guedri, A. Mourad, O. Younis, 
+T. Botmart, N.A. Shah, Melting enhancement of PCM in a finned tube latent heat 
+thermal energy storage (vol 12, 11521, 2022), Sci. Rep. 12 (1) (2022) .
+[91] P. Yan, W. Fan, Y. Yang, H. Ding, A. Arshad, C. Wen, Performance enhancement 
+of phase change materials in triplex-tube latent heat energy storage system using 
+novel fin configurations, Appl. Energy 327 (2022) .
+[92] S. Abbas, Z. Ramadan, C.W. Park, Thermal performance analysis of compact-type 
+simulative battery module with paraffin as phase-change material and flat plate 
+heat pipe, Int. J. Heat Mass Tran. 173 (2021) .
+[93] Z. Wang, Y. Diao, Y. Zhao, C. Chen, T. Wang, L. Liang, Visualization experiment 
+and numerical study of latent heat storage unit using micro-heat pipe arrays: 
+melting process, ENERGY 246 (2022) .
+[94] W.Q. Li, Y.X. Li, T.H. Yang, T.Y. Zhang, F. Qin, Experimental investigation on 
+passive cooling, thermal storage and thermoelectric harvest with heat pipe- 
+assisted PCM-embedded metal foam, Int. J. Heat Mass Tran. 201 (2023) .
+[95] K. Ermis, A. Erek, I. Dincer, Heat transfer analysis of phase change process in a 
+finned-tube thermal energy storage system using artificial neural network, Int. J. 
+Heat Mass Tran. 50 (15) (2007) 3163 – 3175 .
+[96] F. Ghani, R. Waser, T.S. O ’ Donovan, P. Schuetz, M. Zaglio, J. Wortischek, Non- 
+linear system identification of a latent heat thermal energy storage system, Appl. 
+Therm. Eng. 134 (2018) 585 – 593 .
+[97] W. Cui, T. Si, X. Li, X. Li, L. Lu, T. Ma, Q. Wang, Heat transfer analysis of phase 
+change material composited with metal foam-fin hybrid structure in inclination 
+container by numerical simulation and artificial neural network, Energy Rep. 8 
+(2022) 10203 – 10218 .
+[98] L. Darvishvand, V. Safari, B. Kamkari, M. Alamshenas, M. Afrand, Machine 
+learning-based prediction of transient latent heat thermal storage in finned 
+enclosures using group method of data handling approach: a numerical 
+simulation, Eng. Anal. Bound. Elem. 143 (2022) 61 – 77 .
+[99] A. Tavakoli, J. Hashemi, M. Najafian, A. Ebrahimi, Physics-based modelling and 
+data-driven optimisation of a latent heat thermal energy storage system with 
+corrugated fins, Renew. Energy 217 (2023) 119200 .
+[100] T. Xiao, Z. Liu, L. Lu, H. Han, X. Huang, X. Song, X. Yang, X. Meng, LSTM-BP 
+neural network analysis on solid-liquid phase change in a multi-channel thermal 
+storage tank, Eng. Anal. Bound. Elem. 146 (2023) 226 – 240 .
+[101] N. Mallya, P. Baqu ´e, P. Yvernay, A. Pozzetti, P. Fua, S. Haussener, Geodesic 
+convolutional neural network characterization of macro-porous latent thermal 
+energy storage, ASME JOURNAL OF HEAT AND MASS TRANSFER 145 (5) 
+(2023) .
+[102] V.K. Venkatraman Balakrishnan, K. Kumaresan, Thermal analysis of PCM 
+magnesium chloride hexahydrate using various machine learning and deep 
+learning models, Eng. Appl. Artif. Intell. 126 (2023) 107159 .
+[103] A. El-Sawi, F. Haghighat, H. Akbari, Assessing long-term performance of 
+centralized thermal energy storage system, Appl. Therm. Eng. 62 (2) (2014) 
+313 – 321 .
+[104] G. Ren, A. Chuttar, D. Banerjee, Exploring efficacy of machine learning (artificial 
+neural networks) for enhancing reliability of thermal energy storage platforms 
+utilizing phase change materials, Int. J. Heat Mass Tran. 189 (2022) 122628 .
+[105] Y. Li, X. Huang, X. Huang, X. Gao, R. Hu, X. Yang, Y.-L. He, Machine learning and 
+multilayer perceptron enhanced CFD approach for improving design on latent 
+heat storage tank, Appl. Energy 347 (2023) 121458 .
+S. Liu et al.                                                                                                                                                                                                                                       Renewable Energy 238 (2025) 121973 
+27 
+--- PAGE 28 ---
+[106] G.V.S. Anooj, G.K. Marri, C. Balaji, A machine learning methodology for the 
+diagnosis of phase change material-based thermal management systems, Appl. 
+Therm. Eng. 222 (2023) 119864 .
+[107] P. Zhang, J. Li, R. Xie, J. Shen, L. Song, L. Chen, One-step strategy to construct 
+GA/PEG shape-stabilized phase change material with excellent thermophysical 
+properties, Diam. Relat. Mater. 103 (2020) 107716 .
+[108] I.I. Smalyukh, Thermal management by engineering the alignment of 
+nanocellulose, Adv. Mater. 33 (28) (2021) .
+[109] F.L. Shao, L.L. Wang, R.R. Luo, W. Yu, H.Q. Xie, Shape-Stable hybrid emulsion gel 
+with sodium acetate trihydrate and paraffin wax for efficient solar energy storage 
+and building thermal management, ACS Appl. Mater. Interfaces 15 (32) (2023) 
+38474 – 38484 .
+[110] M. Kenisarin, K. Mahkamov, Passive thermal control in residential buildings using 
+phase change materials, Renew. Sustain. Energy Rev. 55 (2016) 371 – 398 .
+[111] L.-Y. Yang, C.-P. Feng, L. Bai, R.-Y. Bao, Z.-Y. Liu, M.-B. Yang, W. Yang, Flexible 
+shape-stabilized phase change materials with passive radiative cooling capability 
+for thermal management, Chem. Eng. J. 425 (2021) .
+[112] P.J. Ong, Y.Y. Lum, X.Y.D. Soo, S. Wang, P. Wang, D. Chi, H. Liu, D. Kai, C.-L. 
+K. Lee, Q. Yan, J. Xu, X.J. Loh, Q. Zhu, Integration of phase change material and 
+thermal insulation material as a passive strategy for building cooling in the 
+tropics, Construct. Build. Mater. 386 (2023) .
+[113] X. Kong, P. Jie, C. Yao, Y. Liu, Experimental study on thermal performance of 
+phase change material passive and active combined using for building application 
+in winter, Appl. Energy 206 (2017) 293 – 302 .
+[114] T.Y. Jiang, Y.L. Zhang, S. Olayiwola, C. Lau, M.H. Fan, K. Ng, G. Tan, Biomass- 
+derived porous carbons support in phase change materials for building energy 
+efficiency: a review, Mater. Today Energy 23 (2022) .
+[115] D.K. Bhamare, P. Saikia, M.K. Rathod, D. Rakshit, J. Banerjee, A machine learning 
+and deep learning based approach to predict the thermal performance of phase 
+change material integrated building envelope, Build. Environ. 199 (2021) 
+107927 .
+[116] A. Badji, A. Benseddik, H. Bensaha, A. Boukhelifa, S. Bouhoun, C. Nettari, M. 
+A. Kherrafi, D. Lalmi, Experimental assessment of a greenhouse with and without 
+PCM thermal storage energy and prediction their thermal behavior using machine 
+learning algorithms, J. Energy Storage 71 (2023) 108133 .
+[117] N. Farouk, Applying machine learning based on multilayer perceptron on 
+building energy demand in presence of phase change material to drop cooling 
+load, Eng. Anal. Bound. Elem. 150 (2023) 20 – 29 .
+[118] M.-H. Benzaama, F. Alassaad, L. Rajaoarisoa, K. Touati, Artificial intelligence 
+approaches to predict thermal behavior of light earth cell incorporating PCMs: 
+experimental CNN and LSTM validation, J. Energy Storage 68 (2023) 107780 .
+[119] M. Zhussupbekov, S.A. Memon, S.A. Khawaja, K. Nazir, J. Kim, Forecasting 
+energy demand of PCM integrated residential buildings: a machine learning 
+approach, J. Build. Eng. 70 (2023) 106335 .
+[120] A. Urresti, A. Campos-Celador, J.M. Sala, Dynamic neural networks to analyze the 
+behavior of phase change materials embedded in building envelopes, Appl. 
+Therm. Eng. 158 (2019) 113783 .
+[121] D.K. Bhamare, M.K. Rathod, J. Banerjee, Selection of phase change material and 
+establishment of thermophysical properties of phase change material integrated 
+with roof of a building using Measure of Key Response index: proposal of a new 
+parameter, J. Energy Storage 32 (2020) 101812 .
+[122] K. Nazir, S.A. Memon, A. Saurbayeva, A. Ahmad, Energy consumption predictions 
+by genetic programming methods for PCM integrated building in the tropical 
+savanna climate zone, J. Build. Eng. 68 (2023) 106115 .
+[123] W. Aftab, M. Khurram, S. Jinming, H. Tabassum, Z. Liang, A. Usman, W. Guo, 
+X. Huang, W. Wu, R. Yao, Q. Yan, R. Zou, Highly efficient solar-thermal storage 
+coating based on phosphorene encapsulated phase change materials, Energy 
+Storage Mater. 32 (2020) 199 – 207 .
+[124] P.K. Tyagi, R. Kumar, Z. Said, Recent advances on the role of nanomaterials for 
+improving the performance of photovoltaic thermal systems: trends, challenges 
+and prospective, Nano Energy 93 (2022) .
+[125] A.H.A. Al-Waeli, H.A. Kazem, J.H. Yousif, M.T. Chaichan, K. Sopian, 
+Mathematical and neural network modeling for predicting and analyzing of 
+nanofluid-nano PCM photovoltaic thermal systems performance, Renew. Energy 
+145 (2020) 963 – 980 .
+[126] A. Bamasag, F.A. Essa, Z.M. Omara, E. Bahgat, A.O. Alsaiari, H. Abulkhair, R. 
+A. Alsulami, A.H. Elsheikh, Machine learning-based prediction and augmentation 
+of dish solar distiller performance using an innovative convex stepped absorber 
+and phase change material with nanoadditives, Process Saf. Environ. Protect. 162 
+(2022) 112 – 123 .
+[127] H. Alghamdi, C. Maduabuchi, D.S. Mbachu, A. Albaker, I. Alatawi, T.R. Alsenani, 
+A.S. Alsafran, M. AlAqil, Machine learning model for transient exergy 
+performance of a phase change material integrated-concentrated solar 
+thermoelectric generator, Appl. Therm. Eng. 228 (2023) 120540 .
+[128] J. Tang, G. Liu, Q. Pan, A review on representative swarm intelligence algorithms 
+for solving optimization problems: applications and trends, IEEE-CAA JOURNAL 
+OF AUTOMATICA SINICA 8 (10) (2021) 1627 – 1643 .
+[129] A.G. Gad, Particle swarm optimization algorithm and its applications: a 
+systematic review, Arch. Comput. Methods Eng. 29 (5) (2022) 2531 – 2561 .
+[130] G. Karafotias, M. Hoogendoorn, A.E. Eiben, Parameter control in evolutionary 
+algorithms: trends and challenges, IEEE Trans. Evol. Comput. 19 (2) (2015) 
+167 – 187 .
+[131] B. Li, J. Li, K. Tang, X. Yao, Many-objective evolutionary algorithms: a survey, 
+ACM Comput. Surv. 48 (1) (2015) .
+[132] A.A. Godarzi, M. Jalilian, J. Samimi, A. Jokar, M.A. Vesaghi, Design of a PCM 
+storage system for a solar absorption chiller based on exergoeconomic analysis 
+and genetic algorithm, Int. J. Refrig. 36 (1) (2013) 88 – 101 .
+[133] L. Yang, H. Xu, F. Cola, B. Akhmetov, A. Gil, L.F. Cabeza, A. Romagnoli, Shell- 
+and-Tube latent heat thermal energy storage design methodology with material 
+selection, storage performance evaluation, and cost minimization, APPLIED 
+SCIENCES-BASEL 11 (9) (2021) .
+[134] H.-j. Song, W. Zhang, Y.-q. Li, Z.-w. Yang, A.-b. Ming, Exergy analysis and 
+parameter optimization of heat pipe receiver with integrated latent heat thermal 
+energy storage for space station in charging process, Appl. Therm. Eng. 119 
+(2017) 304 – 311 .
+[135] Y. Deng, Z. Zhu, W. Wang, Q. Ye, B. Yu, D. Sun, Numerical analysis and 
+optimization of the charging process on a shell-and-tube latent heat thermal 
+energy storage unit for a solar power plant with direct steam generation, Energy 
+Sci. Eng. 11 (1) (2023) 206 – 226 .
+[136] B. Lu, J. Wu, Z. Liang, C. Liu, Circuitry arrangement optimization for multi-tube 
+phase change material heat exchanger using genetic algorithm coupled with 
+numerical simulation, Energy Convers. Manag. 175 (2018) 213 – 226 .
+[137] N. Javani, I. Dincer, G.F. Naterer, New latent heat storage system with 
+nanoparticles for thermal management of electric vehicles, J. Power Sources 268 
+(2014) 718 – 727 .
+[138] G. Hou, L. Ye, C. Wang, X. Liu, W. He, X. Zeng, Optimization of the thermal 
+management system of battery thermal network model based on coupled liquid 
+cooling of phase change materials, J. Energy Storage 73 (2023) 108936 .
+[139] H. Cheng, S. Jung, Y.-B. Kim, Battery thermal management system optimization 
+using Deep reinforced learning algorithm, Appl. Therm. Eng. 236 (2024) 121759 .
+[140] J. Zhang, Z. Cao, S. Huang, X. Huang, Y. Han, C. Wen, J.H. Walther, Y. Yang, 
+Solidification performance improvement of phase change materials for latent heat 
+thermal energy storage using novel branch-structured fins and nanoparticles, 
+Appl. Energy 342 (2023) .
+[141] N.S. Dhaidan, J.M. Khodadadi, Melting and convection of phase change materials 
+in different shape containers: a review, Renew. Sustain. Energy Rev. 43 (2015) 
+449 – 477 .
+[142] A.M. Abdulateef, S. Mat, J. Abdulateef, K. Sopian, A.A. Al-Abidi, Geometric and 
+design parameters of fins employed for enhancing thermal energy storage 
+systems: a review, Renew. Sustain. Energy Rev. 82 (2018) 1620 – 1635 .
+[143] C. Zhang, J. Li, Y. Chen, Improving the energy discharging performance of a 
+latent heat storage (LHS) unit using fractal-tree-shaped fins, Appl. Energy 259 
+(2020) 114102 .
+[144] A. Sciacovelli, F. Gagliardi, V. Verda, Maximization of performance of a PCM 
+latent heat storage system with innovative fins, Appl. Energy 137 (2015) 
+707 – 715 .
+[145] H. Maleki, M. Ashrafi, N.Z. Ilghani, M. Goodarzi, T. Muhammad, Pareto optimal 
+design of a finned latent heat thermal energy storage unit using a novel hybrid 
+technique, J. Energy Storage 44 (2021) 103310 .
+[146] Y. Xu, Z.-J. Zheng, C. Yang, X. Cai, Intelligent optimization of horizontal fins to 
+improve the melting performance of phase change materials in a square cavity 
+with isothermal vertical wall, J. Energy Storage 44 (2021) 103334 .
+[147] Z.-J. Zheng, X. Cai, C. Yang, Y. Xu, Improving the solidification performance of a 
+latent heat thermal energy storage unit using arrow-shaped fins obtained by an 
+innovative fast optimization algorithm, Renew. Energy 195 (2022) 566 – 577 .
+[148] Y. Shen, A.R. Mazhar, P. Zhang, S. Liu, Structure optimization of tree-shaped fins 
+for improving the thermodynamic performance in latent heat storage, Int. J. 
+Therm. Sci. 184 (2023) 108003 .
+[149] B. 
+˙
+Izgi, H. Zahit Demira ˘g, Multi-objective optimization of fin shape in a 
+cylindrical encapsulated phase change material for thermal energy storage 
+applications, Appl. Therm. Eng. 231 (2023) 120921 .
+[150] Q. Xu, X. Liu, Q. Luo, Y. Tian, C. Dang, H. Yao, C. Song, Y. Xuan, J. Zhao, Y. Ding, 
+Loofah-derived eco-friendly SiC ceramics for high-performance sunlight capture, 
+thermal transport, and energy storage, Energy Storage Mater. 45 (2022) 786 – 795 .
+[151] H. Wang, X. Liu, Q. Luo, H. Yao, Q. Xu, Y. Tian, J. Wang, Y. Xuan, Artificial 
+“ honeycomb-honey ” decorated with non-noble plasmonic nanoparticles for 
+superior solar capture and thermal energy storage, Nano Res. 15 (9) (2022) 
+8065 – 8075 .
+[152] O. Sigmund, K. Maute, Topology optimization approaches, Struct. Multidiscip. 
+Optim. 48 (6) (2013) 1031 – 1055 .
+[153] J. Wu, O. Sigmund, J.P. Groen, Topology optimization of multi-scale structures: a 
+review, Struct. Multidiscip. Optim. 63 (3) (2021) 1455 – 1480 .
+[154] X. Liu, X. Qin, Y. Tian, Q. Luo, H. Yao, J. Wang, C. Dang, Q. Xu, S. Lv, Y. Xuan, 
+Biomimetic optimized vertically aligned annular fins for fast latent heat thermal 
+energy storage, Appl. Energy 347 (2023) 121435 .
+[155] A. Pizzolato, A. Sharma, R. Ge, K. Maute, V. Verda, A. Sciacovelli, Maximization 
+of performance in multi-tube latent heat storage – optimization of fins topology, 
+effect of materials selection and flow arrangements, Energy 203 (2020) 114797 .
+[156] I.A. Laasri, Z. Elmaazouzi, A. Outzourhit, M.O. Mghazli, Investigation of different 
+topology-optimized fin structures in a cylindrical latent heat thermal energy 
+storage unit, Therm. Sci. Eng. Prog. 33 (2022) 101372 .
+[157] S. Zhang, D. Feng, L. Shi, L. Wang, Y. Jin, L. Tian, Z. Li, G. Wang, L. Zhao, Y. Yan, 
+A review of phase change heat transfer in shape-stabilized phase change materials 
+(ss-PCMs) based on porous supports for thermal energy storage, Renew. Sustain. 
+Energy Rev. 135 (2021) 110127 .
+[158] S. Zhang, Z. Li, Y. Yao, L. Tian, Y. Yan, Heat transfer characteristics and 
+compatibility of molten salt/ceramic porous composite phase change material, 
+Nano Energy 100 (2022) .
+S. Liu et al.                                                                                                                                                                                                                                       Renewable Energy 238 (2025) 121973 
+28 
+--- PAGE 29 ---
+[159] W.Q. Li, Z.G. Qu, B.L. Zhang, K. Zhao, W.Q. Tao, Thermal behavior of porous 
+stainless-steel fiber felt saturated with phase change material, Energy 55 (2013) 
+846 – 852 .
+[160] P. Zhang, Z.N. Meng, H. Zhu, Y.L. Wang, S.P. Peng, Melting heat transfer 
+characteristics of a composite phase change material fabricated by paraffin and 
+metal foam, Appl. Energy 185 (2017) 1971 – 1983 .
+[161] M. Al-Jethelah, S. Ebadi, K. Venkateshwar, S.H. Tasnim, S. Mahmud, A. Dutta, 
+Charging nanoparticle enhanced bio-based PCM in open cell metallic foams: an 
+experimental investigation, Appl. Therm. Eng. 148 (2019) 1029 – 1042 .
+[162] J. Yang, L. Yang, C. Xu, X. Du, Numerical analysis on thermal behavior of 
+solid – liquid phase change within copper foam with varying porosity, Int. J. Heat 
+Mass Tran. 84 (2015) 1008 – 1018 .
+[163] C. Yang, Y. Xu, X. Cai, Z.-J. Zheng, A simplified phase change model and 
+performance optimization of plate latent heat storage unit with graded porous, 
+Int. J. Heat Mass Tran. 196 (2022) 123309 .
+[164] M. Ganji, M. Givian, K. Gharali, S. Ebadi, S. Maleki Dastjerdi, Experimental 
+optimization of partial metallic wire mesh configuration applicable in thermal 
+energy storage systems, Appl. Therm. Eng. 218 (2023) 119274 .
+[165] M.M. Farid, Y. Kim, A. Kansawa, Thermal performance of a heat storage module 
+using PCM ’ s with different melting temperature: experimental, J. Sol. Energy Eng. 
+112 (2) (1990) 125 – 131 .
+[166] X. Cheng, X. Zhai, Thermal performance analysis and optimization of a cascaded 
+packed bed cool thermal energy storage unit using multiple phase change 
+materials, Appl. Energy 215 (2018) 566 – 576 .
+[167] Y. Shen, A.R. Mazhar, S. Liu, Comprehensive review on cascaded latent heat 
+storage technology: recent advances and challenges, J. Energy Storage 55 (2022) 
+105713 .
+[168] Y.B. Tao, Y.L. He, Y.K. Liu, W.Q. Tao, Performance optimization of two-stage 
+latent heat storage unit based on entransy theory, Int. J. Heat Mass Tran. 77 
+(2014) 695 – 703 .
+[169] H.J. Xu, C.Y. Zhao, Thermodynamic analysis and optimization of cascaded latent 
+heat storage system for energy efficient utilization, Energy 90 (2015) 1662 – 1673 .
+[170] H.J. Xu, C.Y. Zhao, Thermal efficiency analysis of the cascaded latent heat/cold 
+storage with multi-stage heat engine model, Renew. Energy 86 (2016) 228 – 237 .
+[171] Y.K. Liu, Y.B. Tao, Thermodynamic analysis and optimization of multistage latent 
+heat storage unit under unsteady inlet temperature based on entransy theory, 
+Appl. Energy 227 (2018) 488 – 496 .
+[172] H. Shamsi, M. Boroushaki, H. Geraei, Performance evaluation and optimization of 
+encapsulated cascade PCM thermal storage, J. Energy Storage 11 (2017) 64 – 75 .
+[173] S. Nekoonam, R. Roshandel, Modeling and optimization of a multiple (cascading) 
+phase change material solar storage system, Therm. Sci. Eng. Prog. 23 (2021) 
+100873 .
+[174] Y. Shen, A.R. Mazhar, P. Zhang, S. Liu, Investigation of the volume impact on 
+cascaded latent heat storage system by coupling genetic algorithm and CFD 
+simulation, J. Energy Storage 48 (2022) 104065 .
+[175] S. Nekoonam, R. Ghasempour, Modeling and optimization of a thermal energy 
+storage unit with cascaded PCM capsules in connection to a solar collector, 
+Sustain. Energy Technol. Assessments 52 (2022) 102197 .
+[176] P. Huang, G. Wei, L. Cui, C. Xu, X. Du, Experimental and numerical optimization 
+of cascaded PCM heat sink by using low melting point alloys, Energy Convers. 
+Manag. 269 (2022) 116149 .
+[177] C. Zhang, X. Zhang, L. Qiu, Y. Zhao, Thermodynamic investigation of cascaded 
+latent heat storage system based on a dynamic heat transfer model and DE 
+algorithm, Energy 211 (2020) 118578 .
+[178] Y. Shen, Y. Liu, S. Liu, A.R. Mazhar, A dynamic method to optimize cascaded 
+latent heat storage systems with a genetic algorithm: a case study of cylindrical 
+concentric heat exchanger, Int. J. Heat Mass Tran. 183 (2022) 122051 .
+[179] N. Javani, I. Dincer, G.F. Naterer, B.S. Yilbas, Exergy analysis and optimization of 
+a thermal management system with phase change material for hybrid electric 
+vehicles, Appl. Therm. Eng. 64 (1) (2014) 471 – 482 .
+[180] A.R. Mazhar, S. Liu, A. Shukla, An optimizer using the PSO algorithm to 
+determine thermal parameters of PCM: a case study of grey water heat harnessing, 
+Int. J. Heat Mass Tran. 144 (2019) 118574 .
+[181] N. Bianco, A. Fragnito, M. Iasiello, G.M. Mauro, L. Mongibello, Multi-objective 
+optimization of a phase change material-based shell-and-tube heat exchanger for 
+cold thermal energy storage: experiments and numerical modeling, Appl. Therm. 
+Eng. 215 (2022) 119047 .
+[182] M. Abbasi Kamazani, C. Aghanajafi, Multi-objective optimization and 
+exergoeconomic evaluation of a hybrid geothermal-PVT system integrated with 
+PCM, Energy 240 (2022) 122806 .
+[183] S. Kavian, C. Aghanajafi, H. Jafari Mosleh, A. Nazari, A. Nazari, Exergy, economic 
+and environmental evaluation of an optimized hybrid photovoltaic-geothermal 
+heat pump system, Appl. Energy 276 (2020) 115469 .
+[184] F. Pelella, G. Zsembinszki, L. Viscito, A. William Mauro, L.F. Cabeza, Thermo- 
+economic optimization of a multi-source (air/sun/ground) residential heat pump 
+with a water/PCM thermal storage, Appl. Energy 331 (2023) 120398 .
+[185] Y. Zhang, X. Wang, C. Xu, W. Yan, Q. Tian, Z. Sun, H. Yao, J. Gao, Fabrication of 
+chitosan gel droplets via crosslinking of inverse Pickering emulsifications, 
+Carbohydr. Polym. 186 (2018) 1 – 8 .
+[186] D.A. Cieslak, N.V. Chawla, Learning decision trees for unbalanced data, Lect. 
+Notes Comput. Sci. (2008) 241 – 256 .
+[187] C. Igel, A note on generalization loss when evolving adaptive pattern recognition 
+systems, IEEE Trans. Evol. Comput. 17 (3) (2013) 345 – 352 .
+[188] L. S ´anchez, P. S ´anchez, A. De Lucas, M. Carmona, J.F. Rodríguez, Using neural 
+networks or linear models to predict the characteristics of microcapsules 
+containing phase change materials, Macromol. Symp. 287 (1) (2010) 162 – 167 .
+[189] G. Feng, G. Wang, Q. Li, Y. Zhang, H. Li, Investigation of a solar heating system 
+assisted by coupling with electromagnetic heating unit and phase change energy 
+storage tank: towards sustainable rural buildings in northern China, Sustain. 
+Cities Soc. 80 (2022) 103449 .
+[190] C. Camarasa, 
+´
+E. Mata, J.P.J. Navarro, J. Reyna, P. Bezerra, G.B. Angelkorte, 
+W. Feng, F. Filippidou, S. Forthuber, C. Harris, N.H. Sandberg, S. Ignatiadou, 
+L. Kranzl, J. Langevin, X. Liu, A. Müller, R. Soria, D. Villamar, G.P. Dias, 
+J. Wanemark, K. Yaramenka, A global comparison of building decarbonization 
+scenarios by 2050 towards 1.5 – 2 
+◦
+C targets, Nat. Commun. 13 (1) (2022) 3077 .
+[191] Y.Q. Ang, Z.M. Berzolla, S. Letellier-Duchesne, C.F. Reinhart, Carbon reduction 
+technology pathways for existing buildings in eight cities, Nat. Commun. 14 (1) 
+(2023) 1689 .
+[192] X. Zhong, M. Hu, S. Deetman, B. Steubing, H.X. Lin, G.A. Hernandez, 
+C. Harpprecht, C. Zhang, A. Tukker, P. Behrens, Global greenhouse gas emissions 
+from residential and commercial building materials and mitigation strategies to 
+2060, Nat. Commun. 12 (1) (2021) 6126 .
+[193] Z. Liu, D. Guan, W. Wei, S.J. Davis, P. Ciais, J. Bai, S. Peng, Q. Zhang, K. Hubacek, 
+G. Marland, R.J. Andres, D. Crawford-Brown, J. Lin, H. Zhao, C. Hong, T. 
+A. Boden, K. Feng, G.P. Peters, F. Xi, J. Liu, Y. Li, Y. Zhao, N. Zeng, K. He, Reduced 
+carbon emission estimates from fossil fuel combustion and cement production in 
+China, Nature 524 (7565) (2015) 335 – 338 .
+[194] J. Ngarambe, G.Y. Yun, M. Santamouris, The use of artificial intelligence (AI) 
+methods in the prediction of thermal comfort in buildings: energy implications of 
+AI-based thermal comfort controls, Energy Build. 211 (2020) 109807 .
+[195] A. Kiam Heong, G. Chong, L. Yun, PID control system analysis, design, and 
+technology, IEEE Trans. Control Syst. Technol. 13 (4) (2005) 559 – 576 .
+[196] G. Halhoul Merabet, M. Essaaidi, M. Ben Haddou, B. Qolomany, J. Qadir, 
+M. Anan, A. Al-Fuqaha, M.R. Abid, D. Benhaddou, Intelligent building control 
+systems for thermal comfort and energy-efficiency: a systematic review of 
+artificial intelligence-assisted techniques, Renew. Sustain. Energy Rev. 144 
+(2021) 110969 .
+[197] M. Sulzer, A. Christen, A. Matzarakis, Predicting indoor air temperature and 
+thermal comfort in occupational settings using weather forecasts, indoor sensors, 
+and artificial neural networks, Build. Environ. 234 (2023) 110077 .
+[198] K. Haruehansapong, M. Kliangkhlao, K. Yeranee, B. Sahoh, Personal thermal 
+comfort prediction using multi-physiological sensors: the design and development 
+of deep neural network models based on individual preferences, Build. Environ. 
+245 (2023) 110940 .
+[199] L. Li, Y. He, H. Zhang, J.C.H. Fung, A.K.H. Lau, Enhancing IAQ, thermal comfort, 
+and energy efficiency through an adaptive multi-objective particle swarm 
+optimizer-grey wolf optimization algorithm for smart environmental control, 
+Build. Environ. 235 (2023) 110235 .
+[200] J. Ahn, S. Cho, Anti-logic or common sense that can hinder machine ’ s energy 
+performance: energy and comfort control models based on artificial intelligence 
+responding to abnormal indoor environments, Appl. Energy 204 (2017) 117 – 130 .
+[201] S. Zhou, B. Li, C. Du, H. Liu, Y. Wu, S. Hodder, M. Chen, R. Kosonen, R. Ming, 
+L. Ouyang, R. Yao, Opportunities and challenges of using thermal comfort models 
+for building design and operation for the elderly: a literature review, Renew. 
+Sustain. Energy Rev. 183 (2023) 113504 .
+[202] E. Mamulova, M. Loomans, R. Loonen, M. Schweiker, H. Kort, Let ’ s talk 
+scalability: the current status of multi-domain thermal comfort models as support 
+tools for the design of office buildings, Build. Environ. 242 (2023) 110502 .
+[203] R. Rawal, Y. Shukla, V. Vardhan, S. Asrani, M. Schweiker, R. de Dear, V. Garg, 
+J. Mathur, S. Prakash, S. Diddi, S.V. Ranjan, A.N. Siddiqui, G. Somani, Adaptive 
+thermal comfort model based on field studies in five climate zones across India, 
+Build. Environ. 219 (2022) 109187 .
+[204] J.F. Nicol, M.A. Humphreys, Adaptive thermal comfort and sustainable thermal 
+standards for buildings, Energy Build. 34 (6) (2002) 563 – 572 .
+S. Liu et al.                                                                                                                                                                                                                                       Renewable Energy 238 (2025) 121973 
+29 

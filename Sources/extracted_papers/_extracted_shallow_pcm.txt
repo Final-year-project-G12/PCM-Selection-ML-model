@@ -1,0 +1,1524 @@
+
+===== PAGE 1 =====
+Experimental validation and enhanced thermal prediction of a shallow 
+solar pond using artificial neural network – based model predictive control 
+for real-time optimization under multiple heat extraction modes
+Abdelkrim Terfai
+a
+, Younes Chiba
+a , *
+, Mounir Zirari
+a
+, Mohamed Najib Bouaziz
+b
+a
+Renewable Energy and Materials Laboratory (LERM), Mechanical Engineering Department, University of Medea, 26000, Algeria
+b
+Biomaterials and Transport Phenomena Laboratory (LBMPT), Mechanical Engineering Department, University of Medea, 26000, Algeria
+ARTICLE INFO
+Keywords:
+Shallow solar pond
+Artificial neural networks
+Model predictive control
+Heat extraction modes
+Thermal performance prediction
+Solar energy systems
+Optimization algorithms
+ABSTRACT
+This study presents the experimental validation and enhanced thermal modeling of a Shallow Solar Pond (SSP) 
+operating under three distinct heat extraction modes: direct, open cycle, and closed cycle. A custom-designed 
+SSP, insulated and equipped with double-glazing and a PVC heat exchanger and black-painted bottom, was 
+monitored under clear-sky conditions. 14 Artificial Neural Network (ANN) configurations were trained, with the 
+optimal Bayesian Regularization-based model (two hidden layers, 15 neurons) achieving exceptional predictive 
+accuracy (R
+2 
+= 0.99919, RMSE = 32.7580 %, MRE = 0.62 %) for temperatures across all system components and 
+operational modes. The ANN model effectively captured complex nonlinear dynamics, including transient 
+heating and cooling phases. The integration of this ANN with a Model Predictive Control (MPC) framework 
+enabled real-time optimization of the fluid flow rate in the closed-cycle mode, which was identified as the most 
+efficient configuration. The MPC-ANN strategy reduced the outlet temperature tracking error by over 50 % 
+(MAE = 1.42 
+◦
+C vs. 2.97 
+◦
+C without MPC), demonstrating superior thermal stability and adaptive control under 
+fluctuating solar irradiance. This work confirms the closed-cycle SSP ’ s superiority for stable energy delivery and 
+establishes a robust ANN-MPC framework for real-time operational optimization of solar thermal systems.
+1. Introduction
+The development of renewable energy technologies is a global pri -
+ority due to the growing demand for sustainable energy solutions. One of 
+the most promising alternatives is solar energy for its abundance and 
+environmentally friendly nature [ 1 ]. Among various solar energy tech -
+nologies, the shallow solar pond (SSP) has attracted significant attention 
+due to its simplicity, cost-effectiveness, and the ability to store thermal 
+energy and use it for various applications [ 2 ]. An SSP typically consists 
+of a shallow water body with a blackened bottom designed to absorb and 
+retain solar radiation, converting it into heat [ 3 ]. This stored heat can be 
+harnessed for tasks such as water heating, industrial processes, and even 
+power generation. Several design enhancements, including the use of 
+transparent covers, thermal insulation, and integrated heat exchangers, 
+have been investigated to boost system efficiency [ 4 ]. Heat extraction 
+from SSPs is categorized into three primary methods: the direct method, 
+which involves draining the pond to access heated water, albeit with 
+lower efficiency; the open-cycle mode, where a heat exchanger circu -
+lates fluid through the pond; and the closed-cycle mode, which employs 
+a sealed heat exchanger system to reduce thermal losses and optimize 
+heat transfer [ 4 – 6 ].
+Significant research advancements have refined SSP technology. 
+Early work by Dickinson et al. [ 3 ] demonstrated the feasibility of 
+large-scale power generation using SSPs, emphasizing transparent 
+plastic layers to minimize heat loss. Further studies [ 4 , 5 ] underscored 
+the importance of optimizing pond depth, glazing materials, and oper -
+ational modes, achieving efficiencies of up to 50 %. More recently, the 
+introduction of nanofluids, such as aluminum oxide (Al
+2
+O
+3
+) and copper 
+oxide (CuO), has been explored to enhance heat transfer efficiency [ 7 ]. 
+To further improve thermal storage capabilities and reduce energy los -
+ses, researchers have incorporated serpentine heat exchangers, yielding 
+efficiencies up to 60 % under specific conditions [ 6 ]. Experimental work 
+by Ali et al. [ 8 ] validated the influence of water depth and glazing 
+configurations on performance, while [ 9 ] confirmed the effectiveness of 
+Peer review under the responsibility of KeAi Communications Co., Ltd.
+* Corresponding author.
+E-mail address: chiba.younes@univ-meda.dz (Y. Chiba). 
+Contents lists available at ScienceDirect
+Unconventional Resources
+journal homep age: www.kea ipublishing. com/en/journa ls/unconventi onal-resourc es/
+https://doi.org/10.1016/j.uncres.2025.100240
+Received 25 March 2025; Received in revised form 2 September 2025; Accepted 4 September 2025  
+Unconventional Resources 8 (2025) 100240 
+Available online 5 September 2025 
+2666-5190/© 2025 The Authors. Publishing services by Elsevier B.V. on behalf of KeAi Communications Co. Ltd. This is an open access article under the CC 
+BY-NC-ND license ( http://creativecommons.org/licenses/by-nc-nd/4.0/ ). 
+===== PAGE 2 =====
+dark-colored water bags for tropical environments. Studies by Velmur -
+uganand Srithar [ 10 ], El-Sebaii et al. [ 11 ] and El-Sebaii et al. [ 12 ] 
+demonstrated the successful integration of SSPs with solar stills, 
+enhancing productivity.
+As the design of SSP is also progressing, Artificial Neural Networks 
+(ANNs) are turning out to be indispensable in the simulation, optimi -
+zation, and modeling of renewable energy systems. ANNs are artificial 
+intelligence algorithms that emulate the working of the human brain to 
+learn from data and recognize patterns in data sets, using interconnected 
+nodes. Because of their flexibility, they are very useful in solving 
+nonlinear problems in energy studies [ 13 ]. Various types of ANNs, 
+including multilayer perceptron (MLP) and radial basis function (RBF) 
+networks, have been widely used in solar energy applications. MLP 
+models, known for their simple architecture and efficient training, have 
+been applied to forecast solar radiation, optimize energy efficiency, and 
+predict thermal performance [ 14 ]. ANN models have demonstrated high 
+accuracy in estimating heat transfer rates for parabolic trough, evacu -
+ated tube, and solar air collectors [ 14 – 16 ]. Comprehensive reviews 
+further confirm the effectiveness of ANN in predicting thermal perfor -
+mance across various solar thermal systems [ 17 ]. In addition, 
+ANN-based approaches have been applied to evaluate the impact of 
+nanofluids, such as Cu
+2
+O and SiO
+2
+, on solar system efficiency, providing 
+insights into their potential to enhance thermal performance [ 18 , 19 ].
+The combination of ANN models with renewable energy research has 
+contributed to improved design and operational strategies for solar 
+thermal systems, including photovoltaic/thermal configurations, solar 
+dryers, and solar-assisted heat pumps [ 20 ].
+The increasing use of ANNs in renewable energy systems highlights 
+their importance in enhancing sustainable energy performance. In this 
+context, the present study aims to develop, validate, and optimize an 
+ANN-based model for predicting the thermal behavior of an SSP oper -
+ating under three different heat extraction modes: direct, open, and 
+closed cycles. Experimental data were collected from a custom-built 1 
+m
+2 
+SSP operating under identical environmental conditions for 
+comparative analysis. The developed ANN model was trained not only to 
+predict thermal performance with high accuracy but was also seamlessly 
+integrated into a real-time Model Predictive Control (MPC) system. This 
+integration enabled intelligent, adaptive regulation of key operating 
+parameters most notably, the fluid flow rate to dynamically optimize 
+heat extraction efficiency under varying solar conditions.
+The novelty of this research is threefold. First, it presents a rigorous 
+comparative experimental analysis of three distinct heat extraction 
+modes direct, open cycle, and closed cycle conducted under identical 
+environmental conditions, a comprehensive approach seldom achieved 
+in existing literature. Second, it advances beyond conventional predic -
+tive modeling by embedding the ANN as a core component within a real- 
+time control framework, facilitating online thermal optimization. Third, 
+the SSP was specially designed, constructed, and instrumented to enable 
+high-resolution, real-time thermal monitoring across multiple points, 
+significantly enhancing the reliability and fidelity of both model training 
+and experimental validation.
+The paper is organized as follows: Section 1 outlines the background, 
+motivation, and research objectives; Section 2 details the experimental 
+setup and data acquisition methodology; Section 3 provides an overview 
+of ANN fundamentals and training techniques; Section 4 specifies the 
+modeling parameters and performance evaluation metrics; Section 5
+compares ANN predictions with experimental results; Section 6 analyzes 
+the thermal performance of each operating mode; Section 7 introduces 
+the real-time control strategy via ANN-MPC integration; and finally, 
+Section 8 summarizes the key findings and contributions.
+2. Construction of the system and data collection
+Fig. 1 illustrates the experimental setup of the SSP. The system was 
+constructed using galvanized sheet materials with dimensions of 0.76 ×
+1.30 m and a depth of 0.06 m, accommodating a water capacity of 
+approximately 60 L. To minimize conductive heat losses, the pond was 
+thermally insulated with a 0.04 m polystyrene layer, while the bottom 
+surface was painted black to maximize solar radiation absorption. Heat 
+extraction was achieved through a transparent PVC heat exchanger, 10 
+m in length and 0.008 m in diameter, connected to a QR30E brushless 
+pump and a 20-L insulated storage tank. Although the effectiveness ( ε ) 
+of the heat exchanger was not directly measured in this work, its thermal 
+performance can be reasonably inferred from the material properties. 
+Considering the thermal conductivity of PVC ( λ ≈ 0.19 W/m ⋅ K) and the 
+tube wall thickness ( δ = 0.001 m), the overall heat transfer coefficient 
+(U) is expected to be relatively low compared to metallic exchangers. 
+However, the experimental results showed a stable temperature rise and 
+consistent heat transfer, indicating that the exchanger operated with 
+satisfactory effectiveness. Tap water was employed as the working fluid 
+due to its availability, cost-effectiveness, and favorable thermal prop -
+erties. Its main thermophysical characteristics are summarized in 
+Table 1 , including thermal conductivity (k = 0.6 W/m ⋅ K), specific heat 
+capacity (Cp = 4180 J/kg ⋅ K), and density ( ρ = 1000 kg/m
+3
+). These 
+properties justify its selection as a working fluid, as they ensure efficient 
+heat transfer and reliable operation at low cost compared to alternative 
+engineered fluids. The SSP was covered with two glass panels, each 
+0.003 m thick, separated by a 0.03 m air gap. The use of double glazing 
+serves multiple purposes: (i) reducing convective heat losses through the 
+insulating air gap, (ii) enhancing the greenhouse effect by transmitting 
+short-wave solar radiation while restricting long-wave thermal emis -
+sion, and (iii) protecting the pond against condensation, dust, and 
+environmental effects. As noted by Kamiuto et al. [ 21 ], the application 
+of multilayer transparent insulation significantly improves the thermal 
+performance of solar pond systems by mitigating upward heat losses.
+It should be noted that the three experiments were conducted on 
+different consecutive days (August 15 – 17), under clear-sky conditions 
+without significant weather fluctuations. This ensured that variations in 
+solar radiation or ambient temperature did not bias the comparison 
+across modes. Details of the main materials and components used in 
+constructing the SSP are provided in Table 1 , which complements the 
+schematic illustrated in Fig. 1 .
+2.1. Experimental scenarios
+To investigate the performance of the SSP under different thermal 
+extraction strategies, three experimental scenarios were designed. The 
+rationale for selecting direct, open, and closed cycles lies in their distinct 
+heat transfer characteristics and their relevance to practical solar ther -
+mal applications. The direct mode represents the simplest case, the open 
+cycle reflects intermediate efficiency with continuous heat removal, 
+while the closed cycle provides maximum isolation and storage capacity. 
+These scenarios were therefore chosen to cover the full spectrum of SSP 
+operation strategies reported in the literature.
+Fig. 1. Photograph of the experimental setup used for SSP.
+A. Terfai et al.                                                                                                                                                                                                                                   Unconventional Resources 8 (2025) 100240 
+2 
+===== PAGE 3 =====
+The experiments were not operated simultaneously, but separately, 
+one per day. This approach was necessary to avoid thermal interference 
+between modes and to ensure independent performance evaluation of 
+each configuration: 
+1. Direct mode heat extraction (August 15)
+In the first scenario, thermal energy was extracted using the direct 
+mode, the simplest approach among the three (see Fig. 2 ). Heated water 
+was drained directly from the pond, allowing immediate use of the 
+stored heat. While this method enabled quick access to thermal energy, 
+it resulted in significant heat losses due to exposure and the lack of 
+thermal insulation or recovery mechanisms. 
+2. Open cycle heat extraction (August 16)
+The second scenario implemented an open-cycle continuous flow 
+system. In this configuration, a heat exchanger placed inside the pond 
+(illustrated in Fig. 3 ) transferred heat to a circulating working fluid, 
+which continuously removed thermal energy from the pond. This setup 
+enabled steady and sustained heat transfer, making it more suitable for 
+applications that require a continuous thermal supply. However, being 
+an open cycle, some thermal losses still occurred. 
+3. Closed cycle heat extraction with thermal storage tank (August 17)
+In the third scenario, the system operated in a closed-cycle contin -
+uous flow heating mode, where the working fluid circulated in a sealed 
+loop between the SSP and an insulated storage tank. A serpentine heat 
+exchanger was placed inside the pond to collect thermal energy, and a 
+second heat exchanger was installed inside the thermal storage tank to 
+transfer the collected heat as shown in Fig. 4 . This design effectively 
+isolated the working fluid from direct contact with the pond water, 
+significantly reducing heat losses. As a result, it offered higher thermal 
+efficiency and longer heat retention, making it more suitable for appli -
+cations requiring stable and delayed thermal delivery. This design 
+effectively minimized contact with the environment, thus reducing heat 
+losses and enhancing long-term heat storage, making it suitable for 
+delayed thermal utilization.
+2.2. Data collection and analysis
+Data acquisition was performed using an Arduino UNO microcon -
+troller, complemented by various sensors, with measurements recorded 
+every minute from 07:00 to 19:00 h. This experimental procedure was 
+strictly followed for each of the three scenarios to maintain consistency 
+and comparability across modes. The ambient air temperature and hu -
+midity were monitored using a DHT22 sensor, while seven DS18B20 
+waterproof temperature probes were installed at critical locations, 
+including the upper and lower glass covers, the storage tank, the 
+absorber plate, the pond water, and the inlet/outlet of the heat 
+exchanger. The QR30E brushless pump was employed to circulate the 
+heat transfer fluid and overcome the pressure drop. Solar radiation was 
+estimated using the semi-empirical Bird & Hulstrom model [ 22 ], based 
+on the geographical coordinates of Tablat, Medea, Algeria.
+The accuracy and uncertainty of the employed sensors are summa -
+rized in Table 2 , which ensures transparency in evaluating the reliability 
+of the experimental results. The DHT22 sensor features a temperature 
+accuracy of ± 0.5 
+◦
+C and a humidity accuracy of ± 2 % RH, while the 
+DS18B20 sensors provide a measurement precision of ± 0.5 
+◦
+C within 
+the range of   10 
+◦
+C to 85 
+◦
+C. Such accuracies are consistent with the 
+requirements for thermal performance assessment of solar pond systems 
+and guarantee reliable model validation against experimental data. The 
+uncertainty analysis ( Table 2 ) ensures the reliability of the obtained 
+results and strengthens confidence in the subsequent ANN modeling and 
+performance evaluation.
+3. Overview of ANNs
+ANNs are an essential part of AI along with expert systems, fuzzy 
+logic, and automatic control systems. ANNs provide a scientific 
+approach to developing models that learn from data, identify patterns, 
+and make data-driven decisions. The bio-inspired architecture of ANNs 
+mimics the parallel processing capability of the human brain by utilizing 
+interconnected processing units known as neurons [ 13 , 14 ].
+3.1. Key features of ANNs
+The effectiveness of ANNs lies in their ability to handle complex and 
+imprecise data. The most significant features of ANNs include: 
+• Pattern Recognition and Learning: ANNs can extract useful infor -
+mation from noisy or complex data sets, making pattern recognition 
+and classification of data possible.
+• Adaptive Learning: ANNs adjust their internal parameters (weights) 
+by training or experiences to enhance performance, learning to carry 
+out data-dependent tasks.
+Table 1 
+Summary of materials and components used in the SSP experimental setup.
+Component Material/Type Dimensions Numerical value
+Transparent cover Double glass panels thickness air gap α
+g
+τ
+g
+ε
+g
+0.003 m 0.03 m 0.05 0.90 0.90
+Working fluid Tap water – K
+w
+C
+w
+ρ
+w
+0.6 
+W/m ⋅ K
+4180 J/kg ⋅ K 1000 kg/m
+3
+Heat exchanger PVC tube length diameter thickness K
+PVC
+10 m 0.008 m 0.001 m 0.19 W/m ⋅ K
+Thermal insulation Polystyrene thickness K
+Polystyrene
+0.04 m 0.03 W/m ⋅ K
+Absorber plate galvanized sheet length width α
+p
+1.3 m 0.76 m 0.95
+Fig. 2. Schematic representation of the Direct Heat Extraction Mode.
+A. Terfai et al.                                                                                                                                                                                                                                   Unconventional Resources 8 (2025) 100240 
+3 
+===== PAGE 4 =====
+• Self-Organization: ANNs self-organize their internal representation 
+of data during learning, offering dynamic modeling of data.
+• Parallel Processing: ANNs distributed structure supports simulta -
+neous computations, enhancing processing efficiency and robustness 
+[ 23 ].
+3.2. ANN architecture and components
+The architecture of ANNs consists of layers and neurons that are 
+interconnected and each contributes to the overall functionality of the 
+network. The most important components are:
+3.2.1. Network layers
+• Input Layer: Receives input features such as temperature, humidity, 
+and solar radiation.
+• Hidden Layers: Consist of artificial neurons that process input data 
+using mathematical transformations, allowing the network to learn 
+complex, non-linear relationships [ 18 ].
+• Output Layer: Produces the ultimate output from calculations of the 
+earlier layers, which is the network classification or prediction.
+3.2.2. Artificial neurons and activation functions
+Each neuron processes input data using weighted connections, a 
+summation function, and an activation function. Common activation 
+functions include: 
+• Sigmoid Function: Smooth gradients are generated, which is appro -
+priate for probabilistic outputs.
+• Linear Function: Employed where regression is needed.
+• Sign Function: Generates binary outputs, useful in classification.
+• Step Function: Triggers neurons only when inputs surpass a certain 
+threshold [ 23 ].
+3.2.3. ANNs types
+ANNs may be grouped based on their layer structure: 
+• Single-layer Neural Networks: Consist of one processing layer, which 
+feeds inputs straight into the output layer without any hidden layers, 
+suitable for simple problems.
+• Multi-layer Neural Networks: Are made up of more than one hidden 
+layer, which raises the capacity of the network to model complicated 
+relationships at the cost of greater computational complexity.
+Fig. 3. Thermal operation layout of an SSP in open-cycle continuous flow mode.
+Fig. 4. Schematic diagram of an SSP operating in closed-cycle continuous flow heating mode.
+Table 2 
+Specifications and accuracy of the measurement devices.
+Device/ 
+Sensor
+Parameter 
+Measured
+Measuring 
+Range
+Accuracy/ 
+Error
+Notes/ 
+Application
+DHT22 
+sensor
+Ambient air 
+temperature
+  40 to 
++ 80 
+◦
+C
+± 0.5 
+◦
+C Used for 
+monitoring 
+ambient 
+conditions
+DHT22 
+sensor
+Relative 
+humidity
+0 – 100 % 
+RH
+± 2 % RH Connected to 
+Arduino via 
+serial port
+DS18B20 
+waterproof 
+probe
+Pond, glass, 
+absorber, tank, 
+exchanger 
+temperatures
+  55 to 
++ 125 
+◦
+C
+± 0.5 
+◦
+C 
+(   10 to 
++ 85 
+◦
+C)
+Installed at 7 
+key thermal 
+nodes
+Arduino Uno Data 
+acquisition/ 
+control
+– – Logged sensor 
+readings every 
+minute
+QR30E 
+brushless 
+pump
+Fluid circulation Max flow 
+240 L/h
+– Ensures heat 
+transfer and 
+stable flow
+A. Terfai et al.                                                                                                                                                                                                                                   Unconventional Resources 8 (2025) 100240 
+4 
+===== PAGE 5 =====
+4. ANN training and optimization
+To ensure the accurate thermal performance prediction of the SSP, 
+different ANN training scenarios were considered. Training was focused 
+on the optimization of the network performance by changing key 
+hyperparameters, which consist of the training algorithm, the number of 
+hidden layers, and the number of neurons in each layer.
+4.1. Training algorithm selection
+Various backpropagation-based training functions were attempted, 
+including Bayesian Regularization (trainbr), Levenberg-Marquardt 
+(trainlm), BFGS Quasi-Newton (trainbfg), and Scaled Conjugate 
+Gradient (trainscg). All the algorithms were benchmarked against each 
+other based on their error minimization and computational efficiency.
+4.2. Data preprocessing and outlier treatment
+Prior to training the ANN model, a data preprocessing phase was 
+conducted to ensure the reliability of the dataset. Input variables 
+including temperature, humidity, and solar radiation were normalized 
+to enhance training convergence and reduce computational bias. To 
+identify potential outliers, a combination of visual inspection and sta -
+tistical criteria specifically the Z-score method — was applied. Data 
+points deviating more than ± 3 standard deviations from the mean were 
+considered potential outliers. However, analysis of the experimental 
+data revealed no significant outliers that warranted exclusion. There -
+fore, the entire dataset, consisting of approximately 2160 data points 
+collected over three consecutive days (with a 1-min sampling interval 
+from 07:00 to 19:00), was retained for model training, validation, and 
+testing. The dataset was randomly divided into 70 % for training, 15 % 
+for validation, and 15 % for testing to ensure the generalization capa -
+bility of the ANN model (see Fig. 4 ).
+The input and output variables used in the ANN model, as illustrated 
+in Fig. 5 , were carefully selected to reflect the thermal dynamics of the 
+SSP under all three heat extraction scenarios: direct mode, open-cycle 
+mode, and closed-cycle mode. For all scenarios, the common input pa -
+rameters included ambient air temperature (T
+a
+), humidity (Hum), solar 
+radiation (I
+T
+), time of day (Time), SSP area (A), SSP depth, insulation 
+thickness, and wind speed. In addition to the above, mode-specific input 
+parameters were incorporated, such as the inlet temperature of the heat 
+exchanger (T
+fi
+) and the mass flow rate of the fluid ( ˙m) for the open and 
+closed cycles. The output parameters varied depending on the scenario 
+but primarily aimed to reflect key thermal behavior, including upper 
+and lower glass cover temperatures (T
+C1
+, T
+C2
+), pond water temperature 
+(T
+wp
+), absorber plate temperature (T
+P
+), heat exchanger fluid outlet 
+temperature (T
+fo
+), and storage tank temperature (T
+wt
+). Although the 
+number of output parameters may appear large, they were intentionally 
+included to ensure the ANN was trained with sufficient information to 
+achieve high predictive accuracy and to effectively capture the complex 
+nonlinear thermal interactions within the SSP.
+5. Performance evaluation metrics
+The network ’ s performance was evaluated using four standard sta -
+tistical indicators: Sum of Squared Errors (SSE), Root Mean Square Error 
+(RMSE), Mean Relative Error (MRE), and the Coefficient of Determi -
+nation (R
+2
+). These metrics are widely adopted in ANN performance 
+evaluation for regression tasks, particularly in thermal systems 
+modeling, and have been used in several previous studies [ 16 , 17 ].
+Equations (1) – (4) are utilized to compute SSE, RMSE, R2, and MRE, 
+respectively, for evaluation purposes.
+Eq (1) can be used to compute the SSE: 
+S SE =
+∑
+n
+i = 1
+( e
+i
+  p
+i
+)
+2
+(1) 
+The number of output data is n, the experimental value is e
+i, 
+and the 
+predicted value is p
+i
+.
+Eq (2) is used to determine the RMSE: 
+R MSE ( % ) =
+̅̅̅̅̅̅̅̅̅̅̅̅̅̅ ̅
+(
+SSE
+n
+)
+√
+× 100 (2) 
+Additionally, Eq (3) is used to obtain the R
+2
+: 
+R
+2
+= 1  
+SSE
+∑
+n
+i = 1
+p
+2
+i
+(3) 
+Eq (4) is used to calculate MRE: 
+M RE ( % ) =
+1
+n
+∑
+n
+i = 1
+(
+| e
+i
+  p
+i
+|
+e
+i
+× 100
+)
+(4) 
+The best scenario was selected based on the lowest error values and 
+the highest R
+2 
+score.
+Through these training scenarios, the optimal ANN model was 
+determined for accurately predicting the thermal behavior of the SSP, 
+ensuring both precision and computational efficiency.
+6. Results and discussion
+The procedure followed for conduction of experiments and ANN 
+training consisted of two main stages. First, the experimental campaign 
+was carried out over three consecutive clear-sky days, during which 
+Fig. 5. Schematic diagram of the ANN used in this study.
+A. Terfai et al.                                                                                                                                                                                                                                   Unconventional Resources 8 (2025) 100240 
+5 
+===== PAGE 6 =====
+thermal and environmental parameters were continuously monitored 
+using calibrated sensors connected to an Arduino-based acquisition 
+system. Each heat extraction mode (direct, open, and closed cycles) was 
+tested separately to ensure independent evaluation and comparability. 
+Second, the complete dataset of approximately 2160 measurements per 
+scenario was preprocessed through normalization and outlier detection, 
+then divided into training, validation, and testing subsets. Multiple ANN 
+models were trained using different algorithms, hidden layers, and 
+neuron configurations, and their performance was systematically 
+compared based on error metrics (SSE, RMSE, MRE, and R
+2
+) to identify 
+the optimal predictive model. Based on this procedure, the ANN 
+development stage involved a systematic generation and evaluation of 
+multiple candidate models, as detailed below.
+In the ANN development stage, a total of 14 models were generated 
+by systematically varying the training algorithms, the number of hidden 
+layers (1 – 3), and the number of neurons per layer (5 – 20). Various 
+backpropagation-based algorithms — including Bayesian Regularization 
+(trainbr), Levenberg-Marquardt (trainlm), BFGS Quasi-Newton 
+(trainbfg), and Scaled Conjugate Gradient (trainscg) — were bench -
+marked against one another. Each model was rigorously evaluated using 
+statistical performance indicators such SSE, RMSE, MRE, R
+2
+, training 
+time, and best epoch. The comparison of these 14 ANN configurations 
+and their corresponding statistical results is summarized in Table 3 .
+The final ANN model was selected based on its superior performance, 
+particularly the lowest RMSE and the highest R
+2
+, which demonstrated its 
+capability to capture the non-linear thermal dynamics of the SSP under 
+all operating scenarios.
+Fig. 6 presents the correlation between experimental data and ANN- 
+predicted outputs during the training phase of the neural network 
+model. The scatter points (circles) represent the paired values of 
+experimental and predicted temperatures, while the solid line indicates 
+the ideal 1:1 correlation. The coefficient of determination (R
+2 
+=
+0.99919) demonstrates an almost perfect linear agreement, as the ma -
+jority of points cluster tightly around the reference line. This close 
+alignment with minimal deviation confirms that the ANN model has 
+successfully captured and internalized the nonlinear thermal dynamics 
+of the shallow solar pond. The negligible spread and offset of the 
+regression line further validate the robustness and accuracy of the 
+model, ensuring reliable generalization for subsequent prediction and 
+control tasks.
+Fig. 7 presents a comparative analysis between experimental mea -
+surements and ANN-predicted temperatures of the upper glass cover 
+(T
+C2
+) under three distinct heat extraction modes: open, closed, and 
+direct. Across all modes, the ANN model demonstrates a high level of 
+accuracy, with maximum deviations remaining below 0.5 
+◦
+C and MRE 
+values between 0.84 % and 0.91 %. This strong agreement validates the 
+robustness of the developed neural network in capturing the complex 
+thermal dynamics of the shallow solar pond under varying operating 
+conditions.
+In the open cycle, T
+C2 
+starts at 33.74 
+◦
+C at 07:00 h and increases 
+steadily to a maximum of 48.63 
+◦
+C between 13:00 and 14:00 h.
+The ANN predictions closely track this rise, with only minor dis -
+crepancies at peak values. The temperature increase is primarily 
+attributed to the progressive growth of incident solar radiation and the 
+greenhouse effect induced by the double-glass cover, which traps 
+longwave radiation from the pond surface. The relatively high peak 
+reflects strong convective coupling between the circulating fluid and the 
+pond, enhancing heat extraction while still allowing significant solar 
+energy gain.
+For the closed cycle, temperatures begin at 25.00 
+◦
+C and rise to a 
+peak of 47.94 
+◦
+C around midday (MRE = 0.91 %). Although starting 
+values are lower than in the open cycle due to reduced convective losses 
+in early morning, the closed configuration shows effective heat retention 
+by minimizing evaporative and convective losses to the surroundings. 
+The ANN model again mirrors the experimental data with high preci -
+sion, though slight deviations appear during peak hours. These are likely 
+linked to transient fluctuations in solar irradiance and convective ex -
+changes with ambient air, which are inherently difficult to capture 
+simultaneously by sensors and predictive models. Overall, this mode 
+achieves a more balanced performance, providing significant heat 
+extraction while maintaining higher stability compared to the open 
+configuration.
+In the direct extraction mode, T
+C2 
+increases from 25.56 
+◦
+C in the 
+morning to a maximum of 42.63 
+◦
+C at noon, which is significantly lower 
+than the peaks observed in the open and closed modes. ANN predictions 
+reproduce this trend accurately, with minor mismatches (MRE = 0.89 
+%) during the post-peak cooling phase.
+The reduced maximum temperature reflects the weaker thermal 
+retention capacity of this mode, as direct extraction intensifies convec -
+tive losses and reduces the residence time of heated water within the 
+pond. The faster decline in the afternoon is mainly due to enhanced 
+radiative losses from the glass cover to the cooler sky and convective 
+exchanges with ambient air.
+Fig. 8 depicts a comparative evaluation between experimental data 
+and ANN-predicted values of the lower glass cover temperature (T
+C1
+) 
+under the three heat extraction configurations: open, closed, and direct. 
+Across all modes, the ANN model exhibits excellent agreement with the 
+measured data, with maximum deviations below 0.5 
+◦
+C and MRE values 
+ranging from 0.42 % to 0.48 %. This consistency confirms the robustness 
+of the ANN in capturing the rapid and nonlinear thermal dynamics of the 
+pond surface layer.
+In the open cycle, T
+C1 
+increases from 34.00 
+◦
+C at 07:00 h to a 
+maximum of 58.38 
+◦
+C between 13:00 and 14:00 h. The ANN predictions 
+closely follow this behavior with minimal error (MRE = 0.44 %). The 
+rise is governed by the steady increase in solar irradiance, which en -
+hances absorption at the pond surface and elevates the cover 
+Table 3 
+The results of the statistical analysis of errors for different types of training functions.
+Function N
+◦
+of hidden layers N
+◦
+of neurons SSE RMSE (%) MRE (%) R
+2
+Training 
+Time (s)
+Best 
+Epoch
+trainbr 1 5 999.9238 48.1107 0.87 0.9999 3 310
+10 645.2234 38.6468 0.72 0.9999 7 440
+2 5 681.3693 39.7145 0.74 0.9999 3 267
+15 463.5746 32.7580 0.62 0.9999 93 870
+3 10 488.4118 33.6241 0.62 0.9999 66 1000
+trainlm 1 5 1484.7205 58.6247 0.98 0.9998 1 43
+2 10 594.4154 37.0940 0.70 0.9999 4 100
+3 5 634.6896 38.3300 0.71 0.9999 3 213
+trainbfg 1 10 1429.7470 57.5291 0.97 0.9998 1 89
+2 5 1020.6553 48.6069 0.85 0.9999 1 146
+3 15 604.7769 37.4159 0.70 0.9999 24 179
+trainscg 1 5 4307.5440 99.8557 1.84 0.9995 1 25
+2 10 1908.5109 66.4669 1.16 0.9998 1 154
+3 20 1466.1337 58.2566 1.05 0.9998 1 180
+A. Terfai et al.                                                                                                                                                                                                                                   Unconventional Resources 8 (2025) 100240 
+6 
+===== PAGE 7 =====
+temperature via radiative and convective coupling. The stabilization 
+after midday indicates a balance between incoming solar flux and heat 
+dissipation through convection and longwave radiation. The relatively 
+lower peak compared to other modes reflects stronger convective in -
+teractions with ambient air due to the direct replacement of hot pond 
+water with colder fluid, which intensifies cooling losses.
+For the closed cycle, the temperature starts at 25.00 
+◦
+C and gradually 
+climbs to 63.00 
+◦
+C, peaking later in the afternoon (around 15:20). ANN 
+predictions remain closely aligned, with small discrepancies at peak 
+hours (MRE = 0.48 %). The delayed peak compared to the open cycle 
+suggests that the closed-loop exchanger reduces early convective in -
+teractions with the ambient environment, allowing a more gradual 
+Fig. 6. Comparison of experimental and predicted values during training phase.
+Fig. 7. Experimental vs Predicted temperatures of the upper glass cover in open, closed, and direct modes.
+A. Terfai et al.                                                                                                                                                                                                                                   Unconventional Resources 8 (2025) 100240 
+7 
+===== PAGE 8 =====
+thermal build-up. The higher maximum compared to the open cycle 
+confirms the improved insulation effect of this configuration, as evap -
+orative and convective losses to the surroundings are minimized. This 
+enhances both retention and stability, which are advantageous for sus -
+tained thermal utilization.
+The direct mode demonstrates the broadest range, from 26.75 
+◦
+C in 
+the morning to the highest observed peak of 66.87 
+◦
+C at 16:00 h. The 
+ANN model successfully tracks this trend, though it slightly 
+underestimates post-peak cooling (MRE = 0.42 %). The sharp rise in this 
+mode is explained by the absence of a thermal exchange barrier, which 
+allows rapid and direct transfer of solar heat to the pond surface. 
+However, this same mechanism promotes strong convective exchanges 
+with ambient air, resulting in large diurnal swings. The underestimation 
+of ANN predictions during the afternoon is attributed to nonlinear 
+radiative losses — particularly longwave radiation to the cooler sky — and 
+enhanced convective heat transfer, which are challenging to reproduce 
+Fig. 8. A comparison between measured and simulated lower glass cover temperatures for different heat extraction modes.
+Fig. 9. Pond water temperature: experimental data and ANN predictions across open, closed, and direct cycles.
+A. Terfai et al.                                                                                                                                                                                                                                   Unconventional Resources 8 (2025) 100240 
+8 
+===== PAGE 9 =====
+perfectly.
+Fig. 9 presents a comparative evaluation of the experimental and 
+ANN-predicted pond water temperature (T
+wp
+) across the three heat 
+extraction modes: open, closed, and direct. As T
+wp 
+represents the 
+effective thermal output of the pond closely tied to the quality and us -
+ability of extracted energy its accurate prediction is of high practical 
+importance.
+In the open cycle, T
+wp 
+rises from 32 
+◦
+C in the morning to a plateau of 
+53.94 
+◦
+C between 13:00 and 15:00 h. ANN estimates follow the exper -
+imental curve with remarkable precision (maximum deviation ≈
+0.39 
+◦
+C, MRE = 0.46 %). The midday stabilization reflects a transient 
+equilibrium between the rising solar irradiance and simultaneous 
+convective and radiative losses at the air – water interface. The sudden 
+reductions observed during withdrawal events confirm the inherently 
+unstable nature of this mode, as the direct replacement of hot pond 
+water with colder fluid induces sharp cooling. Nevertheless, the ANN 
+model successfully reproduces these fluctuations, validating its capa -
+bility to track rapid thermal changes.
+In the closed cycle, the water temperature begins at 25 
+◦
+C and 
+steadily climbs to a maximum of 62.88 
+◦
+C around 16:00 h. ANN pre -
+dictions remain tightly aligned, with minor underestimations during the 
+cooling phase (MRE = 0.54 %). The delayed yet higher peak relative to 
+the open cycle highlights the insulating effect of the closed-loop 
+exchanger, which minimizes evaporative and convective losses. This 
+configuration enables deeper and more gradual accumulation of thermal 
+energy within the pond, resulting in greater thermal stability and higher 
+output quality. The slight deviations between ANN and experiment 
+during the evening cooling period are linked to nonlinear exchanges 
+particularly sky radiation and convective currents which are challenging 
+to model with complete accuracy.
+The direct mode demonstrates the widest range, from 27 
+◦
+C at 07:00 
+h to a maximum of 66.44 
+◦
+C at 16:00 h. ANN predictions capture this 
+strong upward trend with high fidelity (MRE = 0.47 %), though slight 
+underestimations occur post-peak. The rapid heating arises from the 
+absence of an insulating exchanger, which allows immediate and direct 
+energy accumulation in the pond water. However, this also exposes the 
+system to stronger convective coupling with the ambient environment, 
+leading to larger diurnal fluctuations. The post-peak discrepancies be -
+tween ANN and experimental data reflect intensified radiative losses to 
+the cooler sky and convective cooling to ambient air.
+Fig. 10 illustrates a comparative analysis between experimental and 
+ANN-predicted absorber plate temperatures (T
+p
+) under the three heat 
+extraction modes: open, closed, and direct. The absorber plate, located 
+at the pond base, plays a critical role in capturing and redistributing 
+solar flux into the shallow water mass, making its thermal behavior 
+central to overall system efficiency.
+In the open cycle, T
+p 
+rises from 33 
+◦
+C at 07:00 h to a maximum of 
+53.94 
+◦
+C between 13:00 and 15:00 h. ANN predictions maintain close 
+agreement, with only slight deviations (maximum ≈ 0.13 
+◦
+C, MRE =
+0.50 %). The relatively lower peak temperature compared to the other 
+modes results from continuous withdrawal of hot water, which enhances 
+convective cooling at the absorber surface and promotes evaporative 
+losses at the air – water interface. These effects combine to reduce the 
+overall retention of absorbed heat, though the ANN model accurately 
+reproduces both the heating and cooling trajectories.
+The closed cycle begins at 26 
+◦
+C and gradually increases to 62.02 
+◦
+C 
+by 16:00 h. ANN predictions closely follow this progression, with only 
+minor underestimations during the late cooling phase (MRE = 0.52 %). 
+The higher peak relative to the open cycle reflects reduced evaporative 
+and convective losses due to the isolated heat exchanger configuration. 
+In this mode, the absorber plate effectively channels absorbed solar flux 
+into the bulk water, where heat accumulates more stably and with less 
+disruption from ambient air interactions.
+The direct mode shows the steepest rise, from 28 
+◦
+C in the morning to 
+66.36 
+◦
+C at 16:00 h. The ANN model captures this rapid heating trend 
+with excellent accuracy (MRE = 0.42 %), though slight post-peak vari -
+ations are observed. The absence of an exchanger barrier allows for 
+maximum heat buildup, but also increases susceptibility to strong 
+Fig. 10. Comparison of experimental and predicted absorber plate temperatures for open, closed, and direct modes.
+A. Terfai et al.                                                                                                                                                                                                                                   Unconventional Resources 8 (2025) 100240 
+9 
+===== PAGE 10 =====
+ambient coupling, explaining the sharp diurnal range. The post-peak 
+deviations are attributable to enhanced radiative losses from the 
+absorber to the sky and intensified convective cooling during evening 
+hours.
+An important observation from Fig. 10 is the closeness between 
+absorber plate, pond water, and lower glass cover temperatures, a direct 
+consequence of the shallow pond geometry. The minimal water depth 
+leads to weak vertical gradients, effectively homogenizing temperatures 
+across components. The lower glass cover aligns closely with bulk water 
+due to direct thermal contact, though it often registers slightly higher 
+values from direct solar irradiation and reduced dissipation to the 
+exchanger. Similarly, the absorber plate, positioned at the pond base, 
+absorbs direct solar flux that is quickly redistributed through conduction 
+and convection in the shallow water volume. This strong thermal 
+coupling underscores the highly interactive nature of shallow solar 
+ponds, a dynamic faithfully reproduced by the ANN model.
+Fig. 11 presents the experimental and ANN-predicted outlet fluid 
+temperature (T
+fo
+) profiles for the open and closed cycles, noting that the 
+direct mode is absent since T
+fo 
+is only relevant under active heat 
+extraction. The results show that the ANN model reproduces the 
+experimental trends with very high accuracy in both configurations. In 
+the open cycle, the outlet temperature rises from 30 
+◦
+C at 07:00 h and 
+stabilizes around 51.5 
+◦
+C between 13:00 – 16:00 h, with only minor de -
+viations from experimental values (max ≈ 0.29 
+◦
+C, MRE = 0.66 %). In 
+the closed cycle, the fluid warms from 25 
+◦
+C to a delayed but higher peak 
+of 58.88 
+◦
+C at 16:00 h, with the ANN again matching closely, except for 
+slight underestimations during the cooling phase (MRE = 0.63 %). These 
+patterns highlight the different thermal mechanisms of each configura -
+tion: the open cycle is constrained by direct heat transfer fluid 
+replacement, convective cooling, and enhanced evaporative losses, 
+which accelerate stabilization of the outlet temperature around midday; 
+while the closed cycle benefits from exchanger isolation, allowing 
+deeper accumulation of heat and smoother delivery, which explains its 
+higher and more stable outlet temperature. Comparatively, the open 
+cycle favors faster but less stable extraction, while the closed cycle en -
+sures higher-quality thermal energy with better buffering capacity and 
+reduced sensitivity to ambient fluctuations. Since T
+fo 
+represents the final 
+useable energy of the system, its sensitivity to extraction strategy makes 
+it a critical indicator of system efficiency.
+Fig. 12 presents the experimental and ANN-predicted water tank 
+temperature (T
+wt
+) profiles under the closed-cycle configuration. Starting 
+from 25 
+◦
+C at 07:00 h, the tank temperature increases steadily 
+throughout the day, reaching a maximum of 53.56 
+◦
+C around 17:00 h 
+before stabilizing. The ANN model captures this thermal evolution with 
+high accuracy, with only slight deviations during the final stabilization 
+phase (MRE = 0.68 %). This smooth and continuous rise reflects the role 
+of the insulated storage tank as a thermal buffer, which minimizes the 
+influence of ambient convective and radiative disturbances and ensures 
+gradual accumulation of heat. Unlike the pond water that directly ex -
+changes energy with the environment, the tank retains thermal energy 
+more effectively, producing a delayed but stable temperature profile. 
+The eventual stabilization of T
+wt 
+indicates that thermal equilibrium is 
+reached when the heat input from the solar pond balances the losses 
+through the tank walls, while the small discrepancies in ANN predictions 
+are likely linked to nonlinear insulation effects and delayed heat 
+response. These results confirm the superior storage capacity and ther -
+mal inertia of the closed cycle, which enhances the system ’ s ability to 
+preserve heat and deliver stable thermal energy for extended use. The 
+close agreement between ANN predictions and experiments further 
+demonstrates the robustness of the model, supporting its potential 
+application not only in forecasting but also in real-time optimization of 
+thermal storage management within solar pond systems.
+Fig. 13 illustrates the experimental temperature variations of the 
+solar pond under the three extraction modes, alongside solar radiation 
+intensity, which peaked at 909.82 W/m
+2 
+at 12:00 h. A clear thermal lag 
+is observed between the radiation maximum and the peak fluid tem -
+peratures, a result of the water ’ s high thermal inertia and slow heat 
+transfer dynamics. This effect is most pronounced in the closed cycle and 
+Fig. 11. Measured and simulated heat transfer fluid temperature profiles: observations vs. ANN predictions.
+A. Terfai et al.                                                                                                                                                                                                                                   Unconventional Resources 8 (2025) 100240 
+10 
+===== PAGE 11 =====
+direct extraction modes, where the larger thermal mass delays but sus -
+tains the heating response. By contrast, the open-cycle mode exhibits a 
+faster response to solar fluctuations due to continuous circulation and 
+direct mixing, though this results in lower peak values and reduced 
+storage capacity. The closed cycle achieves the most stable and extended 
+thermal retention, maintaining elevated temperatures well into the 
+Fig. 12. Storage tank temperature: experimental results versus model estimates.
+Fig. 13. Comparison of experimental fluid and water temperatures for open, closed, and direct modes with solar radiation.
+A. Terfai et al.                                                                                                                                                                                                                                   Unconventional Resources 8 (2025) 100240 
+11 
+===== PAGE 12 =====
+evening and thereby minimizing losses, while the direct mode produces 
+higher peaks but with stronger fluctuations and rapid cooling once solar 
+input diminishes. The open cycle, although more moderate, provides a 
+relatively balanced performance but with lower long-term efficiency. 
+These results are consistent with earlier findings by Aboul-Enein et al. 
+[ 24 ], Ramadan et al. [ 25 ], El-Sebaii et al. [ 26 ], and El-Sebaii et al. [ 27 ], 
+confirming the superior energy conservation capability of the closed 
+configuration.
+7. Model predictive control design and parameter identification
+Building on the experimental comparison of the three extraction 
+modes ( Fig. 13 ), it was shown that the closed cycle delivers the most 
+stable and extended heat retention, ensuring minimal thermal losses and 
+sustained elevated temperatures. This superior stability makes the 
+closed configuration the most suitable candidate for advanced control 
+enhancement. Accordingly, this section develops a hybrid ANN – MPC 
+strategy aimed at regulating the fluid flow rate in the SSP closed cycle. 
+The controller is designed with two main objectives: (i) minimizing the 
+outlet temperature tracking error, and (ii) reducing the energy con -
+sumption of the circulation pump. Implementation is carried out on the 
+QR30E brushless DC pump, which operates within a constrained flow 
+range, making it particularly well-suited for predictive optimization 
+guided by the ANN model.
+7.1. Controller concept
+The MPC controller estimates the optimal flow rate by simulating the 
+future outlet temperature response for a set of candidate flow rates. For 
+each candidate value, the temperature correction is evaluated using a 
+simplified dynamic model: 
+T
+fo , corr
+= T
+fo , pred
++ α . tanh ( β ( ˙m   0 . 01 )) (5) 
+where: 
+1. T
+fo,corr
+: the corrected or future temperature after applying the MPC 
+adjustment.
+2. T
+fo,pred
+: the temperature predicted by the ANN model without 
+correction.
+3. ˙m : the mass flow rate of the working fluid in the heat exchanger (kg/ 
+s).
+4. α : the gain factor, representing the magnitude of the thermal 
+correction applied by the MPC.
+5. β : the sensitivity factor, which controls how sharply the tanh func -
+tion responds to variations in the flow rate.
+6. 0.010: the reference set-point for the mass flow rate, approximately 
+corresponding to the minimum operational flow rate of the QR30E 
+pump used in the system.
+The overall workflow of the proposed ANN – MPC control strategy, 
+including the prediction, decision, and feedback loop, is illustrated in 
+Fig. 14 .
+7.1.1. Determination of α and β parameters
+To effectively tune the MPC, it is essential to determine the correc -
+tion parameters α and β . These parameters were identified through an 
+offline optimization procedure, in which the objective was to minimize 
+the error between the desired outlet temperature (T
+fo-set
+) and the ANN- 
+predicted temperature (T
+fo-pred
+). The experimental mass flow rate profile 
+was employed as input during this optimization, ensuring that the 
+identified parameters reflect realistic operating conditions. The opti -
+mization was carried out using the fminsearch algorithm, which itera -
+tively adjusted α and β to reduce the mean squared error (MSE) between 
+the target and predicted temperatures.
+The obtained results, illustrated in Fig. 15 , confirm that the corrected 
+temperature trajectory closely follows the setpoint. This outcome vali -
+dates the suitability of the optimized parameters ( α =   22.93619, β =
+33.23245) for incorporation into the MPC framework, as they encap -
+sulate the system ’ s dynamic behavior. The corrected output (T
+fo-fmin -
+search
+) achieved a low MSE of 0.98907, demonstrating the effectiveness 
+of this approach for enhancing prediction accuracy and ensuring robust 
+real-time control performance.
+7.2. Neural Network-Based MPC control system architecture
+Fig. 16 illustrates the architecture of an MPC system integrated with 
+an ANN for effective temperature regulation. This hybrid system com -
+bines the predictive capabilities of an ANN with the optimization po -
+tential of MPC to ensure precise control over the system ’ s temperature.
+7.2.1. System overview
+The architecture consists of the following key components: 
+• Input: The initial temperature and process input to the system.
+• Function Fitting Neural Network (FNN): A data-driven model trained 
+to predict the system ’ s output temperature T
+fo-corr 
+based on input 
+dynamics and historical data.
+• MPC Controller: Utilizes the predictions from the ANN to optimize 
+the flow rate in order to minimize the error between the T
+fo-pred 
+and 
+the T
+fo-set
+.
+• Error Signal: The difference between the T
+fo-pred 
+and the T
+fo-set 
+serves 
+as the primary input to the MPC, driving corrective actions to adjust 
+the flow rate and maintain temperature stability.
+7.2.2. System workflow
+The system operates in a feedback loop, and its workflow can be 
+broken down into the following steps: 
+1. Neural Network Prediction:
+The FNN processes the input data and simulates the expected output 
+temperature T
+fo-corr. 
+The ANN ’ s predictive model captures the system ’ s 
+dynamics, providing an estimation of the future temperature response. 
+2. MPC Optimization:
+The MPC controller evaluates the predicted temperature against the 
+desired setpoint.
+Using the predefined parameters α and β (discussed in Section 7.1 ), 
+the MPC calculates the optimal mass flow rate. This optimization min -
+imizes the error between the predicted temperature and the setpoint, 
+ensuring efficient system operation. 
+3. Closed-Loop Correction:
+Based on the optimization by the MPC, the adjusted flow rate is 
+applied to the system. The process is repeated in real-time, continuously 
+correcting the flow rate to ensure temperature stability and to meet the 
+target setpoint.
+Fig. 17 illustrates a comparison between mass flow rate patterns 
+observed under two different conditions: the first controlled by an MPC, 
+and the second recorded during the training phase of the ANN.
+The mass flow rate managed by the MPC exhibits a more adaptive 
+and energy-efficient pattern. Starting at approximately 9 × 10
+  3 
+kg/s in 
+the early morning, the flow rate gradually decreases and remains rela -
+tively low during midday hours when the temperature naturally rises. 
+The system then increases the flow rate in the late afternoon as solar 
+radiation declines.
+This behavior confirms that the MPC effectively and dynamically 
+adjusts the mass flow rate in real time to minimize thermal losses while 
+maintaining a temperature close to the desired setpoint.
+A. Terfai et al.                                                                                                                                                                                                                                   Unconventional Resources 8 (2025) 100240 
+12 
+===== PAGE 13 =====
+Fig. 14. Integrated flow process and ANN – MPC control loop for real-time thermal regulation in the SSP.
+A. Terfai et al.                                                                                                                                                                                                                                   Unconventional Resources 8 (2025) 100240 
+13 
+===== PAGE 14 =====
+Fig. 18 presents a comparative analysis of the outlet temperature 
+profiles under three distinct operational scenarios. The red curve, rep -
+resenting the outlet temperature corrected by the MPC system T
+fo-corr
+, 
+clearly exceeds in performance the black curve, which corresponds to 
+the temperature predicted by the ANN without any corrective action T
+fo- 
+pred
+. Although both temperature profiles were obtained under the same 
+reduced solar irradiance conditions (green curve, recorded on 
+November 17), the red curve consistently remains in closer proximity to 
+the reference temperature T
+fo-set 
+(blue curve), particularly during the 
+critical midday and afternoon hours. This improved performance is 
+attributed to the adaptive regulation of the mass flow rate provided by 
+the MPC system, which adjusts the fluid flow in real time. Consequently, 
+the working fluid resides for a longer duration within the heat exchanger 
+during periods of low solar irradiance, enabling more efficient heat 
+capture and reducing thermal losses.
+Quantitatively, the maximum outlet temperature achieved by the 
+MPC system was approximately 52.1 
+◦
+C, whereas the temperature pre -
+dicted by the ANN without correction peaked at 49.3 
+◦
+C, resulting in a 
+2.8 
+◦
+C advantage for the MPC approach. The minimum outlet temper -
+atures were 24.9 
+◦
+C for the corrected temperature profile and 24.0 
+◦
+C for 
+the predicted profile, indicating enhanced early-morning heat retention. 
+With respect to prediction accuracy, the mean absolute error relative 
+Fig. 15. Optimization of Parameters α and β for Temperature Prediction Correction.
+Fig. 16. Schematic of a neural network-based MPC system for temperature control.
+A. Terfai et al.                                                                                                                                                                                                                                   Unconventional Resources 8 (2025) 100240 
+14 
+===== PAGE 15 =====
+(MAE) to the reference temperature T
+fo-set 
+was 1.42 
+◦
+C for the corrected 
+profile, compared to 2.97 
+◦
+C for the predicted profile, representing a 
+52.2 % reduction in error. This substantial improvement confirms the 
+superior tracking capability of the MPC system and its effectiveness in 
+maintaining temperature stability through intelligent adjustment of the 
+mass flow rate.
+Both the corrected and predicted temperature profiles display 
+distinct dips throughout the day, directly corresponding to fluctuations 
+in solar irradiance as observed in the green curve, particularly between 
+09:30 and 16:00, when radiation dropped below 500 W/m
+2
+. These 
+variations reflect the system ’ s thermal response to cloudy weather 
+conditions. In contrast, the reference temperature profile T
+fo-set
+, derived 
+from ANN predictions using clear-sky solar data from August 17 (purple 
+curve), exhibits a smooth and uninterrupted temperature trajectory, 
+with solar irradiance peaking around 950 W/m
+2 
+and remaining stable.
+This comparative analysis highlights the sensitivity of the SSP to 
+Fig. 17. Comparison of MPC-Controlled vs. ANN-Trained Mass Flow Rates.
+Fig. 18. Outlet Temperature Comparison under ANN-Trained vs. MPC-Controlled Flow Rates with Varying Solar Radiation.
+A. Terfai et al.                                                                                                                                                                                                                                   Unconventional Resources 8 (2025) 100240 
+15 
+===== PAGE 16 =====
+variations in solar radiation and emphasizes the effectiveness of the MPC 
+system in mitigating these challenges. By continuously adjusting the 
+mass flow rate in response to real-time environmental inputs, the system 
+enhances thermal regulation, improves adherence to the desired outlet 
+temperature, and maintains high operational efficiency even under non- 
+ideal solar conditions.
+8. Conclusion
+This study successfully demonstrated the superior thermal perfor -
+mance of a closed-cycle SSP, insulated and equipped with double- 
+glazing, a PVC heat exchanger, and a black-painted bottom, and the 
+efficacy of a hybrid ANN and MPC framework for its optimization. 
+Experimental results under identical environmental conditions 
+confirmed that the closed-cycle mode outperformed both direct and 
+open-cycle modes, providing higher peak temperatures, enhanced 
+thermal stability, and prolonged heat retention due to minimized 
+convective and evaporative losses.
+The developed ANN model proved to be a powerful tool for pre -
+dicting the complex, nonlinear thermal behavior of the SSP. The opti -
+mally configured network (trainbr algorithm, 2 hidden layers, 15 
+neurons) achieved remarkable accuracy across all measured tempera -
+tures (T
+C1
+, T
+C2
+, T
+wp
+, T
+p
+, T
+fo
+, T
+wt
+) and under all operational modes, 
+validating its capability to handle both steady-state and dynamic 
+conditions.
+The most significant contribution of this work is the integration of 
+this accurate ANN model into a real-time MPC strategy. By dynamically 
+adjusting the mass flow rate based on predictive control, the MPC – ANN 
+system reduced thermal tracking errors by more than 50 %, significantly 
+enhancing the system ’ s efficiency and robustness against solar irradi -
+ance variations. The optimized control parameters ( α =   22.94, β =
+33.23) for the closed-cycle operation highlight the potential for adap -
+tive, energy-efficient management of solar thermal systems.
+In summary, this research provides: 
+1. A definitive experimental comparison establishing the closed-cycle 
+configuration as the most efficient method for heat extraction from 
+an SSP.
+2. A highly accurate, data-driven ANN model for the thermal simula -
+tion of SSPs.
+3. A practical and intelligent MPC – ANN control framework that 
+significantly improves real-time operational efficiency and thermal 
+output stability.
+This integrated approach paves the way for the intelligent automa -
+tion and optimization of renewable energy systems, promising greater 
+reliability and efficiency for practical, large-scale solar thermal appli -
+cations. Future work will focus on extending this strategy to multi- 
+objective optimization and real-world hardware-in-the-loop validation.
+CRediT authorship contribution statement
+Abdelkrim Terfai: Writing – original draft, Validation, Software, 
+Resources, Methodology, Funding acquisition, Formal analysis, Data 
+curation, Conceptualization. Younes Chiba: Writing – review & editing, 
+Visualization, Validation, Supervision, Investigation, Data curation, 
+Conceptualization. Mounir Zirari: Writing – review & editing, Valida -
+tion, Supervision, Project administration. Mohamed Najib Bouaziz: 
+Writing – review & editing, Validation, Supervision, Project 
+administration.
+Declaration of competing interest
+The authors declare that they have no known competing financial 
+interests or personal relationships that could have appeared to influence 
+the work reported in this paper.
+Acknowledgement
+This research was supported by the Renewable Energy and Materials 
+Laboratory, University Yahia Fares of Medea, Algeria.
+Nomenclature
+Geometric and physical parameters
+• A Area (m
+2
+)
+• D
+he
+Tube diameter of the pond heat exchanger (m)
+• L
+he
+Tube length of the pond heat exchanger (m)
+• δ
+is
+Insulating material thickness (m)
+• δ
+w
+Depth of the shallow solar pond (m)
+• k Thermal conductivity (W/m ⋅ K)
+• ρ Density (kg/m
+3
+)
+• C
+p
+Specific heat capacity (J/kg ⋅ K)
+• m
+wt
+Mass of water in the storage tank (kg)
+• m Mass flow rate (kg/s)
+Thermal and experimental variables
+• T
+a 
+– Air (ambient) temperature (
+◦
+C)
+• T
+p 
+– Absorber plate temperature (
+◦
+C)
+• T
+C1 
+– Lower glass cover temperature (
+◦
+C)
+• T
+C2 
+– Upper glass cover temperature (
+◦
+C)
+• T
+wp 
+– Pond water temperature (
+◦
+C)
+• T
+fi 
+– Inlet fluid temperature to heat exchanger (
+◦
+C)
+• T
+fo 
+– Outlet fluid temperature from heat exchanger (
+◦
+C)
+• T
+wt 
+– Storage tank water temperature (
+◦
+C)
+• T
+fo-set 
+– Setpoint outlet fluid temperature (
+◦
+C)
+• T
+fo-corr 
+– Corrected outlet fluid temperature (
+◦
+C)
+• T
+fo-pred 
+– Predicted outlet fluid temperature by ANN (
+◦
+C)
+Environmental parameters
+• I
+T 
+– Solar radiation (W/m
+2
+)
+• Hum – Relative humidity (%)
+• W
+speed 
+– Wind speed (m/s)
+• Time – Desired time period (min)
+Heat transfer & optical properties
+• Q – Heat transfer rate (W)
+• α
+p 
+– Absorptivity of absorber plate (   )
+• α
+g 
+– Absorptivity of glass cover (   )
+• τ
+g 
+– Transmissivity of glass cover (   )
+• ε g – Emissivity of glass cover (   )
+• ε – Heat exchanger effectiveness (   )
+ANN / MPC modeling parameters
+• e
+i
+Experimental value
+• p
+i
+Predicted value
+• n Number of independent data samples
+• α , β Regression/ANN model parameters
+• ANNs Artificial Neural Networks
+• MPC Model Predictive Control
+• SSP Shallow Solar Pond
+Error analysis & statistics
+• SSE – Sum of Squared Errors
+• RMSE – Root Mean Square Error
+• MRE – Mean Relative Error
+• MAE – Mean Absolute Error Relative
+• R
+2 
+– Coefficient of determination
+References
+[1] K.H. Solangi, M.R. Islam, R. Saidur, N.A. Rahim, H. Fayaz, A review on global solar 
+energy policy, Renew. Sustain. Energy Rev. 15 (4) (2011) 2149 – 2163 .
+A. Terfai et al.                                                                                                                                                                                                                                   Unconventional Resources 8 (2025) 100240 
+16 
+===== PAGE 17 =====
+[2] H.P. Garg, A. Shukla, A.K. Bhargava, Shallow solar pond: state-of-the-art, Energy 
+Convers. Manag. 22 (2) (1982) 117 – 131 .
+[3] W.C. Dickinson, J.H. Brown, The shallow solar pond energy conversion system, Sol. 
+Energy 18 (1) (1976) 3 – 10 .
+[4] A. Kudish, Sede Boqer shallow pond project, Energy 6 (3) (1981) 277 – 292 .
+[5] M.S. Sodha, G.N. Tiwari, J.K. Nayak, Shallow solar pond water heater: an 
+analytical study, Energy Convers. Manag. 21 (2) (1981) 137 – 139 .
+[6] P.K. Bansal, D. Buddhi, R.L. Sawhney, Effect of heat exchanger on the performance 
+of a shallow solar pond water heater, Energy Convers. Manag. 24 (4) (1984) 
+259 – 263 .
+[7] A. Terfai, et al., Thermal performance enhancement of a shallow solar pond based 
+on nanofluids, J. Nano- Electron. Phys. 12 (1) (2020) 01015, 1 – 01015-6 .
+[8] H.M. Ali, M. Akhlaghi, Experimental study in a shallow solar pond, Sol. Wind 
+Technol. 4 (4) (1987) 425 – 430 .
+[9] J. Gonzalez, L.R. Perez, J. Benitez, Modeling the thermal process in a shallow solar 
+pond water heater, Sol. Energy 48 (4) (1992) 261 – 265 .
+[10] V. Velmurugan, K. Srithar, Solar stills integrated with a mini solar 
+pond — analytical simulation and experimental validation, Desalination 216 (1 – 3) 
+(2007) 232 – 241 .
+[11] A.A. El-Sebaii, M.R.I. Ramadan, S. Aboul-Enein, N. Salem, Thermal performance of 
+a single-basin solar still integrated with a shallow solar pond, Energy Convers. 
+Manag. 49 (10) (2008) 2839 – 2848 .
+[12] A.A. El-Sebaii, S. Aboul-Enein, M.R.I. Ramadan, A.M. Khallaf, Thermal 
+performance of an active single basin solar still (ASBS) coupled to shallow solar 
+pond (SSP), Desalination 280 (1 – 3) (2011) 183 – 190 .
+[13] T. Khatib, A. Mohamed, K. Sopian, A review of solar energy modeling techniques, 
+Renew. Sustain. Energy Rev. 16 (5) (2012) 2864 – 2869 .
+[14] H.K. Ghritlahre, R.K. Prasad, Application of ANN technique to predict the 
+performance of solar collector systems — A review, Renew. Sustain. Energy Rev. 84 
+(2018) 75 – 88 .
+[15] E.D. Reyes-T ´ellez, A. Parrales, G.E. Ramírez-Ramos, J.A. Hern ´andez, G. Urquiza, 
+M.I. Heredia, F.Z. Sierra, Analysis of transfer functions and normalizations in an 
+ANN model that predicts the transport of energy in a parabolic trough solar 
+collector, Desalination Water Treat. 200 (2020) 23 – 41 .
+[16] H. Benli, Determination of thermal performance calculation of two different types 
+of solar air collectors with the use of artificial neural networks, Int. J. Heat Mass 
+Tran. 60 (2013) 1 – 7 .
+[17] A. Ahmad, H.K. Ghritlahre, P. Chandrakar, Implementation of ANN technique for 
+performance prediction of solar thermal systems: a comprehensive review, Trends 
+Renew. Energy 6 (1) (2020) 12 – 36 .
+[18] G. Sadeghi, S. Nazari, M. Ameri, F. Shama, Energy and exergy evaluation of the 
+evacuated tube solar collector using Cu
+2
+O/water nanofluid utilizing ANN methods, 
+Sustain. Energy Technol. Assessments 37 (2020) 100578 .
+[19] A. Abidi, A.I. Khdair, R. Kalbasi, Using ANN techniques to forecast thermal 
+performance of a vacuum tube solar collector filled with SiO
+2
+/EG-water nanofluid, 
+J. Taiwan Inst. Chem. Eng. 128 (2021) 301 – 313 .
+[20] A.H. Elsheikh, et al., Modeling of solar energy systems using artificial neural 
+network: a comprehensive review, Sol. Energy 180 (2019) 622 – 639 .
+[21] K. Kamiuto, T. Oda, Thermal performance of a shallow solar-pond water heater 
+with semitransparent, multilayer surface insulation, Energy 16 (10) (1991) 
+1239 – 1245 .
+[22] R.E. Bird, R.L. Hulstrom, Simplified Clear Sky Model for Direct and Diffuse 
+Insolation on Horizontal Surfaces, Solar Energy Research Institute, Golden, CO, 
+USA, 1981. Technical Report SERI/TR-642-761 .
+[23] S. Haykin, Neural Networks and Learning Machines, third ed., Pearson, Upper 
+Saddle River, NJ, USA, 2009 .
+[24] S. Aboul-Enein, A.A. El-Sebaii, M.R.I. Ramadan, A.M. Khallaf, Parametric study of a 
+shallow solar pond under the batch mode of heat extraction, Appl. Energy 78 (2) 
+(2004) 159 – 177 .
+[25] M.R.I. Ramadan, A.A. El-Sebaii, S. Aboul-Enein, A.M. Khallaf, Experimental testing 
+of a shallow solar pond with continuous heat extraction, Energy Build. 36 (9) 
+(2004) 955 – 964 .
+[26] A.A. El-Sebaii, S. Aboul-Enein, M.R.I. Ramadan, A.M. Khallaf, Thermal 
+performance of shallow solar pond under open cycle continuous flow heating mode 
+for heat extraction, Energy Convers. Manag. 47 (7 – 8) (2006) 1014 – 1031 .
+[27] A.A. El-Sebaii, S. Aboul-Enein, M.R.I. Ramadan, A.M. Khallaf, Thermal 
+performance of shallow solar pond under open and closed cycle modes of heat 
+extraction, Sol. Energy 95 (2013) 30 – 41 .
+A. Terfai et al.                                                                                                                                                                                                                                   Unconventional Resources 8 (2025) 100240 
+17 

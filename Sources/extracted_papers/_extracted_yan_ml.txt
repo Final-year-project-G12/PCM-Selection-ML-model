@@ -1,0 +1,1185 @@
+
+--- PAGE 1 ---
+The potential of machine learning to predict melting response time of phase 
+change materials in triplex-tube latent thermal energy storage systems
+☆
+Peiliang Yan
+a
+, Chuang Wen
+b , *
+, Hongbing Ding
+c
+, Xuehui Wang
+d
+, Yan Yang
+e , *
+a
+School of Energy and Power Engineering, Beihang University, Beijing 100191, China
+b
+School of the Built Environment, University of Reading, Reading RG6 6AH, United Kingdom
+c
+School of Electrical and Information Engineering, Tianjin University, Tianjin 300072, China
+d
+School of Mechanical & Materials Engineering, University College Dublin, Dublin D04 V1W8, Ireland
+e
+Faculty of Environment, Science and Economy, University of Exeter, Exeter EX4 4QF, United Kingdom
+HIGHLIGHTS
+• Y-shaped fins to enhance phase change material charging performance in latent thermal energy storage systems.
+• Predicting melting response time using four machine learning methods.
+• Evaluation of model performance using mean square error and coefficient of determination.
+• Conducted Feature importance evaluation to guide fin improvements.
+ARTICLE INFO
+Keywords:
+Phase change material
+Thermal energy storage
+Machine learning
+Melting response time
+XGBoost algorithm
+ABSTRACT
+Accurate prediction of the melting response time is vital for optimizing thermal energy storage systems, which 
+play a key role in addressing the temporal mismatch between thermal energy demand and supply in the built 
+environment. This study aims to quantitatively predict the melting response time of a novel triplex-tube thermal 
+energy storage system incorporating phase change materials and Y-shaped fins to enhance heat transfer. A nu -
+merical model based on the enthalpy-porosity method was developed to simulate the melting process, resulting 
+in a dataset comprising 60 cases with melting response times ranging from 15 to 45 min under varying design 
+and operational conditions. The key parameters investigated include fin angle (10
+◦
+– 30
+◦
+), fin width (5 – 15 mm), 
+and heat transfer fluid temperature (60 
+◦
+C – 80 
+◦
+C). Prior to model development, variable independence was 
+validated to ensure robust predictions. Four machine learning algorithms — polynomial regression, support vector 
+regression, random forest regression, and extreme gradient boosting (XGBoost) — were employed, with hyper -
+parameter optimization performed using a Bayesian approach. The XGBoost model demonstrated superior pre -
+dictive capability, achieving an accuracy of 92 %. Feature importance analysis revealed that fin width and heat 
+transfer fluid temperature were the dominant factors, contributing 51 % and 47 % to the prediction variance, 
+respectively, whereas fin angle had a marginal influence of 2 %. This work provides a novel application of 
+machine learning techniques to the design and optimization of thermal energy storage systems, offering valuable 
+insights into improving their melting performance and operational efficiency.
+1. Introduction
+In the last century, the global average temperature has risen signif -
+icantly, primarily due to industrialization. According to the 6th 
+Assessment Report from the Intergovernmental Panel on Climate 
+Change (IPCC, 2023), global surface temperatures have increased by 
+1.09 
+◦
+C [ 1 ]. This rise in temperature poses serious challenges, prompting 
+various industries to recognize the urgent need to adopt renewable en -
+ergy sources to reduce carbon emissions [ 2 – 4 ]. For instance, many 
+modern urban buildings are now using solar collectors to supply heating 
+[ 5 ]. However, a major issue is that peak heating demand often does not 
+align with when solar energy is available [ 6 ]. To address this mismatch, 
+the main solutions involve electrical options and thermal energy storage 
+☆
+This article is part of a Special issue entitled: ‘Decarbonize the Industry(Zishuai Bill Zhang) ’ published in Applied Energy.
+* Corresponding authors.
+E-mail addresses: c.wen@reading.ac.uk (C. Wen), y.yang7@exeter.ac.uk (Y. Yang). 
+Contents lists available at ScienceDirect
+Applied Energy
+journal homepag e: www.else vier.com/loc ate/apene rgy
+https://doi.org/10.1016/j.apenergy.2025.125863
+Received 26 January 2025; Received in revised form 26 March 2025; Accepted 3 April 2025  
+Applied Energy 390 (2025) 125863 
+Available online 10 April 2025 
+0306-2619/© 2025 The Authors. Published by Elsevier Ltd. This is an open access article under the CC BY license ( http://creativecommons.org/licenses/by/4.0/ ). 
+--- PAGE 2 ---
+(TES) [ 7 ]. While electrical systems can provide flexibility, they often 
+rely on fossil fuels, leading to higher carbon emissions. In contrast, TES 
+systems store solar energy as heat, resulting in lower emissions and a 
+more sustainable approach to achieving carbon neutrality in the built 
+environment.
+TES can be divided into three types: sensible, latent, and thermo -
+chemical energy storage [ 8 ]. Latent heat storage, which uses phase 
+change materials (PCMs), has gained considerable interest in recent 
+years [ 9 ]. This technology allows for the efficient storage and release of 
+energy at nearly constant temperatures while maintaining a high energy 
+storage density [ 10 ]. Its applications extend across various fields, such 
+as the food industry [ 11 ], battery thermal management [ 12 ], distributed 
+heat supply systems [ 13 ], solar thermal supply [ 14 ] and other fields 
+[ 15 – 17 ].
+A common component of latent heat storage systems is the triplex- 
+tube latent thermal energy exchanger. This system consists of three 
+tubes arranged to form three channels: the inner and outer channels are 
+filled with heat transfer fluid (HTF), while the middle channel contains 
+the PCM [ 18 ]. During the charging process, the PCM in the middle 
+channel absorbs heat and begins to melt, effectively storing energy. 
+When there is a demand for heating, the stored thermal energy can be 
+released back into the system, providing a reliable source of heat even 
+when solar energy is not available.
+However, the poor thermal conductivity of PCMs results in a slow 
+rate of energy release, which limits their application [ 19 ]. Therefore, 
+researchers have conducted some studies on the enhancement of melting 
+speed in PCM. Common heat transfer enhancement techniques include 
+inserting fins [ 20 ], adding nanoparticles [ 21 ], etc. While these methods 
+slightly reduce the volume proportion of PCM in the middle channel of a 
+triplex-tube latent thermal energy exchanger, they can significantly 
+improve the heat transfer rate and yield better results. Importantly, the 
+chemical stability of PCMs remains intact, even after many charging 
+cycles [ 22 ].
+Factors such as fin length [ 23 ], initial temperature [ 24 ], and many 
+other parameters can greatly affect the heat transfer performance of 
+triplex-tube latent thermal energy storage systems. It is essential to 
+understand how different parameters influence the heat transfer effect 
+when designing new systems. To quantify these impacts, researchers 
+have conducted numerous studies.
+Direct measurement of the melt time of TES systems using experi -
+mental method is an accurate way to obtain heat transfer performance. 
+In contrast, more researchers are using numerical simulation methods to 
+obtain melt time because of the high cost of manufacturing components 
+for different experiments in different conditions. In triplex-tube TES 
+systems, researchers have designed a variety of fins [ 25 – 27 ] and tested 
+them using simulation methods to reduce costs and enhance efficiency.
+To accelerate the optimization process, researchers use faster pre -
+dictive models to replace time-consuming simulation methods. One 
+approach is the empirical formula method, where researchers derive 
+data through experimentation or simulation and then fit it into mathe -
+matical formulas. Rieger was among the first to summarize empirical 
+formulas related to the heat transfer performance of phase change ma -
+terials, providing empirical formulas for the Nusselt number in relation 
+to the Rayleigh number for a PCM in a heated cylinder [ 28 ]. Wang 
+summarized empirical formulas for the melting behavior of a heated 
+vertical wall in a rectangular enclosure [ 29 ]. Assis presented an 
+empirical formula for the melting of PCM inside a spherical shell [ 30 ]. 
+Chabot et al. described the relationship between the solid crust dimen -
+sion of periodically heated horizontal tubes and three dimensionless 
+numbers: the Prandtl number, Stefan number, and Rayleigh number 
+[ 31 ]. Despite these contributions, the empirical formula method has 
+notable shortcomings. The equations take various forms, often failing to 
+accurately represent the actual relationships between variables, making 
+them applicable only to specific scenarios. When attempting to extend 
+these formulas to new situations, their forms may need adjustment or 
+entirely new formulas may have to be developed. Additionally, the 
+prediction accuracy of these formulas can be limited, leading to signif -
+icant errors under certain conditions. These limitations have driven re -
+searchers to seek new prediction methods.
+Machine learning has emerged as a powerful prediction tool in recent 
+decades, attracting the interest of researchers across various industries 
+[ 32 – 34 ]. In the field of phase change material based TES system re -
+searches, Ermis et al. used artificial neural networks (ANN) to predict 
+the thermal storage capacity of a PCM-based finned tube thermal storage 
+system [ 35 ]. Fini et al. applied the ANN approach to identify optimal 
+working conditions for PCM-based battery cooling [ 36 ]. Walker et al. 
+developed an algorithm that predicts the remaining time for a PCM to 
+reach a target melting fraction in real time for an electronic device 
+cooling system, also using an ANN [ 37 ]. These examples demonstrate 
+that machine learning methods for predicting heat transfer performance 
+related to PCMs offer significant advantages.
+For predicting the melting time of the TES system, traditional 
+methods have been the mainstream approach, as previously discussed, 
+and these methods have been widely applied across different TES 
+Nomenclature
+English symbols
+C model constants
+c heat capacity [J/kg ⋅ K]
+g gravity constant [m/s
+2
+]
+H latent heat [J/kg]
+k thermal conductivity [W/m ⋅ K]
+p pressure [Pa]
+S source term
+T temperature [K]
+t time [s]
+u fluid velocity in x direction [m/s]
+v fluid velocity in y direction [m/s]
+Greek symbols
+β thermal expansion coefficient [1/K]
+ε model constants
+θ fin angle [
+◦
+]
+λ local liquid fraction
+μ dynamic viscosity [Pa ⋅ s]
+ρ density [kg/m
+3
+]
+Subscripts
+l liquid
+m melting
+p constant pressure
+s solid
+ref reference
+Abbreviations
+HTF heat transfer fluid
+MSE mean square error
+PCM phase change material
+PR polynomial regression
+R
+2
+coefficient of determination
+RFR random forest regression
+SVR support vector regression
+TES thermal energy storage
+XGboost extreme gradient boosting
+P. Yan et al.                                                                                                                                                                                                                                     Applied Energy 390 (2025) 125863 
+2 
+--- PAGE 3 ---
+systems. However, in recent years, data-driven machine learning tech -
+niques have gained popularity for their ability to quickly predict melting 
+outcomes, thus circumventing the lengthy numerical simulation pro -
+cesses. To create meta-models of the first-principle simulation model for 
+this scenario, it is essential to explore various types of machine learning 
+models in order to identify an effective model for predicting melting 
+time.
+In our previous work, we established a triplex-tube PCM-TES system 
+featuring novel Y-shaped fins and qualitatively analyzed the effects of 
+various parameters [ 38 ]. Building on these findings, the present study 
+aims to enhance the prediction of melting response time in this triplex- 
+tube latent thermal energy storage (TES) system using machine learning 
+techniques. To achieve this aim, the following objectives have been 
+identified: developing predictive models, evaluating their performance, 
+conducting sensitivity analysis, optimizing hyperparameters, and 
+providing design guidelines.
+2. Dataset
+2.1. TES system
+The research object of the study is a triplex-tube novel thermal en -
+ergy storage system. PCMs are used to store thermal energy, with Y- 
+shaped fins for heat transfer enhancement, which has a cross-sectional 
+structure as shown in Fig. 1 . The outer diameters of the three concen -
+tric copper tubes from the outside to the inside are 200 mm, 150 mm and 
+50.8 mm respectively, and the wall thicknesses are 2 mm, 2 mm and 1.2 
+mm respectively. The fins are attached to the inner and middle tubes of 
+the middle annular region and staggered, respectively. The total cross- 
+sectional area of the Y-fin is fixed as 2 % of the cross-sectional area of 
+the system, and the length of the branch fins is twice the length of the 
+root fin, making the structure of the Y-fin in this case controlled by three 
+parameters (See Fig. 2 ). The explanation of the parameters and their 
+values are given in Table 1 . In this study, RT82 was used as the PCM and 
+copper was used as the material for the fins as well as the tubes, the 
+physical properties of which are shown in Table 2 .
+2.2. Simulation method
+The dataset for this study was obtained by the same numerical 
+simulation method as in the previous work [ 38 ]. The enthalpy-porosity 
+method is a commonly used approach for simulating solid-liquid phase 
+changes [ 39 ]. The enthalpy-porosity model treats the mushy zone as a 
+porous medium when the solids are melting and equates the liquid phase 
+volume fraction to the porosity of the porous medium to represent the 
+melting process. The model is controlled by:
+Continuity equation: 
+∂ρ
+∂ t
++
+∂ ( ρ u )
+∂ x
++
+∂ ( ρ v )
+∂ y
+= 0 (1) 
+The momentum sink caused by solidification are expressed by source 
+terms [ 40 ] in the enthalpy-porosity model, and the momentum equa -
+tions are: 
+Fig. 1. Cross-section of the object TES system.
+Fig. 2. The computational domain.
+Table 1 
+The explanation and value of the parameters.
+Parameters Unit Explanation Values
+Fin width mm Fin short side dimensions 0.5,1,1.5,2
+Fin angle
+◦
+Y-shaped fin branch angle 30,60,90
+HTF 
+temperature
+K
+HTF temperature during 
+discharging energy process
+363 ， 365.5 ， 368 ， 
+370.5 ， 373
+Table 2 
+The explanation and value of the parameters.
+Property RT82 Copper
+ρ [kg/m
+3
+] 770 8920
+c
+p 
+[J/kg ⋅ K] 2000 381
+k [W/m ⋅ K] 0.2 387.6
+μ [Pa ⋅ s] 0.03499 –
+H [J/kg] 176,000 –
+T
+s 
+[K] 350.15 –
+T
+l 
+[K] 358.15 –
+β [1/K] 0.001 –
+P. Yan et al.                                                                                                                                                                                                                                     Applied Energy 390 (2025) 125863 
+3 
+--- PAGE 4 ---
+∂ ( ρ u )
+∂ t
++
+∂ ( ρ uu )
+∂ x
++
+∂ ( ρ vu )
+∂ y
+=  
+∂ p
+∂ x
++
+∂
+∂ x
+(
+μ
+∂ u
+∂ x
+)
++
+∂
+∂ y
+(
+μ
+∂ u
+∂ y
+)
++ uA (2) 
+∂ ( ρ v )
+∂ t
++
+∂ ( ρ uv )
+∂ x
++
+∂ ( ρ vv )
+∂ y
+=  
+∂ p
+∂ y
++
+∂
+∂ x
+(
+μ
+∂ v
+∂ x
+)
++
+∂
+∂ y
+(
+μ
+∂ v
+∂ y
+)
++ vA + ρ g β ( T   T
+m
+)
+(3) 
+A in the source terms can be computed using the porosity function: 
+A =   C
+( 1   λ )
+2
+λ
+3
++ ε
+(4) 
+λ is the liquid fraction of the PCM throughout this study, which is 
+calculated as 
+λ =
+⎧
+⎪
+⎪
+⎪
+⎨
+⎪
+⎪
+⎪
+⎩
+0 , T < T
+s
+T   T
+s
+T
+l
+  T
+s
+, T
+s
+< T < T
+l
+1 , T > T
+l
+(5) 
+The mushy zone constant C is a key element of the Carman-Kozeny 
+equation, which adds a damping term to the momentum equation, 
+modeling fluid flow in the mushy zone as flow through a porous medium 
+[ 41 ]. The constant can be obtained through empirical correlation Eqs. 
+[ 42 ]. For most calculations, the recommended values are between 10
+4 
+and 10
+7
+. After our adjustments, this model selects C = 10
+6
+. ε is simply an 
+arbitrary minimum protection against a denominator of zero, which is 
+set to be ε = 0.001.
+Energy equation with external heat source term: 
+∂ ( ρ h )
+∂ t
++
+∂ ( ρ uh )
+∂ x
++
+∂ ( ρ vh )
+∂ y
+=
+∂
+∂ x
+(
+k
+∂ T
+∂ x
+)
++
+∂
+∂ y
+(
+k
+∂ T
+∂ y
+)
++ S (6) 
+h is defined as 
+h =
+⎧
+⎪
+⎪
+⎪
+⎪
+⎪
+⎪
+⎪
+⎪
+⎨
+⎪
+⎪
+⎪
+⎪
+⎪
+⎪
+⎪
+⎪
+⎩
+∫
+T
+T
+ref
+c
+p
+dT , T < T
+s
+∫
+T s
+T
+ref
+c
+p
+dT + λ H , T
+s
+< T < T
+l
+∫
+T s
+T
+ref
+c
+p
+dT + H +
+∫
+T
+T
+l
+c
+p
+dT , T > T
+l
+(7) 
+T could be calculated as 
+T = λ ( T
+l
+  T
+s
+) + T
+s
+(8) 
+The following assumptions were used in the computational 
+modeling: (1) the melted liquid flow in the middle annular region during 
+the process appears to be transient, laminar, and incompressible; (2) the 
+HTF temperature is constant in each case; (3) the PCM thermophysical 
+properties remain constant throughout the range of involved case tem -
+peratures, and the PCM density is dominated by Boussinesq ’ s hypothe -
+sis; (4) throughout the phase transition process of PCM, there is no 
+volume variation, heat dissipation from the outer wall, and radiative 
+heat transmission; and (5) at the boundary, there is no slip resulting 
+from shear force.
+2.3. Model validation
+The geometry of this thermal energy storage system is straightfor -
+ward, and its two-dimensional characteristics are prominent, thereby 
+making the utilization of a 2D model for modeling and analysis a more 
+efficient choice in terms of computational resource consumption. Pre -
+vious researchers have also used this method for model simplification 
+[ 43 ]. A 2D model, consistent with the previous investigations conducted 
+by our research group, was implemented for simulation purposes [ 38 ]. 
+The model simplifies the structures of the tube walls in contact with the 
+PCM and replaces them with thermostatic boundary conditions. The grid 
+employed in this paper is presented in Fig. 3 . The computational grid 
+utilized in this study is illustrated in Fig. 3 and comprises a combination 
+of quadrilateral and triangular elements. Numerical simulation calcu -
+lations were performed using Ansys fluent software, with the initial 
+temperature state of the PCM set at 300 K.
+The mesh independence validation as well as the model validation 
+are the same as the previous work of our group [ 38 ]. The experimental 
+data from Al-Abidi [ 44 ] were used for the grid independence validation, 
+and simulations were carried out under the same working conditions as 
+the experiments with the grid numbers 16,117, 49,908, and 80,258. The 
+results of the simulations are shown in Fig. 4 (a), which indicate that 
+considering the number of grids in the model as well as the accuracy of 
+the calculation, the final method of dividing the grid with the number of 
+49,908 has been chosen. The verification of time step independence is 
+shown in Fig. 4 (b). The influence of the three different time steps on the 
+melting time is minimal. Ultimately, a time step of 0.3 s was determined 
+to be the minimum.To ensure the accuracy of the model, it is necessary 
+Fig. 3. The grid distribution.
+P. Yan et al.                                                                                                                                                                                                                                     Applied Energy 390 (2025) 125863 
+4 
+--- PAGE 5 ---
+to validate the output results of different parameters [ 45 ]. The melting 
+curves are analytically evaluated against the experimental data, and the 
+information is shown in Fig. 4 (c). In addition, the model is compared 
+with experiments from Safari [ 46 ] under the same boundary conditions 
+to validate the model melting fraction. Both of them demonstrate that 
+the results are in good correlation and the numerical model used in this 
+study matches well with the actual melting process.
+3. Methods
+3.1. Variable correlation analysis
+Before performing machine learning training, the first step is to do 
+correlation analysis of the variables. Correlation analysis is a type of 
+scientific procedure used in examining the relevance of correlation be -
+tween two or multiple random variables with the same state, when the 
+correlation between the variables is high, it can be assumed that there is 
+a hidden link between the variables, and in order to improve the pre -
+dictive precision of a model, it is essential to simplify the input variables 
+with high correlation. The assessment of correlation is usually achieved 
+by calculating the Pearson correlation coefficient. The equation to 
+calculate this coefficient r between variables j and k is 
+r
+j , k
+=
+∑
+n
+i = 1
+[( j
+i
+  j ) ⋅ ( k
+i
+  k ) ]
+̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅ ̅̅̅̅ ̅
+∑
+n
+i = 1
+( j
+i
+  j )
+2
+√
+⋅
+̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅ ̅̅̅
+∑
+n
+i = 1
+( k
+i
+  k )
+2
+√ (9) 
+It is usually concluded that when the absolute value of Pearson ’ s 
+correlation coefficient is less than 0.35 [ 47 ], two variables can be 
+considered to show no correlation between them. The correlations were 
+calculated separately for all the parameters and the results were plotted 
+in the same matrix as shown in Fig. 5 . The results of Pearson ’ s correla -
+tion coefficient between any two parameters shown in the figure indi -
+cate that there is no significant correlation between the parameters.
+Fig. 4. Validation study (a) mesh independence validation; (b) model validation of melting temperature [ 38 ]; (c) model validation of melting fraction.
+P. Yan et al.                                                                                                                                                                                                                                     Applied Energy 390 (2025) 125863 
+5 
+--- PAGE 6 ---
+3.2. Polynomial regression algorithm
+The polynomial regression (PR) algorithm is based on the linear 
+regression algorithm. The linear regression algorithm considers the 
+relationship between the independent variables of the dataset and the 
+objective to be linear, and is able to establish the loss function equation 
+through the use of the least square method, and optimise the loss 
+function through the gradient descent method. The polynomial regres -
+sion algorithm is a method of pre-processing the features of established 
+datasets by considering them as multidimensional features and then 
+fitting them to a linear regression.
+3.3. Support vector regression algorithm
+As an algorithm with good robustness, the support vector regression 
+(SVR) algorithm is an algorithm for linearly fitting data in a high- 
+dimensional space through supervised learning, which was first pro -
+posed by Vapnik [ 48 ] and has become a popular machine learning al -
+gorithm. The implementation process is mainly divided into two steps. 
+The first step is data upgrading, i.e., transforming the difficult-to-fit low- 
+dimensional nonlinear data into high-dimensional linear data by a 
+specific kernel function; the second step is hyperplane fitting, i.e., 
+finding a regression plane to make all the data of a set to the nearest 
+distance to the plane, and this hyperplane is the ideal hyperplane. Once 
+the algorithm is trained, model result prediction can be achieved by 
+simply mapping the new data to the high-dimensional space using the 
+same method. The structure of the support vector regression algorithm is 
+shown in Fig. 6 .
+Fig. 5. Correlation matrix of parameters.
+Fig. 6. Support vector machine algorithm.
+P. Yan et al.                                                                                                                                                                                                                                     Applied Energy 390 (2025) 125863 
+6 
+--- PAGE 7 ---
+3.4. Random forest algorithm
+Integrated learning methods typically demonstrate high prediction 
+accuracy. The random forest regression (RFR) algorithm [ 49 ] is an in -
+tegrated learning algorithm that uses a large number of decision trees for 
+regression prediction, aggregates the decision trees, and calculates the 
+average of the outputs of each decision tree as the final regression pre -
+diction result. Because each sub-decision tree is from the same data set, 
+it is inevitable that each decision tree will produce correlation, which 
+will affect the prediction results, therefore, RFR uses two ieideologies to 
+achieve tree de-correlation, which are the bagging ideology [ 50 ] and the 
+random subspace ideology [ 51 ]. The structure of the RFR model is 
+shown in Fig. 7 .
+3.5. XGBoost algorithm
+As an integrated learning method, the extreme gradient boosting 
+(XGBoost) [ 52 ] is a highly scalable gradient boosting algorithm based on 
+decision trees. XGBoost is based on the concept of gradient boosting and 
+generates decision trees separately and sequentially, where each tree 
+learns from the residues of all the previous trees. Finally, the output 
+predictions of these trees are aggregated to give the prediction result. 
+The XGBoost algorithm avoids overfitting by integrating a regularisation 
+term in the modeling process. The XGBoost algorithm has been sche -
+matically illustrated in Fig. 8 .
+3.6. Hyperparameter
+There are two types of parameters in the training process of super -
+vised machine learning algorithms, one can be obtained iteratively from 
+the training process and is called the model parameter, while the other 
+tuning parameter cannot be obtained iteratively and needs to be set 
+manually by hand, which is called the hyperparameter. After these years 
+of advancement of machine learning algorithms, researchers have come 
+up with certain default values after empirical experiments on various 
+datasets. The default values have no theoretical roots and are derived 
+merely from experimental experience. In order to obtain better models, 
+optimisation tuning strategies regarding predictive performance can be 
+employed to select the values that are most suitable for the dataset under 
+study.
+3.7. Bayesian optimisation algorithm
+Traditional optimisation algorithms, such as grid search, are 
+computationally intensive and inefficient, making optimisation algo -
+rithms that can improve efficiency the preferred choice of researchers. 
+The Bayesian optimisation algorithm is a global search algorithm that is 
+able to exploit prior knowledge [ 53 ]. The core idea of the Bayesian 
+optimisation algorithm is to generate an initial set of candidate sample 
+solutions for the function to be optimised, then assume a priori distri -
+bution and continuously add candidate solutions, which are judged by a 
+given scoring function to determine whether the candidate solutions are 
+reasonable or not, and finally output the global maximum point of the 
+candidate solutions after repeated iterations. It is an optimisation al -
+gorithm with relatively low computational overhead.
+3.8. Model assessment
+The dataset in this study with a capacity of 60 was segmented, where 
+70 % of the data point was partitioned into the training set, and the 
+remaining 30 % of the data point was partitioned into the test set. This 
+dataset is a full factorial dataset. A 3-fold cross-validation was adopted 
+in the evaluation and the reason for not choosing more folds was due to 
+the limit size of the dataset. Prediction models obtained by different 
+machine learning algorithms need to be evaluated using the same 
+quantitative metrics. There are two indicators called mean square error 
+(MSE) as well as the coefficient of determination (R
+2
+) were chosen to 
+evaluate the results of machine learning models in this scenario.
+MSE is the average of the summation of the squares of the targeted 
+predicted data deviations from their actual values. Given that y
+i 
+repre -
+sents the actual value which corresponds to the predicted value h
+i
+( x
+i
+), 
+the formula is 
+MSE =
+1
+n
+∑
+n
+i = 1
+( h
+i
+( x
+i
+)   y
+i
+)
+2
+(10) 
+R
+2 
+is the proportion of the dependent variable that could be 
+explained by the regression relationship obtained by the fitted model for 
+the target independent variable of a study. The model would have better 
+interpretability if its R
+2 
+close to 1. The coefficient of determination can 
+Fig. 7. Random forest regression algorithm.
+Fig. 8. XGBoost algorithm.
+P. Yan et al.                                                                                                                                                                                                                                     Applied Energy 390 (2025) 125863 
+7 
+--- PAGE 8 ---
+be calculated as 
+R
+2
+= 1  
+∑
+n
+i = 1
+( y
+i
+  h
+i
+( x
+i
+) )
+2
+∑
+n
+i = 1
+( y
+i
+  y
+i
+)
+2
+(11) 
+4. Results and discussions
+The numerical simulation results from the dataset employed in this 
+study have been previously presented in the previous paper [ 38 ]; 
+therefore, this paper will specifically concentrate on the results of the 
+meta-models. The quantitative prediction results of this study do not 
+separately summarize the effects of variables on melting time using the 
+control variable method. Instead, they are aggregated within scatter 
+plots to facilitate the observation of the reliability of the meta-model.
+4.1. Hyperparameter tuning
+The principles of each machine learning algorithm are different, and 
+each algorithm weighs the efficiency of finding the global optimal so -
+lution and the optimal model fitting to achieve the minimised deviation 
+from the expected value in a different way. As a result, the numbers of 
+key hyperparameters and their meanings vary from one algorithm to 
+another. In this study, the hyperparameter tuning of all four machine 
+learning algorithms is accomplished based on the Bayesian optimisation 
+algorithm. The scoring metrics for the optimisation results are chosen to 
+be R
+2 
+values, and hyper-parameters (e.g., the number of decision trees, 
+etc.) for which the value needs to be an integer value during the iteration 
+process are already rounded. The search intervals for each hyper -
+parameter are given empirically. The hyperparameters that need to be 
+rounded are already rounded during the tuning process. The final 
+hyperparameters are taken to three significant digits to ensure that the 
+results are sufficiently accurate. For each algorithm, the interpretation 
+of each hyperparameter, the search space, and the final selected values 
+are shown in Table 3 . The PR algorithm has only one hyperparameter, so 
+a manual tuning method was chosen, and the selected final values of the 
+hyperparameters for each of the remaining algorithms were obtained by 
+iterating the Bayesian algorithm for 400 steps, where the first 200 steps 
+of the iteration are random searches within the hyperparameter candi -
+date range, and the last 200 steps of the iteration are fine searches near 
+the optimum of the previous 200 steps. This study implements all ma -
+chine learning algorithms in the environment of Python 3.9, and all 
+machine learning experiments were performed on a PC equipped with 
+Intel (R) Core (TM) i5-8300H (@ 2.30 GHz), 24 GB of RAM, and running 
+the Windows 11 operating system.
+4.2. Algorithms performance analysis
+The physical model parameters are treated as independent variables, 
+with the melting response time as the dependent variable, establishing a 
+nonlinear mapping. The four machine learning algorithms previously 
+described are then employed to identify the algorithm that achieves the 
+highest accuracy in this context. Using the hyperparameters obtained 
+from the search in Section 4.1 , the melting response time of the triplex- 
+tube PCM-TES system was predicted with each algorithm, and the pre -
+dicted results were compared with the actual results, as presented in 
+Fig. 9 . The predictions of the training set as well as the test set are 
+labelled in Fig. 9 , and the scatter points fall on the labelled auxiliary 
+dotted lines when the predicted values are exactly the same as the actual 
+values. From Fig. 9 , it can be found that among the four algorithms, the 
+algorithm with the largest deviation between the training set and the 
+test set results is the SVR algorithm, which means that there is an 
+obvious overfitting phenomenon, while the test set and the training set 
+of the other algorithms have roughly the same distribution on both sides 
+of the auxiliary line. The RF algorithm has the largest deviation, espe -
+cially in the region of higher values, which indicates that its prediction 
+accuracy is insufficient. The best performing algorithm was XGboost, 
+whose data were able to be distributed roughly precisely around the 
+auxiliary line.
+The residual plots of the prediction results of the four algorithms are 
+presented in Fig. 10 . The results indicate that the residual value of the 
+prediction results of the random forest algorithm is significantly higher 
+than the other algorithms, and the maximum error of its prediction value 
+is more than 15 min, and more results of high prediction value occur 
+when the actual value is lower, while more results of low prediction 
+value occur in the region of higher actual value. Both PR algorithm as 
+well as SVR algorithm showed the prediction error close to 15 min for 
+individual conditions, and the prediction accuracy of XGBoost algorithm 
+was higher than the other algorithms, and its maximum error was 
+approximately 5 min. With the exception of the RFR algorithm, the re -
+siduals of the test set for the other algorithms are larger than the training 
+set residuals, which corresponds to the results in Fig. 9 .
+The prediction results were analyzed using the evaluation metrics 
+presented in the previous section. The results of the mean square error 
+comparison are presented in Fig. 11 (a), which can show that the data 
+fitting quality of the training set is higher than that of the prediction set 
+in general. The algorithm with the largest MSE gap is the SVR algorithm, 
+which has an 11.8 times MSE gap in its predictions, indicating that the 
+algorithm is overfitting more severely, meanwhile the PR algorithm is 
+the best in terms of unbiasedness, which has an MSE difference of only 
+1.15 times. From the perspective of the absolute error of the test set, 
+XGboost is the optimal algorithm, although the MSE of its test set differs 
+from that of the training set by about 4.84 times. The coefficient of 
+Table 3 
+Hyperparameter search spaces and chosen values.
+Algorithm Hyperparameter Description Search space Value
+PR degree
+polynomial 
+dimension
+[ 1 , 10 ] 2
+SVR
+gamma
+coefficients of the 
+kernel function
+(0.0001,100) 0.154
+c penalty factor (0.1200) 186
+epsilon
+regularisation 
+parameter range
+(0.0001,100) 0.369
+RFR
+n_estimators tree number [10,500] 65
+min_samples_leaf
+samples minimum 
+number required to 
+be at a leaf node
+[ 2 , 10 ] 2
+max_depth
+maximum depth of 
+trees
+[ 2 , 10 ] 7
+min_samples_split
+samples minimum 
+number required to 
+split an internal node
+[ 2 , 5 ] 2
+max_features
+number of variables 
+to consider
+[0.100,0.999] 0.999
+XGboost
+n_estimators number of trees [10,500] 497
+subsample
+the training instances 
+subsample ratio
+[0.5,1) 0.933
+max_depth
+maximum depth of 
+trees
+[ 2 , 10 ] 46
+min_child_weight
+instance weight 
+minimum sum 
+needed in a child
+[ 1 , 8 ] 2
+reg_alpha
+L1 regularisation 
+term on weights
+(0,1) 0.768
+reg_lambda
+L2 regularisation 
+term on weights
+(0,1) 0.529
+learning_rate
+Step reduction used 
+for updates
+(0,0.5] 0.389
+gamma
+minimum loss 
+reduction required to 
+make a further 
+partition on a leaf 
+node
+(0,1) 0.544
+colsample_bytree
+subsample ratio of 
+columns when 
+constructing each 
+tree
+[0.5,1] 0.908
+P. Yan et al.                                                                                                                                                                                                                                     Applied Energy 390 (2025) 125863 
+8 
+--- PAGE 9 ---
+determination metrics presented in Fig. 11 (b) exhibit similar findings, 
+with the SVR algorithm having the lowest coefficient of determination 
+for test set prediction results while the XGboost algorithm has the 
+highest coefficient of determination for test set prediction results.
+4.3. Feature importance evaluation
+While traditional prediction methods such as empirical formulae can 
+only qualitatively analyse the extent to which each parameter affects the 
+melting response time, data-driven machine learning methods are able 
+to quantitatively give this value directly and guide the subsequent 
+design of the fin structure. The principle is to calculate the increase in 
+model prediction error after substitution of features to measure the 
+importance of the features. In this section, the importance of each 
+parameter is evaluated. The predictions in this section are given based 
+on the best-performing XGBoost algorithm. From the previous studies, it 
+can be judged that both fin width and HTF temperature have a greater 
+influence on the final melt rate, and from Fig. 12 , it can be found that the 
+importance of fin width is 51 % while the importance of HTF 
+temperature is 47 %. This indicates that the increase in fin heat transfer 
+area contributes the most to the enhanced heat transfer. The change in 
+fin angle has a lesser effect on the melting response time with only 2 % 
+importance. This suggests that changes in fin structure style have a small 
+effect on heat transfer performance, and subsequent research should 
+focus more on how to increase the surface area of the fins at a low cost 
+with a fixed fin cross-section area.
+After all, when an algorithm is deemed ‘optimal ’ in a study, it is 
+usually within the context of that specific research framework. This 
+benchmarking establishes a baseline for future work, enabling re -
+searchers to identify which algorithms merit further exploration under 
+similar conditions. Additionally, current machine learning research 
+increasingly emphasizes generalization and transfer learning — applying 
+knowledge gained in one domain to another. Insights into the superior 
+performance of XGBoost in a specific configuration can inspire adapta -
+tions and modifications for different TES systems.
+Although different types of PCMs or system configurations may lead 
+to certain variations, the study demonstrates that machine learning al -
+gorithms maintain comparable accuracy across datasets with similar 
+Fig. 9. PCM melting response time model prediction result reaped by (a) PR (b)SVR( c )RF(d) XGboost.
+P. Yan et al.                                                                                                                                                                                                                                     Applied Energy 390 (2025) 125863 
+9 
+--- PAGE 10 ---
+structural characteristics. The performance of these models is primarily 
+influenced by the statistical properties of the dataset rather than the 
+specific physical attributes of the materials. Datasets with analogous 
+patterns, irrespective of material variations, tend to yield consistent 
+algorithmic outcomes. While the trained models may not be directly 
+transferable to entirely distinct configurations, the meta-model selection 
+approach remains consistent. The adoption of algorithms, which 
+perform well across datasets with similar distributions, ensures robust 
+model selection, even in the presence of PCM or configuration varia -
+tions. Thus, while dataset diversity can impact prediction accuracy, the 
+overall framework for similar systems remains reliable [ 54 ].
+Moreover, the scalability of the algorithm is advantageous. In anal -
+ogous scenarios, the model can be efficiently retrained by incorporating 
+a small amount of additional data, making it adaptable to new datasets 
+without necessitating a complete retraining process. This flexibility 
+enhances the model ’ s efficiency, particularly when managing evolving 
+or expanded datasets within the same operational context.
+5. Conclusions
+This study explores the potential of machine learning-based meta- 
+models in predicting the melting response time of phase change mate -
+rials in triplex-tube latent thermal energy storage systems. By applying 
+algorithms such as polynomial regression, support vector regression, 
+random forest regression, and XGBoost, we constructed efficient pre -
+dictive models that effectively replace traditional experimental and 
+numerical methods.
+The results show that the XGBoost algorithm outperforms others, 
+achieving the highest accuracy and lowest prediction error. In contrast, 
+support vector regression exhibits significant overfitting in the testing 
+set, highlighting the need for appropriate meta-models to ensure reliable 
+predictions. Sensitivity analysis based on XGBoost identifies key factors 
+influencing melting response time, with fin width and heat transfer fluid 
+temperature contributing 51 % and 47 %, respectively, while the fin 
+angle has a minor effect at 2 %. These findings guide future design ef -
+forts, emphasizing the optimization of fin design to enhance heat 
+Fig. 10. PCM melting response time prediction residual errors of (a) PR (b)SVR( c )RF(d) XGboost.
+P. Yan et al.                                                                                                                                                                                                                                     Applied Energy 390 (2025) 125863 
+10 
+--- PAGE 11 ---
+transfer efficiency. Machine learning-based meta-models hold great 
+promise for the design and optimization of latent thermal energy storage 
+systems, improving prediction accuracy and providing data-driven 
+support for engineering decisions.
+CRediT authorship contribution statement
+Peiliang Yan: Writing – original draft, Methodology, Formal anal -
+ysis, Conceptualization. Chuang Wen: Writing – review & editing, Su -
+pervision, Methodology, Formal analysis, Conceptualization. Hongbing 
+Ding: Writing – review & editing, Methodology, Formal analysis. Xue -
+hui Wang: Writing – review & editing, Formal analysis. Yan Yang: 
+Writing – review & editing, Supervision, Methodology, Investigation, 
+Formal analysis, Conceptualization.
+Declaration of competing interest
+The authors declare that they have no known competing financial 
+interests or personal relationships that could have appeared to influence 
+the work reported in this paper.
+Data availability
+Data will be made available on request.
+References
+[1] IPCC. Climate change 2023 synthesis report. 2023.
+[2] Pouresmaieli M, Ataei M, Nouri Qarahasanlou A, Barabadi A. Integration of 
+renewable energy and sustainable development with strategic planning in the 
+mining industry. Results Eng 2023;20:101412 .
+[3] Hassan AA, El-Rayes K. Optimal use of renewable energy technologies during 
+building schematic design phase. Appl Energy 2024;353:122006 .
+[4] Chen X, Xi X, Zhang L, Wang Z, Cui Z, Long W. Experimental study on nucleation 
+and micro-explosion characteristics of emulsified heavy fuel oil droplets at elevated 
+temperatures during evaporation. Appl Therm Eng 2023;224:120114 .
+[5] Abu-Hamdeh NH, Khoshaim A, Alzahrani MA, Hatamleh RI. Study of the flat plate 
+solar collector ’ s efficiency for sustainable and renewable energy management in a 
+building by a phase change material: containing paraffin-wax/graphene and 
+paraffin-wax/graphene oxide carbon-based fluids. J Build Eng 2022;57:104804 .
+[6] Mahdi JM, Nsofor EC. Melting enhancement in triplex-tube latent heat energy 
+storage system using nanoparticles-metal foam combination. Appl Energy 2017; 
+191:22 – 34 .
+[7] Yan P, Fan W, Han Y, Ding H, Wen C, Elbarghthi AFA, et al. Leaf-vein bionic fin 
+configurations for enhanced thermal energy storage performance of phase change 
+materials in smart heating and cooling systems. Appl Energy 2023;346:121352 .
+[8] Jain S, Kumar KR, Rakshit D. Heat transfer augmentation in single and multiple 
+(cascade) phase change materials based thermal energy storage: research progress, 
+challenges, and recommendations. Sustain Energy Technol Assess 2021;48: 
+101633 .
+[9] Abilkhassenova Z, Memon SA, Ahmad A, Saurbayeva A, Kim J. Utilizing the Fanger 
+thermal comfort model to evaluate the thermal, energy, economic, and 
+environmental performance of PCM-integrated buildings in various climate zones 
+worldwide. Energ Build 2023;297:113479 .
+[10] Choure BK, Alam T, Kumar R. A review on heat transfer enhancement techniques 
+for PCM based thermal energy storage system. J Energy Storage 2023;72:108161 .
+[11] Sarkar S, Mestry S, Mhaske ST. Developments in phase change material (PCM) 
+doped energy efficient polyurethane (PU) foam for perishable food cold-storage 
+applications: a review. J Energy Storage 2022;50:104620 .
+[12] Khan MM, Alkhedher M, Ramadan M, Ghazal M. Hybrid PCM-based thermal 
+management for lithium-ion batteries: trends and challenges. J Energy Storage 
+2023;73:108775 .
+[13] Du K, Calautit J, Eames P, Wu Y. A state-of-the-art review of the application of 
+phase change materials (PCM) in mobilized-thermal energy storage (M-TES) for 
+recovering low-temperature industrial waste heat (IWH) for distributed heat 
+supply. Renew Energy 2021;168:1040 – 57 .
+[14] Goel V, Dwivedi A, Kumar R, Kumar R, Pandey AK, Chopra K, et al. PCM-assisted 
+energy storage systems for solar-thermal applications: review of the associated 
+problems and their mitigation strategies. J Energy Storage 2023;69:107912 .
+[15] Li S, Zou K, Sun G, Zhang X. Simulation research on the dynamic thermal 
+performance of a novel triple-glazed window filled with PCM. Sustain Cities Soc 
+2018;40:266 – 73 .
+[16] Agarwal P, Prabhakar A. Energy and thermo-economic analysis of PCM integrated 
+brick in composite climatic condition of Jaipur - a numerical study. Sustain Cities 
+Soc 2023;88:104294 .
+[17] Zavrl E, Tomc U, El Mankibi M, Dovjak M, Stritih U. Parametric study of an active- 
+passive system for cooling application in buildings improved with free cooling for 
+enhanced solidification. Sustain Cities Soc 2023;99:104960 .
+[18] Al-Abidi AA, Bin Mat S, Sopian K, Sulaiman MY, Lim CH, Th A. Review of thermal 
+energy storage for air conditioning systems. Renew Sust Energ Rev 2012;16: 
+5802 – 19 .
+[19] Xu B, Lu S, Zheng J. Thermodynamic optimization of cascaded PCMs charge 
+process based on entransy dissipation extreme principle. Sustain Cities Soc 2023; 
+93:104521 .
+Fig. 11. The assessment scores for the four algorithm (a) MSE (b)R
+2
+.
+Fig. 12. Feature importance evaluation.
+P. Yan et al.                                                                                                                                                                                                                                     Applied Energy 390 (2025) 125863 
+11 
+--- PAGE 12 ---
+[20] Palmer B, Arshad A, Yang Y, Wen C. Energy storage performance improvement of 
+phase change materials-based triplex-tube heat exchanger (TTHX) using 
+liquid – solid interface-informed fin configurations. Appl Energy 2023;333 .
+[21] Nitsas M, Koronaki IP. Performance analysis of nanoparticles-enhanced PCM: an 
+experimental approach. Thermal Sci Eng Progress 2021;25:100963 .
+[22] Saraf SD, Panda D, Gangawane KM. Performance analysis of hybrid expanded 
+graphite-NiFe2O4 nanoparticles-enhanced eutectic PCM for thermal energy 
+storage. J Energy Storage 2023;73:109188 .
+[23] Huang X, Yao S, Yang X, Zhou R, Luo J, Shen X. Comparison of solidification 
+performance enhancement strategies for a triplex-tube thermal energy storage 
+system. Appl Therm Eng 2022;204:117997 .
+[24] Huang X, Yao S, Yang X, Zhou R. Melting performance assessments on a triplex- 
+tube thermal energy storage system: optimization based on response surface 
+method with natural convection. Renew Energy 2022;188:890 – 910 .
+[25] Liu J, Liu Z, Nie C. Phase transition enhancement through circumferentially 
+arranging multiple phase change materials in a concentric tube. J Energy Storage 
+2021;40:102672 .
+[26] Al-Abidi AA, Mat S, Sopian K, Sulaiman MY, Mohammad AT. Numerical study of 
+PCM solidification in a triplex tube heat exchanger with internal and external fins. 
+Int J Heat Mass Transf 2013;61:684 – 95 .
+[27] Zonouzi SA, Dadvar A. Numerical investigation of using helical fins for the 
+enhancement of the charging process of a latent heat thermal energy storage 
+system. J Energy Storage 2022;49:104157 .
+[28] Rieger H, Projahn U, Beer H. Analysis of the heat transport mechanisms during 
+melting around a horizontal circular cylinder. Int J Heat Mass Transf 1982;25: 
+137 – 47 .
+[29] Wang Y, Amiri A, Vafai K. An experimental investigation of the melting process in a 
+rectangular enclosure. Int J Heat Mass Transf 1999;42:3659 – 72 .
+[30] Assis E, Katsman L, Ziskind G, Letan R. Numerical and experimental study of 
+melting in a spherical shell. Int J Heat Mass Transf 2007;50:1790 – 804 .
+[31] Chabot C, Gosselin L. Solid-liquid phase change around a tube with periodic 
+heating and cooling: scale analysis, numerical simulations and correlations. Int J 
+Therm Sci 2017;112:345 – 57 .
+[32] Cai J, Xu K, Zhu Y, Hu F, Li L. Prediction and analysis of net ecosystem carbon 
+exchange based on gradient boosting regression and random forest. Appl Energy 
+2020;262:114566 .
+[33] Yan P, Fan W, Zhang R. Predicting the NOx emissions of low heat value gas rich- 
+quench-lean combustor via three integrated learning algorithms with Bayesian 
+optimization. Energy 2023;273:127227 .
+[34] Wallimann H, Sticher S. On suspicious tracks: machine-learning based approaches 
+to detect cartels in railway-infrastructure procurement. Transp Policy 2023;143: 
+121 – 31 .
+[35] Ermis K, Erek A, Dincer I. Heat transfer analysis of phase change process in a 
+finned-tube thermal energy storage system using artificial neural network. Int J 
+Heat Mass Transf 2007;50:3163 – 75 .
+[36] Fini AT, Fattahi A, Musavi S. Machine learning prediction and multiobjective 
+optimization for cooling enhancement of a plate battery using the chaotic water- 
+microencapsulated PCM fluid flows. J Taiwan Inst Chem Eng 2023;148 .
+[37] Chuttar A, Banerjee D. Machine learning (ML) based thermal Management for 
+Cooling of electronics chips by utilizing thermal energy storage (TES) in packaging 
+that leverages phase change materials (PCM). Electronics 2021;10:2785 .
+[38] Yan P, Fan W, Yang Y, Ding H, Arshad A, Wen C. Performance enhancement of 
+phase change materials in triplex-tube latent heat energy storage system using 
+novel fin configurations. Appl Energy 2022;327:120064 .
+[39] Ye W-B, Arıcı M. False diffusion, asymmetrical interface, and equilibrious state for 
+pure solid-gallium phase change modeling by enthalpy-porosity methodology. Int 
+Commun Heat Mass Transfer 2023;144:106746 .
+[40] Brent AD, Voller VR, Reid KJ. Enthalpy-porosity technique for modeling 
+convection-diffusion phase change: application to the melting of a pure metal. 
+Numerical Heat Transfer 1988;13:297 – 318 .
+[41] Hameter M, Walter H. Influence of the mushy zone constant on the numerical 
+simulation of the melting and solidification process of phase change materials. 
+Comput Aided Chem Eng 2016;38:439 – 44 .
+[42] Ye W-B, Arıcı M. Exploring mushy zone constant in enthalpy-porosity methodology 
+for accurate modeling convection-diffusion solid-liquid phase change of calcium 
+chloride hexahydrate. Int Commun Heat Mass Transfer 2024;152:107294 .
+[43] Ye W-B, Arıcı M. 3D validation, 2D feasibility, corrected and developed 
+correlations for pure solid-gallium phase change modeling by enthalpy-porosity 
+methodology. Int Commun Heat Mass Transfer 2023;144:106780 .
+[44] Al-Abidi AA, Mat S, Sopian K, Sulaiman MY, Mohammad AT. Experimental study of 
+melting and solidification of PCM in a triplex tube heat exchanger with fins. Energ 
+Build 2014;68:33 – 41 .
+[45] Ye W-B, Arıcı M. Redefined interface error, 2D verification and validation for pure 
+solid-gallium phase change modeling by enthalpy-porosity methodology. Int 
+Commun Heat Mass Transfer 2023;147:106952 .
+[46] Safari V, Abolghasemi H, Darvishvand L, Kamkari B. Thermal performance 
+investigation of concentric and eccentric shell and tube heat exchangers with 
+different fin configurations containing phase change material. J Energy Storage 
+2021;37:102458 .
+[47] Taylor R. Interpretation of the correlation coefficient: a basic review. J Diagnostic 
+Med Sonography 1990;6:35 – 9 .
+[48] Cortes C, Vapnik V. Support-vector networks. Mach Learn 1995;20:273 – 97 .
+[49] Breiman L. Random forests. Mach Learn 2001;45:5 – 32 .
+[50] Breiman L. Bagging predictors. Mach Learn 1996;24:123 – 40 .
+[51] Tin Kam H. The random subspace method for constructing decision forests. IEEE 
+Trans Pattern Anal Mach Intell 1998;20:832 – 44 .
+[52] Chen T, Guestrin C. XGBoost: A Scalable Tree Boosting System. Proceedings of the 
+22nd ACM SIGKDD International Conference on Knowledge Discovery and Data 
+Mining: Association for Computing Machinery; 2016. p. 785 – 94, numpages = 10.
+[53] Snoek J, Larochelle H, Adams RP. Practical Bayesian optimization of machine 
+learning algorithms. Proceedings of the 25th International Conference on Neural 
+Information Processing Systems - Volume 2. Lake Tahoe, Nevada: Curran 
+Associates Inc.; 2012. p. 2951 – 9.
+[54] Uddin S, Lu H. Dataset meta-level and statistical features affect machine learning 
+performance. Sci Rep 2024:14 .
+P. Yan et al.                                                                                                                                                                                                                                     Applied Energy 390 (2025) 125863 
+12 

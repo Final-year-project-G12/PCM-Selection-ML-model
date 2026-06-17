@@ -1,0 +1,1579 @@
+
+--- PAGE 1 ---
+A systematic review of solar irradiance forecasting across time horizons 
+using physical, satellite, and AI-based methods
+Mohammad Hasan Ghodusinejad
+a
+, Nasrin Rashvand
+a
+, Fatemeh Salmanpour
+a
+,  
+Shaghayegh Danehkar
+b
+, Hossein Yousefi
+a , *
+a
+School of Energy Engineering and Sustainable Resources, College of Interdisciplinary Science and Technology, University of Tehran, Iran
+b
+Doctoral candidate in Earth Resources Engineering, Faculty of Engineering, Kyushu University, Japan
+ARTICLE INFO
+Keywords:
+Solar irradiance
+Forecasting
+Physical models
+Data-driven methods
+Numerical weather prediction
+ABSTRACT
+Solar energy is a key renewable resource, yet synchronizing its production with grid demand remains challenging 
+due to irradiance variability. This review systematically examines the evolution of solar irradiance forecasting 
+methods, from physical and numerical weather prediction (NWP) models to modern data-driven and hybrid AI- 
+based approaches. It integrates analyses of All-Sky Imager (ASI) and satellite datasets and categorizes forecasting 
+techniques by temporal horizons from intra-hour to multi-day forecasts. The paper uniquely contributes a 
+comparative taxonomy linking forecast horizon, input data type, and model architecture to accuracy outcomes. 
+The findings highlight the growing benefits of physics-informed deep learning for improving operational solar 
+forecasts.
+1. Introduction
+With the continuous growth in population, the importance of energy 
+supply has escalated significantly. It is anticipated that in the coming 
+years, energy supply will become a paramount concern for countries. 
+Despite the high emissions and finite nature of fossil fuels, their acces -
+sibility has led to a substantial reliance on them. Therefore, it is crucial 
+to identify and develop suitable alternatives, particularly renewable 
+energy sources.
+Solar energy is one of the renewable resources that are easily 
+accessible in most parts of the world [ 1 ]. Despite the increasing adoption 
+of this energy source and its relatively recent development compared to 
+other renewable sources, the challenges associated with its full utiliza -
+tion remain unresolved.
+After the Kyoto Protocol, a coherent policy toward renewable en -
+ergies has been put in place globally in order to slow down the pace of 
+global warming [ 2 ]. A large number of developing and developed 
+countries are investing in solar energy in order to comply with the Paris 
+Agreement and relieve the extreme effects of global warming. A major 
+downside of renewable energies, particularly solar energy, is related to 
+uncertainties about the power generation capacity of solar systems in 
+the upcoming days [ 3 ].
+Over the last ten years, the capacity for electricity production from 
+photovoltaic sources has surged by > 900 gigawatts, with investments in 
+this sector rising by approximately 19 %. In 2021 alone, solar energy 
+production capacity increased by 180 gigawatts. Key factors contrib -
+uting to this progress include the reduction in storage battery costs and 
+the expansion of local battery storage systems, particularly in solar 
+farms and decentralized photovoltaic production [ 4 ].
+The primary challenges in the solar energy sector currently involve 
+the unpredictability of incoming radiation and the amount of solar en -
+ergy generated over specific periods. Efforts must be made to mitigate 
+these uncertainties [ 5 ].
+Based on the weather conditions of a specific geographic area, pre -
+dictions can be made regarding incoming solar radiation. However, due 
+to potential changes and inaccuracies in the input weather data, there 
+are inherent errors in these predictions. Accurate forecasting of 
+incoming radiation is crucial to reduce costs and minimize the impact of 
+forecast errors on ratepayers, grid operators, wind and solar farm 
+maintenance crews and energy traders. These errors can lead to price 
+increases, project shutdowns, or financial losses. Therefore, it is essential 
+to strive for the most accurate predictions of wind and solar energy [ 6 ].
+Given the inherently intermittent nature of solar energy, accurately 
+forecasting its generation trends is of paramount importance. Reliable 
+power generation forecasts are widely recognized by policymakers as a 
+key instrument for mitigating availability challenges and ensuring grid 
+stability [ 7 , 8 ]. To achieve optimal photovoltaic system utilization, 
+* Corresponding author.
+E-mail address: Hosseinyousefi@ut.ac.ir (H. Yousefi). 
+Contents lists available at ScienceDirect
+Solar Compass
+journal homep age: www. elsevier.com/ locate/sol com
+https://doi.org/10.1016/j.solcom.2025.100154
+Received 21 May 2025; Received in revised form 15 December 2025; Accepted 16 December 2025  
+Solar Compass 17 (2026) 100154 
+Available online 16 December 2025 
+2772-9400/© 2025 The Author(s). Published by Elsevier Ltd on behalf of International Solar Alliance. This is an open access article under the CC BY-NC-ND license 
+( http://creativecommons.org/licenses/by-nc-nd/4.0/ ). 
+--- PAGE 2 ---
+highly accurate forecasts are required. These forecasts minimize 
+network fluctuations across multiple temporal horizons (long-term, 
+medium-term, and short-term) [ 9 ].
+For clarity of scope, this review adopts the following classification of 
+forecast horizons: 
+• Very-short / Intra-hour (up to 60 min): Primarily used for now -
+casting, this range supports real-time voltage regulation, rapid 
+energy-storage response, and short-term power smoothing.
+• Short / Intra-day (1 – 6 h): Suitable for local dispatch optimization, 
+near-term generation forecasting, and coordination with distributed 
+storage resources.
+• Day-ahead (6 – 48 h): Critical for unit commitment, market bidding, 
+and resource allocation within operational planning cycles.
+• Multi-day / Seasonal (beyond 48 h up to several weeks): Pertinent to 
+maintenance scheduling, long-term planning, and strategic genera -
+tion management [ 10 ].
+This temporal differentiation is crucial because forecasting models, 
+data inputs, preprocessing procedures, and evaluation metrics may vary 
+substantially depending on the horizon considered.
+In this systematic review, we explore the evolution of solar irradi -
+ance forecasting techniques aimed at improving solar energy generation 
+prediction. The reviewed methods are organized into three overarching 
+categories: 
+• Physical and Numerical Weather Prediction (NWP) – based 
+approaches
+• Classical statistical and machine-learning techniques
+• Modern deep-learning and hybrid frameworks
+We compare these approaches across different forecast horizons, 
+highlighting their respective strengths, limitations, and domains of 
+applicability. Furthermore, emerging paradigms such as physics- 
+informed learning frameworks, probabilistic and ensemble forecasting, 
+and data-fusion methodologies integrating satellite and all-sky imager 
+(ASI) observations are discussed to illuminate future research directions.
+Accordingly, the paper is structured as follows: Section 2 presents an 
+overview of solar radiation measurement techniques and forecasting 
+methods. Section 3 outlines the key environmental and meteorological 
+factors influencing solar irradiance. Section 4 details the various fore -
+casting models, followed by an analytical comparison within Section 4 . 
+Finally, Section 5 concludes the study and highlights perspectives for 
+future work.
+2. Measurement and forecasting
+Despite the challenges in forecasting solar radiation, solar energy 
+remains the most widely utilized renewable energy source, largely due 
+to its seamless integration with the electricity supply network [ 11 ].
+The success of any solar project hinges on the availability of accurate 
+global solar radiation data. Unfortunately, due to the high cost of 
+measuring equipment and technical limitations in calibration, only a 
+limited number of weather stations worldwide record such data. In 
+response to this challenge, researchers have explored alternative data 
+generation methods. This exploration could inspire the development of 
+robust forecasting techniques that integrate the strengths of existing 
+models.
+The operation and maintenance of photovoltaic (PV) plants are 
+crucial for professionals in the solar industry. Accurate prediction of PV 
+output power is essential for effective electricity planning, distribution, 
+optimal management, quality assurance, and grid stability. However, 
+designing precise models for PV output power prediction is challenging 
+due to the inherent uncertainties caused by variations in solar radiation. 
+Forecasting methods can be broadly categorized into four groups: 
+physical models (such as numerical weather prediction models), statis -
+tical techniques (such as AR, ARMA, ARIMA), artificial intelligence (AI) 
+methods (including machine learning (ML) and deep learning (DL)), and 
+hybrid approaches that combine two or more methods.
+When considering different time scales, intra-hour forecasts (up to 1 
+hour) enhance grid quality and stability, while intraday forecasts (up to 
+6 h) are crucial for optimal integration. One-day forecasts are mainly 
+used for unit commitment planning and dispatching capacity, whereas 
+one-week forecasts are applicable in trading, management, and main -
+tenance [ 12 ]. Beyond the aforementioned scenarios, over time, addi -
+tional methods such as those based on sensor networks are employed, 
+and their performance, errors, and advantages are thoroughly examined 
+[ 13 ]. In numerous countries, extensive research has been conducted to 
+identify optimal solar radiation prediction models tailored to the spe -
+cific climatic conditions of each region [ 14 , 15 ].
+3. Factors affecting incoming solar radiation
+Multiple factors influence the amount of radiant energy in each 
+geographical area. These factors have been studied extensively in 
+various articles, considering their individual effects and potential in -
+teractions. The key factors are stated in the following.
+Nomenclature
+AI Artificial Intelligence
+ANN Artificial Neural Network
+AR / ARMA / ARIMA Autoregressive / Autoregressive Moving 
+Average / Autoregressive Integrated Moving Average
+ASI All-Sky Imager
+CSP Concentrated Solar Power
+CSI Clear Sky Index
+DNI Direct Normal Irradiance
+ECMWF European Centre for Medium-Range Weather Forecasts
+GFS Global Forecast System
+GHI Global Horizontal Irradiance
+MAE Mean Absolute Error
+MAPE Mean Absolute Percentage Error
+MBE Mean Bias Error
+nMBE normalized Mean Bias Error
+CNN Convolutional Neural Networks
+ML Machine Learning
+MLP Multilayer Perceptron
+MOS Model Output Statistics
+SVM/SVR Support Vector Machine / Support Vector Regression
+NWP Numerical Weather Prediction
+PCA Principal Component Analysis
+PM Persistence Model
+PV Photovoltaic
+RF Random Forest
+RMSE Root Mean Square Error
+rRMSE Relative Root Mean Square Error
+nRMSE normalized Root Mean Square Error
+CRMSE Central Root Mean Square Error
+TSI Total Sky Imager
+WRF Weather Research and Forecasting Model
+R² Coefficient of determination
+M.H. Ghodusinejad et al.                                                                                                                                                                                                                      Solar Compass 17 (2026) 100154 
+2 
+--- PAGE 3 ---
+3.1. Particulate matter
+Particulate matter in the atmosphere are one of the most important 
+factors affecting the solar radiation of the earth ’ s surface. In an study, 
+the impact of aerosols on the precision of solar radiation forecasting was 
+examined using a high-resolution, one-day-ahead operational numerical 
+weather prediction (NWP) model. To isolate the effect of aerosols, the 
+research focuses on clear sky periods. Severe events attributed to aero -
+sols, such as dust or fog, were identified during these periods. Thus, 
+accurate aerosol forecasting plays a crucial role in enhancing solar ra -
+diation prediction accuracy [ 16 ].
+Short-term (2 – 3-day) solar radiation forecasts play a crucial role in 
+solar energy industries, particularly for yield forecasting when inte -
+grating highly variable solar energy into the power grid. In regions and 
+time periods focused on solar energy, cloud-free conditions prevail. 
+During these times, aerosols become the main atmospheric factor 
+affecting direct and global irradiance at the Earth ’ s surface. For 
+example, in a five-month period in Europe, the accuracy of aerosol op -
+tical depth at 550 nm (AOD550) predictions was assessed using particle 
+forecasts from the CTM European Air Pollution Dispersion (EURAD) 
+model [ 17 ].
+Following an assessment of day- and hour-ahead solar irradiance 
+prediction applications within the energy industry, aerosol optical depth 
+(AOD) forecasts at 550 nm derived from a chemistry transport model 
+were found to surpass ground-based measurements. Notably, sporadic 
+desert dust storm events in the central Mediterranean region were 
+identified as the primary source of significant inaccuracies in the model 
+predictions. These AOD predictions, along with other remote sensing 
+data (like Earth albedo and ozone) and numerical weather prediction 
+parameters (such as water vapor and clouds), were used as inputs for a 
+radiation forecasting system [ 18 ].
+3.2. Cloud cover
+Another important factor that have impact on the performance of a 
+PV system, is the cloud covering of the sky. A 15-minute advance notice 
+before cloud cover is adequate for activating backup systems and 
+minimizing the reliance on electrical storage during clear-sky condi -
+tions. As a test case, it is essential to assess satellite-based cloud and 
+radiation data, conduct atmospheric modeling of aerosol loading, and 
+perform numerical weather prediction for clouds and radiation using 
+deterministic modeling and ensemble techniques. These efforts align 
+with the requirements for integrating solar power into the grid [ 19 ]. For 
+example, Stratocumulus clouds ( Sc ) significantly influence surface solar 
+resources along the California coast, particularly where rooftop photo -
+voltaic systems are prevalent. Their extensive spatial coverage, optical 
+thickness, and reflectivity contribute to this variability. However, cur -
+rent numerical weather prediction models lack the capability to predict 
+both the presence and thickness of Sc . Consequently, validation efforts 
+focus on a specific summer month in southern California, when Sc clouds 
+are most common [ 20 ].
+In an investigation of the impact of cloud intensity on the predicted 
+global horizontal irradiance (GHI), a novel approach was introduced. 
+This approach utilized satellite imagery and ground measurements as 
+input data. Specifically, it relied on cloud tracking and transmission 
+using an optical flow algorithm. Subsequently, at the chosen location 
+(San Diego, California), the estimated cloud transport along semi-steady 
+streamlines was calculated. Based on this method, radiation forecasts 
+were obtained. Fig. 1 illustrates the data processing flowchart for the 
+solar forecast system, which relies on the satellite radiation model [ 21 ]. 
+Table 1 presents the calculated error results from this research. For 
+comparison, SolarAnywhere results were included.
+One challenge in predicting solar energy is the variability in solar 
+penetration due to cloud cover. The Total Sky Imager (TSI) is a short- 
+term irradiance forecasting method with a 5-minute forecast horizon 
+for low-altitude clouds. Jin Xu et al. [ 22 ]suggested integrating NWP into 
+TSI to extend the forecast horizon to 15 min. This approach aimed to 
+detect multi-layer clouds and track identified cloud segments. To ach -
+ieve this, three basic models with different feature combinations were 
+used: the Persistence Model (PM), Linear Regressions (LRs), and Support 
+Vector Machines (SVRs). The performance of each model, shown in 
+Fig. 2 based on their Root Mean Square Error (RMSE), indicated that the 
+SVR model performed the best, resulting in an effective irradiance 
+forecasting model for 1 – 15 min predictions.
+Taking into account several variables, including the clear sky index 
+(Kc), solar zenith angle (SZA), and the cloud pattern in solar radiation 
+prediction, it is observed that the absolute error increases as SZA and Kc 
+decrease. Notably, the RMSE is notably affected by the mean and stan -
+dard deviation of Kc [ 23 ].
+Numerical climate prediction models frequently underestimate 
+cloud cover, which results in an overestimation of GHI. By integrating 
+cloud water path (CWP) data from geostationary satellites using an 
+Ensemble Kalman Filter (EnKF), short-term GHI forecasts from the 
+Weather Research and Forecasting (WRF) model have improved in mid- 
+latitude case studies [ 24 ].
+In recent years, there has been ongoing development of machine 
+learning models aimed at analyzing surface radiation variability in 
+relation to cloud type and cloud fraction. These models employ various 
+machine learning approaches, including multivariate linear regression, 
+k-nearest neighbors (kNN), random forests (RF), gradient boosting ma -
+chines (GBM), and multilayer perceptrons (MLP or ANN). The input 
+features for these models encompass a measure of solar variability and 
+the ratio of observed all-sky irradiance to estimated clear-sky irradiance, 
+referred to as effective transfer (ET). Fractional sky cover (FSC) acts as a 
+continuous predictor variable, whereas cloud type (CT) is considered a 
+categorical variable [ 25 ].
+Despite the challenges posed by cloud cover in solar radiation fore -
+casting, various solutions are being explored to mitigate this error. One 
+effective tool for short-term radiation forecasting is the total sky imager, 
+which currently provides data at 5-minute intervals primarily due to 
+low-altitude clouds. Efforts to extend its predictive horizon include 
+integrating weather data from NWP at intervals ranging from 15 min to 
+several days into a short-term radiation prediction model. This inte -
+gration has resulted in an average improvement of 21 % compared to the 
+base model [ 26 ]. Models are employed to reconstruct historical total 
+Fig. 1. Schematic of data processing for the satellite-to-irradiance model based 
+solar forecasting system [ 21 ].
+M.H. Ghodusinejad et al.                                                                                                                                                                                                                      Solar Compass 17 (2026) 100154 
+3 
+--- PAGE 4 ---
+solar radiation (TSI) when direct space-based measurements are un -
+available [ 27 ].
+3.3. Humidity
+The sky transparency index, derived from relative humidity profiles 
+across three atmospheric sub-layers, significantly influences global solar 
+radiation. It serves as a link between solar radiation under clear sky 
+conditions and cloud cover. For instance, research on the Tibetan 
+Plateau indicated that convective activity in the region introduces un -
+certainty in radiation estimates due to the localized and transient nature 
+of these systems [ 28 ].
+3.4. Wind velocity
+Numerous studies have investigated the impact of wind intensity on 
+incoming solar radiation and the joint assessment of these two 
+parameters. For instance, Federica Davo et al. [ 29 ] employed Principal 
+Component Analysis (PCA) along with two post-processing techniques 
+to predict wind power in Sicily and assess solar radiation at specific 
+measurement locations.
+3.5. Ozone air quality
+The precision of the model ’ s solar radiation forecasts is greatly 
+influenced by the aerosol optical depth. When this depth surpasses 0.1, 
+the model ’ s errors can be as high as 100 W/m². Conversely, for lower 
+aerosol optical depths, the models ’ use of climatological attenuation 
+results in solar irradiance estimates that are very close [ 30 ].
+3.6. Earth
+Rugged terrain introduces variability in the incoming solar radiation 
+field, yet its impact remains inadequately accounted for in most nu -
+merical weather prediction models. Specifically, for a horizontal sur -
+face, reduced radiation has been demonstrated to decrease the root 
+mean square error of the WRF model by approximately 20 % (equivalent 
+to about 25 W/m²) during winter and autumn, and by 60 W/m² during 
+spring and summer. Meanwhile, for a tilted surface, downscaling to 
+different spatial resolutions yielded the best results at a resolution of 9 
+arcseconds, with a root-mean-square error of 45 % (equivalent to 57 W/ 
+m²) and an average bias error close to zero [ 31 ].
+In numerous studies, researchers have explored the combined impact 
+of various factors. For instance, Zhian Sun et al. [ 32 ] developed a rapid 
+estimation scheme for assessing instantaneous direct solar radiation 
+(DSI) at the Earth ’ s surface. Additionally, the influence of dust varies 
+based on soil quality and this can clearly have impact on the solar ra -
+diation [ 33 ].
+4. Models for predicting solar radiation
+4.1. Physical models
+Developing models for accurately measuring solar radiation involves 
+incorporating various meteorological parameters (such as latitude, 
+longitude, and altitude) and climatic factors (including sunshine dura -
+tion, humidity, transparency index, seasonal variations, temperature, 
+cloudiness, wind speed, atmospheric pressure, radiation diffusion, 
+global radiation, extraterrestrial radiation, and evaporation) [ 34 ]. 
+Physical methods include three main approaches: sky imagery [ 35 ], 
+NWP [ 36 ], and satellite-imaging [ 21 ]. The accuracy of physical models 
+is significantly influenced by the interactions between the dynamic 
+movement of solar radiation and the physical state. Given that photo -
+voltaics and concentrated solar power (CSP) are increasingly contrib -
+uting to global energy resources, there is a substantial demand for 
+reliable solar energy forecasting. These forecasts are primarily gener -
+ated by physical or statistical models, both of which depend on precise 
+solar radiation predictions. For short- to medium-term forecast horizons 
+(hours to days), radiation forecasts are predominantly provided by NWP 
+models. However, despite recent advancements aimed at enhancing 
+irradiance prediction in current NWP models, their quality remains 
+suboptimal and is a major source of uncertainty in PV power prediction. 
+Table 1 
+Comparison between results from the satellite-to-irradiance models and available data from the SolarAnywhere [ 22 ].
+San Diego Mean measured 
+(W/m
+2
+)
+Mean modeled 
+(W/m
+2
+)
+MBE 
+(W/m
+2
+)
+rMBE 
+( %)
+MAE 
+(W/m
+2
+)
+rMAE 
+( %)
+RMSE 
+(W/m
+2
+)
+rRMSE 
+( %)
+Xcor 
+(-)
+NOAA GHI Model 1 493.49 495.73   2.25   0.46 71.72 14.53 124.53 25.24 0.934
+NOAA GHI Model 2 493.49 516.78   23.29   4.72 61.72 12.51 107.41 21.77 0.95
+SUNY GHI 385.31 455.16   69.86   18.13 106.40 27.61 213.14 55.32 0.825
+SUNY GHI 
+(outliers removed)
+415.95 439.89   23.95   5.76 64.71 15.56 130.52 31.38 0.932
+Fig. 2. Comparison of different models (a), feature sets (b), and cloud tracking 
+pipelines (c) for 1 – 15 min forecast [ 22 ].
+M.H. Ghodusinejad et al.                                                                                                                                                                                                                      Solar Compass 17 (2026) 100154 
+4 
+--- PAGE 5 ---
+A promising approach to improve NWP solar radiation forecasting is the 
+multimodel method [ 37 ].
+NWP models begin with a description of the atmospheric conditions 
+at a specific time. They use equations that describe horizontal and ver -
+tical momentum, hydrostatic continuity, and energy conservation, 
+capturing atmospheric variability over fixed time steps. There are two 
+categories of NWP models based on the spatial extent of their modeling 
+domain. The first category includes global models, which cover the 
+entire globe, such as the European Centre for Medium-Range Weather 
+Forecasts (ECMWF) and the Global Forecast System (GFS). The second 
+category includes regional or mesoscale models, which cover specific 
+regions. Examples of these are the Weather Research and Forecasting 
+(WRF) model, the Mesoscale Atmospheric Simulation System (MASS) 
+model, the Advanced Multiscale Regional Prediction System (ARPS), the 
+North American Model (NAM), and the Fifth-generation Pennsylvania 
+State University-National Center for Atmospheric Research Mesoscale 
+(MM5) model [ 38 ].
+To broaden the application of this model, various solutions and 
+methods have been explored for its implementation. Each method aims 
+to reduce forecasting time from days to hours and minutes, while 
+enhancing accuracy across different locations.
+In 2014, short- and medium-term solar radiation forecasts were 
+introduced to evaluate the accuracy of numerical weather forecasting 
+models. Numerical models, such as the air pollution model (TAPM), can 
+estimate GHI using standard meteorological fields, though they lack 
+real-time cloud and aerosol data. To assess the model ’ s performance, the 
+GHI estimated by TAPM was compared with satellite-derived GHI at 
+selected sites. The results showed that the 45 km resolution had the 
+lowest RMSE, indicating that the model struggles to accurately capture 
+changes on scales smaller than 45 km [ 39 ].
+To address these shortcomings, Mathiesen et al. [ 40 ] introduced a 
+high-resolution cloud absorption model at the University of California. 
+Using the Weather Research and Forecasting (WRF) model, they 
+implemented an operational 1.3-km grid solar forecast for San Diego, 
+California, optimized to accurately simulate local meteorological con -
+ditions, especially fog and marine layers during summer. They devel -
+oped a direct cloud assimilation system (WRF-CLDDA) to predict 
+intra-hourly variability and produce accurate cloud field initializa -
+tions. By utilizing satellite imagery and ground weather station reports, 
+WRF-CLDDA statistically adjusts cloud hydrometeors (water content 
+and cloud water vapor) in the initial conditions.
+Although numerical weather forecasting models are generally more 
+accurate than image-based or statistical models, they tend to over- 
+predict radiation, leading to meteorological errors. This over- 
+prediction, particularly in regions with dynamic cloud systems, re -
+duces forecast accuracy [ 41 ]. While these models are significant in their 
+applications, they generally operate on a scale much larger than what is 
+effective for network integration, particularly for accurate radiation 
+prediction.
+In a research in this context, to enhance variability forecasts derived 
+from the 10 km coarse forecast, various methodologies, including analog 
+downscaling a pattern matching algorithm utilizing a historical forecast 
+library to identify groups similar to current forecasts are being explored. 
+This process necessitates WRF version 3.6.2 to produce a series of 10 km 
++ 2 km nested simulations. Radiation data, accurate to ± 2 %, was 
+sourced from the SURFRAD network. As indicated in Table 2 , only the 
+WRF-simulated GHI aligns with the observed radiation [ 42 ].
+Also, Wong et al. [ 43 ] conducted an investigation into global average 
+daily radiation by examining solar radiation models for predicting 
+global average daily and hourly irradiance, beam irradiance, and diffuse 
+irradiance. Seven models were considered, utilizing the 
+Angstrom-Prescott equation to predict global average daily radiation 
+based on sunshine hours in Hong Kong. Additionally, two parametric 
+models were investigated to estimate the monthly average global hourly 
+radiation and forecast the hourly radiation and a comparative analysis 
+was conducted between model predictions and measured data.
+Subsequently, to enhance the accuracy of time step examinations, 
+Junior et al.[ 44 ]. introduced a method for predicting solar radiation one 
+hour in advance, utilizing numerical weather forecasts and recent 
+measured data. Ultimately, irrespective of the spatial scale, the proposed 
+method ’ s predictions significantly outperformed the reference pre -
+dictions, demonstrating consistent performance. The skill scores ranged 
+from 0.67 to 0.73 for local scales and 0.97 for regional scales. To 
+examine solar radiation forecasts at 10-minute intervals, Ian 
+Sosa-Tinoco [ 45 ] developed a method for producing global solar radi -
+ation assessments with high spatial (9 km) and temporal (10 min) res -
+olution. This method provided numerical weather forecasts based on a 
+model. The simulation outputs were used to create radiation maps and 
+the grid cells were compared with corresponding observations to eval -
+uate the model ’ s accuracy, achieving a correlation higher than 0.88 with 
+the observational data.
+Although NWP models can forecast solar radiation variables, they 
+often exhibit significant errors, particularly in direct normal irradiance 
+(DNI), which is highly influenced by aerosol and cloud type and con -
+centration. One approach to enhancing 10-minute forecasts for DNI, as 
+proposed by Pereira et al. [ 46 ], involves two artificial neural network 
+(ANN) models. The first model utilizes weather and aerosol variables 
+predicted at a specific moment, while the second model incorporates a 
+period of improved DNI forecasts prior to the forecast moment. This 
+research leverages data from the ECMWF and the Copernicus Atmo -
+spheric Monitoring Service. To enhance forecasting conditions and 
+reduce the time required from one hour to one minute, Far Nanandez 
+et al. [ 47 ] developed a method to describe the movements and 
+high-frequency dynamics of DNI through the non-dimensionalization of 
+solar radiation data. The results, based on two-year surveys across 
+various climate points, indicate that the Kolmogorov-Smirnov integral 
+parameter (KSI %) and the normalized root mean square values are 
+below 23 % and 22 % per month, respectively, showing minimal dis -
+crepancies between modeling and measurement.
+In many high-altitude regions of the Earth, the typical coarse reso -
+lution of models and the variable physical characteristics of the envi -
+ronment pose challenges for the NWP method. For instance, on R ´eunion 
+Island in the southwest Indian Ocean basin, these issues are evident. To 
+address this, Jordi Badosa et al. [ 48 ] investigated the influence of 
+large-scale atmospheric parameters on local solar radiation and its daily 
+variability. To enhance forecast accuracy on the island, they introduced 
+an Empirical-Statistical Downscaling (ESD) method, which relies on 
+identifying similar past conditions to predict the previous day ’ s solar 
+radiation. Using 12 years of ECMWF reanalysis data and measurements 
+from 21 stations on the island, their results demonstrated that the ESD 
+method outperforms climatology-based radiation predictions, 
+improving daily RMSE by 4 – 11 %. The set of NWP methods can also be 
+utilized to estimate solar radiation and wind power density, either in 
+combination or separately [ 49 ].
+4.1.1. Overview of physical models
+Numerical Weather Prediction is one of the most effective forecasting 
+methods, though selecting the appropriate model from the diverse range 
+available remains a significant challenge. Consequently, numerous 
+comparisons have been conducted to evaluate different NWP models 
+Table 2 
+Analog weights and correlation coefficients [ 42 ].
+Variable w-GA Correlation Descriptive Name
+GHI 0.37 0.89 Global Horizontl Irradiance
+qC 0.35 0.01 Columnar Cloud Water Mixing Ratio
+qR 0.19 0.00 Columnar Rain Water Mixing Ratio
+qI 0.06 0.00 Columnar Ice Mixing Ratio
+Prec 0.02 0.05 Surface Precipitation
+qV
+2m
+0.01 0.22 2-m Water Vapor Mixing Ratio
+Qv 0.00 0.13 Columnar Water Vapor Mixing Ratio
+T
+2m
+0.00 0.40 2-m Temperature
+M.H. Ghodusinejad et al.                                                                                                                                                                                                                      Solar Compass 17 (2026) 100154 
+5 
+--- PAGE 6 ---
+based on criteria such as RMSE and mean absolute error (MAE).
+Verbois, et al., assessed 108 different models using a multi-criteria 
+hybrid approach, Fourier analysis, and classification of daily radiation 
+profiles based on various WRF mesoscale radiation parameters. This 
+comprehensive evaluation enhanced the understanding of model dis -
+tinctions and accuracy, highlighting the importance of multiple factors 
+beyond model errors. The study concluded that while WRF forecasts 
+were inadequate for hourly radiation resolution, they were more suit -
+able for predicting daily radiation profiles [ 50 ].
+In a separate study, Perez evaluated two NWP models the ECMWF 
+global model and the WRF model based on the medium-scale GFS across 
+three geographical regions: the United States, Canada, and Europe. The 
+findings from all three studies indicate that the GFS-based WRF model 
+forecasts are less accurate compared to global forecast-based approaches 
+like the ECMWF, and also, a simple averaging of model outputs yields 
+better results than using individual models [ 51 ].
+The primary challenge in solar radiation forecasting lies in eluci -
+dating the nonlinear relationship between observed and predicted ra -
+diation. To address this, a transformation function is required to 
+effectively communicate this relationship. According to Kakumoto et al. 
+[ 52 ], the predicted NWP and observed radiation data were utilized to 
+construct this function using multidimensional kernel density estimation 
+(KDE). The probabilistic prediction of this joint function, derived 
+through Bayes ’ law, offered superior statistical performance and reli -
+ability compared to other methods. This proposed method, termed Joint 
+Probability Condition (CoJD), employs the mean value in place of 
+scattered data and considers the clear sky index as a direct substitute for 
+radiation in measuring solar radiation. Typically, CoJD involves two 
+main phases: the construction phase and the forecasting phase. During 
+the construction phase, a Joint Probability Density Function (PDF) is 
+created between the predicted Clear Sky Index (CSI) and the observed 
+CSI using a two-dimensional KDE method. In this study, the forecasting 
+phase applies the Joint PDF to EnNWP to generate a forecast PDF for CSI. 
+Fig. 3 illustrates this approach. The result of the forecast method studied 
+at every site is shown in Fig. 4 . For all the sites CoJD was better than 
+EnReg an PP. In market trade simulation, CoJD also performed better 
+than the other forecast method.
+Verbois et al. [ 53 ] utilized NWP to study solar irradiance in tropical 
+region. Fig. 5 depicts a network of 25 meteorological stations across 
+Singapore, managed by the Solar Energy Research Institute of Singapore 
+(SERIS). The evaluation was performed with a 1-hour time resolution; 
+for instance, the hourly GHI for 9 am was calculated by averaging 
+multiple values from 8:31 am to 9:30 am, with any missing minute-data 
+being disregarded. In the next step, they used a high resolution 
+implementation of WRF solar consisted of four involute domains with 
+horizontal spatial resolution of 27, 9, 3 and 35 vertical levels. Lasso 
+model output statics (Lasso), Analog Ensemble (AnEn) and Quantile 
+Gradient Boosting (QGB) were used as post – processing models. Lasso 
+and QGB both used all of the variables but AnEn only use a few of them. 
+Briefly, WRF had the least accuracy, QGB had the lowest MAE which 
+means QGB had more accuracy but comparing to Lasso model had too 
+much outliers. After QGB and Lasso, AnEn had the lowest bias.
+Over the years, advanced methods for forecasting solar radiation 
+have been developed, utilizing outputs from NWP models in conjunction 
+with radiative transfer operators like libRadtran. In an study, WRF-Solar 
+configuration of the Weather Research and Forecasting (WRF) model 
+was employed, which is specifically tailored for solar energy applica -
+tions. Parameters forecasted by WRF, such as vertical profiles of cloud 
+liquid water (CLW), ice water content (IWC), cloud fraction, relative 
+humidity, and temperature, are utilized as inputs for libRadtran to 
+compute offline solar radiation. At each forecast interval, Gaussian 
+Mixture Model (GMM) clustering was used to classify all horizontal 
+networks. The classification results showed that the networks are cate -
+gorized into air masses or disturbances with comparable meteorological 
+properties. Satellite observation data served as references. The mean 
+square error (MSE) is broken down into the mean square of the error and 
+the MSE of variables centered at zero. The square root of the latter is 
+known as the central root mean square error (CRMSE). Forecast data was 
+analyzed over a 2-day period. The mean error did not show significant 
+change until the second day, while CRMSE remained consistent only on 
+the first day. This framework clarified the structure of surface solar ra -
+diation forecast errors, aiding validation within the NWP model inte -
+gration domain for any evolving air mass or disturbance [ 54 ].
+In addition to generating electricity through large and small photo -
+voltaic power plants, accurately calculating the received solar energy in 
+urban areas is crucial. This urban-specific model, referred to as WRF- 
+solar (uWRF-solar), demonstrates a strong predictive capability for 
+GHI, with an R² value of 0.93 under clear sky conditions, 0.61 under 
+cloudy sky conditions, and 0.39 under overcast conditions [ 55 ].
+4.1.2. NWP model accuracy
+Over the years, extensive efforts have been undertaken to identify 
+the factors influencing the accuracy of NWP models. For instance, Perez 
+et al. [ 56 ] evaluated seven GHI prediction models that depended 
+directly or indirectly on NWP. To validate these models, ground mea -
+surements, including hourly integrated GHI recorded over a one-year 
+period, were analyzed from seven SURFRAD network stations. The 
+seven NWP-based GHI models evaluated in this study include the Global 
+Multiscale Environmental Model (GEM), the ECMWF model, two ver -
+sions of the Weather Research and Forecasting (WRF) model, the MASS 
+model, the Advanced Multiscale Regional Prediction System (ARPS) 
+model, and a model based on cloud cover forecasts from the US National 
+Forecast Database (NDFD). These models provide forecasts up to 48 h, 
+except for the ECMWF model, which forecasts up to three days, and the 
+NDFD model, which forecasts up to seven days. The models were 
+compared with ground measurements using RMSE, MAE, MBE, and the 
+Kolmogorov-Smirnov integral (KSI). Models based on the European or 
+Canadian Global Climate Simulation (GEM & ECMWF) demonstrated 
+Fig. 3. Schematic illustration of CoJD [ 52 ].
+Fig. 4. Comparison of forecast methods [ 52 ].
+M.H. Ghodusinejad et al.                                                                                                                                                                                                                      Solar Compass 17 (2026) 100154 
+6 
+--- PAGE 7 ---
+superior RMSE results. Combining GEM and ECMWF models yielded 
+better outcomes compared to using them individually. GFS-based 
+models were tested with and without MOS postprocessing, which cor -
+rects local errors. Tests incorporating MOS showed improved perfor -
+mance, while non-MOS experiments highlighted the limitations of 
+GFS-based model radiation algorithms.
+The necessity to accurately predict solar radiation is driven by the 
+initial and ongoing costs associated with all stages of solar energy uti -
+lization. Minimizing forecasting errors ensures that costs remain close to 
+actual values. Sun [ 57 ] proposed an effective plan for predicting solar 
+radiation under various weather conditions, relying on components of 
+both clear and cloudy skies. Input variables were assessed through 
+climate conditions and satellite observations within the NWP model, 
+which serves as an offline plan for GHI calculation using satellite data. 
+The results confirmed that this study can reduce net solar radiation error 
+from 800 W/m² to < 50 W/m². Additionally, results indicated that the 
+average half-hour relative error of GHI is reduced to < 7 % under 
+different sky conditions.
+Upon examining the factors contributing to the inaccuracy of NWP 
+models, it was identified that the type of cloud cover in the study area is 
+a significant factor. For instance, marine stratus clouds are a primary 
+source of inaccuracy in NWP models for coastal California. Proper 
+parameterization, along with accurate initial datasets, significantly en -
+hances the accuracy of simulated cloud fields and surface solar radiation 
+[ 58 ]. Accurate solar radiation forecasting significantly contributes to 
+precise operating cost estimations. However, achieving higher accuracy 
+entails additional costs. In a research, to balance the optimal error 
+margin with the costs of calculations and implementation, a three-hour 
+forecasting period was considered. This interval may introduce errors in 
+radiation forecasts, and simulations with lower resolution at high fre -
+quency may also experience inaccuracies due to humidity and velocity 
+variations caused by atmospheric flow and clouds [ 59 ].
+To mitigate the impact of cloud cover on NWP models, improve -
+ments are necessary. Consequently, many researchers have contributed 
+to enhancing forecast accuracy by developing various approaches. For 
+example, to reduce errors caused by cloud variability, researchers sug -
+gested that a model can be developed by first adopting a seasonal 
+approach and then analyzing cloud change patterns that affect radiation 
+in the target area. Using a seasonal and climate-dependent approach 
+(MOS), this model can reduce the relative root mean square error 
+(rRMSE) of GHI by 6 % compared to the original model, demonstrating 
+the effectiveness of an intelligent model [ 60 ].
+PV modules are influenced by the spectral distribution of solar ra -
+diation. While Numerical Weather Prediction models compute radiation 
+across multiple spectral bands, the standard outputs for PV forecasting 
+typically provide only bandwidth values. This raises concerns about how 
+the absence of detailed spectral data impacts PV power estimation. To 
+investigate this, a physical PV model was created to determine the 
+spectral distribution of radiation and the panels ’ spectral response. This 
+model was tested using data collected at the Site Instrumental de 
+Recherche par T ´el ´ed ´etection Atmosph ´erique (SIRTA) in Palaiseau, 
+France. The average relative difference between the simulated and 
+measured PV power for a 250 W monocrystalline silicon module is   0.9 
+%, with an average bias of   2.0 W.This model was employed to explore 
+how solar zenith angle and cloud cover affect PV module performance. 
+The results revealed that in cloudy conditions, PV performance can 
+improve by up to 5 % through spectral filtering of near-infrared radia -
+tion, and by up to 18 % when only beneficial radiation is considered in 
+performance calculations. Overall, global broadband horizontal irradi -
+ance is inadequate for precise PV power modeling, highlighting the 
+importance of spectrally and angularly refined irradiances. This un -
+derscores the importance of PV models using more precise irradiance 
+inputs, which can be easily obtained by utilizing the internal variables of 
+NWP models [ 61 ].By integrating Data Assimilation (DA) with Numerical 
+Weather Prediction model observations, the issues related to incomplete 
+initial atmospheric information for predictions can be mitigated in both 
+static (3DVAR) and time-evolving (4DVAR) modes. This method was 
+evaluated for its effectiveness in forecasting hourly conditions for the 
+next day, and when applied to the WRF model, it demonstrated minimal 
+error in time evolution under all conditions except clear skies. For 
+instance, the initial 4DVAR forecasts, after processing, exhibited supe -
+rior performance with a relative RMSE of 37 % over the Singapore study 
+area [ 62 ].
+In another study, to enhance the model ’ s accuracy, a method 
+involving the integration of three data sets, i.e., NWP model data, sat -
+ellite survey data and ground-collected information, was employed. The 
+Fig. 5. SERIS network of meteorological stations operational since May 2013 [ 53 ].
+M.H. Ghodusinejad et al.                                                                                                                                                                                                                      Solar Compass 17 (2026) 100154 
+7 
+--- PAGE 8 ---
+implementation of this method required three steps including Classifi -
+cation and Clustering (utilizing the Gaussian Mixture Model (GMM) to 
+classify and cluster horizontal grid cells within the study area), CDF 
+Analysis (Applying the Expectation-Maximization (EM) algorithm to 
+examine the cumulative distribution functions (CDFs) of the trans -
+parency index (CI) derived from satellite observations and NWP data for 
+predicting hourly radiation) and Correction Function Determination 
+(determining the corresponding correction functions based on the 
+inferred CDFs for each region clustered in step 1). Finally, corrections 
+were applied to the CI of the NWP forecast data for days (d) and ( d + 1) 
+( Fig. 6 ). Mean Bias Error (MBE), RMSE, and Mean Absolute Error (MAE) 
+were utilized to assess forecasting accuracy. Consequently, the algo -
+rithm demonstrated a superior correction effect in spring and summer 
+compared to winter, by accounting for seasonal behavior [ 63 ].
+Although NWP models provide a robust physical basis for solar 
+irradiance prediction, their accuracy is limited by coarse spatial reso -
+lution and imperfect aerosol and cloud parameterization; post- 
+processing methods such as MOS or statistical downscaling can sub -
+stantially reduce forecast errors particularly when correcting aerosol- 
+related biases and improving terrain representation.
+4.2. Statistical methodology
+Statistical approaches encompass a number of traditional statistical 
+methodologies, including regression analysis [ 64 ], autoregressive 
+models [ 65 ], Markov Chain [ 66 ], and machine learning methodologies, 
+such as support vector machine (SVM) [ 67 ] and ANN [ 68 ]. Accuracy of 
+the statistical approaches is highly contingent upon the historical data 
+and bears no relation to the internal state information of the solar system 
+[ 69 ]. By evaluating all accuracy metrics, including RMSE, MBE, MAE, 
+and the coefficient of determination (R²), it is evident that all machine 
+learning models enhance the accuracy of regional GHI predictions [ 70 ]. 
+Comparative analyses of various statistical models including Neural 
+Networks (NN), Multivariate Regression (MVR), and Support Vector 
+Machines (SVM) using Mean Absolute Percentage Error (MAPE) and 
+Mean Squared Error (MSE) criteria for short-term (one-hour-ahead) 
+irradiance forecasting based on ground-measured meteorological inputs 
+(temperature, humidity, and cloud index) indicate that NN models 
+slightly outperform MVR and SVM under similar data conditions [ 71 ]. 
+However, this superiority depends on the forecast horizon, data quality, 
+and local climatic variability.
+To investigate the amount of incoming radiation in various countries 
+under the influence of different parameters, numerous studies have 
+employed this method. For instance, Sabzi Peror et al. [ 72 ] conducted a 
+study to examine various influential parameters on the monthly average 
+solar radiation index, considering factors such as altitude, the amount of 
+suspended dust on different days of the month, and the seasonal varia -
+tion in the Earth-Sun distance. They developed an altitude-dependent 
+method incorporating these parameters and tested it in the central 
+arid deserts of Iran. The results demonstrated that this modified altitude 
+method achieved an error rate of < 2 % and exhibited high prediction 
+accuracy in arid and semi-arid deserts globally, with effective general -
+ization to the conditions in Iran.
+Olimar et al. [ 73 ] conducted an investigation into the changes in 
+solar radiation in the southern region of Algeria, taking into account the 
+climatic conditions. They analyzed 10 years of solar radiation data from 
+2011 to 2020. Their findings revealed significant seasonal and annual 
+variability, highlighting the region ’ s substantial solar energy potential, 
+with an average daily energy measurement exceeding 6.16 kWh/m² and 
+an annual average of 2.2 MWh/m².
+In highly accurate solar power forecasting using statistical methods, 
+it is important to reduce the risk of serious errors (especially over -
+estimation). Takamatsu et al. [ 74 ] addressed this subject by developing 
+low risk models with good average accuracy through the following 
+approach: adoption of a machine learning ensemble, and optimization of 
+the metamodel using quadratic programming with downsampled vali -
+dation data.
+4.2.1. Regression analysis
+Regression analysis is an approach in forecasting solar irradiance. 
+For instance, a linear regression model is introduced as a post-processing 
+method to minimize errors from the Weather Research and Forecasting 
+(WRF) model. The coefficients of the regression model are updated using 
+the Kalman Filter (KF) approach, enabling the model to adjust dynam -
+ically to changes in solar radiation. The KF updating formula is then 
+altered to account for measurement availability constraints during 
+forecast execution. WRF forecasts include inputs such as radiation, 
+temperature, relative humidity, and solar zenith angle. Fig. 7 shows a 
+logistic distribution censored at zero [ 75 ].
+In another work, Lauret et al. [ 76 ] developed simple linear models 
+that allow users to predict solar irradiance forecast errors based solely 
+on solar variability at a specific location on Earth. Sixty sites distributed 
+around the globe were used to build two types of RMSE prediction 
+models. The first type was for intra-day forecasts (1-hour to 6-hour 
+forecast horizons), while the second is for day-ahead forecasts 
+(24-hour horizon). The derivation of the intra-day forecast error pre -
+diction model leverages on a non-linear time series approach whereas 
+the one for day-ahead forecast error relies on forecasts issued by the 
+European Centre for Medium-Range Weather Forecasts (ECMWF).
+Khan et al. [ 77 ] introduced novel hybrid architectures and presented 
+a detailed evaluation of GHI prediction models. The approach included 
+traditional machine learning algorithms (Support Vector Regressor, 
+Decision Tree Regressor, and Random Forest Regressor) and novel 
+hybrid deep learning architectures (BiLSTM-BiGRU and CNN-LSTM). 
+The novel cascaded BiLSTM-BiGRU architecture used complete bidi -
+rectional processing. The CNN-LSTM framework effectively combined 
+spatial and temporal features. These advanced architectures achieved a 
+30 % reduction in computational complexity compared to equivalent 
+standalone deep learning approaches, enhanced robustness to missing or 
+noisy data, and controlled seasonal variations.
+4.2.2. Artificial intelligence techniques
+Throughout the history of solar energy forecasting, ambient satellites 
+have measured solar energy reflected from the Earth or atmosphere. 
+Consequently, satellite-based methods are now well-established, and 
+extensive research has been conducted to address their limitations [ 78 ]. 
+Recent studies have also incorporated machine learning methods and 
+artificial intelligence techniques.
+Fig. 6. CI of the NWP forecast data for days (d) and ( d + 1) [ 64 ].
+M.H. Ghodusinejad et al.                                                                                                                                                                                                                      Solar Compass 17 (2026) 100154 
+8 
+--- PAGE 9 ---
+To demonstrate the positive impact of employing artificial intelli -
+gence techniques, Khadija Barhmi et al. [ 79 ] conducted a comprehen -
+sive review of various solar irradiance forecasting methods based on 
+satellite data, all-sky imagery (ASI), sensor networks, NWP models, and 
+hybrid approaches. By analyzing more than eighty studies, the authors 
+proposed a comprehensive framework for the classification and evalu -
+ation of forecasting methods, utilizing common performance indicators 
+such as RMSE, MAE, MBE, and the forecast skill index (FS) to assess 
+model accuracy. Their findings reveal that the integration of artificial 
+intelligence particularly deep neural networks (CNN, LSTM, GAN) and 
+hybrid learning strategies significantly enhances forecasting precision 
+over short- to medium-term horizons. Furthermore, the study un -
+derscores the crucial role of data preprocessing for noise reduction and 
+postprocessing for bias correction and performance refinement, high -
+lighting how AI-driven methodologies can profoundly elevate the ac -
+curacy and reliability of solar forecasting systems.
+To evaluate the effectiveness of artificial intelligence – based ap -
+proaches, numerous studies have compared their performance against 
+traditional forecasting methods under identical operating conditions. 
+For instance, Shanlin Chen et al. [ 80 ] investigated a deep lear -
+ning – based model chain developed for intra-day solar irradiance fore -
+casting. In the first stage, spectral satellite data from GOES-16 and 
+ground-based measurements from the SURFRAD network were used to 
+train a model capable of producing highly accurate spatial estimations of 
+GHI, referred to as the SAT-DL model. In the subsequent stage, these 
+spatial estimates served as inputs to a second model designed to generate 
+short-term temporal forecasts of GHI (ranging from 15 to 180 min 
+ahead) using convolutional neural networks (CNNs), attention layers, 
+and dense layers within the TensorFlow framework. For performance 
+benchmarking, NSRDB data derived from physical radiative transfer 
+models were employed. Evaluation metrics such as nRMSE, nMBE, the 
+coefficient of determination (R²), and ramp event analysis demonstrated 
+that the proposed deep learning model chain outperformed benchmark 
+models (including hybrid physical – deep learning and end-to-end net -
+works), particularly under cloudy conditions. Although the approach 
+demands greater computational resources and access to ground-based 
+data, it offers substantial potential for enhancing solar forecasting ac -
+curacy and advancing intelligent energy management systems.
+In this context, Sediqi et al. [ 81 ] utilized time-lapse videos from a 
+wide-lens camera, analyzing one million images spanning 1 to 12 years, 
+to predict solar radiation using a deep learning approach. Fig. 8 illus -
+trates the Convolutional Neural Network and Long Short-Term Memory 
+(CNN-LSTM) model proposed by these researchers. This method com -
+prises two stages: the first stage involves a CNN to encode a frame from a 
+Fig. 7. Proposed scheme of one-day-ahead PV power forecasting [ 75 ].
+Fig. 8. The proposed CNN + LSTM approach based architecture [ 77 ].
+M.H. Ghodusinejad et al.                                                                                                                                                                                                                      Solar Compass 17 (2026) 100154 
+9 
+--- PAGE 10 ---
+sky video, creating a full-sky representation with the help of auxiliary 
+weather data. The second stage employs a two-tier LSTM architecture to 
+analyze historical full-sky representations and generate future pre -
+dictions. This deep learning approach, when compared to satellite-based 
+methods, significantly lowers the normalized mean absolute percentage 
+error for both nowcasting (predicting solar irradiance at the moment the 
+frame is captured) and forecasting (predicting irradiance up to 4 h in 
+advance).
+Fathi et al. [ 82 ] also assessed the viability of a rooftop solar photo -
+voltaic system for a hotel building and utilized monthly data from 1984 
+to 2023 and hybrid models comprising LSTM-based and GRU-based 
+architectures, along with the MLP model and the standard forecasting 
+methods, to forecast solar radiation and temperatures.
+Forecast accuracy directly impacts operational efficiency each 1 % 
+reduction in forecasting error (RMSE) can translate into approximately 
+0.5 – 1 % improvement in PV plant energy scheduling efficiency and 
+reduced reserve capacity costs, leading to more stable grid integration. 
+Xiaoyan Shao et al.[ 83 ]. shown that more accuracy can be achieved by 
+combining the individual forecasting models using a machine learning 
+model. In Fig. 9 , schematic of this proposed combining is represented.
+However, existing statistical and machine learning algorithms are 
+not reliable for forecasting due to the sparse nature of solar energy data. 
+Several factors affect the performance of solar radiation, such as the 
+forecast horizon, weather classification, and performance evaluation 
+criteria. Therefore, an overview of the performance of deep learning- 
+based solar radiation forecasting models is presented in separate clas -
+sifications. Based on the analysis, deep learning models outperform 
+conventional models in solar forecasting applications, especially in 
+combination with some techniques that enhance feature extraction. In 
+addition, the use of data augmentation techniques is beneficial to 
+improve the performance of deep learning, especially for deep networks 
+[ 84 ].
+4.2.3. Horizon-based suitability
+Recent comparative studies show that image-based deep learning 
+(CNN, ConvLSTM) and optical-flow methods excel at very-short term 
+(minutes to 1 hour) nowcasting, while NWP-augmented ML or hybrid 
+physical-ML methods perform better for horizons > 1 – 6 h and up to 
+multi-day forecasts. For example, Ajith et al. [ 85 ]report superior per -
+formance of sky-image DL for sub-hour horizons, whereas satel -
+lite + NWP + DL pipelines reduce error for intra-day and day-ahead 
+horizons.
+To address the high levels of uncertainty inherent in photovoltaic 
+energy, an increasing number of studies have focused on short-term or 
+nowcasting solar forecasting. Most of these works employ deep learning 
+models to directly predict solar irradiance or photovoltaic power based 
+on sequences of sky images. Recently, however, advances in generative 
+modeling have introduced a new paradigm that divides the nowcasting 
+problem into two sub-tasks: (1) future event prediction, involving the 
+generation of forthcoming sky images; and (2) irradiance or power 
+estimation, which predicts solar values from a single image.
+Among these approaches, the SkyGPT model has shown that its 
+strength lies primarily in the estimation component rather than in image 
+generation. Building on this, Lorenzo F. C. Varaschin et al. [ 86 ] 
+concentrated on the irradiance estimation task, systematically evalu -
+ating a wide range of deep learning architectures using the well-known 
+Folsom, SIRTA, and NREL datasets. Their work also included ablation 
+studies to test different training setups and data preprocessing tech -
+niques, such as the choice of target variables and time-label alignment 
+between sky images and irradiance measurements. Notably, they iden -
+tified a potential timestamp misalignment in the Folsom dataset and 
+proposed a correction strategy. Across all three datasets, their results 
+consistently confirmed the reliability and generalizability of their find -
+ings across different solar observation sites.
+In summary, it can be stated: 
+(1) Very-short term (seconds – 60 min): sky-image DL and optical- 
+flow-based methods yield the best nowcasting accuracy.
+(2) Short term (1 – 6 h): hybrid ML + NWP and post-processed NWP 
+(AnEn, MOS) provide better forecasts by leveraging synoptic 
+evolution.
+(3) Medium to long term ( > 6 h – days): global NWP ensembles 
+(ECMWF) with statistical downscaling remain the primary 
+choice. These distinctions are supported by comparative studies 
+and benchmarks [ 85 , 86 ]
+4.2.4. Climate/Regional suitability
+Model performance is strongly influenced by climatic conditions. In 
+particular, NWP models tend to show varying accuracy depending on 
+the dominant regional weather regimes. For example, coastal and 
+stratocumulus-dominated regions often pose significant challenges for 
+conventional cloud microphysics and cloud – radiation parameteriza -
+tions within NWP systems. In such areas, models can benefit substan -
+tially from higher-resolution simulations (e.g., WRF) combined with 
+advanced statistical or machine-learning-based postprocessing tech -
+niques to better represent local cloud variability and short-term solar 
+irradiance fluctuations [ 51 ].
+Conversely, in arid and semi-arid regions, where dust storms and 
+other aerosol events frequently occur, the dominant source of uncer -
+tainty shifts from cloud representation to aerosol – radiation interactions. 
+In these environments, improved skill is obtained through aerosol-aware 
+modeling approaches or the use of aerosol data assimilation methods 
+that integrate satellite or ground-based observations [ 80 ].
+Finally, machine learning (ML) models that are trained on local sky 
+imagery or radiation patterns often exhibit limited transferability across 
+different climatic zones. This is because the spectral, radiative, and 
+cloud-formation characteristics can vary dramatically between humid 
+coastal areas and dry continental regions. Therefore, to maintain 
+generalization and model robustness, regional retraining, climate- 
+specific adaptation, or transfer-learning techniques are strongly rec -
+ommended [ 87 ].
+4.2.5. Complexity vs latency tradeoffs
+There exists a practical trade-off between model complexity and 
+operational latency in predictive modeling. More sophisticated archi -
+tectures such as Transformers, ConvLSTMs, or multimodal ensemble 
+models often achieve lower RMSE (higher predictive accuracy). 
+Fig. 9. General schematic showing the architecture of the machine learning 
+based model blending forecast system [ 78 ].
+M.H. Ghodusinejad et al.                                                                                                                                                                                                                      Solar Compass 17 (2026) 100154 
+10 
+--- PAGE 11 ---
+However, these gains usually come at the cost of greater computational 
+requirements and higher inference latency, which can limit their us -
+ability in real-time or resource-constrained environments.
+In contrast, simpler approaches including persistence models, 
+ARIMA, or lightweight Random Forests may deliver less accurate pre -
+dictions, but they are typically faster, more stable, and easier to deploy 
+in operational systems where low latency or limited computational ca -
+pacity is critical [ 86 , 88 ].
+4.2.6. Neural network
+In forecasting solar radiation, ANN are utilized because they can 
+learn from historical data to make the required predictions. The key 
+input data influencing the availability and intensity of solar radiation 
+include the month, day, season, average ambient temperature, and 
+average relative humidity (RH) [ 89 ]. A generalized regression neural 
+network is used to predict solar radiation. For training the neural 
+network, meteorological satellite and geographical data were employed 
+for short-term and long-term periods. The network ’ s input layer were 
+meteorological satellite and geographic data such as longitude, latitude, 
+altitude, month, and average earth surface temperature, with solar ra -
+diation as the output. The root mean square error and the correlation 
+coefficient between the predicted and actual values were calculated 
+using the neural network outputs [ 90 ].
+Various models have been created and evaluated to forecast hourly 
+solar radiation one day ahead using artificial neural network techniques. 
+The projected radiation is the primary factor affecting the panel array of 
+modules in a photovoltaic power plant. When comparing pure statistical 
+models, which depend solely on locally measured data, with methods 
+that adjust numerical weather prediction data using a stability model, it 
+is found that statistical models can improve forecasting performance 
+[ 91 , 92 ].
+Cloud cover is one of the most critical variables in solar irradiance 
+forecasting. Accurate predictions of cloud cover changes can provide 
+valuable information for companies and systems utilizing solar energy. 
+McCandless et al. [ 93 ] proposed a short-range solar irradiance fore -
+casting method that uses a statistical classification of cloud regimes to 
+enhance deterministic GHI predictions. Their study utilized surface 
+weather observations, solar irradiance measurements, and GOES-East 
+satellite data. The prediction method utilized a regime-dependent 
+approach to forecast over intervals of 0, 60, 120, and 180 min. To 
+calculate the clearness index, various inputs and multi-regime depen -
+dent prediction methods were employed. Fig. 10 illustrates the rela -
+tionship between these techniques. From left to right, the first prediction 
+method is the ANN, applied to the clear dataset. The second is an ANN 
+without additional regime classification. The remaining methods are 
+RD-ANNs. The first RD-ANN method, called RD-ANN-GCT, is based on 
+regimes identified by cloud type changes in the GOES-East data. The 
+next method, RD-ANN-GKTCC, uses k-means regimes incorporating in -
+puts from all data sources in this study. The final technique, named 
+RD-ANN-KtCC, involves satellite measurements and compares previous 
+work.
+Zibo Dong et al.[ 94 ]. investigated the hourly solar irradiance time 
+series using satellite image analysis combined with a hybrid exponential 
+smoothing state space (ESSS) model and an ANN. The ESSS model was 
+employed to predict the cloud cover index, given the stochastic nature of 
+cloud formation. To estimate solar irradiance from the cloud index, a 
+MLP was selected from various ANN models. Satellite images were 
+sourced from the Geostationary weather satellite operated by the Japan 
+Meteorological Agency (JMA), and the solar irradiance time series data 
+were obtained from the meteorological station of the Solar Energy 
+Research Institute of Singapore (SERIS). The satellite images collected 
+were thoroughly analyzed to determine the cloud cover index using 
+self-organizing maps. Two critical threshold tests were then applied to 
+the satellite images: the visible reflectance threshold test and the 
+infrared temperature threshold test. For the visible reflectance threshold 
+test, image data from one year were utilized to create monthly synthetic 
+raster images of surface albedo. The infrared temperature threshold test 
+used two temperature sources: the monthly minimum sea surface tem -
+perature and the monthly mean minimum land temperature from the 
+National Environment Agency of Singapore, to generate monthly syn -
+thetic raster images of surface temperature. Fig. 11 displays the 
+normalized RMSE for all models. The proposed model in this study 
+demonstrated a 6 % improvement in accuracy compared to other 
+models.
+4.3. Combined method
+Ensemble models, due to their reduced constraints compared to in -
+dividual models, often yield more accurate results than statistical and 
+physical models. Over the past three decades, numerous researchers 
+Fig. 10. Overall process design for our regime-dependent prediction technique and the comparison techniques [ 83 ].
+M.H. Ghodusinejad et al.                                                                                                                                                                                                                      Solar Compass 17 (2026) 100154 
+11 
+--- PAGE 12 ---
+have continuously strived to enhance the accuracy of solar radiation 
+predictions. This section outlines methods for estimating solar energy 
+potential at specific locations by integrating various solar radiation 
+calculation techniques. This innovative approach, which incorporates 
+regional climatic conditions, significantly reduces computation time and 
+enhances decision-making accuracy with minimal initial data. Addi -
+tionally, it examines the impact of spatial orientation on the maximum 
+electricity generation over monthly, seasonal, and annual periods, 
+demonstrating that optimal tilt angles during specific times can maxi -
+mize the region ’ s solar potential [ 95 ]. As an example, surface meteo -
+rological data from the DATSAV2 database allow for the application of 
+the METSTAT (meteorological/statistical) model to compute hourly 
+values of normalized direct, horizontally diffuse, and global horizontal 
+solar radiation for locations worldwide [ 96 ].
+To forecast GHI, researchers have proposed several hybrid methods. 
+Marquez et al. [ 97 ] utilized processed satellite images in combination 
+with an ANN to develop a new hybrid approach for predicting GHI at 
+intervals of 30, 60, 90, and 120 min. The forecast model was applied to 
+GHI data collected from Davis and Merced locations in the San Joaquin 
+Valley. The ANN model inputs included cloud fraction variables derived 
+from satellite image analysis, such as velocimetry and cloud indexing. 
+The proposed forecasting methods showed a relative improvement 
+ranging from 5 % to 25 %. Additionally, as the forecasting horizon 
+increased, the RMSE improvement also increased. In another study, de 
+Lima et al. [ 98 ] predicted GHI over short- and medium-term horizons 
+using the Global Forecast System (GFS), the Weather Research and 
+Forecasting-Solar (WRF-Solar) model, and a hybrid method called 
+GFS-MOS for the Northeast of Brazil. The GFS-MOS combines GFS 
+forecasts with the Model Output Statistics (MOS) algorithm, which uses 
+observational data for statistical refinement. The results demonstrate 
+that GFS-MOS outperforms WRF-Solar in most aspects, particularly in 
+simulating low GHI values, where GFS-MOS demonstrated superior 
+accuracy.
+Post-processing methods have widely been employed as correction 
+models to enhance the accuracy of NWP solar irradiance forecasts. Based 
+on the analysis of NWP GHI error characteristics, errors in NWP GHI 
+forecasts may show obvious seasonal variations. Therefore, it is chal -
+lenging for a single correction model to achieve good correction per -
+formance and strong seasonal robustness. Hence, Dou et al. [ 99 ] 
+proposed a hybrid model comprising representation learning module, 
+feature sparse activation module, and encoder-decoder-based correction 
+module to address the aforementioned problem.
+Ansong et al. [ 100 ] presented a hybrid deep learning model 
+combining convolutional neural networks (CNN) with long short-term 
+memory (LSTM) networks to forecast solar irradiance 60 min ahead. 
+The model used images from the Karlsruhe low-cost sky imager (KALiSI) 
+alongside meteorological data from a local weather station. Experi -
+mental results showed that including relative humidity and wind di -
+rection yields the lowest average RMSE of 119 W/m² and MAE of 82 
+W/m². This outperformed image-only and persistence models by 3 % 
+and 42 % in RMSE (9 % and 50 % in MAE), respectively.
+A new combined Model Output Statistics (MOS) method, known as 
+the MOS cascade, was created to improve the global horizontal radiation 
+forecasts produced by the WRF model. This approach used a sequence of 
+two different MOS algorithms. The first algorithm, MOSRH, is a 
+physically-based method aimed at correcting moisture-related errors in 
+WRF radiation schemes. The second algorithm, MOSNN, leverages 
+artificial intelligence to address systematic and learnable errors in nu -
+merical weather predictions. By comparing 1-day and 2-day forecast 
+accuracy with observed radiation data, a significant reduction in error 
+was observed when using the MOSRH model and the MOS cascade 
+[ 101 ].
+Dong et al. [ 102 ] proposeed a novel zero-shot multimodal learning 
+framework for predicting global horizontal irradiance. The proposeed 
+framework integrates satellite images and numerical time series data. 
+First, a pre-trained Vision Transformer was employed to extract feature 
+embeddings from satellite images. Meanwhile, the temporal information 
+from historical irradiance and relevant variables are captured using an 
+iTransformer. Second, a filtering cross-attention mechanism was intro -
+duced to eliminate inter-modal redundant information and enhance the 
+modal fusion capability. Finally, a multivariate shared multi-layer per -
+ceptron (MLP) was used to achieve multi-step prediction. his paper in -
+troduces a method based on fully convolutional neural networks (U-Net) 
+to interpolate missing time steps for both deterministic and probabilistic 
+solar irradiation forecasts. The model is trained on deterministic fore -
+casts (ECMWF IFS) to restore hourly forecasts from three-hourly fore -
+casts benefiting from past physical NWP model runs. We show that the 
+proposed method is capable of restoring deterministic forecasts and 
+furthermore can provide highly accurate probabilistic solar irradiation 
+forecast interpolations
+Real-time solar radiation predictions can be made using either ma -
+chine learning or physics-based models, each offering unique benefits 
+Fig. 11. nRMSE ( %) comparison among 5 forecasting methods for SERIS data [ 84 ].
+M.H. Ghodusinejad et al.                                                                                                                                                                                                                      Solar Compass 17 (2026) 100154 
+12 
+--- PAGE 13 ---
+and drawbacks. To overcome these limitations, a new predictive ana -
+lytics framework was introduced, combining the strengths of both model 
+types. This framework, particularly a thrust conceptual model, in -
+tegrates satellite cloud imagery with real-time solar radiation data to 
+improve prediction accuracy. Initial results, derived from actual radia -
+tion and cloud data, validate the effectiveness of this conceptual drift- 
+based approach. The findings suggest that static models are inade -
+quate for accurately capturing solar radiation dynamics under both 
+cloudy and clear conditions [ 103 ].
+Solar energy is extensively used in both residential and industrial 
+applications. To maximize its utilization, measuring radiation per unit 
+area is crucial. Irradiance measurements are taken at numerous stations. 
+When radiation data is missing, empirical models are often used. For 
+instance, Holland et al. [ 104 ] created a 48-hour forecasting system for 
+two PV power plants in China and Germany. This system combines NWP 
+models with irradiance and power measurements, along with 
+satellite-based irradiance forecasts. Various GHI forecasts were merged 
+into a single forecast using linear regression, which was then applied to 
+PV simulation. The resulting PV power predictions were compared with 
+on-site power measurements, and Root Mean Square Error was used to 
+assess the accuracy of the irradiance and PV power predictions ( Fig. 12 ).
+The conventional method for photovoltaic forecasting depends 
+heavily on extensive historical data, including records of PV plant power 
+generation and numerical weather prediction data, which makes it un -
+suitable for newly established PV plants. To overcome this limitation, a 
+physical forecasting approach based on solar radiation on inclined sur -
+faces was proposed, as depicted in Fig. 13 . This method employs three 
+decomposition models and four displacement models, resulting in a total 
+of 12 combined forecasting models. The enhanced model also took into 
+account factors such as solar spectral response, radiation angle, and soil 
+coefficient. The predicted PV power was then calculated using these 
+derived prediction models along with the mathematical model of the PV 
+cell. The performance of the 12 models was assessed using RMSE and 
+MAE under four different weather conditions: sunny, cloudy, overcast, 
+and rainy days. The evaluation revealed that the Liu-Jordan transfer 
+model combination methods demonstrated superior prediction accuracy 
+across these weather conditions. Notably, the Erbs + Liu-Jordan model 
+yielded the most accurate predictions [ 105 ].
+Machine learning techniques have become increasingly popular in 
+various forecasting applications. For example, U ˘gur Ercan [ 106 ] focused 
+on predicting solar radiation for all cities in Turkey ’ s Mediterranean 
+region using both statistical and common machine learning methods. 
+The performance of these models was evaluated using ensemble learning 
+methods such as gradient boosting and extreme gradient boosting, along 
+with artificial neural networks. Data from eight cities in the Mediter -
+ranean region of Turkey were utilized, with input variables including 
+deviation angle, wind speed, ambient temperature, relative humidity, 
+and cloud index. The findings reveal that machine learning models 
+outperformed statistical models. The extreme gradient boosting method 
+delivered the best results, achieving an R² of 0.9993 and a MAPE of 
+0.0119.
+4.4. Pros and cons of physical vs AI models and the importance of hybrid 
+approaches
+Physical models (NWP) are physically consistent and suited to 
+medium-to-long horizons but suffer from cloud/aerosol parameteriza -
+tion and coarse resolution; AI models (ML/DL) excel at capturing local 
+nonlinearities and very short-term variability but require representative 
+training data and may not generalize across climates. Hybrid methods 
+that fuse NWP/satellite physics with ML postprocessing or multimodal 
+DL provide a pragmatic compromise improving accuracy and reducing 
+systematic biases, as demonstrated in recent studies [ 88 ].
+Fig. 12. Integration of multiple GHI predictions as simulation input and comparison with measured power [ 104 ].
+M.H. Ghodusinejad et al.                                                                                                                                                                                                                      Solar Compass 17 (2026) 100154 
+13 
+--- PAGE 14 ---
+5. Conclusion
+Solar irradiance forecasting is pivotal for the integration of solar 
+energy into the power grid, as it addresses the inherent variability and 
+uncertainty associated with solar power generation. This review has 
+examined the progression of forecasting methods from traditional 
+physical models to modern data-driven approaches, highlighting the 
+strengths and limitations of each technique.
+Physical models, such as Numerical Weather Prediction, offer a 
+foundational understanding of atmospheric processes but often fall short 
+in accuracy for short-term forecasts due to their reliance on large-scale 
+atmospheric data. Statistical models, while useful in identifying pat -
+terns in historical data, tend to struggle with capturing the nonlinear and 
+dynamic nature of solar irradiance, especially over short time horizons. 
+In contrast, AI and ML methods, particularly deep learning, have shown 
+great promise in improving forecast accuracy by effectively handling 
+complex, nonlinear relationships between meteorological variables.
+The review also emphasized the importance of integrating various 
+data sources, such as satellite imagery and ASIs, into forecasting models. 
+These integrations help to overcome the limitations of individual data 
+sources and enhance the overall prediction accuracy, particularly for 
+short-term and very short-term forecasts. Hybrid approaches that 
+combine physical models with AI techniques have emerged as particu -
+larly effective, leveraging the strengths of both to produce more reliable 
+forecasts.
+Despite these advancements, challenges remain, particularly in the 
+accurate forecasting of solar irradiance under varying atmospheric 
+conditions, such as cloud cover and aerosol presence. The review un -
+derscores the need for continued research into improving the resolution 
+and accuracy of forecasting models, including the development of more 
+sophisticated hybrid models and the integration of real-time data for 
+adaptive forecasting.
+In conclusion, while significant progress has been made in solar 
+irradiance forecasting, ongoing advancements in AI, data integration, 
+and hybrid modeling are essential to further enhance the reliability and 
+precision of these forecasts. Future research should focus on refining 
+these methods, exploring new data sources, and addressing the 
+challenges posed by complex atmospheric phenomena to support the 
+growing reliance on solar energy in global power grids.
+CRediT authorship contribution statement
+Mohammad Hasan Ghodusinejad: Writing – review & editing, 
+Project administration, Methodology, Investigation, Conceptualization. 
+Nasrin Rashvand: Writing – original draft, Visualization, Software, 
+Investigation. Fatemeh Salmanpour: Writing – original draft, Meth -
+odology, Investigation, Conceptualization. Shaghayegh Danehkar: 
+Writing – original draft, Methodology, Investigation, Conceptualization. 
+Hossein Yousefi: Writing – review & editing, Supervision, Project 
+administration, Data curation.
+Declaration of competing interest
+The authors declare that they have no known competing financial 
+interests or personal relationships that could have appeared to influence 
+the work reported in this paper.
+References
+[1] N. Rashvand, et al., Optimizing solar energy-based energy consumption in 
+atrium-designed residential buildings: an economic, environmental, and energy- 
+centric evaluation, Results Eng. 29 (2026) 108570 .
+[2] B. Johansson, Security aspects of future renewable energy systems – A short 
+overview, Energy 61 (2013) 598 – 605 .
+[3] M. David, M. Diagne, P. Lauret, Outputs and error indicators for solar forecasting 
+models, in: Proceedings of the World Renewable Energy Forum (WREF)., 2012 .
+[4] A. J ¨ager-Waldau, Snapshot of photovoltaics – February 2022, EPJ photovolt. 13 
+(2022) 9 .
+[5] M.A. Russo, et al., Forecasting the inevitable: a review on the impacts of climate 
+change on renewable energy resources, Sustain. Energy Technol. Assess. 52 
+(2022) 102283 .
+[6] E. Novakovskaia, C. Hayes, C. Collier, Spatial pattern classification for more 
+accurate forecasting of variable energy resources, in AGU Fall Meet. Abstr. 
+(2014) .
+[7] M. Alanazi, A. Alanazi, A. Khodaei, Long-term solar generation forecasting. 2016 
+IEEE/PES Transmission and Distribution Conference and Exposition (T & D), IEEE, 
+2016 .
+Fig. 13. Structure diagram of the PV power forecasting [ 91 ].
+M.H. Ghodusinejad et al.                                                                                                                                                                                                                      Solar Compass 17 (2026) 100154 
+14 
+--- PAGE 15 ---
+[8] C.L. Dewangan, S. Singh, S. Chakrabarti, Solar irradiance forecasting using 
+wavelet neural network. 2017 IEEE PES Asia-Pacific Power and Energy 
+Engineering Conference (APPEEC), IEEE, 2017 .
+[9] S. Alessandrini, et al., A gridded solar irradiance ensemble prediction system 
+based on WRF-solar EPS and the analog ensemble, Atmos. (Basel) 14 (3) (2023) 
+567 .
+[10] N.Y. Hendrikx, et al., All sky imaging-based short-term solar irradiance 
+forecasting with long short-term memory networks, Sol. Energy 272 (2024) 
+112463 .
+[11] E. Sharma, W. Elmenreich, A review on physical and data-driven based 
+nowcasting methods using sky images, in: Advances in Information and 
+Communication: Proceedings of the 2021 Future of Information and 
+Communication Conference (FICC), 2, Springer, 2021 .
+[12] A. Mellit, An overview on the application of machine learning and deep learning 
+for photovoltaic output power forecasting. Proceedings of the 2nd International 
+Conference On Electronic Engineering and Renewable Energy Systems: ICEERE 
+2020, Springer, Saidia, Morocco, 13-15 April 2020, p. 2021 .
+[13] D.S. Kumar, et al., Solar irradiance resource and forecasting: a comprehensive 
+review, IET Renew. Power Gener. 14 (10) (2020) 1641 – 1656 .
+[14] K. Ulgen, A. Hepbasli, Solar radiation Models. Part 1, Rev. Energy Sources 26 (5) 
+(2004) 507 – 520 .
+[15] C.K. Pandey, A.K. Katiyar, Solar radiation: models and measurement techniques, 
+J. Energy 2013 (2013) 305207 .
+[16] K.-i. Shimose, et al., Impact of aerosols on the forecast accuracy of solar 
+irradiance calculated by a numerical weather prediction model, Eur. Phys. J. 
+Spec. Top. 223 (12) (2014) 2621 – 2630 .
+[17] H. Breitkreuz, et al., Short-range direct and diffuse irradiance forecasts for solar 
+energy applications based on aerosol chemical transport and numerical weather 
+modeling, J. Appl. Meteorol. Climatol. 48 (9) (2009) 1766 – 1779 .
+[18] H. Breitkreuz, Solar irradiance forecasts for energy applications. The influence of 
+aerosols on the visible range; solare strahlungsvorhersagen fuer 
+energiewirtschaftliche Anwendungen, Einfluss von Aerosolen auf sol. 
+Strahlungsangebot Eur. (2008) .
+[19] Schroedter-Homscheidt, M., et al., Nowcasting and forecasting of solar irradiance for 
+solar energy electricity grid integration . 2009.
+[20] H. Yang, J. Kleissl, Preprocessing WRF initial conditions for coastal stratocumulus 
+forecasting, Sol. Energy 133 (2016) 180 – 193 .
+[21] L. Nonnenmacher, C.F. Coimbra, Streamline-based method for intra-day solar 
+forecasting through remote sensing, Sol. Energy 108 (2014) 447 – 459 .
+[22] J. Xu, et al., Solar irradiance forecasting using multi-layer cloud tracking and 
+numerical weather prediction, in: Proceedings of the 30th Annual ACM 
+Symposium on Applied Computing, 2015 .
+[23] S. Cros, et al., Reliability predictors for solar irradiance satellite-based forecast, 
+Energies 13 (21) (2020) 5566 .
+[24] F. Kurzrock, et al., Evaluation of WRF-DART (ARW v3. 9.1. 1 and DART 
+Manhattan release) multiphase cloud water path assimilation for short-term solar 
+irradiance forecasting in a tropical environment, Geosci. Model Dev. 12 (9) 
+(2019) 3939 – 3954 .
+[25] L.D. Riihimaki, et al., Improving prediction of surface solar irradiance variability 
+by integrating observed cloud characteristics and machine learning, Sol. Energy 
+225 (2021) 275 – 285 .
+[26] J. Xu, et al., Solar irradiance forecasting using multi-layer cloud tracking and 
+numerical weather prediction. Proceedings of the 30th Annual ACM Symposium 
+on Applied Computing, Association for Computing Machinery, Salamanca, Spain, 
+2015, pp. 2225 – 2230 .
+[27] T. Chatzistergos, A discussion of implausible total solar-irradiance variations 
+since 1700, Sol Phys 299 (2) (2024) 1 – 31 .
+[28] K. Yang, T. Koike, Estimating surface solar radiation from upper-air humidity, 
+Sol. Energy 72 (2) (2002) 177 – 186 .
+[29] F. Dav `o, et al., Post-processing techniques and principal component analysis for 
+regional wind power and solar irradiance forecasting, Sol. Energy 134 (2016) 
+327 – 338 .
+[30] R.J. Zamora, et al., The accuracy of solar irradiance calculations used in 
+mesoscale numerical weather prediction, Mon. weather rev. 133 (4) (2005) 
+783 – 792 .
+[31] J.A. Ruiz-Arias, et al., A high-resolution topographic correction method for clear- 
+sky solar irradiance derived with a numerical weather prediction model, J. Appl. 
+Meteorol. Climatol. 50 (12) (2011) 2460 – 2472 .
+[32] Z. Sun, A. Liu, Fast scheme for estimation of instantaneous direct solar irradiance 
+at the Earth ’ s surface, Sol. Energy 98 (2013) 125 – 137 .
+[33] M. Blal, et al., A prediction models for estimating global solar radiation and 
+evaluation meteorological effect on solar radiation potential under several 
+weather conditions at the surface of Adrar environment, Measurement 152 
+(2020) 107348 .
+[34] S. Mohanty, P.K. Patra, S.S. Sahoo, Prediction and application of solar radiation 
+with soft computing over traditional and conventional approach – A 
+comprehensive review, Renew. Sustain. Energy Rev. 56 (2016) 778 – 796 .
+[35] H. Yang, et al., Solar irradiance forecasting using a ground-based sky imager 
+developed at UC San Diego, Sol. energy 103 (2014) 502 – 524 .
+[36] P.J. Mathiesen, C. Collier, J.P. Kleissl, Development and validation of an 
+operational, cloud-assimilating numerical weather prediction model for solar 
+irradiance forecasting. Energy Sustainability, American Society of Mechanical 
+Engineers, 2012 .
+[37] P. Kr ˇc, K. Eben, E. Pelik ´an, Clustering weather situations with respect to 
+prediction of solar irradiance by multiple NWP models. ECAI 2014, IOS Press, 
+2014, pp. 1207 – 1208 .
+[38] E.W. Law, et al., Direct normal irradiance forecasting and its application to 
+concentrated solar thermal output forecasting – A review, Sol. Energy 108 (2014) 
+287 – 307 .
+[39] A. Dehghan, et al., Evaluation and improvement of TAPM in estimating solar 
+irradiance in Eastern Australia, Sol. Energy 107 (2014) 668 – 680 .
+[40] Mathiesen, P.J., C. Collier, and J.P. Kleissl, Development and validation of an 
+operational, cloud-assimilating numerical weather prediction model for solar 
+irradiance forecasting . 2012. p. 955 – 964.
+[41] P. Mathiesen, C. Collier, J. Kleissl, A high-resolution, cloud-assimilating 
+numerical weather prediction model for solar irradiance forecasting, Sol. Energy 
+92 (2013) 47 – 61 .
+[42] P. Mathiesen, D. Rife, C. Collier, Forecasting solar irradiance variability using the 
+analog method. 2016 IEEE 43rd Photovoltaic Specialists Conference (PVSC), 
+IEEE, 2016 .
+[43] L.T. Wong, W.K. Chow, Solar radiation model, Appl Energy 69 (3) (2001) 
+191 – 224 .
+[44] J.G.d.S.F. Junior, et al., Local and regional hour-ahead forecasts of solar 
+irradiance with training data selection and support vector regression, IEEJ Trans. 
+Power Energy 136 (12) (2016) 898 – 907 .
+[45] I. Sosa-Tinoco, et al., Validation of a global horizontal irradiation assessment 
+from a numerical weather prediction model in the south of Sonora – Mexico, 
+Renew Energy 90 (2016) 105 – 113 .
+[46] S. Pereira, P. Canhoto, R. Salgado, Development and assessment of artificial 
+neural network models for direct normal solar irradiance forecasting using 
+operational numerical weather prediction data, Energy AI 15 (2024) 100314 .
+[47] C.M. Fern ´andez-Peruchena, et al., Increasing the temporal resolution of direct 
+normal solar irradiance series in different climatic zones, Sol. Energy 115 (2015) 
+255 – 263 .
+[48] J. Badosa, et al., Reliability of day-ahead solar irradiance forecasts on Reunion 
+Island depending on synoptic wind and humidity conditions, Sol. energy 115 
+(2015) 306 – 321 .
+[49] J.-M. Yeom, et al., Exploring solar and wind energy resources in North Korea with 
+COMS MI geostationary satellite data coupled with numerical weather prediction 
+reanalysis variables, Renew. sustain. energy rev. 119 (2020) 109570 .
+[50] H. Verbois, et al., Beyond quadratic error: case-study of a multiple criteria 
+approach to the performance assessment of numerical forecasts of solar irradiance 
+in the tropics, Renew. Sustain. Energy Rev. 117 (2020) 109471 .
+[51] R. Perez, et al., Comparison of numerical weather prediction solar irradiance 
+forecasts in the US, Can. Eur. Sol. Energy 94 (2013) 305 – 326 .
+[52] M. Kakimoto, et al., Probabilistic solar irradiance forecasting by conditioning 
+joint probability method and its application to electric power trading, IEEE Trans. 
+Sustain. Energy 10 (2) (2018) 983 – 993 .
+[53] H. Verbois, A. Rusydi, A. Thiery, Probabilistic forecasting of day-ahead solar 
+irradiance using quantile gradient boosting, Sol. Energy 173 (2018) 313 – 327 .
+[54] T. Watanabe, H. Takenaka, D. Nohara, Framework of forecast verification of 
+surface solar irradiance from a numerical weather prediction model using 
+classification with a gaussian mixture model, Earth Space Sci. 7 (11) (2020) 
+e2020EA001260 .
+[55] H. Gamarro, J.E. Gonzalez, L.E. Ortiz, On the assessment of a numerical weather 
+prediction model for solar photovoltaic power forecasts in cities, J Energy Resour 
+Technol 141 (6) (2019) 061203 .
+[56] R. Perez, et al., Evaluation of numerical weather prediction solar irradiance 
+forecasts in the US, in: preparation (to be presented at the 2011 ASES Annual 
+Conference), 2011 .
+[57] Z. Sun, et al., Parameterization of instantaneous global horizontal irradiance: 
+cloudy-sky component, J. Geophys. Res.: Atmos. 117 (D14) (2012) .
+[58] I. L ´opez-Coto, et al., Comparison between several parameterization schemes in 
+WRF for solar forecasting in coastal zones, in: SOLAR Conference Proceedings, 
+Baltimore, Maryland, USA, 2013 .
+[59] A.A. Prasad, M. Kay, Assessment of simulated solar irradiance on days of high 
+intermittency using WRF-solar, Energies 13 (2) (2020) 385 .
+[60] J.F. Mejia, M. Giordano, E. Wilcox, Conditional summertime day-ahead solar 
+irradiance forecast, Sol. Energy 163 (2018) 610 – 622 .
+[61] N. Lindsay, et al., Errors in PV power modelling due to the lack of spectral and 
+angular details of solar irradiance inputs, Sol. Energy 197 (2020) 266 – 278 .
+[62] R. Huva, H. Verbois, W. Walsh, Comparisons of next-day solar forecasting for 
+Singapore using 3DVAR and 4DVAR data assimilation approaches with the WRF 
+model, Renew Energy 147 (2020) 663 – 671 .
+[63] T. Watanabe, H. Takenaka, D. Nohara, Post-processing correction method for 
+surface solar irradiance forecast data from the numerical weather model using 
+geostationary satellite observation data, Sol. Energy 223 (2021) 202 – 216 .
+[64] D. Yang, et al., Very short term irradiance forecasting using the lasso, Sol. Energy 
+114 (2015) 314 – 326 .
+[65] D. Yang, et al., Solar irradiance forecasting using spatio-temporal empirical 
+kriging and vector autoregressive models with parameter shrinkage, Sol. Energy 
+103 (2014) 550 – 562 .
+[66] G. Pamparana, et al., Studying the integration of solar energy into the operation 
+of a semi-autogenous grinding mill. Part I: framework, model development and 
+effect of solar irradiance forecasting, Min. Eng 137 (2019) 68 – 77 .
+[67] F. Wang, et al., Generative adversarial networks and convolutional neural 
+networks based weather classification model for day ahead short-term 
+photovoltaic power forecasting, Energy convers. manag. 181 (2019) 443 – 462 .
+[68] V. Sharma, et al., Short term solar irradiance forecasting using a mixed wavelet 
+neural network, Renew Energy 90 (2016) 481 – 492 .
+[69] J. Antonanzas, et al., Review of photovoltaic power forecasting, Sol. energy 136 
+(2016) 78 – 111 .
+M.H. Ghodusinejad et al.                                                                                                                                                                                                                      Solar Compass 17 (2026) 100154 
+15 
+--- PAGE 16 ---
+[70] T. Takamatsu, et al., Regional solar irradiance forecast for Kanto region by 
+support vector regression using forecast of meso-ensemble prediction system, 
+Energies 14 (11) (2021) 3245 .
+[71] R. Sabzehgar, D.Z. Amirhosseini, M. Rasouli, Solar power forecast for a residential 
+smart microgrid based on numerical weather predictions using artificial 
+intelligence methods, J. Build. Eng. 32 (2020) 101629 .
+[72] A.A. Sabziparvar, A simple formula for estimating global solar radiation in central 
+arid deserts of Iran, Renew Energy 33 (5) (2008) 1002 – 1010 .
+[73] I. Oulimar, et al., Statistical study of global solar radiation in the Algerian desert: 
+a case study of Adrar town, Theor Appl Clim. (2024) 1 – 12 .
+[74] T. Takamatsu, et al., Day-ahead solar irradiance forecasting with low risk via 
+downsampled metamodel optimization, Sol. Energy 301 (2025) 113990 .
+[75] S. Suksamosorn, N. Hoonchareon, J. Songsiri, Post-processing of NWP forecasts 
+using Kalman filtering with operational constraints for day-ahead solar power 
+forecasting in Thailand, IEEE Access 9 (2021) 105409 – 105423 .
+[76] P. Lauret, et al., A simple method for quickly estimating solar irradiance forecast 
+errors, Sol. Energy 301 (2025) 113821 .
+[77] A.W. Khan, et al., Novel hybrid BiLSTM-BiGRU and CNN-LSTM architectures for 
+enhanced solar irradiance forecasting in semi-arid climates, Int. J. Electr. Power 
+Energy Syst. 172 (2025) 111380 .
+[78] S.D. Miller, et al., Short-term solar irradiance forecasting via satellite/model 
+coupling, Sol. Energy 168 (2018) 102 – 117 .
+[79] K. Barhmi, et al., A review of solar forecasting techniques and the role of artificial 
+intelligence, Solar 4 (1) (2024) 99 – 135 .
+[80] S. Chen, et al., Improved satellite-based intra-day solar forecasting with a chain of 
+deep learning models, Energy Convers. Manag. 313 (2024) 118598 .
+[81] T.A. Siddiqui, S. Bharadwaj, S. Kalyanaraman, A deep learning approach to solar- 
+irradiance forecasting in sky-videos. 2019 IEEE Winter Conference On 
+Applications of Computer Vision (WACV), IEEE, 2019 .
+[82] M. Fathi, et al., Enhanced global solar irradiance and temperature forecasting for 
+rooftop PV power generation prediction using multi-step LSTM and GRU based 
+hybrid models, Energy Convers. Manag.: X (2025) 101351 .
+[83] X. Shao, S. Lu, H.F. Hamann, Solar radiation forecast with machine learning. 
+2016 23rd International Workshop On Active-Matrix Flatpanel Displays and 
+Devices (AM-FPD), IEEE, 2016 .
+[84] A.M. Assaf, et al., A review on neural network based models for short term solar 
+irradiance forecasting, Appl. Sci. 13 (14) (2023) 8332 .
+[85] M. Ajith, M. Martínez-Ram ´on, Deep learning algorithms for very short term solar 
+irradiance forecasting: a survey, Renew. Sustain. Energy Rev. 182 (2023) 113362 .
+[86] L.F.C. Varaschin, D. Silva, Benchmarking deep learning methods for irradiance 
+estimation from sky images with applications to video prediction-based 
+irradiance nowcasting, Sol. Energy 302 (2025) 114000 .
+[87] F. Pand ˇzi ´c, T. Capuder, Advances in short-term solar forecasting: a review and 
+benchmark of machine learning methods and relevant data sources, Energies 17 
+(1) (2024) 97 .
+[88] V. Abad-Alcaraz, et al., Multimodal deep learning for solar radiation forecasting, 
+Appl Energy 393 (2025) 126061 .
+[89] Kalogirou, S.A., S. Michaelides, and F.S. Tymvios, Prediction of maximum solar 
+radiation using artificial neural networks . 2002.
+[90] O. S ¸ enkal, M. S ¸ ahin, V. Pes ¸ temalci, The estimation of solar radiation for different 
+time periods, Energy Sources A: Recovery Util. Environ. Eff. 32 (13) (2010) 
+1176 – 1184 .
+[91] C. Cornaro, et al., Twenty-four hour solar irradiance forecast based on neural 
+networks and numerical weather prediction, J Sol Energy Eng 137 (3) (2015) 
+031011 .
+[92] C.K. Kim, et al., Toward improved solar irradiance forecasts: comparison of the 
+global horizontal irradiances derived from the COMS satellite imagery over the 
+Korean Peninsula, Pure Appl. Geophys. 174 (2017) 2773 – 2792 .
+[93] T. McCandless, et al., Regime-dependent short-range solar irradiance forecasting, 
+J. Appl. Meteorol. Climatol. 55 (7) (2016) 1599 – 1613 .
+[94] Z. Dong, et al., Satellite image analysis and a hybrid ESSS/ANN model to forecast 
+solar irradiance in the tropics, Energy Convers. Manag. 79 (2014) 66 – 73 .
+[95] Y. Daus, V. Kharchenko, I.V. Yudaev, Solar radiation intensity data as basis for 
+predicting functioning modes of solar power plants. Handbook of Research on 
+Renewable Energy and Electric Resources For Sustainable Rural Development, IGI 
+global, 2018, pp. 283 – 309 .
+[96] W. Marion, R. George, Calculation of solar radiation using a methodology with 
+worldwide potential, Sol. Energy 71 (4) (2001) 275 – 283 .
+[97] R. Marquez, H.T. Pedro, C.F. Coimbra, Hybrid solar forecasting method uses 
+satellite imaging and ground telemetry as inputs to ANNs, Sol. Energy 92 (2013) 
+176 – 188 .
+[98] F.J.L.d. Lima, et al., Evaluation of the short and medium-term forecast quality of 
+global solar irradiance from GFS-MOS and WRF-Solar models for the northeast 
+region of Brazil, Energy Rep. 13 (2025) 2187 – 2203 .
+[99] W. Dou, et al., A hybrid correction framework using disentangled seasonal-trend 
+representations and MoE for NWP solar irradiance forecast, Appl Energy 397 
+(2025) 126295 .
+[100] M. Ansong, et al., Improving sky image-based short-term solar irradiance 
+forecasting through the integration of meteorological data, Energy Rep. 14 (2025) 
+4111 – 4124 .
+[101] M. Pierro, et al., Model output statistics cascade to improve day ahead solar 
+irradiance forecast, Sol. Energy 117 (2015) 99 – 113 .
+[102] C. Dong, et al., ZSIF: a zero-shot solar irradiance forecasting model based on 
+satellite images and numerical series, Sustain. Energy Grids Netw. (2025) 102044 .
+[103] J. Wojtkiewicz, S. Katragadda, R. Gottumukkala, A concept-drift based predictive- 
+analytics framework: application for real-time solar irradiance forecasting. 2018 
+Ieee International Conference On Big Data (big Data), IEEE, 2018 .
+[104] N. Holland, et al., Solar and PV forecasting for large PV power plants using 
+numerical weather models, satellite data and ground measurements. 2019 IEEE 
+46th Photovoltaic specialists Conference (PVSC), IEEE, 2019 .
+[105] C. Cui, et al., Evaluating combination models of solar irradiance on inclined 
+surfaces and forecasting photovoltaic power generation, IET Smart Grid 2 (1) 
+(2019) 123 – 130 .
+[106] U. Ercan, A. Kocer, Prediction of solar irradiance with machine learning methods 
+using satellite data, Int. J. Green Energy (2024) 1 – 10 .
+M.H. Ghodusinejad et al.                                                                                                                                                                                                                      Solar Compass 17 (2026) 100154 
+16 

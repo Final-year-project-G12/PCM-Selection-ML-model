@@ -1,0 +1,2175 @@
+pages: 23
+
+---PAGE 1---
+Received 29 July 2025, accepted 22 August 2025, date of publication 26 August 2025, date of current version 5 September 2025.
+Digital Object Identifier 10.1 109/ACCESS.2025.3602914
+Multimodal Learning Techniques for Time Series
+Forecasting in Renewable Energy Systems: A
+Comprehensive Survey
+MAJDI MANSOURI
+ 1, (Senior Member, IEEE), KHADIJA ATTOURI 1,
+AND SHADY S. REFAAT
+ 2,3, (Senior Member, IEEE)
+1Department of Electrical and Computer Engineering, College of Engineering, Sultan Qaboos University, Muscat 123, Oman
+2Department of Electrical and Computer Engineering, Texas A&M University at Qatar, Doha, Qatar
+3School of Physics, Engineering and Computer Science, University of Hertfordshire, AL10 9EU Hatfield, U.K.
+Corresponding author: Shady S. Refaat (shady.khalil@qatar.tamu.edu)
+This work was supported by the Qatar National Library.
+ABSTRACT Renewable energy systems, such as solar, wind, and hybrid sources, present complex
+forecasting challenges due to their stochastic and weather-dependent nature. The growing availability of
+heterogeneous and complementary data modalities including meteorological forecasts, satellite imagery,
+numerical sensor streams, and grid interaction logs has motivated the application of multimodal learning
+techniques to improve time series forecasting accuracy. Unlike previous surveys that either focused narrowly
+on single-modality forecasting or provided only high-level overviews, this paper offers a focused and
+technically grounded review of multimodal learning strategies specific to renewable energy forecasting. We
+categorize and compare key fusion strategies (early, late, hybrid), analyze deep model architectures (e.g., co-
+attention and transformer-based fusion), and discuss deployment-related challenges such as data alignment,
+modality missingness, and interpretability. Then, this paper reviews multimodal learning techniques based
+on four main aspects, i.e., classify fusion techniques, examine model architectures, showcase practical
+application scenarios, and summarize benchmark datasets. Finally, the paper identifies existing research gaps
+and outlines promising future directions in this rapidly evolving field, such as self-supervised multimodal
+learning and adaptive fusion under uncertainty.
+INDEX TERMS Multimodal learning, renewable energy forecasting, time series forecasting, data fusion,
+deep learning, benchmark data sets, forecast uncertainty.
+I. INTRODUCTION
+The global transition toward cleaner and more sustainable
+energy sources has accelerated the deployment of solar,
+wind, and hybrid energy systems [1]. Accurate forecasting
+of energy generation from these sources is essential to
+maintain grid stability, optimize operational efficiency, and
+enable effective participation in the energy market [2].
+Unlike conventional energy generation, renewable energy
+sources are inherently intermittent and non-linear, driven
+by a complex combination of meteorological variables,
+geographic conditions, and temporal patterns of energy
+demand [3]. As a result, accurate forecasting remains a
+The associate editor coordinating the review of this manuscript and
+approving it for publication was Wencong Su
+.
+central challenge in the reliable integration of renewable
+energy sources into modern power systems [4].
+Traditional statistical and physics-based forecasting mod-
+els often struggle to capture the non-stationary and multi-
+modal nature of environmental data associated with solar
+irradiance, wind speed, and temperature fluctuations. Recent
+advances in data-driven methods, particularly those based
+on artificial intelligence (AI), have shown substantial
+potential in addressing these complexities. By leveraging
+large-scale historical datasets, AI models can effectively
+model non-linear dependencies and adapt to evolving
+temporal and spatial patterns [5], [6]. These capabili-
+ties have driven increasing adoption of machine learn-
+ing and deep learning techniques for renewable energy
+forecasting.
+151970
+
+ 2025 The Authors. This work is licensed under a Creative Commons Attribution 4.0 License.
+For more information, see https://creativecommons.org/licenses/by/4.0/ VOLUME 13, 2025
+
+---PAGE 2---
+M. Mansouri et al.: Multimodal Learning Techniques for Time Series Forecasting
+Among these advancements, multimodal learning has
+emerged as a powerful paradigm that integrates information
+from diverse sources such as satellite imagery, numerical
+weather prediction (NWP) models, sensor data, and his-
+torical energy production records into unified forecasting
+models [7]. The fusion of heterogeneous data types has shown
+strong effectiveness in enhancing model performance and
+predictive accuracy, especially when dealing with missing or
+noisy observations. By jointly leveraging complementary pat-
+terns across different modalities, multimodal learning enables
+more robust, context-aware forecasting frameworks that can
+generalize across geographic and temporal variability [8].
+For instance, integrating spatial satellite data with temporal
+meteorological forecasts has been shown to significantly
+improve solar and wind power predictions. In a recent
+study, a hybrid model that combined MODIS satellite
+data and NWP inputs achieved a 13.2% improvement in
+RMSE compared to single-modality models [9]. Similarly,
+multimodal convolutional transformer networks have been
+applied to fuse geographical maps, time series weather
+data, and topological grid features, yielding state-of-the-art
+performance in wind energy forecasting tasks [10].
+Despite the promising results, integrating multimodal data
+into forecasting systems remains challenging due to issues
+such as data alignment across modalities, imbalance in data
+granularity, and the need for scalable learning architectures
+that can handle high-dimensional inputs. These concerns
+underscore the need for structured surveys and critical
+assessments of recent work to help guide the development of
+practical, high-performance multimodal forecasting systems.
+This paper addresses this gap by presenting a focused
+and up-to-date survey on multimodal learning approaches for
+renewable energy forecasting. Rather than reiterating general
+renewable energy principles, our emphasis is on categorizing
+state-of-the-art deep learning-based models, identifying core
+fusion strategies, and highlighting their role in improving
+forecasting accuracy and robustness across solar, wind, and
+hybrid energy systems.
+To clarify the distinct contributions of this survey relative
+to existing literature, we introduce Table 1, which compares
+recent relevant surveys across key dimensions including fore-
+casting domains covered, data modalities considered, fusion
+techniques discussed, deep learning models analyzed, and
+inclusion of benchmark datasets and evaluation metrics. This
+comparative summary highlights our manuscript’s unique
+emphasis on comprehensive multimodal fusion strategies and
+deep learning architectures tailored specifically for renewable
+energy forecasting applications.
+The main contributions of this survey are as follows.
+We provide a structured taxonomy of AI-based forecasting
+models with an emphasis on their multimodal data handling
+capabilities. We analyze the impact of various data fusion
+techniques early, intermediate, and late fusion, on predictive
+performance. We discuss the availability of benchmark
+datasets and the use of standardized evaluation metrics
+that facilitate reproducibility and fair comparison across
+models. Finally, we explore remaining challenges and future
+directions for integrating multimodal learning in real-world
+forecasting applications.
+The structure of this paper is organized as follows.
+Section II provides an essential overview of renewable energy
+forecasting and the motivation for multimodal learning, while
+avoiding redundant background. Section III details the types
+of data modalities relevant to renewable energy systems. Sec-
+tion IV outlines fusion strategies used in multimodal learning,
+followed by Section V, which presents representative model
+architectures such as CNNs, transformers, and attention-
+based models. Section VI presents applications in renewable
+energy forecasting. Section VII reviews evaluation protocols
+and benchmark datasets, and Section VIII discusses technical
+challenges. Section IX discusses future research directions.
+Finally, Section X concludes the paper with a summary and
+outlook on.
+II. BACKGROUND
+This section briefly introduces the renewable energy (RE)
+context in which multimodal learning is applied, with empha-
+sis on the diverse data modalities (e.g., weather observations,
+satellite imagery, and numerical predictions) relevant to
+forecasting tasks. It outlines the core forecasting challenges
+posed by renewable systems, such as nonstationarity, missing
+data, and spatial heterogeneity, that motivate the use of
+multimodal learning. Finally, it defines multimodal learning
+and discusses its benefits and application challenges in the
+energy domain.
+A. RENEWABLE ENERGY SYSTEMS AND ASSOCIATED
+DATA MODALITIES
+Modern renewable energy systems, particularly solar PV ,
+wind farms, and their hybrid integrations, generate substantial
+volumes of heterogeneous data. These include ground-based
+sensor measurements (e.g., global horizontal irradiance,
+wind speed), numerical weather prediction (NWP) outputs,
+satellite imagery, spatial-geographical features, and historical
+power generation records. Each of these modalities offers
+complementary perspectives for forecasting energy output.
+However, the inherent intermittency and variability of these
+systems present forecasting challenges that cannot be suffi-
+ciently addressed using any single data modality alone [16],
+[17], [18].
+B. FORECASTING CHALLENGES AND THE NEED FOR
+MUL TIMODAL MODELS
+Time series forecasting in renewable energy systems is
+inherently complex due to the stochastic nature of weather-
+driven generation. Key challenges include: (1) high temporal
+and spatial variability, (2) nonlinear relationships between
+inputs and outputs, (3) missing or noisy data due to
+sensor failures, and (4) site-specific dynamics that reduce
+generalizability [19], [20], [21]. Traditional single-modality
+models, e.g., those relying solely on historical generation
+or on-site weather data, often fail to capture these complex
+VOLUME 13, 2025 151971
+
+---PAGE 3---
+M. Mansouri et al.: Multimodal Learning Techniques for Time Series Forecasting
+TABLE 1. Comparative summary of recent surveys on renewable energy forecasting and multimodal learning.
+interactions and may suffer from poor transferability to new
+regions or systems [22].
+Moreover, when a forecasting model depends on a single
+data stream, its performance can degrade sharply during
+outages or anomalous conditions (e.g., sudden storms or
+sensor drift). Such limitations emphasize the need for robust
+models capable of integrating multiple data types. By doing
+so, models can leverage redundancy, contextual awareness,
+and complementary features, ultimately improving accuracy
+and resilience [23], [24].
+C. MUL TIMODAL LEARNING: DEFINITION AND
+APPLICATION IN ENERGY FORECASTING
+Multimodal learning refers to machine learning techniques
+that integrate information from multiple data modalities
+such as time-series meteorological data, satellite imagery,
+and NWP outputs to produce richer and more robust
+representations [25]. In renewable energy forecasting, mul-
+timodal learning enables models to go beyond local sen-
+sor data and incorporate broader spatial and predictive
+context. For instance, cloud motion captured via satellite
+imagery can enhance solar forecasting when combined
+with irradiance measurements, while NWP-based wind
+maps improve predictions when fused with turbine-level
+telemetry [13], [26].
+Fusion strategies in multimodal learning vary in com-
+plexity: early fusion concatenates raw features; intermediate
+fusion employs shared network layers or attention mecha-
+nisms; and late fusion aggregates model outputs. Each strat-
+egy has trade-offs in terms of interpretability, performance,
+and computational cost [27]. Despite challenges such as data
+alignment and heterogeneous resolution, multimodal models
+have shown promise in handling extreme conditions, adapting
+to new locations, and maintaining performance during partial
+data loss [24].
+In this paper, we survey recent advances in multimodal
+learning for renewable energy forecasting, with an emphasis
+on deep fusion architectures and applications across solar,
+wind, and hybrid systems.
+III. MODALITIES IN RENEWABLE ENERGY SYSTEMS
+A. NUMERICAL SENSOR DATA
+Renewable energy systems rely heavily on continuous
+numerical sensor measurements to monitor operational and
+environmental variables crucial for forecasting and control.
+These sensors provide high-frequency, real-time data streams
+such as power output, wind speed, solar irradiance, and
+temperature, which form the backbone of predictive analytics
+in renewables.
+Table 2 summarizes common sensor types, the variables
+they measure, and their principal applications in wind, solar,
+and hybrid energy systems.
+Effective integration of numerical sensors requires atten-
+tion to data quality (calibration, redundancy), communication
+protocols (Modbus, IEC 61850), and appropriate sampling
+rates depending on application needs.
+Table 3 highlights key forecasting use cases leveraging
+numerical sensor data, from short-term power forecasting to
+fault detection and advanced feature engineering.
+B. WEATHER FORECASTS
+Numerical Weather Prediction (NWP) models provide struc-
+tured, spatio-temporal meteorological forecasts essential for
+solar and wind power prediction. They solve physical equa-
+tions governing atmospheric dynamics to generate forecasts
+of variables like temperature, humidity, wind speed, cloud
+cover, and solar radiation [44].
+Common NWP outputs used in renewables include:
+• 2 m air and surface temperature.
+• Relative humidity affecting irradiance transmission.
+• Wind speed/direction at turbine hub heights.
+• Cloud cover by altitude layers.
+• Precipitation and pressure relevant for turbine safety.
+• Solar radiation fluxes such as GHI and DNI [45].
+NWP forecasts are often interpolated to plant locations via
+geospatial methods (IDW, kriging).
+Due to inherent model limitations and uncertainties,
+forecast errors are corrected through post-processing:
+Forecast Error = ytrue − ˆyNWP
+Machine learning methods for bias correction are increas-
+ingly used:
+ycorrected = fML(ˆyNWP, auxiliary features)
+where fML can be Random Forests, GBMs, or DNNs trained
+to improve accuracy [46].
+NWP challenges include resolution limits, forecast drift,
+latency, and large data volumes [44], [52].
+151972 VOLUME 13, 2025
+
+---PAGE 4---
+M. Mansouri et al.: Multimodal Learning Techniques for Time Series Forecasting
+TABLE 2. Summary of numerical sensor types, measured variables, and applications in renewable energy systems.
+TABLE 3. Key forecasting applications using numerical sensor data.
+TABLE 4. Comparison of common NWP models used in renewable energy forecasting.
+C. SATELLITE AND IMAGE DATA
+Satellite imagery provides critical spatio-temporal data for
+cloud cover, atmospheric dynamics, terrain shading, and
+surface reflectivity, supporting irradiance forecasting, terrain-
+aware wind modeling, and visual inspection [53].
+Common satellite platforms include:
+• GOES: Real-time monitoring over the Americas, 5–15
+min revisit.
+• Meteosat MSG: Europe, Africa, Middle East; 15 min
+temporal, 1–3 km spatial resolution.
+• Himawari-8/9: East Asia/Oceania; 10 min revisit, mul-
+tiple spectral bands.
+• MODIS: High-res multispectral data for albedo and
+aerosol [54].
+• Landsat 8/9: 30 m resolution for terrain and vegetation.
+Key image processing and modeling approaches:
+• Cloud Motion Estimation: Optical flow methods
+(Lucas-Kanade, Horn-Schunck) or data-driven frame
+prediction estimate cloud displacement:
+Ipredicted(t + 1t) = I (t) + ⃗vcloud · 1t
+• Digital Elevation Models (DEMs) for shading and wind
+modeling.
+• Shadow detection and albedo correction using NIR
+reflectance.
+• Radiative transfer models combine satellite cloud prop-
+erties and solar geometry for irradiance estimation.
+Satellite data applications include:
+• V ery short-term solar nowcasting (0–30 min) [55].
+• Ramp event prediction via temporal cloud and tempera-
+ture sequences.
+• Terrain-aware wind micro-siting.
+VOLUME 13, 2025 151973
+
+---PAGE 5---
+M. Mansouri et al.: Multimodal Learning Techniques for Time Series Forecasting
+FIGURE 1. Diagram illustrating sensor integration considerations and key forecasting applications of numerical sensor data.
+• Panel condition monitoring via drone or satellite
+imagery [56].
+• Aerosol and dust storm monitoring adjusting irradiance
+forecasts [57].
+Integration with other modalities enables:
+• Fusion with NWP for cloud cover correction and hybrid
+modeling.
+• Combining CNN-extracted image embeddings with
+time series features in ConvLSTM or Transformer
+models [58].
+• Attention mechanisms dynamically weighing image vs
+numerical features.
+Challenges include:
+• Geolocation errors due to orbital drift [59].
+• Cloud obscuration necessitating masking or alternate
+sensing [60].
+• Temporal gaps from satellite revisit limitations [61].
+• High data volumes requiring optimized storage and
+processing [62].
+• Edge artifacts in optical flow reducing cloud motion
+reliability [63].
+D. TEXTUAL DATA
+Textual data provide a rich semantic layer to renewable
+energy forecasting by capturing contextual information from
+unstructured documents such as maintenance logs, incident
+reports, and meteorological bulletins. These data sources
+reveal latent patterns related to system behavior, faults,
+and external disturbances, complementing numerical sensor
+and weather data when processed using Natural Language
+Processing (NLP) techniques [64].
+V arious textual sources relevant to forecasting and fault
+diagnosis include: These are summarized in Table 5.
+• SCADA Maintenance Records: Logs generated by
+operators or automated systems detailing routine inspec-
+tions, servicing, and component replacements [65], [66].
+• Technician Notes and Alarm Logs: On-site observa-
+tions and sensor-generated warnings recorded in natural
+language [67].
+151974 VOLUME 13, 2025
+
+---PAGE 6---
+M. Mansouri et al.: Multimodal Learning Techniques for Time Series Forecasting
+FIGURE 2. Flowchart illustrating NWP concepts and applications in renewable energy forecasting.
+• Weather Bulletins and Advisories: Reports from
+meteorological agencies on extreme conditions such as
+storms or icing.
+• Manufacturer Reports: Manuals, datasheets, and
+OEM-issued alerts relevant to system diagnostics.
+• Incident and Failure Reports: Post-event analyses that
+support forensic investigations and system improve-
+ment.
+These documents often exist in heterogeneous formats
+(e.g., PDFs, logs, HTML), requiring robust text preprocessing
+for effective analysis, as summarized in Table 5.
+NATURAL LANGUAGE PROCESSING TECHNIQUES
+NLP transforms raw text into structured information usable
+by forecasting models. Common techniques include:
+• Text Preprocessing: Includes lowercasing, stop-word
+removal, punctuation stripping, and stemming or
+lemmatization.
+• Tokenization and Named Entity Recognition (NER):
+Breaks down text into tokens and identifies entities such
+as equipment names, fault codes, or weather terms.
+• V ectorization (TF-IDF, Word2V ec): Converts docu-
+ments into numerical vectors:
+TF-IDF(t, d) = tf (t, d) · log N
+df (t) (1)
+where tf (t, d) is the term frequency and df (t) is the
+document frequency across N documents.
+• Topic Modeling (LDA): Latent Dirichlet Allocation
+helps discover underlying themes (e.g., ‘‘equipment
+wear’’, ‘‘storm warnings’’).
+• Sentiment and Polarity Analysis: Classifies text as
+positive, neutral, or negative useful in triaging fault-
+prone conditions.
+• Text Classification: Uses models such as Naive Bayes,
+SVM, or BERT-based transformers to categorize text
+(e.g., fault types, risk levels).
+Although textual data are not inherently time-series
+in nature, they play a complementary role in enhancing
+forecasting accuracy and interpretability [74]:
+• Early Fault Detection: Frequent appearance of specific
+alarm phrases (e.g., ‘‘overheat’’, ‘‘vibration alert’’)
+may precede component failure and enhance anomaly
+detection.
+• Post-Hoc Model Validation: Textual logs help interpret
+unexpected forecast errors by correlating with unsched-
+uled maintenance or extreme weather events.
+• Knowledge Graph Construction: Integrates struc-
+tured and unstructured data into entity-relation graphs,
+enabling root-cause analysis across components, events,
+and conditions.
+• Multimodal Forecast Fusion: Textual embeddings
+(e.g., from BERT) are fused with sensor and numerical
+weather prediction (NWP) data in attention-based deep
+learning models for hybrid inference.
+VOLUME 13, 2025 151975
+
+---PAGE 7---
+M. Mansouri et al.: Multimodal Learning Techniques for Time Series Forecasting
+TABLE 5. Summary of textual data types in renewable energy systems.
+INTEGRATION APPROACHES
+Several frameworks have been developed to incorporate
+textual data into forecasting pipelines:
+• Text Embeddings + Time Series Models: Combines
+static textual embeddings with LSTM/GRU to model
+system dynamics under contextual influence.
+• Joint Multimodal Models: Transformer-based encoders
+(e.g., multimodal BERT, CLIP) jointly process textual
+and visual inputs for decision-making.
+• Graph Neural Networks (GNNs): Text-derived rela-
+tionships are used to construct node and edge structures
+for GNNs modeling component interactions and fail-
+ures.
+CHALLENGES
+Despite their promise, several challenges persist in working
+with textual data in renewable energy systems [64]:
+• Ambiguity and Variability in Terminology: Different
+technicians or vendors may describe the same event
+using inconsistent vocabulary.
+• Low Label A vailability: Manual annotation of text
+for supervised learning is labor-intensive and often
+unavailable.
+• Multilingual and Code-Mixed Data: Logs written in
+non-English or mixed languages (e.g., French-English
+in bilingual regions) complicate preprocessing.
+• Timestamp Misalignment : Textual records may lag
+real-time events by hours or days, complicating synchro-
+nization with time-series data.
+• Privacy and Access Restrictions: Maintenance records
+and internal reports may be confidential or subject to
+regulatory constraints.
+IV. MULTIMODAL LEARNING STRATEGIES
+A. EARL Y FUSION: FEATURE CONCATENATION AT INPUT
+LEVEL
+Early fusion is one of the simplest yet widely adopted
+strategies in multimodal learning. It involves combining
+features from multiple data modalities at the input level to
+form a single unified representation [27], [75], which is then
+passed to a downstream model. This approach assumes that
+all relevant information from different modalities can be
+effectively captured and leveraged together without explicitly
+modeling modality-specific interactions.
+In renewable energy forecasting, early fusion typically
+entails concatenating meteorological variables (e.g., wind
+speed, temperature, humidity), temporal descriptors (e.g.,
+time of day, seasonal indices), and spatial features (e.g.,
+elevation, latitude/longitude) into a single input vector. This
+fused vector is subsequently used to train models such
+as multilayer perceptrons (MLPs), random forests, or deep
+neural networks [76].
+Despite its conceptual simplicity, early fusion faces key
+challenges in handling heterogeneous and unaligned data. For
+instance, numerical weather prediction (NWP) features are
+often continuous and temporally dense, whereas geographic
+metadata can be categorical or sparse, requiring careful
+preprocessing and embedding techniques to harmonize
+inputs [77]. Furthermore, concatenation may dilute crucial
+cross-modal interactions, especially in high-dimensional
+spaces, risking the dominance of noisy or irrelevant features.
+Nevertheless, early fusion remains popular due to its com-
+putational efficiency and straightforward implementation.
+Recent deep learning models improve on naive concatenation
+by first passing each modality through dedicated encoders
+or embedding layers before merging, thus enhancing repre-
+sentational richness and facilitating learning from correlated
+multimodal patterns [78].
+Techniques such as feature selection, dimensionality
+reduction (e.g., PCA, autoencoders), and regularization
+(dropout, batch normalization) are commonly applied to
+improve early fusion robustness and generalization. Figure 3
+presents a redesigned flowchart of the early fusion strategy,
+emphasizing the separate preprocessing of modalities before
+concatenation, which supports clearer understanding and
+replicability.
+B. LATE FUSION: COMBINING PREDICTIONS FROM
+MODALITY-SPECIFIC MODELS
+Late fusion, or decision-level fusion, combines outputs from
+independently trained modality-specific models rather than
+merging raw features [75], [79]. Each modality is processed
+separately, and their predictions are aggregated through
+heuristics (e.g., averaging, weighted voting) or meta-learning
+methods like stacking [80].
+151976 VOLUME 13, 2025
+
+---PAGE 8---
+M. Mansouri et al.: Multimodal Learning Techniques for Time Series Forecasting
+FIGURE 3. Flowchart of the early fusion learning strategy illustrating modality-specific preprocessing, feature concatenation, and unified modeling. This
+design supports efficient integration of diverse inputs while highlighting preprocessing steps critical for handling heterogeneous data.
+In renewable energy forecasting, late fusion pipelines com-
+monly involve separate models for meteorological variables
+and satellite or SCADA data, whose outputs are combined to
+improve final prediction reliability.
+Late fusion provides significant advantages: modularity
+allows independent training and updating of models; special-
+ization enables tailored architectures (e.g., CNNs for images,
+RNNs for sequences); and robustness arises from graceful
+degradation if a modality is missing or corrupted. However,
+late fusion requires synchronization mechanisms, such as
+interpolation or buffering, to reconcile different temporal
+resolutions across modalities [81].
+While late fusion methods do not inherently learn
+cross-modal feature dependencies, incorporating a meta-
+learner to weigh predictions adaptively can partially address
+this limitation by exploiting context or reliability cues [80].
+Careful validation and regularization are necessary to prevent
+overfitting in stacked or ensemble models trained on limited
+data.
+Figure 4 shows the updated late fusion flowchart, now
+with explicit illustration of separate modality processing,
+synchronization steps, and prediction aggregation, providing
+clearer guidance for implementation.
+C. HYBRID/INTERMEDIATE FUSION: ATTENTION-BASED
+AND CO-LEARNING ARCHITECTURES
+Hybrid or intermediate fusion integrates modalities at
+latent representation levels within neural networks [75],
+[82]. Attention mechanisms, gating units, and shared
+latent spaces enable dynamic, context-sensitive interactions
+between modalities.
+Attention-based models allow selective focus on relevant
+temporal or spatial features across modalities. For example,
+in solar forecasting, attention can emphasize satellite image
+regions with cloud activity while highlighting meteorological
+time points with rapid humidity changes.
+This strategy captures conditional and complex inter-
+modal dependencies, adapting fusion weights dynamically
+based on context critical for renewable energy where
+relationships vary with geography and time [8]. Co-
+learning approaches further enhance fusion by aligning
+modality-specific features via bilinear pooling or tensor
+fusion, promoting joint latent space discovery.
+Though hybrid fusion increases model complexity and
+training requirements, it offers improved interpretability
+through attention visualization and gating activations. Fig-
+ure 5 presents the enhanced hybrid fusion flowchart, clari-
+fying intermediate feature extraction, attention modules, and
+joint decoding.
+D. CROSS-MODAL ATTENTION AND CO-ATTENTION
+MECHANISMS
+Cross-modal attention explicitly models interdependencies
+between modalities [83]. Unlike unimodal attention, it allows
+queries from one modality to attend to keys and values in
+another, enabling fine-grained contextual alignment.
+In renewable energy, this could involve satellite cloud
+data modulating the relevance of temperature readings or
+topographical maps informing wind sensor data interpreta-
+tion. Co-attention further symmetrizes this interaction, with
+modalities mutually attending to one another.
+Transformer-based and multimodal BERT models have
+adopted these mechanisms successfully in vision-language
+tasks and are increasingly applied to renewable energy fore-
+casting, showing gains in accuracy, missing data robustness,
+and interpretability [84].
+The computational overhead of attention layers is signif-
+icant, particularly for high-dimensional modalities. Sparse
+and hierarchical attention mechanisms help manage this
+complexity.
+Figure 6 depicts the cross-modal attention flowchart
+with detailed query-key-value interactions across modalities,
+providing an intuitive visualization of this advanced fusion
+technique.
+E. SELF-SUPERVISED, CONTRASTIVE, AND GENERATIVE
+APPROACHES (E.G., MUL TIMODAL VAES)
+Self-supervised learning exploits unlabeled data by predict-
+ing parts of input from others, enabling effective repre-
+sentation learning without extensive annotations [85]. This
+VOLUME 13, 2025 151977
+
+---PAGE 9---
+M. Mansouri et al.: Multimodal Learning Techniques for Time Series Forecasting
+FIGURE 4. Flowchart of the late fusion learning strategy. The diagram highlights independent modality-specific modeling, synchronization of predictions,
+and decision-level aggregation. This modular approach enhances robustness and facilitates flexible model updates.
+FIGURE 5. Flowchart of the hybrid/intermediate fusion learning strategy. The figure illustrates modality-specific encoders, attention-based fusion
+at latent layers, and joint prediction, highlighting the model’s dynamic integration capacity.
+FIGURE 6. Flowchart of the cross-modal attention fusion learning strategy. The diagram shows bidirectional attention between modalities,
+facilitating fine-grained, context-aware feature integration.
+is critical in renewable energy where labeled multimodal
+datasets are scarce.
+Contrastive learning aligns positive modality pairs (e.g.,
+co-occurring satellite and weather data) while separating
+negatives, enhancing modality-invariant feature learning.
+Generative models like multimodal variational autoencoders
+(V AEs) learn shared latent spaces for cross-modal reconstruc-
+tion and data imputation, improving robustness to missing
+sensors [86].
+These approaches support data augmentation and simulate
+rare events, essential for comprehensive forecasting in hybrid
+energy systems.
+While promising, they require careful training to avoid
+representation collapse and demand task-specific evaluation
+metrics beyond conventional accuracy.
+Figure 7 presents the self-supervised fusion flowchart,
+outlining contrastive and generative model components,
+emphasizing their role in learning robust multimodal embed-
+dings.
+F. PERFORMANCE COMPARISON OF FUSION STRATEGIES
+Table 6 summarizes empirical forecasting performance
+reported in key recent studies employing early, late, and
+hybrid fusion methods in renewable energy applications.
+Metrics include Root Mean Squared Error (RMSE), Mean
+Absolute Error (MAE), and accuracy, allowing direct
+comparison across fusion approaches, datasets, and model
+architectures.
+These results highlight that while early fusion offers
+simplicity, hybrid and attention-based fusion strategies often
+151978 VOLUME 13, 2025
+
+---PAGE 10---
+M. Mansouri et al.: Multimodal Learning Techniques for Time Series Forecasting
+FIGURE 7. Flowchart of the self-supervised fusion learning strategy illustrating contrastive and generative model components for robust multimodal
+representation learning.
+TABLE 6. Performance comparison of fusion types in renewable energy forecasting.
+achieve superior accuracy by effectively modeling complex
+cross-modal interactions. Late fusion, although modular
+and robust, may lag in predictive performance unless
+supplemented by adaptive weighting mechanisms. Practi-
+tioners should consider the trade-offs between complexity,
+interpretability, and data availability when selecting fusion
+techniques for renewable energy forecasting.
+V. MODEL ARCHITECTURES
+A. TRADITIONAL MACHINE LEARNING WITH
+ENGINEERED MUL TIMODAL FEATURES
+Traditional machine learning approaches such as linear
+regression, support vector machines (SVMs), and random
+forests have historically contributed to renewable energy
+forecasting by utilizing handcrafted features derived from
+different modalities (e.g., temperature, solar irradiance, wind
+speed, humidity). These features are typically concatenated
+into a single multimodal feature vector:
+x = [x(1), x(2), . . . ,x(M )]⊤,
+where each x(i) is extracted from a specific modality. The
+model estimates a target variable y (e.g., power output) as:
+y = f (x) + ε.
+These methods depend heavily on domain-specific feature
+engineering to capture relevant patterns, such as lagged
+variables and seasonal trends. While computationally effi-
+cient, they often fail to capture nonlinear interactions and
+dynamic cross-modal dependencies inherent in renewable
+energy systems [87]. Therefore, the focus of recent research
+has shifted toward deep multimodal models capable of
+automatic representation learning.
+B. DEEP LEARNING APPROACHES FOR MUL TIMODAL
+FORECASTING
+1) CNNS FOR VISUAL METEOROLOGICAL MODALITIES
+Convolutional Neural Networks (CNNs) serve as powerful
+encoders for processing spatial modalities such as satellite
+imagery, NWP grids, and sky camera feeds [62], [88]. These
+sources encode cloud morphology, atmospheric flow, and
+irradiance dispersion critical for short-term forecasting.
+Given an image tensor I ∈ RH ×W ×C , CNNs apply
+localized filters to learn hierarchical spatial features. The
+operation of a convolutional layer is defined as:
+Fi,j,k = σ
+( ∑
+m,n,c
+Ii+m,j+n,c · Km,n,c,k + bk
+)
+,
+where Km,n,c,k denotes the k-th convolutional kernel and
+σ is typically ReLU. Output feature maps are passed
+through additional convolutional and pooling layers to extract
+multi-scale spatial representations.
+For example, CNNs can forecast short-term solar irradi-
+ance by analyzing the movement and density of clouds in
+consecutive sky images [89]. In wind energy, CNNs extract
+spatiotemporal weather patterns from synoptic wind maps to
+predict downstream turbine output [90].
+Advanced CNN architectures like U-Net and Inception
+support multi-resolution and context-aware learning. These
+features can be fused with non-visual time series via multi-
+modal pipelines, enhancing model robustness and predictive
+accuracy [12].
+2) LSTM/GRU FOR TEMPORAL MODALITIES
+To capture sequential dynamics in temporal modalities (e.g.,
+irradiance, wind speed), Long Short-Term Memory (LSTM)
+VOLUME 13, 2025 151979
+
+---PAGE 11---
+M. Mansouri et al.: Multimodal Learning Techniques for Time Series Forecasting
+and Gated Recurrent Unit (GRU) networks have been widely
+adopted [91], [92].
+The core LSTM equations model hidden and cell states via
+input, forget, and output gates. These allow selective memory
+retention over time:
+ft = σ (Wf xt + Uf ht−1 + bf ), it = σ (Wixt + Uiht−1 + bi),
+ct = ft ⊙ ct−1 + it ⊙ tanh(Wcxt + Ucht−1 + bc),
+ht = ot ⊙ tanh(ct ).
+GRUs simplify the structure using update and reset
+gates. These models are commonly used for predicting
+hourly/daily power outputs from multivariate historical data,
+often integrated in encoder-decoder setups for multi-horizon
+forecasts [93].
+When fused with spatial modalities or symbolic inputs,
+LSTM/GRU modules offer temporal grounding for multi-
+modal networks.
+3) TRANSFORMER MODELS FOR CROSS-MODAL ATTENTION
+Transformers utilize self-attention to model long-range
+temporal and cross-modal dependencies in a fully parallel
+fashion [94]. Unlike LSTM/GRU, they capture interactions
+across all time steps simultaneously.
+Attention(Q, K , V ) = softmax
+( QK ⊤
+√dk
+)
+V ,
+with query/key/value projections from the input embeddings.
+Temporal order is encoded via sinusoidal or learned posi-
+tional encodings.
+In multimodal settings, cross-attention layers enable align-
+ment across modalities. For instance, image-derived keys and
+time-series-derived queries can be fused to predict energy
+output conditioned on spatial-temporal context [95].
+Recent Transformer variants such as Informer [7]and Tem-
+poral Fusion Transformers [96] optimize for long sequences,
+sparsity, and interpretability. These models represent the
+frontier of multimodal sequence forecasting.
+4) MULTIMODAL AUTOENCODERS AND VAES FOR JOINT
+REPRESENTATION LEARNING
+Multimodal autoencoders (AEs) and variational autoencoders
+(V AEs) project different input modalities into a shared latent
+space for representation learning and reconstruction [97].
+V AEs introduce stochastic latent variables to model uncer-
+tainty and missing data.
+LV AE= Eqφ (z|x)[log pθ (x|z)] − KL(qφ(z|x) ∥ p(z)).
+Such models are beneficial for: (i) compact cross-modal
+feature fusion, (ii) imputation of corrupted sensor data, and
+(iii) generation of missing modalities.
+Hierarchical or conditional V AEs further enhance mod-
+ularity and control. Attention-augmented AEs can weigh
+modality importance, improving robustness and interpretabil-
+ity [98].
+5) GRAPH NEURAL NETWORKS FOR SPATIAL SENSOR
+TOPOLOGIES
+Graph Neural Networks (GNNs) model energy systems as
+graphs, with nodes representing sensors or sites and edges
+capturing spatial or communication relations [99].
+H(l+1) = σ
+(
+˜D−1/2 ˜A ˜D−1/2H(l)W (l)
+)
+,
+where ˜A includes self-loops and H(l) are node features. GNNs
+enable message passing across geographically distributed
+sensors to learn spatial correlations.
+Graph Attention Networks (GA Ts) refine this by learn-
+ing edge-specific attention weights. Temporal extensions
+integrate GNNs with RNNs or Transformers to model
+spatiotemporal dependencies in wind farms or PV arrays.
+These networks are especially effective for large-scale,
+sensor-dense renewable systems where spatial topology and
+data quality vary dynamically [100].
+VI. APPLICATIONS IN RENEWABLE ENERGY
+FORECASTING
+A. SOLAR PV POWER FORECASTING USING IRRADIANCE,
+CLOUD IMAGERY, AND WEATHER DATA
+Solar photovoltaic (PV) power forecasting plays a crucial role
+in optimizing grid operations and energy management due to
+the intermittent and weather-dependent nature of solar power
+generation. Accurate prediction relies on integrating multiple
+heterogeneous data sources such as irradiance measurements,
+satellite or ground-based cloud imagery, and meteorological
+variables including temperature, humidity, and wind speed.
+Irradiance G directly correlates with the PV output power
+P. A simplified physical model for power generation can be
+expressed as:
+P = η · A · G,
+where η denotes the panel efficiency and A the panel area.
+However, the effective irradianceG at the PV module surface
+is influenced by atmospheric conditions, cloud cover, aerosol
+concentration, and shading effects, leading to highly variable
+and nonlinear behavior.
+Cloud imagery provides rich spatial-temporal information
+on cloud movements and density. Deep learning methods,
+particularly convolutional neural networks (CNNs), have
+been employed to extract features from satellite images or
+ground-based sky cameras. These features capture cloud
+dynamics that directly affect irradiance fluctuations. Given a
+sequence of cloud images at times t, t − 1, . . . ,t − n, models
+can forecast future irradiance Gt+τ or directly predict PV
+power output at horizon τ .
+Multimodal fusion approaches effectively integrate numer-
+ical weather predictions (NWP), irradiance sensors, and
+image-derived cloud features to enhance forecasting accuracy
+over various horizons from intra-hour nowcasting to day-
+ahead predictions [58]. These fusion frameworks often use
+hybrid architectures combining CNNs for image processing
+151980 VOLUME 13, 2025
+
+---PAGE 12---
+M. Mansouri et al.: Multimodal Learning Techniques for Time Series Forecasting
+and recurrent neural networks (e.g., LSTM, GRU) or
+Transformers for sequential weather and irradiance data.
+Key challenges in this multimodal context include precise
+temporal and spatial data alignment, handling missing or
+noisy data from sensors or imagery, and ensuring model
+interpretability and computational efficiency for operational
+deployment [101].
+Overall, leveraging irradiance measurements, cloud
+imagery, and weather data through advanced multimodal
+learning significantly improves the robustness and reliability
+of solar PV power forecasting systems, enabling better
+integration of solar energy into smart grids and microgrids.
+B. WIND POWER FORECASTING WITH TURBINE SENSOR
+DATA AND NUMERICAL WEATHER PREDICTION
+Wind power forecasting is essential for the reliable integra-
+tion of wind energy into power grids, given the inherent
+variability and intermittency of wind resources. Accurate
+forecasts enable better scheduling, grid stability, and eco-
+nomic dispatch.
+Forecasting models leverage a combination of turbine
+sensor data such as wind speed, wind direction, rotor speed,
+blade pitch angle, and power output and numerical weather
+prediction (NWP) models that provide meteorological vari-
+ables at multiple atmospheric levels and spatial scales.
+Short-term forecasting horizons (from minutes up to a
+few hours ahead) commonly employ statistical and machine
+learning methods trained on historical turbine measurements
+and near real-time sensor streams. Longer-term forecasts
+(hours to days ahead) predominantly rely on physical NWP
+models, which simulate atmospheric dynamics to generate
+wind field predictions.
+A classical physics-inspired model describing the wind
+turbine power curve P(v) as a function of wind speed v is
+given by:
+P(v) =
+
+
+
+
+
+
+
+
+
+0, v < vcut-in
+Prated
+( v − vcut-in
+vrated − vcut-in
+)3
+, vcut-in ≤ v ≤ vrated
+Prated, vrated < v < vcut-out
+0, v ≥ vcut-out
+where vcut-in, vrated, and vcut-out denote the cut-in, rated, and
+cut-out wind speeds, respectively, and Prated is the rated
+power of the turbine.
+Recent advances employ deep learning architectures
+such as Long Short-Term Memory (LSTM) networks and
+Transformer models to capture complex temporal depen-
+dencies and nonlinearities in turbine data and NWP fore-
+casts [102]. These models can effectively fuse multi-source
+inputs, including high-resolution spatial NWP fields, turbine
+SCADA data, and environmental measurements, resulting in
+improved forecast accuracy.
+Moreover, data assimilation and sensor fusion techniques
+integrate real-time turbine measurements with model-based
+forecasts to correct and refine predictions dynamically. Such
+hybrid approaches enable robust and adaptive forecasting
+suitable for operational wind power management.
+C. SHORT-TERM VS LONG-TERM GENERATION
+FORECASTING
+Renewable energy forecasting spans a wide range of
+horizons [103], [104], each with distinct applications and
+challenges [105].
+Short-term forecasting (seconds to hours ahead) is vital
+for real-time grid balancing, market operations, and energy
+trading. It demands high temporal resolution and rapid
+data assimilation. Models often use high-frequency sensor
+data and recent weather observations to predict power
+output with fine granularity. Techniques such as LSTM,
+Transformer-based models, and hybrid statistical-machine
+learning frameworks are commonly adopted to enhance
+accuracy.
+Long-term forecasting (days to months ahead) supports
+planning, maintenance scheduling, and investment decisions.
+It relies heavily on coarse-resolution weather predictions
+and statistical models capturing seasonal and diurnal pat-
+terns [106].
+Mathematically, let Pt be power at time t. Short-term
+forecasts minimize errors:
+min
+ˆPt+τ
+E
+[
+(Pt+τ − ˆPt+τ )2
+]
+, τ ≤ a few hours,
+while long-term forecasts incorporate additional uncertainty
+and trend components:
+Pt = Tt + St + Rt ,
+where Tt is the trend, St seasonal component, and Rt residual
+noise.
+Hybrid models combining physical weather simulations
+and data-driven methods improve accuracy across horizons,
+yet balancing model complexity and interpretability remains
+an ongoing research challenge.
+D. HYBRID SYSTEMS: COMBINING SOLAR, WIND, AND
+BATTERY ENERGY STORAGE
+Hybrid renewable energy systems integrate multiple gen-
+eration sources (e.g., solar PV , wind turbines) with energy
+storage (e.g., batteries) to enhance reliability and smooth
+power output [107], [108], [109].
+Forecasting in hybrid systems involves predicting each
+component’s power output and modeling the storage system’s
+state of charge (SoC). Let Psolar(t), Pwind(t), and Pstorage(t)
+denote solar, wind, and battery power at timet. The net output
+is:
+Pnet(t) = Psolar(t) + Pwind(t) + Pstorage(t).
+Battery SoC evolves as:
+SoCt+1 = SoCt + ηchargePcharge(t) − 1
+ηdischarge
+Pdischarge(t),
+VOLUME 13, 2025 151981
+
+---PAGE 13---
+M. Mansouri et al.: Multimodal Learning Techniques for Time Series Forecasting
+where ηcharge, ηdischarge are charging/discharging efficiencies,
+and Pcharge, Pdischarge are power flows.
+Forecasting models for hybrid systems require multimodal
+data fusion to anticipate generation variability and optimize
+storage dispatch. Reinforcement learning and model predic-
+tive control (MPC) methods are increasingly used for optimal
+operation based on forecasted conditions.
+Challenges include accurately modeling battery degra-
+dation, uncertainty quantification, and coordinating diverse
+system components in real time [110].
+E. GRID-AWARE FORECASTING: RENEWABLE
+GENERATION AND GRID RESPONSE ESTIMATION
+Grid-aware forecasting integrates renewable generation pre-
+dictions with grid operational constraints and dynamics. This
+holistic approach enhances grid stability by anticipating not
+only generation fluctuations but also their impact on grid
+parameters such as voltage, frequency, and load flow [111].
+Such models couple renewable forecasts with power flow
+equations and grid component models. For example, the
+power flow in a distribution network can be described by the
+AC power flow equations:
+Pi =
+N∑
+j=1
+ViVj(Gij cos θij + Bij sin θij),
+Qi =
+N∑
+j=1
+ViVj(Gij sin θij − Bij cos θij),
+where Pi, Qi are active and reactive power injections at bus i,
+Vi voltage magnitudes, Gij, Bij conductance and susceptance,
+and θij voltage angle differences. By combining forecasts
+of renewable output with grid state estimations, operators
+can preemptively manage congestion, voltage violations, and
+frequency excursions.
+Machine learning approaches incorporating grid topology,
+load profiles, and renewable forecasts improve the prediction
+of grid responses, enabling advanced demand response and
+ancillary services [112].
+Grid-aware forecasting represents a critical step towards
+resilient and efficient smart grids with high renewable
+penetration.
+F. REAL-WORLD DEPLOYMENTS OF MUL TIMODAL
+MODELS IN RENEWABLE ENERGY SYSTEMS
+The practical application of multimodal learning techniques
+in operational renewable energy systems is gaining momen-
+tum worldwide. Several pilot projects and commercial
+deployments have demonstrated the value of integrating
+diverse data sources such as sensor measurements, satellite
+imagery, textual data, smart meter readings, and weather
+forecasts to enhance forecasting accuracy and support grid
+management decisions. Below, we highlight representative
+case studies from key regions:
+• Japan (Kyushu): A multimodal ensemble deep learn-
+ing framework combining CNN–LSTM was deployed
+to forecast day-ahead electricity prices and gen-
+eration using a fusion of weather data, calendar
+data, and power system variables. This approach
+yielded enhanced prediction performance (R 2=0.787,
+MAE=1.936, RMSE=2.630), and demonstrated robust-
+ness in handling zero-price events [113].
+Western Australia: A deep learning-based short-term
+forecasting system used LSTM models trained on smart
+meter data energy import/export, rooftop PV generation,
+consumption and outdoor temperature. The model
+showed superior performance compared to classical
+baselines in forecasting renewable energy flows on
+granular time scales (seconds to minutes) [114].
+China: Multimodal fusion of time series and text
+data (including policy documents and reports) has
+been utilized in CNN-LSTM architectures to improve
+medium-range forecasts. This hybrid approach signifi-
+cantly enhanced accuracy and supported power system
+planning and the national low-carbon transition [12].
+• South Korea: For long-term projections up to 2035,
+a bottom-up forecasting method based on multimodal
+inputs (government plans, project data, historical pro-
+duction records) was employed. The combined use
+of logistic growth, diffusion models, and regression
+provided detailed estimates of renewable energy devel-
+opment by source, guiding national policy targets [115].
+Table 7 summarizes these deployments, outlining the data
+modalities used, the forecast horizon addressed, the adopted
+techniques, and the benefits achieved.
+These real-world examples highlight how multimodal
+learning is moving beyond research laboratories into opera-
+tional environments, proving its practical value in addressing
+the challenges of renewable energy variability and grid
+integration. However, challenges remain in data quality,
+model interpretability, and deployment scalability, which
+continue to motivate ongoing research.
+VII. EVALUATION METRICS AND BENCHMARK DATASETS
+A. FORECASTING METRICS: RMSE, MAE, MAPE, NRMSE
+Accurate evaluation of renewable energy forecasting models
+requires appropriate error metrics that reflect prediction
+quality and robustness. Common metrics include Root Mean
+Squared Error (RMSE), Mean Absolute Error (MAE), Mean
+Absolute Percentage Error (MAPE), and Normalized RMSE
+(NRMSE) [116]. The RMSE is defined as:
+RMSE =
+√
+1
+N
+N∑
+i=1
+(yi − ˆyi)2,
+where yi is the true value, ˆyi is the predicted value, and
+N is the number of samples. RMSE penalizes larger errors
+more severely, making it sensitive to outliers. MAE measures
+151982 VOLUME 13, 2025
+
+---PAGE 14---
+M. Mansouri et al.: Multimodal Learning Techniques for Time Series Forecasting
+TABLE 7. Some real-world deployments of multimodal learning in renewable energy systems.
+average absolute errors:
+MAE = 1
+N
+N∑
+i=1
+|yi − ˆyi|,
+providing a linear measure of error magnitude less sensitive
+to large deviations than RMSE. MAPE expresses errors as
+percentages:
+MAPE = 100%
+N
+N∑
+i=1
+⏐⏐
+⏐⏐
+yi − ˆyi
+yi
+⏐⏐
+⏐⏐ ,
+which is intuitive but can be unstable when true values yi are
+close to zero.
+NRMSE normalizes RMSE by the range or mean of true
+values:
+NRMSE = RMSE
+ymax − ymin
+or RMSE
+¯y ,
+allowing comparison across different datasets or scales. The
+first form is typically used when the range (y max − ymin) is
+relevant to daily cycles or capacity limits, while the second
+form is suited to relative performance comparisons over time
+or across systems.
+B. DATASET QUALITY AND MODALITY COMPLETENESS
+The performance and generalizability of forecasting
+models strongly depend on the quality of training and
+evaluation datasets. Several factors must be considered
+to ensure reliable model development and deployment,
+including:
+• Data Accuracy and Precision: Sensor calibration
+and measurement errors can introduce noise, biasing
+forecasts. Ensuring high-quality instrumentation and
+data cleaning is vital.
+• Sampling Rate and Temporal Resolution: High-
+frequency data captures rapid fluctuations but increases
+computational burden. Forecasting horizons dictate
+suitable temporal resolutions.
+• Completeness and Missing Data: Multimodal datasets
+often suffer from missing values due to sensor faults or
+transmission errors. Strategies like imputation or robust
+modeling are needed.
+• Synchronization Across Modalities: Temporal align-
+ment of heterogeneous data sources (e.g., weather
+maps, sensor readings, images) is necessary to preserve
+correlations and improve fusion.
+• Dataset Size and Diversity: Sufficient volume and
+variety of scenarios (seasonal changes, geographic
+diversity) improve model robustness.
+To ensure reproducibility and scalability, benchmarks
+should report metadata completeness, alignment statistics,
+and noise levels across modalities. Tools such as modality
+correlation matrices and temporal heatmaps are increasingly
+used for dataset validation.
+C. COMMON BENCHMARKS AND COMPARATIVE
+SUMMARY
+1) SOLAR ENERGY DATASETS
+Solar and wind energy forecasting benefit greatly from
+datasets that include historical records of energy output
+alongside relevant meteorological variables such as tem-
+perature, cloud cover, humidity, wind speed, and wind
+direction. These datasets support both deterministic and
+probabilistic forecasting models under various climatic
+and temporal conditions. Additionally, hybrid renewable
+energy systems require multimodal datasets capturing inter-
+actions among diverse energy sources to enable advanced
+forecasting using data fusion and multimodal learning
+approaches.
+Table 8 presents dataset properties such as temporal
+resolution, size, and geographic coverage, as well as the
+specific modalities contained within each dataset. This
+comprehensive view aids researchers in selecting appro-
+priate data for their forecasting tasks and understanding
+the scope of multimodal information available. Notably,
+datasets like NREL and SolarAnywhere provide diverse
+modalities including satellite imagery and ground sensors,
+enabling multimodal fusion approaches. Hybrid datasets
+such as Pecan Street and RENES capture complex inter-
+actions between multiple renewable sources and storage,
+facilitating advanced research on integrated systems. This
+enriched benchmark section supports clearer comparative
+analysis and guides future developments in renewable energy
+forecasting.
+VOLUME 13, 2025 151983
+
+---PAGE 15---
+M. Mansouri et al.: Multimodal Learning Techniques for Time Series Forecasting
+TABLE 8. Benchmark datasets for renewable energy forecasting: Solar, wind, and hybrid systems with properties, modalities, and key usage.
+VIII. CHALLENGES IN MULTIMODAL FORECASTING FOR
+RENEWABLE ENERGY
+A. SPATIOTEMPORAL RESOLUTION MISMATCH ACROSS
+MODALITIES
+One of the principal challenges in multimodal renewable
+energy forecasting arises from the mismatch in spatial
+and temporal resolution among the diverse data modal-
+ities. Renewable energy systems integrate heterogeneous
+data sources, including satellite imagery, weather station
+measurements, sensor arrays on turbines and solar panels,
+and numerical weather prediction outputs. Each of these data
+streams may differ substantially in spatial granularity and
+temporal frequency [126].
+For example, satellite imagery might be available only
+every 15 minutes to an hour and cover broad geographic
+regions, whereas turbine sensor data can be collected at
+sub-second intervals but localized to individual units. Simi-
+larly, weather station data might provide point measurements
+at hourly or sub-hourly intervals, while NWP models output
+gridded forecasts at resolutions ranging from a few kilometers
+to tens of kilometers, updated every few hours.
+This disparity leads to difficulties in fusing data effectively.
+Direct concatenation or naive interpolation can introduce
+artifacts or lose critical information. Temporal mismatch
+may cause delays or phase shifts in the signal alignment,
+reducing forecasting accuracy. Spatial resolution differences
+complicate modeling, as fine-grained local effects might be
+smoothed out in coarse-grained data, and vice versa.
+To address these issues, various strategies have been
+proposed. Spatial and temporal interpolation methods, such
+as kriging or spline-based approaches, can resample data
+to common grids or timestamps. More advanced methods
+exploit spatiotemporal neural networks that learn to repre-
+sent different resolutions jointly. Furthermore, hierarchical
+or multi-scale models process modalities at their native
+resolutions and integrate information through learned atten-
+tion mechanisms. Nonetheless, spatiotemporal resolution
+mismatch remains a significant bottleneck in building
+151984 VOLUME 13, 2025
+
+---PAGE 16---
+M. Mansouri et al.: Multimodal Learning Techniques for Time Series Forecasting
+robust multimodal forecasting models, requiring careful
+pre-processing, domain knowledge, and adaptive modeling
+techniques.
+B. DATA ALIGNMENT, MISSING MODALITIES, AND
+ASYNCHRONOUS UPDATES
+Multimodal forecasting systems often face challenges related
+to data alignment and completeness. Since different sensors
+and data providers operate independently, datasets may not
+be synchronized perfectly in time or may contain gaps due
+to sensor failures, communication errors, or maintenance
+downtime.
+Asynchronous updates mean that some modalities update
+more frequently or irregularly compared to others. For
+instance, weather satellite passes may be periodic but
+sparse, whereas ground-based sensors can have continu-
+ous streams. Combining these requires temporal alignment
+strategies such as resampling, buffering, or window-based
+aggregation.
+Missing modalities pose another challenge: in practical
+deployments, one or more data streams may become tem-
+porarily unavailable. Models trained on complete multimodal
+inputs may perform poorly or fail when some inputs are
+missing, limiting real-world applicability.
+Handling these issues requires robust data imputation
+and missing data modeling techniques. Statistical imputation
+methods, such as mean or interpolation-based filling, are
+simple but may not capture complex dependencies. More
+advanced approaches employ machine learning models
+trained to reconstruct missing modalities from available data,
+including generative models like variational autoencoders or
+adversarial networks.
+Moreover, asynchronous data streams call for flexible
+model architectures capable of processing variable-length
+sequences and conditional inputs. Recurrent networks with
+masking, attention mechanisms that weigh inputs dynam-
+ically, and multi-task learning frameworks can improve
+robustness [127]. Effective data alignment and missing
+modality handling are critical to maintain forecasting accu-
+racy and reliability, especially in operational energy systems
+where sensor faults and network issues are common.
+C. COMPUTATIONAL COMPLEXITY OF DEEP
+MUL TIMODAL MODELS
+The integration of multiple high-dimensional modalities in
+renewable energy forecasting often leads to complex deep
+learning models with large numbers of parameters and heavy
+computational demands. Models such as convolutional neural
+networks (CNNs) for image processing, recurrent neural
+networks (RNNs) or transformers for temporal data, and
+graph neural networks (GNNs) for spatial relationships must
+be combined effectively, increasing architectural complex-
+ity [128], [129].
+Training these models requires extensive computational
+resources, including high-memory GPUs or clusters, pro-
+longed training times, and careful hyperparameter tuning.
+This complexity can be prohibitive for researchers and
+practitioners with limited access to such infrastructure.
+At inference time, computational cost also affects real-time
+deployment feasibility. Forecasting systems used by grid
+operators or energy traders must produce timely predictions;
+excessively heavy models may introduce latency or require
+expensive hardware upgrades [126].
+Strategies to reduce computational complexity include
+model compression techniques such as pruning, quantiza-
+tion, and knowledge distillation, which simplify trained
+models without significant accuracy loss. Architectural
+innovations like lightweight convolutional blocks, effi-
+cient attention mechanisms, and parameter sharing also
+help [129]. Additionally, modular architectures where
+modality-specific encoders run in parallel, with a lightweight
+fusion module, balance complexity and performance. Edge
+computing and distributed processing approaches can
+further alleviate centralized computational burdens [130].
+Despite these advances, computational complexity remains
+a core challenge in scaling multimodal forecasting sys-
+tems to large geographic regions and fine temporal
+resolutions.
+D. LACK OF STANDARDIZED MUL TIMODAL BENCHMARKS
+Another major obstacle in advancing multimodal renewable
+energy forecasting is the absence of widely accepted
+standardized benchmark datasets and evaluation protocols
+that encompass multiple data modalities. While numerous
+single-modality datasets exist for solar or wind forecasting
+individually, fewer datasets integrate multiple modalities with
+consistent annotation and accessibility [131].
+This lack of benchmarks hinders the fair comparison of
+competing algorithms and slows progress. Researchers often
+rely on proprietary or limited datasets, leading to fragmented
+efforts and difficulties reproducing results.
+Creating comprehensive multimodal benchmark datasets
+requires coordinated efforts to collect, preprocess, and
+release synchronized multimodal data including satellite
+imagery, ground sensors, meteorological variables, and
+historical power outputs. These datasets should cover
+diverse geographic regions, temporal scales, and weather
+regimes to enable robust generalization. Furthermore,
+standardized evaluation protocols specifying forecasting
+horizons, train-test splits, and metrics are needed to ensure
+comparability. Public competitions and challenges focused
+on multimodal forecasting could catalyze community
+engagement [126].
+Efforts in other domains, such as multimodal video pro-
+cessing and medical data analysis, provide useful paradigms.
+However, the domain-specific constraints and complexities of
+renewable energy systems require a customized benchmark
+design. Addressing the lack of standardized multimodal
+benchmarks is crucial to foster transparent, reproducible
+research, and accelerate innovation in this field.
+VOLUME 13, 2025 151985
+
+---PAGE 17---
+M. Mansouri et al.: Multimodal Learning Techniques for Time Series Forecasting
+E. INTERPRETABILITY AND TRUST IN AI-BASED ENERGY
+FORECASTING
+The deployment of AI models for renewable energy fore-
+casting in operational settings requires not only accuracy
+but also interpretability and trustworthiness. Complex deep
+multimodal models are often regarded as ‘‘black boxes,’’
+limiting user understanding of their decision processes
+and hampering acceptance by grid operators and energy
+stakeholders [132].
+Interpretability is essential for model debugging, regu-
+latory compliance, and ensuring model robustness under
+unexpected operating conditions. Energy system operators
+need to trust that forecasts are reliable and understand the
+influence of various inputs.
+Several approaches have been developed to improve inter-
+pretability of multimodal models. Attention mechanisms can
+highlight which modalities or features are most influential
+for a given prediction. Post-hoc explanation methods, such
+as SHAP (SHapley Additive exPlanations) and LIME (Local
+Interpretable Model-agnostic Explanations), provide local
+feature importance.
+Model simplification through surrogate models can aid
+human comprehension, though sometimes at the expense of
+accuracy. Incorporating domain knowledge and physically
+interpretable modules enhances trustworthiness in energy
+forecasting environments [133].
+Furthermore, uncertainty quantification, such as prediction
+intervals or Bayesian approaches, communicates confidence
+levels, helping users make informed decisions [134].
+Building interpretability and trust into AI-based renewable
+energy forecasting models remains an ongoing challenge
+but is critical for practical deployment and stakeholder
+acceptance.
+F. COMPARATIVE ANAL YSIS OF DATASETS AND
+EVALUATION METRICS
+Table 9 summarizes prominent datasets such as NREL,
+GEFCom, and SolarDB, detailing the included modalities,
+forecasting horizons, evaluation metrics employed, and
+reported performance outcomes from key studies in the
+literature. This synthesis facilitates understanding of dataset
+characteristics, typical use cases, and benchmarking results,
+thereby aiding fair comparison and reproducibility across
+studies. Notably, datasets vary widely in geographic cov-
+erage, temporal resolution, and modality fusion, impacting
+model generalizability. Standardized evaluation protocols
+remain scarce, and reported metrics include RMSE, MAE,
+MAPE, and skill scores depending on the forecasting task.
+This table highlights trends and gaps, underscoring the need
+for community-driven benchmark development and shared
+evaluation frameworks.
+This comparative analysis highlights the current frag-
+mented landscape and motivates the development of stan-
+dardized multimodal datasets and evaluation protocols to
+accelerate research and ensure fair model comparison.
+IX. FUTURE RESEARCH DIRECTIONS
+A. FOUNDATION MODELS TRAINED ON LARGE-SCALE
+MUL TIMODAL ENERGY DATA
+The rapid advancement of foundation models large-scale
+pretrained neural networks capable of handling diverse tasks
+with minimal fine-tuning presents a promising frontier for
+renewable energy forecasting. These models, exemplified by
+architectures like GPT, BERT, or vision-language transform-
+ers, demonstrate remarkable ability to learn rich, transferable
+representations from massive datasets spanning multiple
+modalities [137].
+Applying foundation models to renewable energy systems
+entails pretraining on vast and heterogeneous multimodal
+datasets that include satellite imagery, weather observations,
+sensor telemetry, historical power outputs, and grid opera-
+tional data. Such models can capture complex cross-modal
+interactions, spatiotemporal dependencies, and underlying
+physical phenomena in a unified latent space [8].
+The benefits include improved generalization across
+geographic regions and weather patterns, reduction in data
+annotation effort through self-supervised learning objectives,
+and enhanced adaptability to downstream tasks such as
+anomaly detection, fault diagnosis, and scenario simulation.
+Challenges remain in curating sufficiently large and
+diverse datasets, designing architectures that effectively fuse
+multimodal inputs, and managing the computational cost of
+training and deploying foundation models. Moreover, domain
+adaptation techniques must be developed to tailor foundation
+models pretrained on general data to specific renewable
+energy applications and regions.
+Research on foundation models in this domain could
+dramatically transform forecasting accuracy and reliability,
+enabling more resilient and efficient energy systems.
+B. FEDERATED MUL TIMODAL LEARNING ACROSS
+RENEWABLE PLANT OPERATORS
+Renewable energy data is often siloed within individual plant
+operators due to privacy, commercial sensitivity, or regu-
+latory restrictions, limiting the availability of large-scale
+datasets for centralized training. Federated learning offers
+a paradigm to collaboratively train multimodal forecasting
+models across multiple distributed data owners without
+sharing raw data [138].
+In federated multimodal learning, each operator trains a
+local model on its own multimodal dataset (e.g., sensor
+readings, local weather data, satellite imagery). Periodically,
+model updates or gradients are aggregated centrally or
+in a decentralized manner to update a global model.
+This approach preserves data privacy while leveraging the
+collective knowledge from diverse geographic regions and
+system configurations.
+Technical challenges include handling heterogeneous
+data distributions across operators, synchronizing updates
+when modalities differ or are incomplete, and designing
+communication-efficient protocols to reduce overhead [139].
+151986 VOLUME 13, 2025
+
+---PAGE 18---
+M. Mansouri et al.: Multimodal Learning Techniques for Time Series Forecasting
+TABLE 9. Summary of common renewable energy forecasting datasets, modalities, metrics, and reported results.
+Further, multimodal federated learning requires advanced
+aggregation methods that can reconcile discrepancies in
+modalities and sensor types, and robust techniques to handle
+missing or corrupted local data.
+Successful development of federated multimodal frame-
+works would enable cross-plant knowledge transfer, improve
+forecasting accuracy, and promote collaborative innovation
+without compromising data confidentiality.
+C. FEW-SHOT AND TRANSFER LEARNING IN
+MODALITY-SCARCE ENVIRONMENTS
+While many renewable energy plants produce rich multi-
+modal data, others may have limited sensing infrastructure or
+face operational constraints that restrict the availability of cer-
+tain modalities. Few-shot and transfer learning methodolo-
+gies aim to overcome this scarcity by leveraging knowledge
+learned from data-rich domains to improve performance in
+data-poor settings. Few-shot learning techniques train models
+to generalize from a very small number of labeled examples,
+often through meta-learning or metric learning approaches.
+For instance, a model pretrained on multimodal data from
+large solar farms could be adapted rapidly to a smaller or
+newly commissioned site with minimal additional data.
+Transfer learning enables the reuse of pretrained feature
+extractors or entire models on related tasks or domains,
+reducing training time and data requirements. In the context
+of modality scarcity, transfer learning can help models
+compensate for missing inputs by relying on correlated or
+substitute modalities [140].
+Developing robust few-shot and transfer learning tech-
+niques tailored to multimodal renewable energy forecasting
+requires addressing domain shift issues, modality mismatch,
+and temporal nonstationarities. Furthermore, interpretability
+and uncertainty estimation are crucial to ensure reliable
+adaptation.
+Advances in this area would broaden the applicability
+of sophisticated forecasting models to diverse operational
+scenarios, accelerating the deployment of AI in renewable
+energy systems globally.
+D. EXPLAINABLE AND UNCERTAINTY-AWARE
+MUL TIMODAL MODELS
+For AI-driven renewable energy forecasting systems to gain
+widespread acceptance, it is essential to develop models
+that not only provide accurate predictions but also offer
+explanations and quantify uncertainty in their outputs.
+Explainable AI (XAI) methods elucidate how multimodal
+inputs contribute to forecasts, enhancing user trust and facili-
+tating model debugging. Techniques such as attention visual-
+ization, feature importance scoring, and concept-based expla-
+nations enable operators to understand the decision-making
+process of complex deep learning models [141].
+Simultaneously, uncertainty-aware modeling quantifies
+confidence levels associated with predictions, distinguishing
+between aleatoric uncertainty (inherent data noise) and
+epistemic uncertainty (model knowledge gaps). Bayesian
+neural networks, ensembles, and probabilistic deep learning
+approaches provide principled frameworks for uncertainty
+estimation.
+Incorporating explainability and uncertainty quantification
+is especially critical in safety-critical or economically sensi-
+tive renewable energy operations where decisions based on
+forecasts impact grid stability and financial planning.
+Future research should focus on integrating these aspects
+seamlessly into multimodal architectures, balancing inter-
+pretability with predictive performance, and developing
+visualization tools tailored to energy system operators.
+E. INTEGRATION OF PHYSICS-INFORMED LEARNING
+WITH DATA-DRIVEN FUSION
+Renewable energy forecasting benefits from combining
+physics-based models grounded in domain knowledge with
+data-driven AI techniques that learn patterns from data.
+Physics-informed machine learning (PIML) incorporates
+physical constraints, conservation laws, or differential equa-
+tions into the training of neural networks, improving model
+generalization and interpretability.
+Integrating PIML with multimodal fusion involves design-
+ing architectures that incorporate prior knowledge about
+atmospheric dynamics, solar radiation physics, or turbine
+aerodynamics alongside multimodal observational data.
+For instance, differential equation solvers or simplified
+energy balance models can be embedded as layers within
+deep networks or used as regularization terms in loss
+functions. This fusion helps mitigate overfitting, enforce
+physically plausible outputs, and enable extrapolation to
+unseen conditions [142].
+Key challenges include representing complex physical
+phenomena at scales compatible with neural network train-
+VOLUME 13, 2025 151987
+
+---PAGE 19---
+M. Mansouri et al.: Multimodal Learning Techniques for Time Series Forecasting
+ing, handling noisy or incomplete data, and balancing
+the influence of physics-based constraints versus learned
+features.
+Advancing the synergy between physics-informed learning
+and multimodal data fusion promises more accurate, robust,
+and trustworthy renewable energy forecasts, bridging the
+gap between traditional numerical models and modern AI
+techniques [143].
+X. CONCLUSION
+Accurate forecasting of renewable energy generation remains
+a cornerstone for the efficient management and operation
+of modern power systems. This survey has comprehensively
+examined the emerging paradigm of multimodal forecasting
+frameworks tailored for renewable energy systems such as
+solar photovoltaic, wind farms, and hybrid installations.
+By leveraging heterogeneous data sources, including mete-
+orological measurements, satellite imagery, sensor telemetry,
+and grid operational data, multimodal approaches provide a
+more holistic understanding of the underlying dynamics that
+govern renewable power output.
+Traditional single-modality forecasting models often
+struggle to capture the complex spatiotemporal patterns and
+nonlinear relationships present in renewable energy systems.
+Multimodal learning frameworks address these challenges
+by integrating complementary information across modalities,
+resulting in enhanced predictive accuracy and robustness.
+For instance, the fusion of irradiance measurements with
+cloud imagery and weather data significantly improves
+solar PV power forecasting, while the incorporation of
+turbine sensor data and numerical weather predictions
+advances wind power estimates. The flexibility of mul-
+timodal architectures, including early fusion, late fusion,
+and hybrid strategies, enables tailored solutions that accom-
+modate diverse data availability scenarios and application
+needs.
+The key advantages of integrating multiple modalities
+extend beyond accuracy improvements. Multimodal frame-
+works inherently enhance resilience to missing or noisy
+data, as models can rely on redundant information channels.
+They also enable the exploitation of cross-modal correlations
+and the discovery of latent factors driving renewable energy
+variability. Recent developments in deep learning architec-
+tures such as convolutional neural networks, recurrent neural
+networks (RNNs), transformers, variational autoencoders,
+and graph neural networks have demonstrated impressive
+capabilities in capturing intricate multimodal dependencies.
+Moreover, advances in foundation models, federated learn-
+ing, and physics-informed AI point to a promising future
+where scalable, collaborative, and interpretable forecasting
+systems will become the norm.
+Despite these promising developments, several critical
+challenges remain. Issues such as spatiotemporal resolution
+mismatch, asynchronous and incomplete data streams, high
+computational costs, and the lack of standardized multi-
+modal benchmarks require ongoing research and innovation.
+Furthermore, to fully realize the potential of multimodal
+forecasting in real-world renewable energy systems, it is
+imperative to develop robust models that balance predictive
+performance with interpretability and uncertainty quantifi-
+cation. Explainable AI techniques and uncertainty-aware
+frameworks will be essential to build operator trust and enable
+informed decision-making in grid management and energy
+markets.
+To guide future research, we explicitly highlight the
+following key open challenges and promising directions:
+• Standardized Benchmark Datasets and Evaluation
+Protocols: There is a critical need to develop and adopt
+comprehensive multimodal datasets with consistent
+annotations and standardized evaluation metrics to
+enable fair comparison, reproducibility, and accelerated
+progress in the field.
+• Spatiotemporal Resolution Mismatch and Asyn-
+chronous Fusion: Future work must focus on designing
+advanced data fusion methods that can effectively rec-
+oncile heterogeneous spatial and temporal granularities,
+as well as handle asynchronous and incomplete data
+streams, to improve robustness and accuracy.
+• Interpretability and Uncertainty Quantification:
+Developing explainable multimodal forecasting models
+that provide transparent reasoning and well-calibrated
+uncertainty estimates is essential for practical deploy-
+ment and gaining trust among grid operators and energy
+stakeholders.
+• Federated and Privacy-Preserving Learning: As data
+privacy concerns grow, expanding federated learning
+frameworks to multimodal renewable energy datasets
+will enable collaborative model training across organi-
+zations without sharing raw sensitive data.
+• Integration of Physics-Informed and Data-Driven
+Approaches: Hybrid modeling paradigms that embed
+physical knowledge of renewable systems within
+data-driven multimodal architectures offer a promising
+route to improve generalization, interpretability, and
+scientific consistency.
+These directions collectively form a roadmap to tackle current
+limitations and harness the full potential of multimodal
+learning for sustainable, reliable, and efficient renewable
+energy forecasting.
+In summary, the fusion of diverse data modalities through
+advanced machine learning techniques represents a transfor-
+mative approach to renewable energy forecasting. Continued
+research addressing the outlined gaps will be crucial to
+support the accelerating integration of renewables, optimize
+grid operations, and foster the transition to a resilient and
+low-carbon energy future.
+REFERENCES
+[1] Q. Hassan, P . Viktor, T. J. Al-Musawi, B. M. Ali, S. Algburi, H. M.
+Alzoubi, A. K. Al-Jiboory, A. Zuhair Sameen, H. M. Salman, and M.
+Jaszczur, ‘‘The renewable energy role in the global energy transforma-
+tions,’’ Renew. Energy F ocus, vol. 48, Mar. 2024, Art. no. 100545.
+151988 VOLUME 13, 2025
+
+---PAGE 20---
+M. Mansouri et al.: Multimodal Learning Techniques for Time Series Forecasting
+[2] P . Singla, M. Duhan, and S. Saroha, ‘‘A comprehensive review and
+analysis of solar forecasting techniques,’’Frontiers Energy, vol. 16, no. 2,
+pp. 1–37, Apr. 2022.
+[3] M. Garcia-Sanz and C. H. Houpis, Wind Energy Systems: Control
+Engineering Design. CRC Press, 2012.
+[4] Y . Chu, Y . Wang, D. Y ang, S. Chen, and M. Li, ‘‘A review of distributed
+solar forecasting with remote sensing and deep learning,’’Renew. Sustain.
+Energy Rev., vol. 198, Jul. 2024, Art. no. 114391.
+[5] K. Hasan, S. B. Y ousuf, M. S. H. K. Tushar, B. K. Das, P . Das, and
+M. S. Islam, ‘‘Effects of different environmental and operational factors
+on the PV performance: A comprehensive review,’’ Energy Sci. Eng.,
+vol. 10, no. 2, pp. 656–675, Feb. 2022.
+[6] J. Qin, H. Jiang, N. Lu, L. Y ao, and C. Zhou, ‘‘Enhancing solar PV
+output forecast by integrating ground and satellite observations with
+deep learning,’’ Renew. Sustain. Energy Rev., vol. 167, Oct. 2022,
+Art. no. 112680.
+[7] X. Zhang, Q. Jin, T. Y u, S. Xiang, Q. Kuang, V . Prinet, and C. Pan, ‘‘Multi-
+modal spatio-temporal meteorological forecasting with deep neural
+network,’’ ISPRS J. Photogramm. Remote Sens., vol. 188, pp. 380–393,
+Jun. 2022.
+[8] Y . Zhang, T. Zhao, S. Gao, and M. Raubal, ‘‘Incorporating multimodal
+context information into traffic speed forecasting through graph deep
+learning,’’ Int. J. Geographical Inf. Sci., vol. 37, no. 9, pp. 1909–1935,
+Sep. 2023.
+[9] J. Heo, K. Song, S. Han, and D.-E. Lee, ‘‘Multi-channel convolutional
+neural network for integration of meteorological and geographical
+features in solar power forecasting,’’ Appl. Energy, vol. 295, Aug. 2021,
+Art. no. 117083.
+[10] E. A. Tuncar, Ş. Sağlam, and B. Oral, ‘‘A review of short-term wind power
+generation forecasting methods in recent technological trends,’’ Energy
+Rep., vol. 12, pp. 197–209, Dec. 2024.
+[11] Y . Han, L. Mi, L. Shen, C. S. Cai, Y . Liu, K. Li, and G. Xu, ‘‘A short-
+term wind speed prediction method utilizing novel hybrid deep learning
+algorithms to correct numerical weather forecasting,’’ Appl. Energy,
+vol. 312, Apr. 2022, Art. no. 118777.
+[12] D. Wang, J. Gan, J. Mao, F. Chen, and L. Y u, ‘‘Forecasting power demand
+in China with a CNN-LSTM model including multimodal information,’’
+Energy, vol. 263, Jan. 2023, Art. no. 126012.
+[13] K. Wang, S. Shan, W. Dou, H. Wei, and K. Zhang, ‘‘A robust photovoltaic
+power forecasting method based on multimodal learning using satellite
+images and time series,’’ IEEE Trans. Sustain. Energy, vol. 16, no. 2,
+pp. 970–980, Apr. 2025.
+[14] T. Jing, S. Chen, D. Navarro-Alarcon, Y . Chu, and M. Li, ‘‘SolarFusion-
+Net: Enhanced solar irradiance forecasting via automated multi-modal
+feature selection and cross-modal fusion,’’ IEEE Trans. Sustain. Energy,
+vol. 16, no. 2, pp. 761–773, Apr. 2025.
+[15] C. Pan, Y . Liu, Y . Oh, and C. Lim, ‘‘Short-term photovoltaic power
+forecasting using PV data and sky images in an auto cross modal
+correlation attention multimodal framework,’’ Energies, vol. 17, no. 24,
+p. 6378, Dec. 2024.
+[16] K. Moustakas, M. Loizidou, M. Rehan, and A. S. Nizami, ‘‘A review of
+recent developments in renewable and sustainable energy systems: Key
+challenges and future perspective,’’Renew. Sustain. Energy Rev., vol. 119,
+Mar. 2020, Art. no. 109418.
+[17] N. Jannah, T. S. Gunawan, S. H. Y usoff, M. S. A. Hanifah,
+and S. N. M. Sapihie, ‘‘Recent advances and future challenges
+of solar power generation forecasting,’’ IEEE Access, vol. 12,
+pp. 168904–168924, 2024.
+[18] M. H. Nehrir, C. Wang, K. Strunz, H. Aki, R. Ramakumar, J. Bing, Z.
+Miao, and Z. Salameh, ‘‘A review of hybrid renewable/alternative energy
+systems for electric power generation: Configurations, control, and
+applications,’’ IEEE Trans. Sustain. Energy, vol. 2, no. 4, pp. 392–403,
+Oct. 2011.
+[19] H. S. Dhiman and D. Deb, ‘‘A review of wind speed and wind power
+forecasting techniques,’’ 2020, arXiv:2009.02279.
+[20] Y . Chen, S. Y u, S. Islam, C. P . Lim, and S. M. Muyeen, ‘‘Decomposition-
+based wind power forecasting models and their boundary issue: An
+in-depth review and comprehensive discussion on potential solutions,’’
+Energy Rep., vol. 8, pp. 8805–8820, Nov. 2022.
+[21] W. Li, Z. Du, X. Xu, Z. Bai, J. Han, M. Cui, and D. Li, ‘‘A review
+of aquaculture: From single modality analysis to multimodality fusion,’’
+Comput. Electron. Agricult., vol. 226, Nov. 2024, Art. no. 109367.
+[22] G. Brunet et al., ‘‘Advancing weather and climate forecasting for
+our changing world,’’ Bull. Amer . Meteorolog. Soc., vol. 104, no. 4,
+pp. E909–E927, 2022.
+[23] A. Stratigakos, P . Andrianesis, A. Michiorri, and G. Kariniotakis,
+‘‘Towards resilient energy forecasting: A robust optimization approach,’’
+IEEE Trans. Smart Grid, vol. 15, no. 1, pp. 874–885, Jan. 2024.
+[24] A. Pappa, I. Theodoropoulos, S. Galmarini, and I. Kioutsioukis, ‘‘Analog
+versus multi-model ensemble forecasting: A comparison for renewable
+energy resources,’’ Renew. Energy, vol. 205, pp. 563–573, Mar. 2023.
+[25] M. Hussain, M. O’Nils, J. Lundgren, and S. J. Mousavirad, ‘‘A
+comprehensive review on deep learning-based data fusion,’’IEEE Access,
+vol. 12, pp. 180093–180124, 2024.
+[26] E. S. Miele, N. Ludwig, and A. Corsini, ‘‘Multi-horizon wind power fore-
+casting using multi-modal spatio-temporal neural networks,’’ Energies,
+vol. 16, no. 8, p. 3522, Apr. 2023.
+[27] Q. Tang, J. Liang, and F. Zhu, ‘‘A comparative review on multi-modal
+sensors fusion based on deep learning,’’ Signal Process., vol. 213,
+Dec. 2023, Art. no. 109165.
+[28] Z. Chen, A. M. Amani, X. Y u, and M. Jalili, ‘‘Control and optimisation
+of power grids using smart meter data: A review,’’Sensors, vol. 23, no. 4,
+p. 2118, Feb. 2023.
+[29] G. Nai-Zhi, Z. Ming-Ming, and L. Bo, ‘‘A data-driven analytical model
+for wind turbine wakes using machine learning method,’’Energy Convers.
+Manage., vol. 252, Jan. 2022, Art. no. 115130.
+[30] M. Alhaddad, E. Ever, M. Fahrioglu, and F. Al-Turjman, ‘‘Aiming
+for smart wind energy: A comparison analysis between wind speed
+forecasting techniques,’’ Trans. Emerg. Telecommun. Technol., vol. 33,
+no. 2, p. 3749, Feb. 2022.
+[31] D. Alves, F. Mendonça, S. S. Mostafa, and F. Morgado-Dias, ‘‘The
+potential of machine learning for wind speed and direction short-term
+forecasting: A systematic review,’’ Computers, vol. 12, no. 10, p. 206,
+Oct. 2023.
+[32] D. S. Kumar, G. M. Y agli, M. Kashyap, and D. Srinivasan, ‘‘Solar
+irradiance resource and forecasting: A comprehensive review,’’ IET
+Renew. Power Gener ., vol. 14, no. 10, pp. 1641–1656, Jul. 2020.
+[33] D. Y ang, G. M. Y agli, and D. Srinivasan, ‘‘Sub-minute probabilistic solar
+forecasting for real-time stochastic simulations,’’ Renew. Sustain. Energy
+Rev., vol. 153, Jan. 2022, Art. no. 111736.
+[34] M. Rana, S. Sethuvenkatraman, R. Heidari, and S. Hands, ‘‘Solar thermal
+generation forecast via deep learning and application to buildings cooling
+system control,’’ Renew. Energy, vol. 196, pp. 694–706, Aug. 2022.
+[35] A. Gopi, K. Sudhakar, N. W. Keng, and A. R. Krishnan, ‘‘Comparison
+of normal and weather corrected performance ratio of photovoltaic solar
+plants in hot and cold climates,’’ Energy Sustain. Develop., vol. 65,
+pp. 53–62, Dec. 2021.
+[36] Ö. Baltacı, Z. Kıral, K. Dalkılınç, and O. Karaman, ‘‘Thermal image and
+inverter data analysis for fault detection and diagnosis of PV systems,’’
+Appl. Sci., vol. 14, no. 9, p. 3671, Apr. 2024.
+[37] R. Gaamouche, M. Chinnici, M. Lahby, Y . Abakarim, and A. E. Hasnaoui,
+‘‘Machine learning techniques for renewable energy forecasting: A
+comprehensive review,’’ in Computational Intelligence Techniques for
+Green Smart Cities. Cham, Switzerland: Springer, 2022, pp. 3–39.
+[38] J. Ren, Z. Y u, G. Gao, G. Y u, and J. Y u, ‘‘A CNN-LSTM-LightGBM
+based short-term wind power prediction method based on attention
+mechanism,’’ Energy Rep., vol. 8, pp. 437–443, Aug. 2022.
+[39] Q. Wu, F. Guan, C. Lv, and Y . Huang, ‘‘Ultra-short-term multi-step wind
+power forecasting based on CNN-LSTM,’’ IET Renew. Power Gener .,
+vol. 15, no. 5, pp. 1019–1029, Apr. 2021.
+[40] J. Zheng, J. Du, B. Wang, J. J. Klemeš, Q. Liao, and Y . Liang, ‘‘A
+hybrid framework for forecasting power generation of multiple renewable
+energy sources,’’ Renew. Sustain. Energy Rev., vol. 172, Feb. 2023,
+Art. no. 113046.
+[41] K. Ullah, M. Ahsan, S. M. Hasanat, M. Haris, H. Y ousaf, S. F. Raza,
+R. Tandon, S. Abid, and Z. Ullah, ‘‘Short-term load forecasting: A
+comprehensive review and simulation study with CNN-LSTM hybrids
+approach,’’ IEEE Access, vol. 12, pp. 111858–111881, 2024.
+[42] W. Du, Z. Guo, C. Li, X. Gong, and Z. Pu, ‘‘From anomaly detection
+to novel fault discrimination for wind turbine gearboxes with a sparse
+isolation encoding forest,’’ IEEE Trans. Instrum. Meas., vol. 71,
+pp. 1–10, 2022.
+[43] L. Tan, R. Kang, J. Xia, and Y . Wang, ‘‘Application of multi-source
+data fusion on intelligent prediction of photovoltaic power,’’ Sol. Energy,
+vol. 277, Jul. 2024, Art. no. 112706.
+VOLUME 13, 2025 151989
+
+---PAGE 21---
+M. Mansouri et al.: Multimodal Learning Techniques for Time Series Forecasting
+[44] S. K. Morley, ‘‘Challenges and opportunities in magnetospheric space
+weather prediction,’’ Space Weather, vol. 18, no. 3, pp. E698–E705,
+Mar. 2020.
+[45] E. Chodakowska, J. Nazarko, Ł. Nazarko, and H. S. Rabayah,
+‘‘Solar radiation forecasting: A systematic meta-review of current
+methods and emerging trends,’’ Energies, vol. 17, no. 13, p. 3156,
+Jun. 2024.
+[46] D. Markovics and M. J. Mayer, ‘‘Comparison of machine learn-
+ing methods for photovoltaic power forecasting based on numerical
+weather prediction,’’ Renew. Sustain. Energy Rev., vol. 161, Jun. 2022,
+Art. no. 112364.
+[47] D. Y ang, W. Wang, and T. Hong, ‘‘A historical weather forecast
+dataset from the European centre for medium-range weather forecasts
+(ECMWF) for energy forecasting,’’ Sol. Energy, vol. 232, pp. 263–274,
+Jan. 2022.
+[48] K. Bakker, K. Whan, W. Knap, and M. Schmeits, ‘‘Compari-
+son of statistical post-processing methods for probabilistic NWP
+forecasts of solar radiation,’’ Sol. Energy, vol. 191, pp. 138–150,
+Oct. 2019.
+[49] J. B. Olson et al., ‘‘Improving wind energy forecasting through numerical
+weather prediction model development,’’ Bull. Amer . Meteorolog. Soc.,
+vol. 100, no. 11, pp. 2201–2220, 2019.
+[50] R. Müller and A. Barleben, ‘‘Data-driven prediction of severe convection
+at deutscher wetterdienst (DWD): A brief overview of recent develop-
+ments,’’ Atmosphere, vol. 15, no. 4, p. 499, Apr. 2024.
+[51] M. J. Mayer, D. Y ang, and B. Szintai, ‘‘Comparing global and
+regional downscaled NWP models for irradiance and photovoltaic
+power forecasting: ECMWF versus AROME,’’ Appl. Energy, vol. 352,
+Dec. 2023, Art. no. 121958.
+[52] M. Fathi, M. Haghi Kashani, S. M. Jameii, and E. Mahdipour, ‘‘Big data
+analytics in weather forecasting: A systematic review,’’ Arch. Comput.
+Methods Eng., vol. 29, no. 2, pp. 1247–1275, Mar. 2022.
+[53] C. Lara-Alvarez, J. J. Flores, H. Rodriguez-Rangel, and R. Lopez-
+Farias, ‘‘A literature review on satellite image time series forecasting:
+Methods and applications for remote sensing,’’ WIREs Data Mining
+Knowl. Discovery, vol. 14, no. 3, p. 1528, May 2024.
+[54] X. Li, K. Liu, and J. Tian, ‘‘V ariability, predictability, and uncertainty
+in global aerosols inferred from gap-filled satellite observations and
+an econometric modeling approach,’’ Remote Sens. Environ., vol. 261,
+Aug. 2021, Art. no. 112501.
+[55] Y . Cui, P . Wang, J. Fokke Meirink, N. Ntantis, and J. S. Wijnands, ‘‘Solar
+radiation nowcasting based on geostationary satellite images and deep
+learning models,’’ Sol. Energy, vol. 282, Nov. 2024, Art. no. 112866.
+[56] C. Henry, S. Poudel, S.-W. Lee, and H. Jeong, ‘‘Automatic detection
+system of deteriorated PV modules using drone with thermal camera,’’
+Appl. Sci., vol. 10, no. 11, p. 3802, May 2020.
+[57] X. Wei, N.-B. Chang, K. Bai, and W. Gao, ‘‘Satellite remote sensing of
+aerosol optical depth: Advances, challenges, and perspectives,’’Crit. Rev.
+Environ. Sci. Technol., vol. 50, no. 16, pp. 1640–1725, Aug. 2020.
+[58] J. Liu, H. Zang, L. Cheng, T. Ding, Z. Wei, and G. Sun, ‘‘A transformer-
+based multimodal-learning framework using sky images for ultra-short-
+term solar irradiance forecasting,’’ Appl. Energy, vol. 342, Jul. 2023,
+Art. no. 121160.
+[59] L. Y an and D. P . Roy, ‘‘Improving Landsat multispectral scanner
+(MSS) geolocation by least-squares-adjustment based time-series
+co-registration,’’ Remote Sens. Environ., vol. 252, Jan. 2021,
+Art. no. 112181.
+[60] J. Li, J. Zheng, B. Li, M. Min, Y . Liu, C.-Y . Liu, Z. Li, W. P . Menzel,
+T. J. Schmit, J. L. Cintineo, S. Lindstrom, S. Bachmeier, Y . Xue, Y . Ma,
+D. Di, and H. Lin, ‘‘Quantitative applications of weather satellite data for
+nowcasting: Progress and challenges,’’J. Meteorolog. Res., vol. 38, no. 3,
+pp. 399–413, Jun. 2024.
+[61] C. Shao, K. Y ang, W. Tang, Y . He, Y . Jiang, H. Lu, H. Fu, and J. Zheng,
+‘‘Convolutional neural network-based homogenization for constructing a
+long-term global surface solar radiation dataset,’’ Renew. Sustain. Energy
+Rev., vol. 169, Nov. 2022, Art. no. 112952.
+[62] R. Gupta and S. J. Nanda, ‘‘Cloud detection in satellite images with
+classical and deep neural network approach: A review,’’Multimedia Tools
+Appl., vol. 81, no. 22, pp. 31847–31880, Sep. 2022.
+[63] B. J. Martins, A. Cerentini, S. L. Mantelli, T. Z. L. Chaves, N. M.
+Branco, A. von Wangenheim, R. Rüther, and J. M. Arrais, ‘‘Systematic
+review of nowcasting approaches for solar energy production based
+upon ground-based cloud imaging,’’ Sol. Energy Adv., vol. 2, Jan. 2022,
+Art. no. 100019.
+[64] K. Niroomand, N. M. C. Saady, C. Bazan, S. Zendehboudi, A. Soares, and
+T. M. Albayati, ‘‘Smart investigation of artificial intelligence in renewable
+energy system technologies by natural language processing: Insightful
+pattern for decision-makers,’’Eng. Appl. Artif. Intell., vol. 126, Nov. 2023,
+Art. no. 106848.
+[65] W. Udo and Y . Muhammad, ‘‘Data-driven predictive maintenance
+of wind turbine based on SCADA data,’’ IEEE Access, vol. 9,
+pp. 162370–162388, 2021.
+[66] J. Jamii, M. Mansouri, M. Trabelsi, M. F. Mimouni, and W. Shatanawi,
+‘‘Effective artificial neural network-based wind power generation and
+load demand forecasting for optimum energy management,’’ Frontiers
+Energy Res., vol. 10, Oct. 2022, Art. no. 898413.
+[67] A. F. Hidayatullah, A. Qazi, D. T. C. Lai, and R. A. Apong, ‘‘A systematic
+review on language identification of code-mixed text: Techniques, data
+availability, challenges, and framework development,’’ IEEE Access,
+vol. 10, pp. 122812–122831, 2022.
+[68] J. Jamii, M. Trabelsi, M. Mansouri, A. Kouadri, M. F. Mimouni, and
+M. Nounou, ‘‘Medium-term wind power forecasting using reduced
+principal component analysis based random forest model,’’ Wind Eng.,
+vol. 48, no. 4, pp. 597–616, Aug. 2024.
+[69] Z. Liang and M. T. Ismail, ‘‘Advanced CEEMD hybrid model for VIX
+forecasting: Optimized decision trees and ARIMA integration,’’ Evol.
+Intell., vol. 18, no. 1, p. 12, Feb. 2025.
+[70] L. Xiang, P . Wang, X. Y ang, A. Hu, and H. Su, ‘‘Fault detection
+of wind turbine based on SCADA data analysis using CNN and
+LSTM with attention mechanism,’’ Measurement, vol. 175, Apr. 2021,
+Art. no. 109094.
+[71] D. D. de Castilho Braz, M. R. dos Santos, M. B. S. de Paula, D. da Silva
+Filho, E. Guarnier, L. P . Alípio, R. Tinós, and A. C. P . L. F. Carvalho,
+‘‘Multi-source data ensemble for energy price trend forecasting,’’ Eng.
+Appl. Artif. Intell., vol. 133, Jul. 2024, Art. no. 108125.
+[72] M. Calautti, D. Duranti, and P . Giorgini, ‘‘Machine learning-augmented
+ontology-based data access for renewable energy data,’’ 2024,
+arXiv:2410.12734.
+[73] A. Bachoumis, C. Mylonas, K. Plakas, M. Birbas, and A. Birbas, ‘‘Data-
+driven analytics for reliability in the buildings-to-grid integrated system
+framework: A systematic text-mining-assisted literature review and trend
+analysis,’’ IEEE Access, vol. 11, pp. 130763–130787, 2023.
+[74] J. Rao, Q. Zhang, Z. Ke, S. Liu, and X. Liu, ‘‘Integrating textual analytics
+with time series forecasting models: Enhancing predictive accuracy in
+global energy and commodity markets,’’ Innov. Appl. Eng. Technol.,
+vol. 2023, pp. 1–7, Nov. 2023.
+[75] K. Bayoudh, R. Knani, F. Hamdaoui, and A. Mtibaa, ‘‘A survey on deep
+multimodal learning for computer vision: Advances, trends, applications,
+and datasets,’’ Vis. Comput., vol. 38, no. 8, pp. 2939–2970, Aug. 2022.
+[76] V . Abad-Alcaraz, M. Castilla, J. A. Carballo, J. Bonilla, and J. D. Álvarez,
+‘‘Multimodal deep learning for solar radiation forecasting,’’Appl. Energy,
+vol. 393, Sep. 2025, Art. no. 126061.
+[77] H. Zhang, Y . Liu, C. Zhang, and N. Li, ‘‘Machine learning methods
+for weather forecasting: A survey,’’ Atmosphere, vol. 16, no. 1, p. 82,
+Jan. 2025.
+[78] T. Zhao and H. Liu, ‘‘Deep early fusion networks for short-term wind
+speed prediction,’’ Appl. Energy, vol. 307, Jan. 2022, Art. no. 118202.
+[79] F.-Z. Nakach, A. Idri, and E. Goceri, ‘‘A comprehensive investigation of
+multimodal deep learning fusion strategies for breast cancer classifica-
+tion,’’ Artif. Intell. Rev., vol. 57, no. 12, p. 327, Oct. 2024.
+[80] P . Cawood and T. V an Zyl, ‘‘Evaluating state-of-the-art, forecasting
+ensembles and meta-learning strategies for model fusion,’’ F orecasting,
+vol. 4, no. 3, pp. 732–751, Aug. 2022.
+[81] N. Gaw, S. Y ousefi, and M. R. Gahrooei, ‘‘Multimodal data fusion for
+systems improvement: A review,’’ inHandbook of Scholarly Publications
+From the Air F orce Institute of Technology, vol. 1. Oxfordshire, U.K.:
+Taylor & Francis, 2022, pp. 101–136.
+[82] S. Karim, G. Tong, J. Li, A. Qadir, U. Farooq, and Y . Y u, ‘‘Current
+advances and future perspectives of image fusion: A comprehensive
+review,’’Inf. Fusion, vol. 90, pp. 185–217, Feb. 2023.
+[83] J. Liu, Z. Duan, and H. Liu, ‘‘A grid fault diagnosis framework based
+on adaptive integrated decomposition and cross-modal attention fusion,’’
+Neural Netw., vol. 178, Oct. 2024, Art. no. 106400.
+[84] G. Zhu, W. Jia, Z. Xing, L. Xiang, A. Hu, and R. Hao, ‘‘CMLLM: A novel
+cross-modal large language model for wind power forecasting,’’ Energy
+Convers. Manage., vol. 330, Apr. 2025, Art. no. 119673.
+151990 VOLUME 13, 2025
+
+---PAGE 22---
+M. Mansouri et al.: Multimodal Learning Techniques for Time Series Forecasting
+[85] J. Liu and Y . Fu, ‘‘Renewable energy forecasting: A self-supervised
+learning-based transformer variant,’’ Energy, vol. 284, Dec. 2023,
+Art. no. 128730.
+[86] S. Liu, T. Kimura, D. Liu, R. Wang, J. Li, S. Diggavi, M. Srivastava,
+and T. Abdelzaher, ‘‘FOCAL: Contrastive learning for multimodal time-
+series sensing signals in factorized orthogonal latent space,’’ inProc. Adv.
+Neural Inf. Process. Syst., 2023, pp. 47309–47338.
+[87] Q. Wen and Y . Liu, ‘‘Feature engineering and selection for prosumer
+electricity consumption and production forecasting: A comprehensive
+framework,’’Appl. Energy, vol. 381, Mar. 2025, Art. no. 125176.
+[88] M. Segal-Rozenhaimer, A. Li, K. Das, and V . Chirayath, ‘‘Cloud
+detection algorithm for multi-modal satellite imagery using convolutional
+neural-networks (CNN),’’ Remote Sens. Environ., vol. 237, Feb. 2020,
+Art. no. 111446.
+[89] B. He, L. Y e, M. Pei, P . Lu, B. Dai, Z. Li, and K. Wang, ‘‘A combined
+model for short-term wind power forecasting based on the analysis of
+numerical weather prediction data,’’ Energy Rep., vol. 8, pp. 929–939,
+Nov. 2022.
+[90] C. Ge, J. Y an, H. Zhang, Y . Li, H. Wang, and Y . Liu, ‘‘Joint
+short-term power forecasting of hydro-wind-photovoltaic considering
+spatiotemporal delay of weather processes,’’ Renew. Energy, vol. 237,
+Dec. 2024, Art. no. 121679.
+[91] M. Mansouri, M. Trabelsi, H. Nounou, and M. Nounou, ‘‘Deep
+learning-based fault diagnosis of photovoltaic systems: A compre-
+hensive review and enhancement prospects,’’ IEEE Access, vol. 9,
+pp. 126286–126306, 2021.
+[92] K. Attouri, M. Mansouri, M. Hajji, A. Kouadri, K. Bouzrara, and
+H. Nounou, ‘‘Wind power converter fault diagnosis using reduced
+kernel PCA-based BiLSTM,’’ Sustainability, vol. 15, no. 4, p. 3191,
+Feb. 2023.
+[93] A. Hichri, M. Hajji, M. Mansouri, K. Abodayeh, K. Bouzrara, H.
+Nounou, and M. Nounou, ‘‘Genetic-algorithm-based neural network for
+fault detection and diagnosis: Application to grid-connected photovoltaic
+systems,’’ Sustainability, vol. 14, no. 17, p. 10518, Aug. 2022.
+[94] S. Moveh, E. A. Merchán-Cruz, M. Abuhussain, Y . A. Dodo, S.
+Alhumaid, and A. H. Alhamami, ‘‘Deep learning framework using
+transformer networks for multi building energy consumption prediction
+in smart cities,’’ Energies, vol. 18, no. 6, p. 1468, Mar. 2025.
+[95] A. Abdulmaksoud and R. Ahmed, ‘‘Transformer-based sensor fusion for
+autonomous vehicles: A comprehensive review,’’ IEEE Access, vol. 13,
+pp. 41822–41838, 2025.
+[96] B. Lim, S. Ö. Arük, N. Loeff, and T. Pfister, ‘‘Temporal fusion
+transformers for interpretable multi-horizon time series forecasting,’’ Int.
+J. F orecasting, vol. 37, no. 4, pp. 1748–1764, Oct. 2021.
+[97] J. Donnelly, A. Daneshkhah, and S. Abolfathi, ‘‘Forecasting global cli-
+mate drivers using Gaussian processes and convolutional autoencoders,’’
+Eng. Appl. Artif. Intell., vol. 128, Feb. 2024, Art. no. 107536.
+[98] F. Cordoni, G. Bacchiega, G. Bondani, R. Radu, and R. Muradore, ‘‘A
+multi–modal unsupervised fault detection system based on power signals
+and thermal imaging via deep AutoEncoder neural network,’’ Eng. Appl.
+Artif. Intell., vol. 110, Apr. 2022, Art. no. 104729.
+[99] W. Liao, B. Bak-Jensen, J. R. Pillai, Y . Wang, and Y . Wang, ‘‘A review of
+graph neural networks and their applications in power systems,’’ J. Mod.
+Power Syst. Clean Energy, vol. 10, no. 2, pp. 345–360, Mar. 2022.
+[100] G. M. Dimitri, I. Cappelli, F. Scarselli, A. Fort, and M. Gori,
+‘‘Graph neural networks for missing data imputation in time series
+from meteorological sensors,’’ in Proc. IEEE Int. Conf. Metrology
+eXtended Reality, Artif. Intell. Neural Eng. (MetroXRAINE), Oct. 2024,
+pp. 1242–1247.
+[101] K. J. Iheanetu, ‘‘Solar photovoltaic power forecasting: A review,’’
+Sustainability, vol. 14, no. 24, p. 17005, Dec. 2022.
+[102] H. Liu and Z. Zhang, ‘‘Development and trending of deep learning
+methods for wind power predictions,’’ Artif. Intell. Rev., vol. 57, no. 5,
+p. 112, Apr. 2024.
+[103] M. Marweni, M. Hajji, M. Mansouri, and M. F. Mimouni, ‘‘Short-
+term solar irradiance and power forecasting in uncertain photovoltaic
+systems,’’ Research Square, Durham, NC, USA, Tech. Rep., 2025, doi:
+10.21203/rs.3.rs-5766097/v1.
+[104] M. Marweni, Z. Y ahyaoui, S. Chaabani, M. Hajji, M. Mansouri,
+Y . Bouazzi, and M. F. Mimouni, ‘‘Forecasting of solar irradiance
+and power in uncertain photovoltaic systems using BiLSTM and
+Bayesian optimization,’’ Arabian J. Sci. Eng., vol. 50, no. 14, pp. 1–15,
+Jul. 2025.
+[105] J. R. Dos Reis, J. M. Tabora, M. C. de Lima, F. P . Monteiro,
+S. C. de Aquino Monteiro, U. H. Bezerra, and M. E. de Lima
+Tostes, ‘‘Medium and long term energy forecasting methods:
+A literature review,’’ IEEE Access, vol. 13, pp. 29305–29326,
+2025.
+[106] L. Chen, B. Han, X. Wang, J. Zhao, W. Y ang, and Z. Y ang, ‘‘Machine
+learning methods in weather and climate applications: A survey,’’ Appl.
+Sci., vol. 13, no. 21, p. 12019, Nov. 2023.
+[107] N. Said, M. Mansouri, R. Al Hmouz, and A. Khedher, ‘‘Deep
+learning techniques for fault diagnosis in interconnected systems: A
+comprehensive review and future directions,’’ Appl. Sci., vol. 15, no. 11,
+p. 6263, Jun. 2025.
+[108] E. I. Come Zebra, H. J. van der Windt, G. Nhumaio, and A. P . C. Faaij,
+‘‘A review of hybrid renewable energy systems in mini-grids for off-
+grid electrification in developing countries,’’Renew. Sustain. Energy Rev.,
+vol. 144, Jul. 2021, Art. no. 111036.
+[109] I. Nakti, M. Mansouri, R. Al-Hmouz, and A. Khedher, ‘‘Artificial
+intelligence techniques with digital twin for fault diagnosis in intercon-
+nected systems: A review,’’ IEEE Access, vol. 13, pp. 91860–91874,
+2025.
+[110] M. Ahwiadi and W. Wang, ‘‘Battery health monitoring and remaining
+useful life prediction techniques: A review of technologies,’’ Batteries,
+vol. 11, no. 1, p. 31, Jan. 2025.
+[111] A. Ghafoor, J. Aldahmashi, J. Apsley, S. Djurović, X. Ma, and
+M. Benbouzid, ‘‘Intelligent integration of renewable energy resources
+review: Generation and grid level opportunities and challenges,’’
+Energies, vol. 17, no. 17, p. 4399, Sep. 2024.
+[112] S. Aslam, H. Herodotou, S. M. Mohsin, N. Javaid, N. Ashraf, and
+S. Aslam, ‘‘A survey on deep learning methods for power load and
+renewable energy forecasting in smart microgrids,’’ Renew. Sustain.
+Energy Rev., vol. 144, Jul. 2021, Art. no. 110992.
+[113] Z. Wang, M. Mae, T. Y amane, M. Ajisaka, T. Nakata, and R. Matsuhashi,
+‘‘Enhanced day-ahead electricity price forecasting using a convolutional
+neural network–long short-term memory ensemble learning approach
+with multimodal data integration,’’ Energies, vol. 17, no. 11, p. 2687,
+Jun. 2024.
+[114] B. Abu-Salih, P . Wongthongtham, G. Morrison, K. Coutinho,
+M. Al-Okaily, and A. Huneiti, ‘‘Short-term renewable energy
+consumption and generation forecasting: A case study of Western
+Australia,’’ Heliyon, vol. 8, no. 3, Mar. 2022, Art. no. e09152.
+[115] C.-Y . Lee and S.-Y . Huh, ‘‘Forecasting new and renewable energy supply
+through a bottom-up approach: The case of South Korea,’’Renew. Sustain.
+Energy Rev., vol. 69, pp. 207–217, Mar. 2017.
+[116] P . Piotrowski, I. Rutyna, D. Baczyłski, and M. Kopyt, ‘‘Evaluation metrics
+for wind power forecasts: A comprehensive review and statistical analysis
+of errors,’’ Energies, vol. 15, no. 24, p. 9657, Dec. 2022.
+[117] T. Hong, P . Pinson, S. Fan, H. Zareipour, A. Troccoli, and R. J. Hyndman,
+‘‘Probabilistic energy forecasting: Global energy forecasting competition
+2014 and beyond,’’ Int. J. F orecasting, vol. 32, no. 3, pp. 896–913,
+Jul. 2016.
+[118] M. Sengupta, Y . Xie, A. Lopez, A. Habte, G. Maclaurin, and J. Shelby,
+‘‘The national solar radiation data base (NSRDB),’’ Renew. Sustain.
+Energy Rev., vol. 89, pp. 51–60, Jun. 2018.
+[119] J. M. Bright, ‘‘Solcast: V alidation of a satellite-derived solar irradiance
+dataset,’’ Sol. Energy, vol. 189, pp. 435–449, Sep. 2019.
+[120] A. R. V . Babu, N. B. Kumar, R. P . Narasipuram, S. Periyannan,
+A. Hosseinpour, and A. Flah, ‘‘Solar energy forecasting using machine
+learning techniques for enhanced grid stability,’’ IEEE Access, vol. 13,
+pp. 93735–93754, 2025.
+[121] N. Effenberger and N. Ludwig, ‘‘A collection and categorization of open-
+source wind and wind power datasets,’’ Wind Energy, vol. 25, no. 10,
+pp. 1659–1683, 2022.
+[122] M. Lafuente-Cacho, O. Izquierdo-Monge, P . Peña-Carro,
+Á. Hernández-Jiménez, L. H. Callejo, A. M. P . Losada, and
+Á. L. Z. Lamadrid, ‘‘State of the art for solar and wind energy-forecasting
+methods for sustainable grid integration,’’ Current Sustain./Renew.
+Energy Rep., vol. 12, no. 1, p. 13, May 2025.
+[123] T. Hong, P . Pinson, and S. Fan, ‘‘Global energy forecasting competition
+2012,’’ Int. J. F orecasting, vol. 30, no. 2, pp. 357–363, 2014.
+[124] E. Altamimi, A. Al-Ali, Q. M. Malluhi, and A. K. Al-Ali, ‘‘Smart grid
+public datasets: Characteristics and associated applications,’’ IET Smart
+Grid, vol. 7, no. 5, pp. 503–530, Oct. 2024.
+VOLUME 13, 2025 151991
+
+---PAGE 23---
+M. Mansouri et al.: Multimodal Learning Techniques for Time Series Forecasting
+[125] Y . Dong, ‘‘Robust dynamic modeling and optimal scheduling of wind-
+solar-storage systems via multi-modal data fusion under uncertainty,’’ in
+Proc. 4th Int. Conf. New Energy Syst. Power Eng. (NESP), Apr. 2025,
+pp. 495–499.
+[126] X. Sun, Y . Liu, Z. Zhao, and J. Zhang, ‘‘Multimodal learning for
+renewable energy forecasting: Challenges and recent advances,’’ Renew.
+Sustain. Energy Rev., vol. 176, Mar. 2023, Art. no. 113194.
+[127] C. Ying, W. Wang, J. Y u, Q. Li, D. Y u, and J. Liu, ‘‘Deep learning
+for renewable energy forecasting: A taxonomy, and systematic literature
+review,’’J. Cleaner Prod., vol. 384, Jan. 2023, Art. no. 135414.
+[128] J. Devaraj, R. Madurai Elavarasan, G. Shafiullah, T. Jamal, and I. Khan,
+‘‘A holistic review on energy forecasting using big data and deep learning
+models,’’ Int. J. Energy Res., vol. 45, no. 9, pp. 13489–13530, Jul. 2021.
+[129] S. Khan, T. Mazhar, M. A. Khan, T. Shahzad, W. Ahmad, A. Bibi,
+M. M. Saeed, and H. Hamam, ‘‘Comparative analysis of deep neural net-
+work architectures for renewable energy forecasting: Enhancing accuracy
+with meteorological and time-based features,’’ Discover Sustainability,
+vol. 5, no. 1, p. 533, Dec. 2024.
+[130] S. Abimannan, E.-S.-M. El-Alfy, S. Hussain, Y .-S. Chang, S. Shukla,
+D. Satheesh, and J. G. Breslin, ‘‘Towards federated learning and
+multi-access edge computing for air quality monitoring: Literature
+review and assessment,’’ Sustainability, vol. 15, no. 18, p. 13951,
+Sep. 2023.
+[131] S. Shan, C. Li, Z. Ding, Y . Wang, K. Zhang, and H. Wei, ‘‘Ensemble
+learning based multi-modal intra-hour irradiance forecasting,’’ Energy
+Convers. Manage., vol. 270, Oct. 2022, Art. no. 116206.
+[132] G. Joshi, R. Walambe, and K. Kotecha, ‘‘A review on explain-
+ability in multimodal deep neural nets,’’ IEEE Access, vol. 9,
+pp. 59800–59821, 2021.
+[133] D. A. Nguyen, K. T. P . Nguyen, and K. Medjaher, ‘‘Enhancing
+trustworthiness in AI-based prognostics: A comprehensive review of
+explainable AI for PHM,’’ in Artificial Intelligence for Safety and
+Reliability Engineering: Methods, Applications, and Challenges. Cham,
+Switzerland: Springer, 2024, pp. 101–136.
+[134] X. Liang, Z. Liu, J. Wang, X. Jin, and Z. Du, ‘‘Uncertainty quantification-
+based robust deep learning for building energy systems consider-
+ing distribution shift problem,’’ Appl. Energy, vol. 337, May 2023,
+Art. no. 120889.
+[135] D. V . Pombo, P . Bacher, C. Ziras, H. W. Bindner, S. V . Spataru, and
+P . E. Sørensen, ‘‘Benchmarking physics-informed machine learning-
+based short term PV -power forecasting tools,’’ Energy Rep., vol. 8,
+pp. 6512–6520, Nov. 2022.
+[136] A. L. Jonathan, O. Bamisile, D. Cai, C. J. Ejiyi, J. J. N. Nkou, K.
+Victor, C. C. Ukwuoma, L. Wei, and Q. Huang, ‘‘A multimodal deep
+learning approach for very short-term solar forecasts using sky images
+and historical numerical data,’’ Renew. Energy, vol. 255, Dec. 2025,
+Art. no. 123774.
+[137] J. Schneider, C. Meske, and P . Kuss, ‘‘Foundation models: A new
+paradigm for artificial intelligence,’’ Bus. Inf. Syst. Eng., vol. 66, no. 2,
+pp. 221–231, Apr. 2024.
+[138] C. Li and W. Liu, ‘‘Multimodal transport demand forecasting via
+federated learning,’’ IEEE Trans. Intell. Transp. Syst., vol. 25, no. 5,
+pp. 4009–4020, May 2024.
+[139] L. Che, J. Wang, Y . Zhou, and F. Ma, ‘‘Multimodal federated learning: A
+survey,’’Sensors, vol. 23, no. 15, p. 6986, Aug. 2023.
+[140] F. Li, K. Shirahama, M. A. Nisar, X. Huang, and M. Grzegorzek,
+‘‘Deep transfer learning for time series data based on sensor modality
+classification,’’ Sensors, vol. 20, no. 15, p. 4271, Jul. 2020.
+[141] S. Sun, W. An, F. Tian, F. Nan, Q. Liu, J. Liu, N. Shah, and P . Chen, ‘‘A
+review of multimodal explainable artificial intelligence: Past, present and
+future,’’ 2024, arXiv:2412.14056.
+[142] X. Hu, H. Hu, S. V erma, and Z.-L. Zhang, ‘‘Physics-guided deep neural
+networks for power flow analysis,’’ IEEE Trans. Power Syst., vol. 36,
+no. 3, pp. 2082–2092, May 2021.
+[143] J. B. Jahangir and M. A. Alam, ‘‘Physics-guided machine learning
+predicts the planet-scale performance of solar farms with sparse,
+heterogeneous, public data,’’ Appl. Energy, vol. 396, Oct. 2025,
+Art. no. 126192.
+MAJDI MANSOURI (Senior Member, IEEE)
+received the degree in electrical engineering
+from the Higher School of Communications
+of Tunis (SUPCOM), Tunis, Tunisia, in 2006,
+the M.Sc. degree in electrical engineering from
+the National School of Electronics, Computer
+Science, Telecommunications, Mathematics and
+Mechanics of Bordeaux (ENSEIRB), Bordeaux,
+France, in 2008, the Ph.D. degree in electrical
+engineering from the University of Technology of
+Troyes (UTT), Troyes, France, in 2011, and the H.D.R. (accreditation to
+supervise research) degree in electrical engineering from the University of
+Orleans, France, in 2019. From October 2011 to August 2024, he held
+different research positions at Texas A&M University at Qatar. Since
+September 2024, he has been with Sultan Qaboos University as an Associate
+Professor. He is the author of more than 250 publications. His research
+interests include the development of model-based, data-driven, and AI-based
+techniques for fault detection and diagnosis.
+KHADIJA ATTOURI received the Ph.D. degree
+in computer engineering from the Faculty of
+Sciences of Monastir (FSM), Monastir, Tunisia.
+She is currently a Postdoctoral Research Asso-
+ciate (remote) with the Department of Electri-
+cal and Computer Engineering, Sultan Qaboos
+University, Muscat, Oman. Her research interests
+include data-driven techniques for fault detection
+and diagnosis, time series forecasting, and intel-
+ligent energy systems. She has authored several
+journal articles and international conference papers in these areas.
+SHADY S. REFAAT (Senior Member, IEEE)
+received the B.A.Sc., M.A.Sc., and Ph.D. degrees
+in electrical engineering from Cairo University,
+Giza, Egypt, in 2002, 2007, and 2013, respectively.
+He has over 12 years of industrial experience,
+having served as an Engineering Team Leader,
+a Senior Electrical Engineer, and an Electrical
+Design Engineer across a range of electrical
+engineering projects. For more than 11 years, he
+worked as an Associate Research Scientist with the
+Department of Electrical and Computer Engineering, Texas A&M University
+at Qatar. He currently holds the position of Reader in electrical power
+engineering at the University of Hertfordshire and also serves as an Adjunct
+Associate Professor at Texas A&M University. He has authored over 215
+journal and conference publications, one patent, and one book. His research
+interests include electrical machines, power systems, smart grids, big
+data analytics, energy management systems, power grid reliability, electric
+machinery, fault detection, condition monitoring, and the development of
+fault-tolerant systems. Over the past decade, he has led and contributed to
+numerous scientific research projects, successfully translating research into
+practical solutions. He is a member of the Institution of Engineering and
+Technology (IET), and a member of the Smart Grid Center - Extension in
+Qatar (SGC-Q).
+151992 VOLUME 13, 2025
+
