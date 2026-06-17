@@ -13,7 +13,10 @@ Two separate API calls per month (ERA5 rule):
   • accum    — forecast variables (TYPE=FC): solar radiation, precipitation
 
 HOW TO RUN:
-  python 01_download_era5_tamilnadu.py 2>&1 | Tee-Object -FilePath download_log.txt
+  1. Save your API key in intlo_unna/.cdsapirc  (see .cdsapirc.example)
+  2. python 01_download_era5_tamilnadu.py
+
+  Scripts can be run from any folder; paths resolve via config.py.
 
 Re-running is safe — completed files are skipped automatically.
 
@@ -21,11 +24,12 @@ IMPORTANT: You deleted the accum files. Re-run this script to get them back.
 The accum files are REQUIRED for GHI, DNI, DHI, LW_down, precipitation.
 """
 
-import cdsapi
 import os
 import csv
 import time
 from datetime import datetime
+
+from config import RAW_GRID_DIR, DOWNLOAD_STATUS_FILE, get_cdsapi_client, ensure_data_dirs
 
 # ═══════════════════════════════════════════════════════════
 # CONFIGURATION
@@ -40,10 +44,9 @@ HOURS  = [f"{h:02d}:00" for h in range(0, 24)]
 # Slightly wider than TN borders to catch all edge locations
 TN_BBOX = [13.75, 75.75, 7.75, 81.25]
 
-OUTPUT_DIR  = "data/raw/era5/grid"
-STATUS_FILE = "data/raw/era5/download_status.csv"
-os.makedirs(OUTPUT_DIR, exist_ok=True)
-os.makedirs(os.path.dirname(STATUS_FILE), exist_ok=True)
+OUTPUT_DIR  = str(RAW_GRID_DIR)
+STATUS_FILE = str(DOWNLOAD_STATUS_FILE)
+ensure_data_dirs()
 
 MAX_RETRIES = 3
 RETRY_WAIT  = 60  # seconds between retries
@@ -223,7 +226,7 @@ def main():
     print("═" * 68)
 
     tracker = StatusTracker(STATUS_FILE)
-    c = cdsapi.Client()
+    c = get_cdsapi_client()
 
     for year in YEARS:
         for month in MONTHS:

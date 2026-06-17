@@ -20,7 +20,9 @@ import zipfile
 import shutil
 import tempfile
 
-INPUT_DIR = "data/raw/era5/grid"
+from config import RAW_GRID_DIR
+
+INPUT_DIR = str(RAW_GRID_DIR)
 
 def is_zip(filepath):
     """Check if a file is actually a ZIP archive."""
