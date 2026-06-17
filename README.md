@@ -1,362 +1,299 @@
-# Climate-Adaptive Intelligent Control and Optimization of PCM Thermal Storage for Solar Water Heating
-
-**Type 1: Research Project | Group 12 | Project Review 1**
-
----
-
-## Team Members
-
-| S.No | Register Number    | Student Name                  |
-|------|--------------------|-------------------------------|
-| 1    | CB.SC.U4CSE23430   | Manduva Jaswita               |
-| 2    | CB.SC.U4CSE23318   | Dungi Manvitha                |
-| 3    | CB.SC.U4CSE23412   | Duddekunta Yuva Hasini        |
-| 4    | CB.SC.U4CSE23558   | Chiruvolu Venkata Khyathi     |
-| 5    | CB.SC.U4CSE23034   | K P N L K Mahitha             |
-
-**Guide:** Dr. T. Deepika  
-**Designation:** Assistant Professor (Sr. Gd.)
+# ERA5 Tamil Nadu Climate Data Pipeline
+### Complete hourly climate & solar resource dataset for all of Tamil Nadu (2024–2025)
 
 ---
 
-## Table of Contents
+## What This Project Does — Big Picture
 
-1. Introduction
-2. Motivation
-3. Research Theme
-4. Literature Review
-5. Research Gaps
-6. Objectives
-7. Problem Statement
-8. Technical Knowledge
-9. Proposed Methodology Workflow
-10. Datasets
-11. References
+This pipeline downloads **real atmospheric data from the European Centre for Medium-Range Weather Forecasts (ECMWF) ERA5 reanalysis dataset** and transforms it into clean, analysis-ready CSV files covering **every major city, town, taluk and district in Tamil Nadu**, plus every ERA5 grid point across the state.
 
----
+The output is a dataset of **hourly climate and solar radiation values** for 2 full years (2024 + 2025) across 222 named locations and 575 spatial grid points — roughly **14 million rows of data total**.
 
-## 1. Introduction
-
-- Solar energy contributes **133 GW** out of **254 GW** of total renewable capacity — Solar : Total Renewable ≈ 1 : 1.9, meaning solar accounts for nearly half of the renewable mix.
-- Solar thermal systems are limited by intermittent sunlight, resulting in reduced heat availability during night time and cloudy conditions.
-- **PCM-based thermal storage** captures excess solar heat and releases it later, improving continuous thermal energy availability.
+This data can be used to:
+- Train machine learning models for **solar irradiance forecasting**
+- Perform **site selection analysis** for solar panel installation
+- Study **spatial variation of solar energy** across Tamil Nadu
+- Analyze **climate zone differences** between coastal, inland, semi-arid, and hill station regions
+- Build **solar energy yield prediction** tools for any location in Tamil Nadu
 
 ---
 
-## 2. Comparison of Solar Water Heater Companies & PCM Usage
+## The Three Scripts
 
-| Company         | Country | PCM? | PCMs Used                          |
-|-----------------|---------|------|-------------------------------------|
-| Sunamp          | UK      | ✓    | Plentigrade PCM, P58, SU58         |
-| PCM Products Ltd| UK      | ✓    | Salt hydrate, organics             |
-| Vaillant        | Germany | ✗    | None                               |
-| PLUSS (IN)      | India   | ✓    | OM Series                          |
-| Chemtex         | India   | ✓    | Positive Temp PCM                  |
-| Emmvee          | India   | ✗    | None                               |
-
-**Why PCM is used more in foreign countries:**  
-Foreign markets focus strongly on energy efficiency and carbon reduction. Government support and higher investment capacity make PCM integration commercially feasible.
-
-**Why PCM is not widely integrated in India:**  
-PCM systems increase design complexity. However, with proper optimization and field validation, PCM can significantly improve hot-water availability, sustainability, and efficiency.
+```
+00_unzip_accum.py          ← Run FIRST  (one time only)
+01_download_era5_tamilnadu.py  ← Run SECOND (downloads raw data from ECMWF)
+02_combine_tamilnadu.py    ← Run THIRD  (processes raw data into CSVs)
+```
 
 ---
 
-## 3. Motivation
+## Script 00 — `00_unzip_accum.py`
 
-- Thermal energy accounts for **48–50%** of global final energy consumption. Residential water heating uses **6–8%** of household energy, underscoring SWH potential.
-- Conventional solar water heating (SWH) systems achieve only **45–70%** annual efficiency, wasting 30–55% of incident solar energy due to inadequate storage.
-- PCM-integrated systems can boost thermal efficiency, extend heat retention time, and store ~50% of total heat with <20% PCM volume.
-- Global solar thermal capacity reaches ~544–560 GW_th (2024–2025); the global market for water heaters was valued at **$23.7 billion** as of 2023 and is expected to reach **$32.1 billion by 2029**.
-- Existing PCM-SWH systems use mostly fixed/offline strategies, causing losses under variable irradiance/load — motivating this research.
+### What problem does it solve?
+The CDS (Copernicus Data Store) API sometimes delivers downloaded files as **ZIP archives disguised with a `.nc` extension**. The file looks like `era5_TN_grid_2024_01_accum.nc` but is actually a ZIP containing the real NetCDF file inside. This causes every subsequent script to fail with `Unknown file format`.
 
----
+### What it does
+1. Scans every `*_accum.nc` file in `data/raw/era5/grid/`
+2. Checks the first 2 bytes of each file — ZIP files always start with `PK` (the ZIP magic bytes)
+3. If it finds a disguised ZIP, it extracts the real `.nc` NetCDF file from inside
+4. Replaces the fake file with the real one in-place
+5. Skips files that are already valid NetCDF
 
-## 4. Literature Survey — Comprehensive Research Map
+### When to run it
+Only once, right after `01_download_era5_tamilnadu.py` finishes downloading the accum files. If you re-download, run it again.
 
-*Key Contributions: PCM Materials, AI Methods, SWH Applications*
-
-| Author (Year)         | Focus              | Method            | Key Insight               |
-|-----------------------|--------------------|-------------------|---------------------------|
-| Hamza (2025)          | PCM storage        | Review, simulation| AI-assisted selection     |
-| Rathore (2024)        | PCM-SWH            | Thermal model     | Heat transfer             |
-| Martinez (2025)       | Industrial PCM     | DSC, TGA          | Tunable formulations      |
-| Mohammed et al. (2025)| Nano-AI thermal    | ANN, opt          | AI models                 |
-| Nemś (2025)           | AI-PCM predict     | ML, GA            | Real-time monitor         |
-| Liu (2025)            | ANN vs modeling    | ANN, opt          | Sensor-driven             |
-| Yan (2025)            | Melting time       | XGBoost, SVR      | TES tools                 |
-| Odoi-Yorke (2025)     | AI in SWH          | ANN, analytics    | AI–PCM scheme             |
-| Eldo (2022)           | ANN-PCM-SWH        | ANN sim           | Supervisory               |
-| Assareh (2023)        | ML collector       | Multi-obj opt     | Climate-adaptive          |
-| Muthanna (2025)       | ML controller      | ANN dyn sim       | Retrofit                  |
-| Singh (2025)          | PCM-SWH tech       | Modeling          | Climate-specific          |
-| Kou (2025)            | Heat pipe-PCM      | Num model         | Cross-climate             |
-| Emami et al. (2026)   | DRL control        | DRL sim           | Grid-interactive          |
-| Chen (2025)           | SWH opt            | Taguchi DOE       | Fins/heat pipes           |
-| Rajamurugu (2025)     | PCM-ML perf        | MLP, RF, SVR      | Performance estimation    |
-| Terfai et al. (2025)  | Pond thermal       | MPC, ANN          | Scalable AI               |
-| Barghi (2025)         | Solar drying       | ANN, SVM          | Smart systems             |
-| Ghodusinejad (2025)   | Solar forecast     | AI, NWP           | Adaptive method           |
+### Output
+No new files — it fixes the existing accum `.nc` files in place.
 
 ---
 
-## 5. Research Gaps
+## Script 01 — `01_download_era5_tamilnadu.py`
 
-1. **Limited real-time adaptive control** — Most PCM-based systems use passive or fixed-rule strategies, lacking dynamic response to varying solar input and demand.
-2. **Lack of integrated PCM–AI–hardware systems** — Prior studies treat materials, control, and implementation separately without a complete working prototype.
-3. **Poor alignment with real usage patterns** — Existing systems rarely adapt storage and release based on actual household demand.
-4. **Limited real-world validation** — Most research relies on simulations or short-term tests rather than long-term experimental evaluation.
-5. **Limited predictive optimization under climatic uncertainty** — Most PCM-based systems lack predictive models to anticipate variations in solar input and demand, leading to suboptimal thermal storage utilization.
+### What is ERA5?
+ERA5 is the world's most widely used atmospheric reanalysis dataset, produced by ECMWF. It provides **hourly estimates of atmospheric variables** (temperature, wind, solar radiation, precipitation etc.) on a global 0.25° × 0.25° grid (~25 km resolution) from 1940 to present. It is derived by combining millions of weather observations (satellites, weather stations, radiosondes, ships) with a numerical weather model. It is not raw sensor data — it is a physically consistent reconstruction of the atmosphere.
 
----
+### The core insight — download a grid, not individual cities
+Previous approaches downloaded data separately for each city — that meant 76 cities × 12 months × 2 years = **1,824 API calls**, taking days. This script downloads the **entire Tamil Nadu state as a single bounding box** — only **48 API calls total** (2 years × 12 months × 2 variable types). All 222 cities are then extracted from this single grid in script 02.
 
-## 6. Objectives
+### The bounding box
+```
+North: 13.75°N    (above Chennai/Tiruvallur)
+South:  7.75°N    (below Kanyakumari)
+West:  75.75°E    (beyond Nilgiris/Gudalur)
+East:  81.25°E    (beyond Chennai coast)
+```
+This box covers the entire state of Tamil Nadu with a small buffer on all sides.
 
-> **Overall Problem:** Most PCM-based solar water heating systems use passive or fixed control rules, leading to delayed heat availability, inefficient storage, and energy loss under variable solar and demand conditions.
+### Why two separate API calls per month?
+ERA5 has two fundamentally different variable types that **cannot be mixed in one request**:
 
-- **Objective 1 (RG 2, RG 5):** Collect and process climate data and thermal parameters to classify and select the most suitable PCM for forecasted climate and demand conditions.
-- **Objective 2 (RG 1, RG 3, RG 5):** Train a DRL agent to adaptively control PCM charge, discharge, and bypass modes to maximize hot-water availability.
-- **Objective 3 (RG 1, RG 4):** Build a grey-box thermal simulation as the DRL training environment and benchmark the controller against rule-based and passive baselines.
-- **Objective 4 (RG 2, RG 3, RG 4):** Deploy the AI controller on embedded hardware as a closed-loop prototype and evaluate performance across Indian climate profiles.
+| Type | ERA5 name | Variables downloaded | Physical meaning |
+|------|-----------|---------------------|------------------|
+| **Instant (AN)** | Analysis | Temperature, dewpoint, wind U, wind V, cloud cover, pressure | Snapshot of the atmosphere at each hour |
+| **Accumulated (FC)** | Forecast | Solar radiation (GHI), thermal radiation, precipitation, mean DNI | Energy/mass that has accumulated since the start of a forecast run |
 
----
+Mixing them in one request causes MARS (the ECMWF retrieval system) to reject the query. So each month requires exactly 2 API calls.
 
-## 7. Problem Statement
+### Variables downloaded
 
-> **Novel Idea:** To design and implement an autonomous, AI-driven PCM-based thermal storage system that dynamically optimizes heat charging and discharging under real-world operating conditions.
+**Instant variables** (saved as `era5_TN_grid_{year}_{month}_instant.nc`):
 
-**Sustainable Development Goals (SDGs) addressed:**
+| ERA5 name | Physical variable | Unit | Used for |
+|-----------|------------------|------|----------|
+| `t2m` | 2m air temperature | K | T_amb (°C) |
+| `d2m` | 2m dewpoint temperature | K | T_dew → relative humidity |
+| `u10` | 10m eastward wind | m/s | Wind speed + direction |
+| `v10` | 10m northward wind | m/s | Wind speed + direction |
+| `tcc` | Total cloud cover | 0–1 | Cloud fraction |
+| `sp` | Surface pressure | Pa | P_atm (hPa) |
 
-- SDG 7 — Affordable and Clean Energy
-- SDG 9 — Industry, Innovation and Infrastructure
-- SDG 12 — Responsible Consumption and Production
-- SDG 13 — Climate Action
+**Accumulated variables** (saved as `era5_TN_grid_{year}_{month}_accum.nc`):
 
----
+| ERA5 name | Physical variable | Unit | Used for |
+|-----------|------------------|------|----------|
+| `ssrd` | Surface solar radiation downwards | J/m² | GHI (W/m²) |
+| `msdwswrf` | Mean surface direct short-wave radiation flux | W/m² | DNI (W/m²) |
+| `strd` | Surface thermal radiation downwards | J/m² | LW_down (W/m²) |
+| `tp` | Total precipitation | m | precipitation (mm) |
 
-## 8. Technical Knowledge
+**Note:** `surface_diffuse_solar_radiation_downwards` does NOT exist in ERA5. DHI (Diffuse Horizontal Irradiance) is computed in script 02 as: `DHI = GHI - DNI × cos(SZA)`.
 
-### 8.1 PCM Selection & Optimization (Objective 1)
+### File naming
+```
+data/raw/era5/grid/
+  era5_TN_grid_2024_01_instant.nc   (Jan 2024, temperature/wind/pressure)
+  era5_TN_grid_2024_01_accum.nc     (Jan 2024, solar/rain)
+  era5_TN_grid_2024_02_instant.nc
+  era5_TN_grid_2024_02_accum.nc
+  ... (48 files total: 2 years × 12 months × 2 types)
+```
 
-**Mapped Objective:** Optimal PCM selection under climate conditions
-
-**Taguchi Method:** Statistical Design of Experiments (DOE) using orthogonal arrays to reduce the number of experiments.
-
-**Grey Relational Analysis (GRA):** Multi-objective method that converts multiple criteria into a single score.
-
-**Grey Relational Grade (GRG):**
-
-$$\gamma_i = \frac{1}{n} \sum \xi_i$$
-
-$$\xi_i = \frac{\Delta_{\min} + \zeta \Delta_{\max}}{\Delta_i + \zeta \Delta_{\max}}$$
-
-**Selection Criteria:** Thermal efficiency and heat retention time
-
-**Outcome:** HPCM with the highest GRG is selected as the optimal material.
-
----
-
-### 8.2 Thermal Modeling (Objective 1)
-
-**Mapped Objective:** Grey-box thermal modeling of PCM system
-
-**Grey-Box Model:** Combines physics-based equations with real system behavior.
-
-**Key Variables:**
-- *T_w* — Water temperature
-- *T_p* — PCM temperature
-- *f* — Melt fraction
-
-**Latent Heat:**
-
-$$Q_{\text{latent}} = mL$$
-
-**Sensible Heat:**
-
-$$Q_{\text{sensible}} = m C_p (T_f - T_i)$$
-
-**Total Energy:**
-
-$$Q_{\text{total}} = Q_{\text{latent}} + Q_{\text{sensible}}$$
-
-**Melting Dynamics:**
-
-$$M_p L \frac{df}{dt} = hA(T_w - T_m)$$
-
-**Outcome:** Predicts dynamic heat storage and release behavior.
+### Smart resume
+Every completed download is logged in `data/raw/era5/download_status.csv`. If the script is interrupted, re-running it skips already-downloaded files automatically.
 
 ---
 
-### 8.3 AI-Based Control (Objective 2)
+## Script 02 — `02_combine_tamilnadu.py`
 
-**Mapped Objective:** Intelligent control using Deep Reinforcement Learning
+This is the main processing script. It reads the 48 raw NetCDF files and produces clean CSVs. It does two completely separate things:
 
-**DRL:** Learns optimal control policy under dynamic solar conditions.
+### Part 1 — Extract 222 named locations
 
-**State:**
+For each of the 222 cities/towns/taluks in `TN_LOCATIONS`, the script:
 
-$$s_t = [T_w,\ T_p,\ f,\ GHI]$$
+**Step 1: Find the nearest ERA5 grid point**
+Each location has an exact latitude/longitude (e.g. Ettimadai: 10.9282°N, 76.8780°E). ERA5's grid is at 0.25° intervals (10.75°, 11.00°, 11.25° etc.). The script finds the closest grid point using `argmin(|lat_ERA5 - lat_location|)`. The output CSV stores both the exact location coordinates (`lat`, `lon`) and the ERA5 grid point used (`grid_lat`, `grid_lon`).
 
-**Actions:** Charge, Discharge, Bypass
+**Step 2: De-accumulate solar radiation**
+ERA5 stores solar radiation as a **running total** that resets every 12 hours (at 00 UTC and 12 UTC forecast starts). To get the hourly value you need to take the difference between consecutive hours. At reset hours (hour 1 and hour 13 UTC), the raw value itself is the hourly increment. The `deaccumulate()` function handles this correctly and converts from J/m² to W/m² by dividing by 3600.
 
-**Transition:**
+**Step 3: Compute derived variables**
+Using `pvlib` (a solar energy library):
+- **SZA** — Solar Zenith Angle (degrees from vertical)
+- **solar_azimuth** — compass direction of the sun
+- **ETR** — Extraterrestrial Radiation (solar power above atmosphere)
+- **GHI_clearsky** — what GHI would be on a perfectly clear day (Ineichen model)
+- **CSI** — Clear Sky Index = GHI / GHI_clearsky (1.0 = perfect clear sky)
+- **DNI** — Direct Normal Irradiance (from msdwswrf, or derived from GHI/cos(SZA))
+- **DHI** — Diffuse Horizontal Irradiance = GHI - DNI × cos(SZA)
+- **sunrise_hour / sunset_hour** — daily sunrise and sunset times in UTC
 
-$$s_{t+1} = f(s_t, a_t)$$
+**Step 4: Compute RRTDHS**
+RRTDHS (Relative Resource-Temperature-Duration-High-Solar) is a monthly composite score that measures solar resource quality accounting for:
+- Mean GHI of the month
+- How close the ambient temperature is to the panel's optimal operating temperature
+- Fraction of daylight hours with significant solar radiation
 
-**Objective:** Maximize hot-water availability under varying solar conditions.
+**Step 5: Add metadata**
+Each row gets: `city`, `district`, `climate_zone`, `altitude_m`, `T_set`, `high_solar_resource` flag.
 
-**Algorithms:**
-- PPO (Proximal Policy Optimization)
-- DDPG (Deep Deterministic Policy Gradient)
+**Step 6: Save**
+- Individual CSV: `data/processed/by_location/climate_{city}.csv`
+- All locations combined: written location by location to avoid memory overflow
 
----
+### Part 2 — Full ERA5 grid CSV
 
-### 8.4 Performance Evaluation (Objective 4)
-
-**Mapped Objective:** System evaluation and optimization
-
-**Solar Input:**
-
-$$Q_{\text{solar}} = A \cdot GHI$$
-
-**Thermal Efficiency:**
-
-$$\eta = \frac{Q_{\text{total}}}{A \cdot E}$$
-
-**Heat Retention Time:**
-
-$$t_{\text{retention}} = t_{\text{final}} - t_{\text{sunset}}$$
-
-**Benchmarking:** Compare DRL controller against:
-- Rule-based control
-- Passive systems
-
-**Outcome:** Improved efficiency and longer heat availability.
+Extracts every single ERA5 grid point inside the bounding box — **25 latitude × 23 longitude = 575 grid points**. For each point it runs the same unit conversions and solar computations (except sunrise/sunset, which is too slow for 575 × 730 days). This produces a spatially complete dataset where every 0.25° cell across Tamil Nadu has hourly data.
 
 ---
 
-## 9. Data Collection
+## Complete Output Structure
 
-### 9.1 PCM Properties
-
-- Selection criteria follow the priority ranking: latent heat → thermal conductivity → melting temperature → specific heat → density.
-- Target operating range for solar water heating: **T_m = 35–65 °C**, validated across multiple SWH studies.
-
-**Rubitherm RT Series** — commercial paraffin-based PCMs:
-- RT35, RT38 HC, RT42, RT44 HC, RT45 HC, RT47, RT50, RT54 HC, RT55, RT64 HC
-- Pre-engineered for higher λ; rated safe for domestic applications.
-
-**PLUSS savE® / OM Series** — bio-based organics suited to Indian supply chains:
-- savE HS36, OM35, OM37, OM39, OM42, OM46, OM48, OM50
-
-**Eutectic blends** (e.g., Lauric–Myristic 66/34, T_m = 34.2 °C) provide tunable T_m for climate-zone-specific recommendation.
-
-**Climate data state vector:**
-
-$$\mathbf{s} = [\text{GHI, DNI, } T_{\text{amb}}, v_{\text{wind}}, \text{RH, Hour, Month, } T_{\text{PCM}}, T_w, f_{\text{melt}}, \text{Demand}]$$
-
----
-
-### 9.2 Solar and Environmental Data
-
-**ERA5 Reanalysis (Copernicus / ECMWF)** — primary multi-year climate backbone:
-- GHI (surface solar radiation downwards), DNI, DHI, total cloud cover, surface pressure, relative humidity
-- Hourly resolution; used to compute clear-sky index: K_c = GHI / GHI_clear
-
-**NASA POWER Data Access Viewer** — validated solar resource data at 0.5° resolution for Indian cities (e.g., Coimbatore, Jaisalmer, Kochi):
-- GHI, DNI, DHI, T_amb, wind speed, humidity feature vector
-
-**ISRO Solar Energy Calculator & Global Solar Atlas** — used to cross-validate GHI estimates and derive the climate suitability index:
-
-$$\text{RRTDHS} = \frac{\bar{Q}_{\text{sol}}}{T_{\text{set}} - \bar{T}_{\text{out}}}$$
-
-**Sensor resolution benchmark:**
-- Temperature: ±0.2 °C
-- Irradiance: ±10 W/m²
-- Interval: 60 s (consistent with DS18B20 + pyranometer hardware)
+```
+data/
+├── raw/
+│   └── era5/
+│       └── grid/
+│           ├── era5_TN_grid_2024_01_instant.nc   ← raw ERA5 (48 files)
+│           ├── era5_TN_grid_2024_01_accum.nc
+│           └── ...
+│
+└── processed/
+    ├── by_location/
+    │   ├── climate_chennai.csv              ← 17,544 rows
+    │   ├── climate_coimbatore.csv           ← 17,544 rows
+    │   ├── climate_ettimadai.csv            ← 17,544 rows
+    │   └── ... (222 files, one per location)
+    │
+    ├── grid/
+    │   └── era5_TN_grid_all.csv             ← 10,087,800 rows (575 grid points)
+    │
+    └── climate_tamilnadu_all.csv            ← 3,894,768 rows (222 locations combined)
+```
 
 ---
 
-## 10. Data Preprocessing Pipeline
+## Columns in Every Output CSV
 
-### Part 1 — ERA5 Climate Data Acquisition & Initial Processing
-
-**Input:** Raw ERA5 reanalysis (NetCDF) for Tamil Nadu / target cities
-
-**Goal:** Production-ready dataset (`climate_all_cities_preprocessed.csv`) for:
-- XGBoost PCM classifier
-- Grey-box thermal simulation for DRL training
-- RPi / TFLite edge deployment
-
-**Pipeline Structure (city-wise):**
-
-1. Copernicus CDS API → hourly NetCDF files
-2. NetCDF → clean hourly CSV + first feature engineering (pvlib)
-3. Full monolithic preprocessing
-
-A modular version is available in `preprocessing/` (6 independent scripts).
-
----
-
-### Part 2 — Feature Engineering, Validation & Scaling
-
-**Key Processing Stages (`03_preprocess_validate.py`):**
-
-1. **Stage A — Data Cleaning:** Physical bounds check, duplicate removal, per-city linear interpolation (max 6 h gaps)
-2. **Stage A2 — Feature Engineering:**
-   - Cyclical encodings (sin/cos hour, month, DOY)
-   - Lag features (GHI & T_amb at 1–24 h)
-   - Rolling statistics (3 h, 6 h, 24 h)
-   - Derived: RRTDHS, CSI, DHI, T_pcm_delta, solar geometry (pvlib)
-3. **Stage B — Validation:** Temporal gaps, spatial join check, QC report
-4. **Stage C — Three-scaler normalisation (no data leakage):**
-   - MinMaxScaler → bounded variables
-   - StandardScaler → Gaussian-like
-   - RobustScaler → skewed (precipitation, wind direction)
-5. **Stage E — Early Fusion:** Assembles solar-sensor, weather-NWP, PCM-thermal, time, lag & rolling groups into single feature matrix X
-
-**Output:**
-- `climate_all_cities_preprocessed.csv` (final ML-ready dataset)
-- 3 fitted scalers (`.pkl`) ready for RPi / TFLite inference
-- Validation reports + plots (correlation matrix, distributions, temporal heatmaps)
-
-> **Challenges Addressed:** Spatiotemporal resolution mismatch, data alignment, missing values, heterogeneous modality handling, and early fusion strategy.
+| Column | Unit | Description |
+|--------|------|-------------|
+| `timestamp` | UTC datetime | Hourly timestamp |
+| `GHI` | W/m² | Global Horizontal Irradiance (total solar on flat surface) |
+| `DNI` | W/m² | Direct Normal Irradiance (beam radiation) |
+| `DHI` | W/m² | Diffuse Horizontal Irradiance (scattered sky radiation) |
+| `avg_sdirswrf` | W/m² | ERA5 mean direct shortwave flux (source of DNI) |
+| `LW_down` | W/m² | Downward longwave (thermal) radiation |
+| `T_amb` | °C | Air temperature at 2m |
+| `T_dew` | °C | Dewpoint temperature at 2m |
+| `RHum` | % | Relative humidity (derived from T_amb and T_dew) |
+| `W_spd` | m/s | Wind speed at 10m |
+| `W_dir` | degrees | Wind direction (meteorological convention) |
+| `P_atm` | hPa | Atmospheric pressure at surface |
+| `cloud_cover` | 0–1 | Total cloud cover fraction |
+| `precipitation` | mm | Hourly precipitation |
+| `SZA` | degrees | Solar Zenith Angle |
+| `solar_azimuth` | degrees | Solar azimuth angle |
+| `ETR` | W/m² | Extraterrestrial radiation |
+| `GHI_clearsky` | W/m² | Clear-sky GHI (Ineichen model) |
+| `CSI` | 0–1.5 | Clear Sky Index |
+| `RRTDHS` | score | Monthly solar resource quality score |
+| `sunrise_hour` | UTC hour | Daily sunrise time |
+| `sunset_hour` | UTC hour | Daily sunset time |
+| `hour` | 0–23 | Hour of day (UTC) |
+| `month` | 1–12 | Month |
+| `DOY` | 1–366 | Day of year |
+| `year` | 2024/2025 | Year |
+| `season` | text | Winter/Summer/Monsoon/Retreat |
+| `season_code` | 1–4 | Numeric season code |
+| `city` | text | Location name |
+| `lat` | degrees | Exact location latitude |
+| `lon` | degrees | Exact location longitude |
+| `grid_lat` | degrees | Nearest ERA5 grid point latitude |
+| `grid_lon` | degrees | Nearest ERA5 grid point longitude |
+| `altitude_m` | metres | Elevation above sea level |
+| `district` | text | Tamil Nadu district |
+| `climate_zone` | text | Climate classification |
+| `T_set` | °C | Panel optimal temperature for RRTDHS |
+| `high_solar_resource` | 0/1 | 1 if RRTDHS > 0.5 |
 
 ---
 
-## 11. References
+## Coverage — All 222 Named Locations
 
-1. NITI Aayog — Solar Irradiance Data
-2. Duraivel et al. (2025) — Performance of SWH Systems
-3. Al-Mamun (2023) — SWH Review
-4. Chen (2025) — Taguchi PCM Optimization
-5. Odoi-Yorke (2025) — AI in SWH
-6. Hamza (2025) — PCM Review
-7. Rathore (2024) — Thermal PCM
-8. Martinez (2025) — Industrial PCM
-9. Mohammed et al. (2025) — AI Thermal
-10. Nemś (2025) — AI-PCM Review
-11. Liu (2025) — AI PCM
-12. Yan (2025) — ML PCM Melting
-13. Eldokaishi (2022) — ANN PCM SWH
-14. Assareh (2023) — ML Solar Collector
-15. MJET (2025) — PCM Controller
-16. Singh (2025) — PCM SWH
-17. Kou (2025) — BIHP PCM
-18. Emami et al. (2026) — DRL Solar
-19. Rajamurugu (2025) — PCM ML
-20. Terfai et al. (2025) — Solar Pond ANN MPC
-21. Barghi (2026) — Solar Drying PCM
-22. Ghodusinejad (2026) — Solar Forecast
-23. Rubitherm GmbH — RT Series PCM Data
-24. PLUSS Advanced Technologies — savE / OM Series
-25. ERA5 — ECMWF Reanalysis Dataset
-26. NASA POWER — Data Access Viewer
-27. ISRO Solar Energy Calculator
-28. Global Solar Atlas
-29. Abdellatif (2025) — PCM Modeling
-30. Majdi (2025) — Time Series Preprocessing
+Locations span all **38 districts** of Tamil Nadu across **8 climate zones**:
+
+| Climate Zone | Description | Example locations |
+|---|---|---|
+| `hot-humid-coastal` | Hot, humid, sea breeze | Chennai, Nagapattinam, Kanyakumari |
+| `hot-humid` | Hot and humid, inland | Coimbatore, Thanjavur, Tenkasi |
+| `hot-semi-arid` | Hot, moderate rainfall | Madurai, Virudhunagar, Sivakasi |
+| `semi-arid` | Moderate temp, low rain | Salem, Vellore, Tiruchirappalli |
+| `hot-arid-coastal` | Dry coastal | Rameswaram, Thoothukudi, Ramanathapuram |
+| `hot-arid` | Dry inland | Paramakudi |
+| `cool-hilly` | Western Ghats highlands | Ooty, Kodaikanal, Valparai, Yercaud |
+| `semi-arid-elevated` | High plateau | Hosur, Denkanikottai |
+| `hot-humid-elevated` | Humid foothills | Ettimadai |
 
 ---
 
-*Thank You*
+## Data Scale Summary
+
+| Dataset | Locations | Rows | Time span |
+|---------|-----------|------|-----------|
+| Per-location CSVs | 222 | 17,544 each | Jan 2024 – Dec 2025 |
+| `climate_tamilnadu_all.csv` | 222 combined | 3,894,768 | Jan 2024 – Dec 2025 |
+| `era5_TN_grid_all.csv` | 575 grid points | 10,087,800 | Jan 2024 – Dec 2025 |
+
+---
+
+## How to Run (Full Pipeline)
+
+```powershell
+# Step 1: Download raw ERA5 data (takes ~4–6 hours, 48 API calls)
+python 01_download_era5_tamilnadu.py 2>&1 | Tee-Object -FilePath download_log.txt
+
+# Step 2: Fix the accum files (CDS API delivers them as hidden ZIPs)
+python 00_unzip_accum.py
+
+# Step 3: Process everything into CSVs (takes ~30–90 minutes)
+python 02_combine_tamilnadu.py
+```
+
+If step 1 is interrupted, just re-run it — completed files are skipped automatically.
+
+---
+
+## Requirements
+
+```
+pip install cdsapi xarray netCDF4 pvlib pandas numpy scipy
+```
+
+You also need a free CDS account and API key from https://cds.climate.copernicus.eu
+
+---
+
+## Key Design Decisions
+
+**Why one grid download instead of per-city downloads?**
+Downloading the entire TN bounding box takes 48 API calls. Downloading each city separately would take 1,800+ calls and days of queuing time on the CDS servers. The grid approach is 40× faster and produces identical data.
+
+**Why does ERA5 resolution matter?**
+ERA5's 0.25° grid means each grid cell is roughly 25 km × 25 km. Two cities within the same 25 km cell (e.g. Coimbatore city and Sulur) will share the same ERA5 values — the ERA5 cannot distinguish them. The `grid_lat`/`grid_lon` columns in the CSV tell you exactly which ERA5 cell was used for each location.
+
+**Why are the accum files smaller than instant files?**
+The accumulated variables (GHI, precipitation) compress better than temperature/wind fields because large portions of the night have zero solar radiation, making the data very compressible.
+
+**Why does the accum de-accumulation matter?**
+If you use the raw `ssrd` values directly, you get a continuously increasing number that resets twice a day. After de-accumulation and dividing by 3600, you get the correct W/m² for each hour. Getting this wrong produces wildly incorrect GHI values.
