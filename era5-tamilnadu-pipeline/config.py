@@ -82,3 +82,6 @@ def get_cdsapi_client():
 
     url, key = load_cds_credentials()
     return cdsapi.Client(url=url, key=key)
+
+'''cd intlo_unna
+python -m jupyter nbconvert --to notebook --execute 05_plot_tamilnadu.ipynb --output 05_plot_tamilnadu_executed.ipynb'''
