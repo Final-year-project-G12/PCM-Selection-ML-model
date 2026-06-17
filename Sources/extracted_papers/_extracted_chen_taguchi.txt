@@ -1,0 +1,3027 @@
+
+--- PAGE 1 ---
+Using the Taguchi method and grey relational analysis to optimize the 
+parameter design of flat-plate collectors with nanofluids, and phase change 
+materials in an integrated solar water heating system
+Guan-Rong Chen
+a
+, Ting-Wei Liao
+a
+, Chien-Chun Hsieh
+a , b
+, Jagadish Barman
+a
+,  
+Chao-Yang Huang
+b
+, Chung-Feng Jeffrey Kuo
+a , *
+a
+Department of Materials Science & Engineering, National Taiwan University of Science and Technology, Taipei 10607 Taiwan, ROC
+b
+Green Energy & Environment Research Laboratories, Industrial Technology Research Institute, Hsinchu 310401 Taiwan, ROC
+ARTICLE INFO
+Keywords:
+Solar water heating system
+Flat plate collector
+Phase change material, Nanofluids
+Taguchi method
+Grey relational analysis method
+ABSTRACT
+Solar water heating systems play a critical role in renewable energy applications, with their global market 
+experiencing continuous growth due to increasing recognition and demand. Despite this, such systems face dual 
+challenges in practical use: low thermal storage efficiency and insufficient heat retention. This study introduces 
+an innovative integration of nanofluids and phase change materials (PCMs) with flat-plate collectors, repre -
+senting a novel approach to addressing these challenges. Unlike prior studies that focused on individual tech -
+nologies, this research combines advanced materials with multi-objective optimization to significantly enhance 
+system performance. The Taguchi method was employed to plan the experiments, with nine control factors 
+selected: PCM material, PCM volume, number of PCM tubes, working fluid, mass flow rate, number of collector 
+tubes, collector tube material, tilt angle, and azimuth angle. A total of 36 experiments were designed using the 
+Taguchi orthogonal array and simulated through TRNSYS software. Data from these experiments were analyzed 
+using Signal-to-Noise (S/N) ratios, main effects analysis, and analysis of variance to identify optimal parameter 
+combinations. Finally, grey relational analysis was utilized for multi-quality optimization, enabling the simul -
+taneous enhancement of thermal storage efficiency and heat retention time. The results demonstrate that the 
+optimized configuration achieved a thermal storage efficiency of 94.2 % and a heat retention time of 31.7 h. The 
+optimal parameters included the use of PCM material, 20 % PCM volume, 14 PCM tubes, CuO nanofluid as the 
+working fluid, a mass flow rate of 0.02 kg/s, 9 collector tubes, copper collector plates, a tilt angle of 22.4
+◦
+, and an 
+azimuth angle of 0
+◦
+facing south. Compared to the non-optimized system, these optimizations increased thermal 
+storage efficiency by 28 % and extended heat retention time by 14.6 h. The innovative integration and opti -
+mization framework presented in this study not only bridges the gap between theoretical research and practical 
+applications but also provides a scalable solution for improving the efficiency of renewable energy systems.
+1. Introduction
+In contemporary society, energy shortages and environmental 
+pollution have become increasingly critical challenges [1] . Facilitating 
+the energy transition and fostering the development of renewable en -
+ergy are pivotal to achieving sustainable development goals [2] . In 
+Taiwan, the primary renewable energy sources include solar thermal, 
+photovoltaic, and wind energy [3] . Solar thermal systems harness solar 
+energy for heating and hot water supply [3,4] , while photovoltaic sys -
+tems convert sunlight into electricity through solar cells [5] . Wind 
+energy is predominantly utilized for power generation [6] . The Taiwa -
+nese government has actively promoted energy diversification and 
+sustainability through supportive policies and investment incentives 
+[7] . According to the latest report by the International Renewable En -
+ergy Agency, thermal energy constitutes 48.7 % of the global total en -
+ergy supply, with solar energy contributing 10.5 % to modern renewable 
+heat production. The global market for solar thermal collectors has 
+experienced a 3 % growth, achieving a cumulative capacity of 522 GW-T 
+[8] . These developments underscore the critical role of solar water 
+heating systems in advancing renewable heat supply. A solar water 
+* Corresponding author.
+E-mail address: jeffreykuo@mail.ntust.edu.tw (C.-F. Jeffrey Kuo). 
+Contents lists available at ScienceDirect
+Energy Conversion and Management: X
+journal homepage: www.scien cedirect.co m/journal/e nergy-con version-and -managem ent-x
+https://doi.org/10.1016/j.ecmx.2025.100910
+Received 30 November 2024; Received in revised form 23 January 2025; Accepted 2 February 2025  
+Energy Conversion and Management: X 26 (2025) 100910 
+Available online 6 February 2025 
+2590-1745/© 2025 The Authors. Published by Elsevier Ltd. This is an open access article under the CC BY-NC-ND license ( http://creativecommons.org/licenses/by- 
+nc-nd/4.0/ ). 
+--- PAGE 2 ---
+heating system typically comprises three main components: solar col -
+lectors, thermal storage tanks, and heat transfer fluids [9,10] . To 
+enhance system performance, auxiliary components such as pumps, 
+electric heaters, and heat exchangers are integrated. These additions 
+ensure efficient operation under varying weather conditions, providing 
+a reliable hot water supply for residential and commercial applications 
+[11] .
+Significant research efforts have been devoted to studying and 
+optimizing flat-plate solar collectors to enhance overall system perfor -
+mance. A flat-plate solar collector is a device designed to harness solar 
+energy for heat generation [12] . Pioneering work on flat-plate collectors 
+was conducted by Hottel in 1942 [13] , introducing a design that 
+incorporated a glass cover, a black absorber plate, insulation, and a 
+casing, establishing the foundation for solar thermal applications.
+Subsequent studies have focused on various aspects of flat-plate 
+collector performance. Shariah [14] investigated the effect of collector 
+plate thermal conductivity, demonstrating that aluminum plates 
+outperform steel, while copper plates provide the most substantial 
+improvement. Bello [15] analyzed the influence of collector tube 
+spacing on performance, finding that narrower spacing increases effi -
+ciency but with diminishing returns, emphasizing the need for an 
+optimal spacing balance. Islam [16] examined the geometric configu -
+rations of collector tubes, revealing that square-shaped tubes signifi -
+cantly enhance efficiency, achieving a maximum of 70.44 %.
+Wang [17] investigated the influence of mass flow rate on the per -
+formance of solar collectors, concluding that higher flow rates enhance 
+heat exchange efficiency and decrease thermal resistance. However, the 
+study noted that flow rate increases beyond a critical threshold result in 
+negligible performance improvements. Similarly, Moghadam [18]
+examined the effect of tilt angle on flat-plate collector efficiency, 
+demonstrating that precise adjustments to the tilt angle can significantly 
+improve thermal performance. Zheng [19] designed a flat plate solar 
+collector with plastic and silica aerogel insulation, achieving 50 % 
+higher efficiency than commercial models and reducing heat losses in 
+high-temperature applications. Gong [20] developed a V-corrugated flat 
+plate solar collector (VC-FPSC) with SSD/SAT phase change materials, 
+enhancing thermal performance by extending heating duration and 
+improving stability, especially at night. Li [21] introduced an S-shaped 
+bend tube for flat-plate collectors based on field synergy theory, 
+reducing plate temperature by 0.33
+◦
+C and improving efficiency by 0.1 
+%. El-Fakharany [22] designed a solar air heater (SAH) combining flat 
+plate and evacuated tube collectors with phase change materials (PCM), 
+achieving efficiencies of up to 64.53 %, outperforming traditional 
+designs.
+Kuo [23] utilized the Taguchi method integrated with grey relational 
+analysis to assess multiple quality characteristics of flat-plate collectors, 
+effectively identifying the optimal process parameters to enhance 
+overall system performance.
+Advancements in nanotechnology have led to the development of a 
+novel category of heat transfer fluids known as nanofluids. These are 
+specially engineered fluids containing solid nanoparticles dispersed on 
+the nanoscale [24] , which may include metals, oxides, carbon nano -
+tubes, and other materials. In solar collectors, the incorporation of 
+nanofluids enhances radiative heat transfer and thermal conductivity 
+[25] , thereby significantly improving efficiency and performance. Ota -
+nicar [26] demonstrated that nanofluids composed of carbon nanotubes, 
+graphite, and silver could enhance solar collector efficiency by up to 5 
+%. Hawwash [27] reported that alumina-based nanofluids increased the 
+thermal efficiency of flat-plate solar collectors by 18 %, outperforming 
+pure water. Similarly, Yousefi [28] found that as the mass flow rate 
+increased, alumina nanofluids improved flat-plate collector efficiency 
+by 28.3 %. Prakasam [29] observed a 14.3 % improvement in collector 
+efficiency at a flow rate of 2 L per minute (L/min) when using alumina 
+nanofluids compared to pure water. Further investigations by Ashour 
+[30] revealed that copper oxide and zinc oxide nanofluids achieved ef -
+ficiencies of up to 81.64 % and 77.64 %, respectively, under varying 
+flow rates, significantly exceeding the 60.21 % efficiency of pure water. 
+Mirzaei [31] highlighted the influence of flow rates on nanofluid per -
+formance, showing that copper oxide enhanced efficiency by 8.2 % at 1 
+L/min and by 7.9 % at 4 L/min, while alumina improved efficiency by 
+7.2 % at 1 L/min and by 5.2 % at 4 L/min. These results underscore the 
+substantial benefits of using nanofluids at lower flow rates to maximize 
+thermal efficiency. Desisa [32] conducted a comparative study on the 
+performance of copper oxide, alumina, titanium oxide, and silicon di -
+oxide nanofluids, concluding that copper oxide provided the most pro -
+nounced efficiency improvement among the tested nanofluids. 
+Collectively, these studies highlight the considerable potential of 
+nanofluids, particularly those based on alumina and copper oxide, in 
+enhancing solar collector performance. Additionally, their cost- 
+effectiveness relative to other nanoparticles further supports their 
+practical application [33] .
+As research progresses, phase change materials (PCMs) have 
+garnered significant attention due to their numerous advantages. PCMs 
+possess high latent heat, enabling them to absorb or release substantial 
+amounts of energy within a compact volume through phase change 
+processes [34] . Furthermore, PCMs exhibit appropriate phase change 
+temperatures and favorable thermal conductivity within specific work -
+ing temperature ranges, ensuring efficient heat transfer and consistent 
+phase change behavior [35] . These properties make PCMs a key 
+component in solar thermal storage systems, where they store heat 
+during the day and release it at night or when required [36] . Several 
+studies have highlighted the efficacy of PCMs in enhancing solar water 
+heating system performance. Cabeza [37] demonstrated that increasing 
+the number and volume of PCM modules in a solar water heating system 
+significantly improved energy density and thermal efficiency. Ferrer 
+[38] evaluated the suitability of different container materials, finding 
+that stainless steel offers excellent corrosion resistance when used with 
+PCMs, whereas aluminum and carbon steel may be prone to corrosion 
+under certain conditions. Hinti [39] investigated the integration of 
+paraffin-based PCM into conventional solar water heating systems. The 
+findings revealed that the inclusion of PCM facilitated greater heat ab -
+sorption during the day and consistent heat release at night, effectively 
+maintaining water temperature. Kumar [40] designed a solar water 
+heating system utilizing two distinct types of PCMs and compared it with 
+a system lacking PCM. The PCM-integrated system exhibited substan -
+tially higher efficiency, with tank water temperatures significantly 
+elevated the following morning compared to the non-PCM system. Zhao 
+[41] explored the performance of organic paraffin as a PCM in storage 
+tanks, showing that although PCM occupied less than 20 % of the tank ’ s 
+volume, it contributed to 50 % of the total stored heat. This utilization 
+not only enhanced energy efficiency but also extended the hot water 
+supply duration during periods without solar radiation. Yousif [42]
+evaluated a CPC solar air collector with phase change materials (PCM). 
+The normal CPC achieved 77.1 % efficiency at 0.027 kg/s airflow, 
+outperforming the involute design by 13 %, highlighting its suitability 
+for domestic air heating.
+The Taguchi method is a widely recognized tool for optimizing en -
+gineering processes focused on a single quality characteristic. By 
+employing orthogonal arrays for experimental design, it facilitates data 
+analysis to enhance product quality and determine the optimal combi -
+nation of control factors and levels. However, in practical scenarios 
+involving multiple quality requirements, it becomes essential to inte -
+grate additional multi-quality analysis methods. Grey relational analysis 
+(GRA) serves as a powerful complementary technique due to its capa -
+bility to evaluate complex relationships among multiple quality in -
+dicators and influencing factors. This integration enables comprehensive 
+multi-quality optimization, ensuring the robustness and reliability of the 
+results. For instance, Kazemian [43] applied the Taguchi method in 
+conjunction with grey relational analysis to optimize the operating 
+conditions of a photovoltaic thermal (PV/T) and solar collector combi -
+nation system. The study systematically analyzed the effects of param -
+eters such as mass flow rate and inlet temperature, successfully 
+G.-R. Chen et al.                                                                                                                                                                                                                                Energy Conversion and Management: X 26 (2025) 100910 
+2 
+--- PAGE 3 ---
+improving both power generation and thermal efficiency. Similarly, Liu 
+[44] utilized the Taguchi method and GRA to optimize a PV/T system 
+incorporating organic paraffin and nanofluids, aimed at enhancing 
+power generation and heat storage efficiency in residential solar sys -
+tems. The experiments demonstrated significant performance improve -
+ments, achieving a power generation efficiency of 14.958 % and a heat 
+storage efficiency of 64.764 %.
+Multi-response optimization problems can be effectively analyzed 
+using the Taguchi method combined with grey relational analysis. 
+Mrmon et al. [45] evaluated the performance of conventional and 
+hybrid woven fabrics for sustainable protective clothing. Their study 
+identified that a Kevlar and Ramie fabric with an 80:20 ratio and a twill 
+weave delivered the best performance across various tests. Sumesh and 
+Kanthavel [46] optimized tensile, flexural, and impact strength in ba -
+nana/coir epoxy composites using Taguchi-based grey relational anal -
+ysis. They found that a combination of 20 % banana, 15 % coir, 3 % 
+alkali treatment, 16 MPa pressure, and 100 
+◦
+C temperature provided 
+superior mechanical properties. Üstünta ˘g and S ¸ enyi ˘git [47] optimized 
+coating process parameters for cotton/elastane denim fabrics, deter -
+mining the ideal conditions as 14 picks/cm weft density, 160 
+◦
+C drying 
+temperature, 50 dPa.s viscosity, 3 bar squeeze pressure, and 30 m/min 
+fabric speed. Jogi et al. [48] applied this methodology to optimize 
+machining parameters for PEEK polymer using CNC turning machines, 
+identifying 377 m/min cutting speed, 0.05 mm/rev feed rate, 2 mm 
+depth of cut, and TiC insert as optimal.
+Based on the studies [45 – 48] , the grey relational analysis model is 
+generally effective for optimizing multiple responses by converting them 
+into a single relational grade [47] . This approach facilitates the simul -
+taneous evaluation of various objective functions and helps identify the 
+optimal parameters for all-purpose functions [49] . The Taguchi method 
+was initially used to optimize each product quality individually, fol -
+lowed by the integration of all qualities using grey relational analysis 
+while considering the prioritization of objectives [47] . Consequently, 
+the most influential parameters for all qualities were determined 
+systematically.
+This study aims to enhance the performance of solar water heating 
+systems by developing an innovative “ integrated solar water heating 
+system ” that combines nanofluids, phase change materials (PCMs), and 
+flat-plate collectors, with optimized parameter configurations. Despite 
+significant advancements in individual technologies, existing studies 
+often fail to address the critical challenges of combining these advanced 
+materials to achieve simultaneous improvements in thermal storage 
+efficiency and heat retention time. Furthermore, there is limited 
+exploration of systematic multi-objective optimization frameworks that 
+integrate these technologies for practical applications.
+By systematically analyzing the interactions among key performance 
+parameters and employing optimization theory, this study identifies the 
+most effective configuration to achieve superior system performance. 
+The primary innovations include the integration of advanced materials 
+with multi-objective optimization techniques to overcome the limita -
+tions of individual technologies. This approach not only enhances the 
+thermal performance of solar water heating systems but also bridges the 
+gap between theoretical research and real-world applications. Ulti -
+mately, these advancements provide a scalable and sustainable solution 
+for renewable energy systems, addressing unresolved issues in the field 
+and offering practical value for energy-efficient technologies.
+2. Integrated solar water heating system structure and software 
+performance testing
+The integrated solar water heating system leverages advanced 
+technologies, including nanofluids, phase change materials (PCMs), and 
+flat-plate collectors, to enhance thermal storage efficiency and prolong 
+heat retention time. The system comprises essential components such as 
+solar collectors, thermal storage tanks, and heat transfer fluids, com -
+plemented by auxiliary elements like pumps, ensuring efficient 
+operation and reliable performance, as shown in Fig. 1 . The detailed 
+specifications of the system module are shown in Table 1 .
+The flow diagram of the integrated solar water heating system 
+investigated in this study is shown in Fig. 2 , and the corresponding 
+physical system is illustrated in Fig. 3 .
+In this study, the TRNSYS simulation tool was utilized to model and 
+analyze the integrated solar water heating system, aiming to optimize 
+design parameters for improved thermal storage efficiency and extended 
+heat retention duration. During the experimental process, parameters of 
+various modules were continuously adjusted to evaluate the impact of 
+different configurations on system performance. Conducting such 
+modifications with physical modules would have required substantial 
+effort, significantly complicating the experiments. The primary advan -
+tage of TRNSYS lies in its capability to simulate the system ’ s operation 
+under diverse environmental conditions by altering parameters of in -
+dividual components within the integrated solar water heating system. 
+These parameters include the use of PCM materials, the tilt angle of solar 
+collectors, and the materials of the absorber plates. The modeling and 
+connection methodology employed in this experiment is depicted in 
+Fig. 4 .
+3. Research methodology
+To minimize the number of experiments and associated costs, this 
+study employed the Taguchi method for experimental design. While the 
+Taguchi method is well-suited for process optimization focusing on a 
+single quality characteristic, the objectives of this research involve 
+optimizing multiple quality characteristics of the system. Consequently, 
+the Taguchi method was combined with grey relational analysis to 
+address this complexity. This integration enabled the optimization of 
+parameter combinations and facilitated decision analysis for multiple 
+quality objectives, aiming to achieve comprehensive optimization across 
+all targeted quality characteristics.
+3.1. Taguchi method
+The Taguchi method was employed to design the experimental pa -
+rameters, including control factors and their respective levels. Main 
+Effects Analysis (MEA) and Analysis of Variance (ANOVA) were subse -
+quently used to assess the influence of product parameters on the quality 
+characteristics. The Signal-to-Noise (S/N) ratio served as a key indicator 
+for evaluating the manufacturing process and quality levels. Depending 
+on the type of quality characteristic being analyzed, the S/N ratio can be 
+calculated using one of four methods: “ Larger-the-Better, ” “ Smaller-the- 
+Better, ” “ Nominal-the-Best, ” or “ Target-the-Best. ” As this study focuses 
+on maximizing thermal storage efficiency and heat retention time, the 
+“ Larger-the-Better ” method was applied for calculating the S/N ratio. 
+S / N
+LTB
+=   10 • log
+10
+(
+1
+n
+∑
+n
+i = 1
+1
+y
+i
+2
+)
+(1) 
+where y
+i 
+represents the experimental data, and n is the number of 
+measurements.
+3.2. Main effects analysis
+Main Effects Analysis (MEA) evaluates the influence of factors on 
+system performance across different levels. Based on the experimental 
+design requirements, the S/N ratio for each experiment is first calcu -
+lated. Subsequently, the average response value Fi for each factor at 
+each level is computed, followed by determining the main effect varia -
+tion Δ F for each factor across its levels. These values are then organized 
+into a response table for the analysis of main effects.
+Assuming a factor has i levels, with mmm sets of S/N ratios for each 
+level, the formulas for the average response value Fi and the main effect 
+variation Δ F are as follows: 
+G.-R. Chen et al.                                                                                                                                                                                                                                Energy Conversion and Management: X 26 (2025) 100910 
+3 
+--- PAGE 4 ---
+F
+i
+=
+1
+m
+∑
+m
+k = 1
+η
+i
+(2) 
+where η
+i 
+represents the S/N ratio at different levels. 
+Δ F = F
+imax
+  F
+imin
+(3) 
+3.3. Analysis of variance (ANOVA)
+Analysis of Variance (ANOVA), also known as variance analysis, is a 
+statistical method used to evaluate the significance of each control 
+factor ’ s contribution to improving experimental quality. Unlike Main 
+Effects Analysis, which focuses on the impact of factors at different 
+levels, ANOVA emphasizes quantifying the contribution of each factor to 
+the overall system performance. This analysis is based on the F-distri -
+bution and begins with the calculation of the sum of squares (SS) and 
+degrees of freedom (DF) for each control factor. These values are sub -
+sequently used to compute the variance ((Var)and the F-value, which 
+determines the statistical significance of the factors.
+(1) Total um of squares (SST): 
+SS
+T
+=
+∑
+( X
+i
+  X )
+2
+=
+∑
+n
+n = 1
+X
+i
+2
+ 
+(
+∑
+X
+i
+)
+2
+n
+(4) 
+where X
+i 
+is the value of each data point, X is the mean of all data points, 
+and n is the number of experiments. This is used to measure the devia -
+tion of the data from the overall mean.
+(2) Sum of squares for control factors (SSC) 
+SS
+C
+=
+∑
+k
+j = 1
+n
+j
+ 
+X
+j
+  X
+)
+2
+(5) 
+where n
+j 
+is the sample size at the j level of the control factor, X
+j 
+overlin is 
+the mean value at the j level, overline X is the overall mean of all data 
+points, and k is the number of levels for the control factor. The main 
+purpose is to distinguish the variation caused by the control factor set -
+tings from the variation caused by other random or non-controlled 
+factors.
+(3) Sum of squares for error (SSE) 
+SS
+E
+= SS
+T
+  SS
+C
+(6) 
+(4) Degree of freedom (DOF) 
+DOF
+T
+= n × r   1 = Total number   1 (7) 
+DOF
+F
+= Lv   1 = Level   1 (8) 
+DOF
+E
+= DOF
+T
+  DOF
+F
+(9) 
+(5) Mean square, also referred to as variance, represents the ratio of 
+the sum of squares (SS) to the degrees of freedom (DF). Since the 
+calculation of the sum of squares is directly influenced by the experi -
+mental data, dividing it by its corresponding degrees of freedom helps 
+mitigate this influence, yielding the mean square or variance. This 
+approach ensures a normalized measure of variability, making the re -
+sults more interpretable and robust.
+The formula for calculating the mean square is as follows: 
+Fig. 1. Diagram of physical equipment and sensors.
+G.-R. Chen et al.                                                                                                                                                                                                                                Energy Conversion and Management: X 26 (2025) 100910 
+4 
+--- PAGE 5 ---
+MS
+f
+=
+SS
+C
+DOF
+F
+(10) 
+MS
+e
+=
+SS
+E
+DOF
+E
+(11) 
+(6) F-value: The F-value is used to assess the relationship between the 
+effect of a factor and the variation caused by random errors. The 
+magnitude of the F-value directly reflects the degree of influence that the 
+factor has on the system. Therefore, the importance of the factor can be 
+determined based on the F-value. When the F-value is less than 1, it 
+indicates that the effect of the factor is relatively small compared to the 
+error; if the F-value is greater than 2, it signifies a noticeable effect of the 
+factor; and if the F-value exceeds 4, it demonstrates a significant impact 
+of the factor on the system. The F-value is calculated by dividing the 
+mean square value of the factor by the mean square value of the error. 
+F =
+MS
+f
+MS
+e
+(12) 
+(7) Percent contribution (P): Percent contribution represents the 
+proportion of each factor ’ s sum of squares to the total sum of squares, 
+indicating the relative effectiveness of the factor in reducing overall 
+Fig. 1. ( continued ).
+G.-R. Chen et al.                                                                                                                                                                                                                                Energy Conversion and Management: X 26 (2025) 100910 
+5 
+--- PAGE 6 ---
+variation. This metric, referred to as the contribution, provides insight 
+into the significance of each factor within the system. The primary 
+purpose of this analysis is to ensure that all selected factors are mean -
+ingful contributors to system performance while confirming that no 
+critical factors have been omitted. By quantifying the contribution of 
+each factor, this analysis helps validate the experimental design and 
+ensures the reliability of the results. 
+P =
+SS
+C
+SS
+T
+(13) 
+(8) P-value and confidence Level (CL): The P-value is a statistical 
+measure used to express probability, widely applied in the analysis of 
+experimental data. A smaller P-value indicates that the experimental 
+results are statistically significant, highlighting the greater importance 
+of the associated factor in the experiment. In contrast, a larger P-value 
+suggests that the observed effects are more likely attributable to random 
+errors rather than the direct influence of the control factor. This implies 
+that the factor may have a smaller impact on the experimental outcomes. 
+The confidence level (CL), typically expressed as a percentage, com -
+plements the P-value by indicating the probability that the results are 
+not due to random chance, reinforcing the reliability of the analysis. 
+CL = ( 1   P ) × 100% (14) 
+3.4. Grey relational analysis
+Grey relational analysis is a quantitative method used to assess the 
+similarities and differences between control factors by applying the Grey 
+Relational Grade (GRG), which quantifies the degree of correlation be -
+tween factors. In system analysis, particularly when quality character -
+istic data involve varying units of measurement or substantial 
+differences in scale, it becomes essential to standardize the data to 
+enable meaningful comparisons. This standardization process, integral 
+to grey relational analysis, is referred to as grey relational generation.
+(1) Grey Relational Generation: Grey relational generation involves 
+standardizing data through an appropriate transformation method 
+selected based on the target value of each data set. Typically, all data 
+sequences are normalized to a range between 0 and 1, depending on the 
+optimization objective: “ larger-the-better, ” “ smaller-the-better, ” or 
+“ nominal-the-best. ” As this study focuses on maximizing thermal storage 
+efficiency and heat retention time, the “ larger-the-better ” calculation 
+method was employed for normalization, ensuring consistency in data 
+comparison and analysis. 
+x
+i
+( k ) =
+x
+i
+( k )   min , x
+i
+( k )
+max , x
+i
+( k )   min , x
+i
+( k )
+(15) 
+where x
+i
+( k ) represents the value after grey relational generation pro -
+cessing, max , x
+i
+( k ) is the maximum value in the original data, and 
+max , x
+i
+( k ) is the minimum value in the original data.
+(2) Grey Relational Coefficient: The grey relational coefficient is 
+Table 1 
+Detailed specifications of system modules.
+Name Parameter Value
+Flat plate collector (FPC) Collector length (mm) 505
+Collector width (mm) 320
+Collector tube outer (mm) 25
+Collector tube inner (mm) 24
+Pipe number 9
+Collector plate material Al
+Heat storage tank Tank volume (m
+3
+) 0.04
+Tank height(mm) 500
+PCM pipe height(mm) 450
+PCM pipe number 12
+PCM pipe volume (m
+3
+) 0.0037
+Heat exchanger outer (mm) 22
+Heat exchanger inner (mm) 21
+Heat exchanger outer (mm) 9
+Heat exchanger total volume (m
+3
+) 0.003
+Pyranometer PYR2-420 – CLASS C/ 300 ~ 2900 nm/ 4 ~ 20 mA/ 
+RS48510/Sensitivity:10 μ V(W/m
+2
+)
+Ambient temperature Galltec-mela PC-ME series/relative humidity accuracy: 
+(5 … 95 %rh at 10 … 40 
+◦
+C) ± 2 % rh 
+temperature accuracy: 
+0 … 1 V (   27 … 70 
+◦
+C) ± 0.2 K 、 
+0 … 10 V (   29 … 70 
+◦
+C) ± 0.2 、 
+K 4 … 20 mA (RC) ± 0.3 K
+Pump FORMOSA RS-15/6GWS
+Temperature sensor PT100   Platinum Resistance Temperature Sensor 
+accuracy: 
+30 K to 305 K : ± 0.25 K 
+305 K to 400 K : ± 0.25 K 
+400 K to 475 K : ± 0.25 K 
+475 K to 500 K : ± 1.4 K 
+500 K to 670 K : ± 2.3 K
+Flow meter RP Series ¡ Variable Area Flow Meter 
+0.01~0.1 L/min up to 30~300 L/min/ Accuracy ± 2.5 
+% FSD
+Data logger BCT TF 200S
+Fig. 2. Flow diagram of the integrated solar water heating system.
+G.-R. Chen et al.                                                                                                                                                                                                                                Energy Conversion and Management: X 26 (2025) 100910 
+6 
+--- PAGE 7 ---
+calculated by selecting one sequence as the reference and treating the 
+others as comparison sequences, a process referred to as local grey 
+relational analysis. This coefficient quantifies the degree of correlation 
+between the reference and comparison sequences. The calculation 
+method for the grey relational coefficient is expressed as follows: 
+r
+0i
+( k ) =
+min
+i
+min
+k
+| x
+0
+( k )   x
+i
+( k ) | + ζ max
+i
+max
+k
+| x
+0
+( k )   x
+i
+( k ) |
+| x
+0
+( k )   x
+i
+( k ) | + ζ max
+i
+max
+k
+| x
+0
+( k )   x
+i
+( k ) |
+(16) 
+where min
+i
+min
+k
+| x
+0
+( k )   x
+i
+( k ) | refers to the minimum absolute difference 
+between the reference sequence x
+0
+( k ) and all comparison sequences 
+x
+i
+( k ) and max
+i
+max
+k
+| x
+0
+( k )   x
+i
+( k ) | is the maximum absolute difference 
+among these differences. ζ is the distinguishing coefficient, typically set 
+to 0.5.
+(3) Grey relational grade calculation: The grey relational grade is 
+determined by averaging the grey relational coefficients calculated for 
+different sequences. This grade serves as an overall measure of the 
+correlation between the reference sequence and the comparison se -
+quences. The calculation method for the grey relational grade is 
+expressed as follows: 
+r
+i
+=
+1
+n
+∑
+n
+k = 1
+w ( k ) × ζ
+i
+( k ) (17) 
+The grey relational grade is used to evaluate the correlation between 
+each set of experimental parameters and their ideal quality character -
+istic values. When the grey relational grade is high, it indicates that the 
+set of parameters is closer to its ideal quality characteristic.
+Fig. 3. Physical diagram of the integrated solar water heating system.
+Fig. 4. System simulation architecture diagram.
+G.-R. Chen et al.                                                                                                                                                                                                                                Energy Conversion and Management: X 26 (2025) 100910 
+7 
+--- PAGE 8 ---
+3.5. Heat transfer across the layers of a flat-plate solar collector
+Heat transfer in flat-plate solar collectors occurs through conduction, 
+convection, and radiation due to temperature differences, as governed 
+by the second law of thermodynamics. Externally, heat is transferred via 
+convection and radiation, influenced by ambient temperature, wind 
+speed, and solar radiation. Internally, solar radiation penetrates the 
+glass cover, heating the absorber plate and riser tubes through radiation, 
+which in turn transfers heat to the working fluid by conduction. Con -
+vection within the air gap between the glass cover and absorber plate 
+further distributes thermal energy. However, when the internal tem -
+perature exceeds the ambient temperature, heat loss to the environment 
+occurs, reducing efficiency. To mitigate this, thermal insulation mate -
+rials are employed to minimize heat dissipation, ensuring enhanced 
+thermal performance and system efficiency. Fig. 5 illustrates these heat 
+transfer processes within the collector ’ s structural layers.
+3.5.1. Assumptions for the model
+To simplify the analysis of the flat-plate solar collector and accu -
+rately predict the dynamic temperature across its layers, a one- 
+dimensional model with several assumptions was established to 
+reduce unnecessary complexity and redundant calculations. The key 
+assumptions are as follows: 
+(1) Uniform temperature distribution: The temperature within each 
+layer of the collector is uniformly distributed, neglecting internal 
+temperature gradients or non-uniformity.
+(2) Perfect insulation at edges: The edges and sides of the flat-plate 
+solar collector are assumed to have perfect thermal insulation, 
+ignoring heat transfer mechanisms such as convection and radi -
+ation at the sides.
+(3) Neglecting aluminum frame effects: The aluminum frame, pri -
+marily used for structural support, is excluded from the analysis 
+due to its minimal area contribution and the increased 
+complexity of including its thermal properties.
+(4) Ignoring dust and dirt: The effects of dust and dirt accumulation 
+on the collector surface are disregarded, assuming regular 
+maintenance and cleaning to ensure optimal performance.
+(5) Equal front and back temperatures: The ambient temperatures at 
+the front and back surfaces of the collector are assumed to be 
+identical, providing consistent environmental conditions for the 
+analysis.
+These assumptions simplify the heat transfer analysis while main -
+taining the focus on the key parameters influencing the system ’ s per -
+formance. The corresponding heat transfer analysis based on these 
+assumptions is illustrated in Fig. 6 .
+3.5.2. Thermal model and equivalent circuit transformation
+To simplify the complexity of thermal model analysis, the lumped 
+capacitance method is employed, converting the thermal model into an 
+equivalent electrical circuit. Each structural layer of the flat-plate solar 
+collector is decomposed and represented as circuit components, facili -
+tating the calculation and analysis of the system.
+The performance of a flat-plate solar collector varies with the tem -
+perature of each component. Considering the effects of temperature and 
+time changes in its equilibrium equations, a mathematical model is 
+established. This model focuses on the primary components of the col -
+lector: (1) glass layer, (2) air gap, (3) absorber plate, (4) working fluid, 
+and (5) insulation layer.
+(1) Glass layer
+The glass cover ’ s temperature is influenced by ambient temperature, 
+solar radiation, and wind speed on its upper surface, leading to con -
+vection and radiation. On the lower surface, heat transfer occurs 
+through convection and radiation due to temperature differences with 
+the air gap and absorber plate. Figs. 7 and 8 depict the thermal model 
+and its equivalent circuit, respectively. The parameters of the heat 
+transfer model for glass materials are shown in the Table 2 .
+After the thermal model was converted into an equivalent circuit, the 
+heat balance equation for the glass layer was derived using circuit 
+analysis (Kirchhoff ’ s Current Law), as shown in Equation (18) . 
+Fig. 5. Heat transfer analysis of flat-plate solar collectors.
+Fig. 6. Heat transfer mechanism analysis of the flat-plate solar collector.
+G.-R. Chen et al.                                                                                                                                                                                                                                Energy Conversion and Management: X 26 (2025) 100910 
+8 
+--- PAGE 9 ---
+Cg
+dTg
+dt
+= IT +
+1
+Rra
+( Tsky   Tg ) +
+1
+Rcov
+( Tam   Tg ) +
+1
+Rra
+( Tab   Tg )
++
+1
+Rcov
+( Ta   Tg )
+(18) 
+Cg represents the thermal capacity of the glass layer, as defined in 
+Equation (19) . 
+Cg = ρ
+g
+A
+g
+δ
+g
+c
+g
+(19) 
+I
+T 
+represents the amount of solar radiation received by the glass 
+layer, as defined in Equation (20) . 
+I
+T
+= α
+g
+GA
+g
+(20) 
+where α
+g 
+represents the absorptivity of the glass layer.
+R
+ra 
+represents the radiative thermal resistance, which includes the 
+radiation from the upper and lower surfaces of the glass layer. It is 
+expressed as Equations (21) and (22) . 
+R
+ra
+= σ ε g
+ 
+T
+sky
++ T
+g
+) 
+T
+sky
+2
++ T
+g
+2
+)
+(21) 
+R
+ra
+=
+σ
+ 
+T
+ab
++ T
+g
+) 
+T
+ab
+2
++ T
+g
+2
+)
+1
+ε ab
++
+1
+ε g
+  1
+(22) 
+where σ is the Stefan-Boltzmann constant, ε g represents the emissivity of 
+the glass layer, and ε ab denotes the emissivity of the absorber plate.
+T
+sky 
+represents the atmospheric temperature, as expressed in Equa -
+tion (23) . 
+T
+sky
+= 0 . 0522 T
+1 . 5
+am
+(23) 
+represents the convective thermal resistance, which accounts for 
+convection above and below the glass layer, as expressed in Equations 
+(24) and (25) . 
+R
+cov
+=
+1
+h
+cov g   am
+A
+(24) 
+R
+cov
+=
+1
+h
+cov g   a
+A
+(25) 
+where h
+cov
+g   am 
+represents the convective heat transfer coefficient be -
+tween the glass and the ambient air, as expressed in Equation (26) .
+h
+cov
+g   a 
+represents the convective heat transfer coefficient between the 
+glass and the air layer, as expressed in Equation (27) . 
+h
+cov g   am
+= 5 . 7 + 3 . 8 V
+w
+(26) 
+h
+cov g   a
+= N
+u a
+k
+a
+δ
+a
+(27) 
+where N
+u
+a 
+represents the Nusselt number for convection within the air 
+layer between two structures, which is related to the Reynolds number 
+as expressed in Equation (28) . 
+N
+u a
+= 1 + 1 . 44
+[
+1  
+1708
+R
+a
+cos β
+]
++
++
+[
+1  
+1708 sin 1 . 8 β
+1 . 6
+R
+a
+cos β
+]
++
+[
+(
+R
+a
+cos β
+5830
+)
+1 / 3
+/
+  1
+]
++ (28) 
+where the inclination angle ( β ) varies only between 0
+◦
+and 75
+◦
+. The 
+Reynolds number (RaRaRa) in Equation (28) is calculated using Equa -
+tion (29) , while the volumetric expansion coefficient ( β ʹ ) is determined 
+using Equation (30) . 
+R
+a
+=
+g β ʹ Δ TL
+3
+P
+r
+v
+2
+(29) 
+1
+β ʹ
+=
+( Tp + Tg )
+2
+(30) 
+where R
+a 
+is the Rayleigh number, g represents gravitational acceleration 
+(m/s
+2
+), L is the characteristic length, P
+r 
+is the Prandtl number, and v 
+denotes the kinematic viscosity of the fluid.
+(2) Air layer
+The air layer ’ s temperature is determined by the energy balance 
+Fig. 7. Thermal model of the glass layer.
+Fig. 8. Equivalent circuit of the glass layer.
+Table 2 
+Parameters for the heat transfer model of the Glass Layer.
+Parameter Symbol Unit Value
+Density of glass ρ
+g
+kg/m
+3
+3000
+Area of glass A
+g
+m
+2
+0.1616
+Thickness of glass δ
+g
+m 0.003
+Specific heat capacity of glass c
+g
+J/kg K 500
+Heat capacity of glass C
+g
+J/K 7338.15
+Absorptivity of glass α
+g
+​ 0.05
+Emissivity of glass ∊
+g
+​ 0.85
+Emissivity of absorber plate ∊
+ab
+​ 0.17
+Stefan-Boltzmann constant σ W/m
+2 
+K
+4
+5.6697 × 10
+  8
+Tilt angle β degree 23
+Fig. 9. Thermal model of the air Layer.
+G.-R. Chen et al.                                                                                                                                                                                                                                Energy Conversion and Management: X 26 (2025) 100910 
+9 
+--- PAGE 10 ---
+between the glass and the absorber plate, with heat transfer primarily 
+via convection. Fig. 9 shows the thermal model, and its equivalent cir -
+cuit is presented in Fig. 10 . All the parameters of air layer heat model are 
+shown in the Table 3 .
+The heat balance equation is given in Equation (31) . 
+C
+a
+dT
+a
+dt
+=
+1
+Rcov
+( Tg   T
+a
+) +
+1
+Rcov
+( Tab   T
+a
+) (31) 
+C
+a 
+represents the thermal capacity of the air layer, as shown in 
+Equation (32) . 
+Ca = ρ
+a
+A
+a
+δ
+a
+c
+a
+(32) 
+Rcov represents the convective thermal resistance, accounting for 
+convection between the air layer and the upper glass as well as the lower 
+absorber plate, as shown in Equation (33) . 
+R
+cov
+=
+1
+h
+cov g   a
+A
+=
+1
+h
+cov
+ab   a
+A
+(33) 
+where h
+cov
+g   a 
+is the convective heat transfer coefficient between the glass 
+and the air layer, and h
+cov
+ab   a 
+is the convective heat transfer coefficient 
+between the absorber plate and the air layer. Both are expressed in 
+Equation (34) . 
+h
+cov g   a
+= h
+cov
+ab   a
+= N
+u a
+k
+a
+δ
+a
+(34) 
+(3) Absorber plate
+The absorber plate, the solar collector ’ s key component, has the 
+highest temperature, driven by energy balance between the glass and 
+insulation layers. It undergoes solar radiation absorption, convective 
+and radiative heat transfer on the upper side, and conductive heat 
+transfer with the insulation below. Figs. 11 and 12 show its thermal 
+model and equivalent circuit. The model ’ s parameters are shown in the 
+Table 4 .
+After converting the thermal model into an equivalent circuit, the 
+heat balance equation for the absorber plate is derived using circuit 
+analysis (Kirchhoff ’ s Current Law) and is expressed in Equation (35) . 
+C
+ab
+dT
+ab
+dt
+= IT +
+1
+Rra
+( Tg   T
+ab
+) +
+1
+Rcov
+( Ta   T
+ab
+) +
+1
+R
+con
+( T
+ins
+  T
+ab
+) +
+1
+Rcov
+ 
+T
+f
+  T
+ab
+)
+(35) 
+Cab represents the heat capacity of the absorber plate, as shown in 
+Equation (36) . 
+Cab = ρ
+ab
+A
+ab
+δ
+ab
+c
+ab
+(36) 
+I
+T 
+represents the thermal radiation received by the absorber plate, as 
+expressed in Equation (37) . 
+I
+T
+= α
+ab
+τ
+g
+GA
+ab
+(37) 
+Where α
+ab 
+is the absorptivity of the absorber plate, and τ
+g 
+is the 
+transmissivity of the glass layer.
+R
+con 
+represents the conductive thermal resistance, specifically the 
+heat conduction between the absorber plate and the insulation layer, as 
+expressed in Equation (38) . 
+Fig. 10. Equivalent circuit of the air layer.
+Table 3 
+Parameters of the air layer heat model.
+Parameter Symbol Unit Value
+Density ρ
+a
+kg/m
+3
+1.275
+Area A
+a
+m
+2
+0.1616
+Thickness δ
+a
+m 0.0495
+Specific Heat c
+a
+J/kg K 993
+Heat Capacity C
+a
+J/K 10.13
+Thermal Conductivity k
+a
+W/m • K 0.026
+Fig. 11. Thermal model of the absorber plate.
+Fig. 12. Equivalent circuit of the absorber Plate.
+Table 4 
+Thermal model parameters for the absorber plate.
+Parameter Symbol Unit Value
+Density ρ
+ab
+kg/m
+3
+2700
+Area A
+ab
+m
+2
+0.1616
+Thickness δ
+ab
+m 0.032
+Specific heat c
+ab
+J/kg K 896
+Heat capacity C
+ab
+J/K 12510.17
+Absorptivity a
+ab
+​ 0.9
+Height of cross-section H m 0.013
+Width of cross-section W m 0.026
+G.-R. Chen et al.                                                                                                                                                                                                                                Energy Conversion and Management: X 26 (2025) 100910 
+10 
+--- PAGE 11 ---
+R
+con
+=
+1
+h
+con
+ins   ab
+A
+(38) 
+h
+con
+ins   ab 
+represents the convective heat transfer coefficient between 
+the insulation layer and the absorber plate, as expressed in Equation 
+(39) . 
+h
+con
+ins   ab
+=
+k
+ins
+δ
+ins
+(39) 
+represents the convective thermal resistance for both the upper and 
+lower surfaces of the glass, as given by Equation (40) . 
+R
+cov
+=
+1
+h
+cov
+f   ab
+A
+(40) 
+The convective heat transfer coefficient between the glass and the 
+ambient air, h
+cov
+f   ab
+, is given by Equation (41) . 
+h
+cov
+f   ab
+= N
+u
+f
+k
+f
+D
+h
+(41) 
+The hydraulic diameter DhD_hDh, considering a rectangular cross- 
+section, is expressed by Equation (42) . 
+D
+h
+=
+4 HW
+2 ( H + W )
+=
+2 HW
+H + W
+(42) 
+where H represents the height of the cross-section, and W represents the 
+width of the cross-section.
+(4) Working fluid
+The temperature of the working fluid is determined by the energy 
+balance within the absorber plate region. After absorbing heat, the 
+absorber plate transfers thermal energy to the cooler working fluid 
+through convective heat transfer. Fig. 13 illustrates the thermal model of 
+the working fluid, and its equivalent circuit representation is shown in 
+Fig. 14 and paremeters of the thermal model for working fluid are 
+described in the Table 5 .
+Through the thermal model and its equivalent circuit transformation, 
+the heat balance equation for the working fluid is derived using circuit 
+analysis (Kirchhoff ’ s Current Law), as shown in Equation (43) . 
+C
+f
+dT
+f
+dt
+=
+1
+Rcov
+ 
+T
+ab
+  T
+f
+)
++ ˙m
+f
+C
+pf
+ 
+T
+fo
+  T
+fi
+)
+(43) 
+The heat capacity of the working fluid, C
+f
+, is expressed as shown in 
+Equation (44) . 
+C
+f
+= ρ
+f
+A
+f
+δ
+f
+c
+f
+(44) 
+The convective thermal resistance, R
+cov
+, between the working fluid 
+and the absorber plate is given by Equation (45) . 
+R
+cov
+=
+1
+h
+cov
+f   ab
+A
+(45) 
+The convective heat transfer coefficient, h
+cov
+f   ab
+, between the working 
+fluid and the absorber plate is expressed in Equation (46) . 
+h
+cov
+f   ab
+= N
+u
+f
+k
+f
+D
+h
+(46) 
+(5) Insulation layer
+The insulation layer ’ s temperature results from the absorber plate ’ s 
+energy balance, where heat is conducted from the plate to the cooler 
+insulation layer below. Fig. 15 shows the thermal model, Table 6 shows 
+the parameters of thermal model, and its equivalent circuit is illustrated 
+in Fig. 16 .
+By converting the thermal model into its electrical circuit equivalent 
+and applying circuit analysis (Kirchhoff ’ s Current Law), the heat balance 
+equation for the insulation layer is derived, as shown in Equation (47) . 
+C
+ins
+dT
+ins
+dt
+=
+1
+Rcon
+( T
+ab
+  T
+ins
+) +
+1
+Rcov
+( Tam   T
+ins
+) (47) 
+The thermal capacity of the insulation layer, C
+ins
+, is expressed as 
+shown in Equation (48) . 
+C
+ins
+= ρ
+ins
+A
+ins
+δ
+ins
+c
+ins
+(48) 
+The conductive thermal resistance, R
+con
+, representing the heat con -
+duction between the absorber plate and the insulation layer, is given by 
+Fig. 13. Thermal model of the working fluid.
+Fig. 14. Equivalent circuit of the working fluid.
+Table 5 
+Parameters for the thermal model of the working fluid.
+Parameter Symbol Unit Value
+Density ρ
+f
+kg/m
+3
+1000
+Cross-sectional area A
+f
+m
+2
+0.006812
+Thickness δ
+f
+m 0.013
+Specific heat c
+f
+J/kg K 42,000
+Heat capacity C
+f
+J/K 371.94
+Thermal conductivity k
+f
+W/m • K 0.6
+Fig. 15. Thermal model of the insulation layer.
+Table 6 
+Insulation layer thermal model parameters.
+Parameter Symbol Unit Value
+Density ρ
+ins
+kg/m
+3
+20
+Area A
+ins
+m
+2
+0.1616
+Thickness δ
+ins
+m 0.025
+Specific Heat c
+ins
+J/kg K 1300
+Heat Capacity C
+ins
+J/K 105.04
+Thermal Conductivity k
+ins
+W/m • K 0.036
+G.-R. Chen et al.                                                                                                                                                                                                                                Energy Conversion and Management: X 26 (2025) 100910 
+11 
+--- PAGE 12 ---
+Equation (49) . 
+R
+con
+=
+1
+h
+con
+ab   ins
+A
+(49) 
+The convective heat transfer coefficient, h
+con
+ab   ins
+, representing the 
+convection between the insulation layer and the absorber plate, is 
+defined by Equation (50) . 
+h
+con
+ab   ins
+=
+k
+ins
+δ
+ins
+(50) 
+The convective thermal resistance, R
+cov
+, representing convection 
+above and below the glass layer, is defined by Equation (51) . 
+R
+cov
+=
+1
+h
+cov
+am   ins
+A
+(51) 
+The convective heat transfer coefficient, h
+con
+ab   ins
+, representing con -
+vection between the insulation layer and ambient air, is defined by 
+Equation (52)
+h
+con
+ab   ins
+= 5 . 7 + 3 . 8 V
+w
+(52) 
+Through the integration of thermal models and equivalent circuit 
+transformations, the heat transfer processes in flat-plate solar collectors 
+were systematically analyzed. By decomposing the system into distinct 
+layers — glass, air, absorber plate, working fluid, and insulation — this 
+study captured the dynamics of conduction, convection, and radiation 
+within each layer. Key findings highlight the significant influence of 
+environmental factors such as wind speed and solar radiation, as well as 
+the critical role of insulation in minimizing heat loss and enhancing 
+efficiency. These insights provide a robust framework for optimizing the 
+design and performance of flat-plate solar collectors, bridging theoret -
+ical understanding and practical applications.
+4. Results and discussions
+Improving the thermal performance of an integrated solar water 
+heating system by addressing two critical parameters: thermal storage 
+efficiency and heat retention time. The following section provides a 
+detailed theoretical basis for these quality characteristics, including the 
+calculation of thermal energy storage, latent heat contributions, and 
+efficiency metrics. Improving the thermal performance of an integrated 
+solar water heating system by addressing two critical parameters: 
+thermal storage efficiency and heat retention time. The following 
+section provides a detailed theoretical basis for these quality charac -
+teristics, Additionally, the analysis incorporates key experimental con -
+trol factors and explains the rationale behind their parameter settings, 
+such as phase change materials (PCMs), nanofluids, mass flow rate, and 
+collector configurations. These factors were systematically adjusted and 
+analyzed to achieve optimal system performance.
+The aim of this study is to improve the thermal storage efficiency and 
+heat retention time of the integrated solar water heating system. To 
+achieve this, the following section outlines the theoretical basis of these 
+two quality characteristics.
+Thermal Storage Efficiency:
+The thermal storage efficiency is determined by measuring the 
+temperature increase of the system over a specified period. This typi -
+cally involves calculating the change in the liquid temperature within 
+the tank from its initial temperature to the final temperature. The stored 
+thermal energy (Q
+store
+) is calculated using the following formula: 
+Q
+store
+= V C
+p
+Δ T = V C
+p
+ 
+T
+f
+  T
+i
+)
+(53) 
+where,
+V = Volume of the storage tank.
+C
+p 
+= Specific heat capacity of the fluid (kJ/kg •
+◦
+C).
+Δ T = Temperature change in the storage tank.
+T
+i
+= Initial temperature of the storage tank (
+◦
+C).
+T
+f 
+= Final temperature of the storage tank (
+◦
+C).
+If phase change materials (PCMs) are added to the system, it is also 
+necessary to calculate the latent heat （ Q
+latent
+） released or absorbed 
+during the melting or solidification process of these materials, as 
+calculated by the following formula: 
+Q
+latent
+= m • C
+p
+dT ( s ) + mL + m • C
+p
+dT (54) 
+where,
+Q = Total latent heat (J).
+m = Mass of the phase change material (kg).
+Cp = Specific heat capacity of the phase change material (J/kg •
+◦
+C).
+L = Latent heat of fusion
+Δ T = Difference between the final temperature and the initial 
+temperature.
+Calculate the sum of the thermal storage energy and latent heat to 
+determine the total thermal storage energy (Q
+total
+), as calculated by the 
+following formula: 
+Q
+total
+= Q
+store
++ Q
+latent
+(55) 
+Finally, the total thermal storage energy calculated is compared with 
+the total incident solar energy received by the solar collector. This 
+comparison is performed by relating the total thermal storage energy to 
+the product of the collector area and the solar radiation. The thermal 
+storage efficiency is calculated using the following formula: 
+η =
+(
+Q
+total
+A • E
+)
+• 100% (56) 
+where,
+A = Collector area (m
+2
+).
+E = Solar radiation (MJ/m
+2
+).
+Heat retention time is defined as the duration during which the 
+storage tank maintains the water temperature above a specified mini -
+mum target temperature after sunset, without the aid of solar radiation. 
+The calculation of heat retention time involves the following steps: 
+(1) Determine the Target Temperature: Set a minimum target tem -
+perature based on research objectives. In this experiment, the 
+target temperature is set at 30 
+◦
+C.
+(2) Record Water Temperature at Sunset: Measure and record the 
+water temperature in the storage tank at sunset, which serves as 
+the starting point for tracking heat retention.
+Fig. 16. Equivalent circuit of the insulation Layer.
+G.-R. Chen et al.                                                                                                                                                                                                                                Energy Conversion and Management: X 26 (2025) 100910 
+12 
+--- PAGE 13 ---
+(3) Monitor Temperature Changes: Periodically measure the water 
+temperature in the storage tank until it drops below the target 
+temperature.
+(4) Calculate Retention Time: Calculate the time elapsed from sunset 
+until the water temperature falls below the target temperature.
+For this study, based on literature and empirical data, the selected 
+control factors include PCM material, PCM volume, number of PCM 
+tubes, working fluid, mass flow rate, number of collector tubes, collector 
+plate material, collector tilt angle, and collector azimuth angle. These 
+factors are detailed in Table 7 .
+The following is an explanation of the selected levels for each control 
+factor:
+(1) PCM Material.
+This study focuses on organic paraffin, the most commonly used 
+phase change material (PCM) in solar water heating systems, to evaluate 
+its effectiveness in enhancing thermal storage efficiency and stability. 
+The control factor for PCM material has two levels: one includes the use 
+of PCM material, while the other excludes it.
+The paraffin selected for this study is RT35HC, with its heating and 
+cooling curves analyzed using data provided by Rubitherm. As shown in 
+Fig. 17 , the minimal difference in enthalpy values between the heating 
+and cooling processes results in nearly overlapping curves across the 
+entire temperature range, demonstrating consistent thermal behavior.
+(2) PCM volume.
+Building on the research conducted by Cabeza et al. [37] , which 
+demonstrated that varying PCM volumes can significantly enhance en -
+ergy density and prolong water temperature retention, three levels of 
+PCM volume were selected for this study. The estimated daily water 
+demand was set at a minimum of 30 L, with the initial PCM volume 
+comprising 10 % of the total volume. Based on this baseline, the PCM 
+volume was incrementally increased by 5 % and 10 %, resulting in three 
+levels for this control factor: 10 %, 15 %, and 20 % of the total volume.
+(3) Number of PCM tubes.
+Research by Park et al. [50] highlighted that increasing the number 
+of PCM tubes enhances the initial heat transfer rate and melting rate due 
+to the expanded heat transfer area. This finding is particularly relevant 
+when installation space is limited, as increasing the number of PCM 
+tubes can effectively improve system efficiency. Based on this principle, 
+this study added 2 and 4 additional PCM tubes to the baseline config -
+uration of 12 tubes. Consequently, the levels selected for this control 
+factor were 12, 14, and 16 PCM tubes.
+(4) Working fluid type.
+To investigate the influence of nanofluids on the thermal efficiency 
+of the integrated solar water heating system, this study selected two 
+nanofluids with superior thermal properties — aluminum oxide (Al2O3) 
+and copper oxide (CuO) — in addition to the traditionally used water. 
+These three working fluids form the levels for this control factor: water, 
+(Al2O3), and CuO.
+Metal oxide nanoparticles, particularly aluminum oxide and copper 
+oxide, are commonly employed in solar water heating systems due to 
+their excellent thermal properties, high heat transfer efficiency, and 
+stability. The physical properties of the nanoparticles used in this study 
+are provided in Table 8 , offering further insight into their suitability for 
+enhancing system performance.
+In this experiment, copper oxide (CuO) and aluminum oxide (Al2O3) 
+nanofluids were selected for their superior thermal properties. The 
+density and specific heat capacity of these nanofluids, as utilized in this 
+study, are detailed in Table 9 .
+(5) Mass flow rate.
+Based on the findings of Moghadam et al. [51] and Prakasam et al. 
+[28] , the optimal mass flow rate range for solar water heating systems 
+was identified as between 0.02 kg/s and 0.03 kg/s. Their research 
+indicated that increasing the mass flow rate beyond 0.03 kg/s, partic -
+ularly up to 0.05 kg/s, led to a decline in system performance. Accord -
+ingly, this study selected three levels of mass flow rate for investigation: 
+0.02 kg/s, 0.025 kg/s, and 0.03 kg/s.
+(6) Number of collector tubes.
+In this study, the flat-plate solar collector has an area of 0.15 m2 and 
+a tube diameter of 25 mm. Due to the size constraints of the collector, the 
+maximum allowable number of collector tubes is 11. The original 
+configuration included 9 collector tubes. Accordingly, this study 
+selected 9, 10, and 11 collector tubes as the levels for this control factor, 
+ensuring compatibility with the collector ’ s physical dimensions while 
+enabling performance comparisons.
+(7) Collector plate material.
+Solar collector plates are typically constructed from aluminum, 
+copper, or stainless steel. Among these, copper possesses the highest 
+thermal conductivity, making it the most efficient in heat transfer, 
+though it is also the most expensive. Aluminum, which has the second- 
+highest thermal conductivity, is widely used due to its balance of per -
+formance and affordability. Stainless steel, while less thermally 
+conductive than copper or aluminum, is valued for its durability and 
+resistance to corrosion, making it ideal for long-term applications. These 
+materials offer distinct trade-offs between thermal efficiency, cost, and 
+longevity.
+Table 7 
+Control Factors and their levels for the integrated solar water heating system.
+Factor Explanation Level 1 Level 2 Level 3
+A PCM Material No Parffine ​
+B PCM volume 10 ％ 15 ％ 20 ％
+C PCM tube 12 14 16
+D Work fluid water Al
+2
+O
+3
+CuO
+E Mass flow rate （ kg / s ） 0.02 0.025 0.03
+F Collector tube number 9 10 11
+G Collector plate material Cu Al M
+H Tilt angle (degrees) 20.4 22.4 24.4
+I Azimuth angle (degrees) 45 0   45
+Fig. 17. Heating and cooling curves of paraffin RT35HC.
+Table 8 
+Specific physical properties of nanoparticles.
+Name Density Specific heat capacity 
+( kj / kg •
+◦
+C )
+Particle size 
+( mm )
+Color
+CuO 6310 0.531 35 – 40 Black
+Al2O3 3970 0.765 30 – 55 White
+Table 9 
+Thermal properties of nanofluids.
+Nanofluid Density
+ 
+kg / m
+3
+)
+Capacity ( kj / kg •
+◦
+C )
+CuO 1210 3.41
+Al2O3 1117 3.69
+G.-R. Chen et al.                                                                                                                                                                                                                                Energy Conversion and Management: X 26 (2025) 100910 
+13 
+--- PAGE 14 ---
+(8) Collector tilt angle.
+Liu et al. [52] conducted an analysis to determine the optimal tilt 
+angle for solar collectors in various regions of Taiwan. Their study 
+revealed that the optimal tilt angle range for solar collectors in Taiwan 
+lies between 20.2
+◦
+and 22.4
+◦
+, with 22.4
+◦
+identified as the best angle for 
+the Taipei area. Based on this finding, this study adjusted the tilt angle 
+by ± 2
+◦
+, selecting 20.4
+◦
+, 22.4
+◦
+, and 24.4
+◦
+as the levels for this control 
+factor to evaluate system performance across a representative range of 
+tilt angles.
+(9) Collector azimuth angle:
+Selecting the appropriate azimuth angle is crucial for optimizing 
+overall performance and maximizing solar radiation capture. Based on 
+data from the Central Weather Bureau of the Ministry of Transportation 
+and Communications regarding seasonal elevation and azimuth angles 
+in Taiwan, this study selected   45
+◦
+, 0
+◦
+, and 45
+◦
+as the levels for the 
+collector azimuth angle control factor.
+The experimental design was conducted systematically using the 
+Taguchi method to define the levels of each control factor. The experi -
+mental data were then analyzed in detail through main effects analysis 
+(MEA) and analysis of variance (ANOVA) to identify the optimal 
+parameter combination for single quality characteristics, achieving the 
+best performance for each specific metric. Finally, grey relational 
+analysis (GRA) was applied to integrate multiple quality characteristics, 
+enabling the determination of an optimal parameter combination that 
+accounts for various quality attributes. This comprehensive approach 
+ensures the practicality and robustness of the experimental results.
+4.1. Validation of experimental and simulation data accuracy
+To ensure the precision of the simulation analysis, a comparative 
+evaluation was conducted between the simulation results and the 
+empirical data obtained from the physical system. When the discrepancy 
+between these two datasets is within 5 %, the simulation results are 
+deemed reliable, thereby providing a robust foundation for subsequent 
+optimization analyses. The TRNSYS model was configured and tested 
+using the parameters derived from the physical system to ensure align -
+ment between the simulation conditions and the actual operational 
+environment. Subsequently, the simulation data generated by the 
+TRNSYS model were compared against the experimental data from the 
+physical system. The comparative outcomes are presented in Table 10 .
+According to Table 10 , in the absence of PCM, the simulated data 
+indicate an average thermal storage efficiency of 66.16 %, while the 
+experimental data show an average value of 63.41 %, resulting in a 
+discrepancy of 4.337 %. For heat retention time, the simulated data yield 
+an average of 17.13 h, compared to 16.59 h from the experimental re -
+sults, with a discrepancy of 3.195 %.
+In the case of PCM utilization, since the experimental setup cannot 
+directly measure the latent heat change of PCM, the thermal storage 
+efficiency was calculated based on the observed temperature rise of the 
+storage tank (sensible heat only). The simulated data were derived using 
+the same approach, excluding the PCM latent heat contribution. The 
+results indicate an average thermal storage efficiency of 62.43 % for the 
+simulated data and 60.15 % for the experimental data, with a discrep -
+ancy of 3.791 %. Regarding heat retention time, the simulated data show 
+an average of 18.33 h, while the experimental results average 17.66 h, 
+with a discrepancy of 3.454 %.
+In summary, under both PCM and non-PCM conditions, the dis -
+crepancies between the simulated and experimental data remain within 
+a reasonable range of 5 %. This demonstrates that the simulation results 
+are in strong agreement with the experimental observations, confirming 
+their accuracy and reliability.
+4.2. Thermal storage efficiency: Single quality optimization analysis
+The experimental results for the thermal storage efficiency of the 
+integrated solar water heating system are presented in Table 11 . The 
+corresponding main effects response table and graph, which detail the 
+analysis of thermal storage efficiency, are provided in Table 12 and 
+Fig. 18 , respectively. These results highlight the influence of various 
+control factors on the system ’ s thermal performance, offering valuable 
+insights for optimization.
+By calculating the average S/N ratio for each level of the control 
+Table 10 
+Comparison of experimental and simulation data.
+Without PCM With PCM
+Thermal storage efficiency (%) Heat retention Time (h) Thermal storage efficiency (%) Heat retention time (h)
+Experimental Simulation Experimental Simulation Experimental Simulation Experimental Simulation
+1 63.47 65.82 16.74 17.13 60.32 62.39 17.73 18.33
+2 63.45 66.91 16.54 17.13 60.11 62.48 17.63 18.33
+3 63.33 65.77 16.51 17.13 60.03 62.44 17.62 18.33
+Average 63.41 66.16 16.59 17.13 60.15 62.43 17.66 18.33
+Error (%) 4.337 % 3.195 % 3.791 % 3.454 %
+Table 11 
+Analysis results of thermal storage efficiency.
+Run Group 1 2 3 4 5 Average S/N
+1 64.68 64.72 64.69 64.7 64.71 64.7 36.218
+2 57.22 57.18 57.21 57.25 57.15 57.2 35.148
+3 47.28 47.32 47.31 47.29 47.32 47.3 33.497
+4 52.65 52.72 52.68 52.73 52.72 52.7 34.436
+5 45.08 45.12 45.11 45.09 45.13 45.1 33.084
+6 73.42 73.45 73.38 73.42 73.35 73.4 37.314
+7 58.15 58.12 58.08 58.12 58.05 58.1 35.284
+8 54.85 54.92 54.88 54.95 54.9 54.9 34.791
+9 58.91 58.95 58.88 58.85 58.92 58.9 35.402
+10 55.08 55.12 55.09 55.13 55.08 55.1 34.823
+11 60.81 60.8 60.79 60.82 60.78 60.8 35.678
+12 54.19 54.22 54.2 54.18 54.21 54.2 34.680
+13 55.81 55.79 55.81 55.78 55.82 55.8 34.933
+14 50.52 50.51 50.49 50.48 50.52 50.5 34.066
+15 62.68 62.72 62.71 62.69 62.71 62.7 35.945
+16 69.38 69.44 69.41 69.43 69.44 69.4 36.827
+17 51.68 51.74 51.71 51.76 51.76 51.7 34.270
+18 47.68 47.74 47.71 47.76 47.77 47.7 33.570
+19 49.82 49.81 49.79 49.82 49.78 49.8 33.945
+20 78.39 78.4 78.41 78.42 78.38 78.4 37.886
+21 73.53 73.48 73.52 73.49 73.51 73.5 37.326
+22 71.18 71.25 71.22 71.27 71.18 71.2 37.050
+23 74.08 74.12 74.11 74.14 74.06 74.1 37.396
+24 55.48 55.52 55.53 55.54 55.56 55.5 34.886
+25 59.07 59.15 59.11 59.12 59.08 59.1 35.432
+26 74.59 74.62 74.59 74.65 74.56 74.6 37.455
+27 65.44 65.42 65.4 65.36 65.38 65.4 36.312
+28 73.47 73.52 73.49 73.54 73.46 73.5 37.326
+29 65.42 65.4 65.44 65.36 65.38 65.4 36.312
+30 59.78 59.82 59.82 59.84 59.76 59.8 35.534
+31 59.68 59.62 59.61 59.64 59.62 59.6 35.505
+32 61.96 62.11 62.01 62.07 62.02 62 35.848
+33 76.25 76.18 76.33 76.28 76.12 76.2 37.639
+34 53.21 53.23 53.17 53.2 53.17 53.2 34.518
+35 61.11 61.08 61.13 61.13 61.1 61.1 35.721
+36 83.31 83.28 83.32 83.27 83.33 83.3 38.413
+Average ​ ​ ​ ​ ​ ​ 35.679
+G.-R. Chen et al.                                                                                                                                                                                                                                Energy Conversion and Management: X 26 (2025) 100910 
+14 
+--- PAGE 15 ---
+factors and compiling these averages into Table 12 : Main Effects 
+Response Table for Thermal Storage Efficiency, the impact of each 
+control factor on thermal storage efficiency is clearly demonstrated. By 
+comparing the average S/N ratios of different levels for each factor, the 
+level with the highest average S/N ratio is selected as the optimal 
+configuration, as it maximizes thermal storage efficiency while ac -
+counting for variability. This analysis not only highlights the importance 
+of processing experimental data but also effectively quantifies the in -
+fluence of each factor on system performance, ultimately identifying the 
+optimal parameter configuration to enhance the performance of the 
+integrated solar water heating system.
+The main effects response table and chart reveal that the optimal 
+factor levels for maximizing thermal storage efficiency are A2, B3, C2, 
+D3, E1, F1, G1, H1, and I2. These correspond to the following configu -
+rations: the use of PCM material, 20 % PCM volume, 14 PCM tubes, CuO 
+nanofluid as the working fluid, a mass flow rate of 0.02 kg/s • m
+2
+, 9 
+collector tubes, copper as the collector plate material, a tilt angle of 
+20.4
+◦
+, and an azimuth angle of 0
+◦
+facing south. According to the main 
+effects response table, the factor with the greatest influence on the 
+thermal storage efficiency of the integrated solar water heating system is 
+G (collector plate material), followed by A (PCM material), F (number of 
+collector tubes), D (working fluid type), B (PCM volume), I (azimuth 
+angle), H (tilt angle), E (mass flow rate), and C (number of PCM tubes).
+As detailed in Table 13 , each control factor significantly impacts 
+thermal storage efficiency. Among these, PCM material demonstrates 
+the most pronounced effect, followed by collector plate material, PCM 
+volume, azimuth angle, tilt angle, and mass flow rate. These findings 
+underscore the importance of optimizing material selection and geo -
+metric configuration to enhance system performance.
+To ensure the accuracy and reliability of the single quality optimi -
+zation results, a series of confirmation experiments is conducted to 
+validate the effectiveness and reproducibility of the optimized param -
+eter combination.
+The validation process begins by calculating the overall mean of the 
+Signal-to-Noise (S/N) ratios obtained from the 36 experiments. This is 
+achieved by summing the S/N ratios of all experiments and dividing the 
+total by 36. The calculation method is expressed as follows: 
+Table 12 
+Main effects response table for thermal storage efficiency.
+A B C D E F G H I
+Lv 1 34.998 35.525 35.652 35.093 35.761 36.252 36.780 35.765 35.666
+Lv 2 36.361 35.638 35.779 35.730 35.708 35.763 35.688 35.744 35.826
+Lv 3 ​ 35.877 35.608 36.216 35.569 35.024 34.571 35.531 35.547
+Max 36.361 35.877 35.779 36.216 35.761 36.252 36.780 35.765 35.826
+Min 34.998 35.525 35.608 35.093 35.569 35.024 34.571 35.531 35.547
+Diff 1.363 0.352 0.127 0.486 0.192 1.227 2.209 0.234 0.279
+Rank 2 5 9 4 8 3 1 7 6
+Fig. 18. Main effects response chart for thermal storage efficiency.
+Table 13 
+Analysis of Variance (ANOVA) for Thermal Storage Efficiency of the Integrated Solar Water Heating System.
+Factor Degrees of Freedom (DOF) Sum of Squares (SS) Variance (Mean square, MS) F-value Contribution P-value Confidence Level
+PCM material 1 16.72157 16.72157 440.520 25.51 % 0 100 %
+PCM volume 2 0.77446 0.38723 10.201 1.18 % 0.001 99.9 %
+PCM (No of tubes) 2 0.19070 0.09535 2.512 0.29 % 0.109 89.1 %
+Working fluid 2 7.61675 3.80837 100.329 11.62 % 0 100 %
+Mass flow rate 2 0.23649 0.11824 3.115 0.36 % 0.068 93.2 %
+Number of collector tubes 2 9.16188 4.58094 120.682 13.98 % 0 100 %
+Collector tube material 2 29.28081 14.64041 385.693 44.68 % 0 100 %
+Inclination angle 2 0.40197 0.20098 5.295 0.61 % 0.015 98.5 %
+Azimuth angle 2 0.47190 0.23595 6.216 0.72 % 0.008 99.2 %
+error 18 0.68326 0.03796 ​ ​ ​ ​
+Combined error 18 0.68326 0.03796 ​ ​ ​ ​
+Total 35 65.53979 ​ ​ ​ ​ ​
+G.-R. Chen et al.                                                                                                                                                                                                                                Energy Conversion and Management: X 26 (2025) 100910 
+15 
+--- PAGE 16 ---
+η i =
+1
+36
+∑
+36
+i = 1
+η i =
+1
+36
+( 36 . 218 + 35 . 148 + 33 . 497 + ⋯ + 36 . 218 ) = 35 . 679 
+Next, the overall mean and the optimal levels of the significant 
+control factors are used to predict the optimized Signal-to-Noise (S/N) 
+ratio. Based on Table 8 , all control factors are identified as critical to 
+thermal storage efficiency. The optimal level for each control factor is 
+determined from Table 6 , enabling the calculation of the predicted 
+optimal S/N ratio. The calculation method is expressed as follows: 
+̂
+S N = η i + ( A
+2
+  η i ) + ( B
+3
+  η i ) + ( C
+2
+  η i ) + ( D
+3
+  η i ) + ( E
+1
+  η i )
++ ( F
+1
+  η i ) + ( G
+1
+  η i ) + ( H
+1
+  η i ) + ( I
+2
+  η i ) = 39 . 179 
+Finally, the CI value for the 95 % confidence interval is calculated. 
+The calculation method is as follows: 
+I =
+̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅ ̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅ ̅ ̅
+F
+a ; 1 , V
+2
+× MS
+e
+×
+[
+1
+n
+eff
++
+1
+r
+]
+√
+=
+̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅ ̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅ ̅
+4 . 41 × 0 . 03796 × 0 . 7
+√
+= 0 . 34231 
+The confidence interval for the optimized thermal storage efficiency 
+is calculated to be between 38.8376 and 39.5222. If the Signal-to-Noise 
+(S/N) ratio obtained from the confirmation experiments falls within this 
+range, it confirms that the experiment is both highly accurate and 
+reproducible.
+As shown in Table 14 , the S/N ratio calculated from five confirma -
+tion experiments is 39.294, which lies within the 95 % confidence in -
+terval. This result indicates that the experimental findings are reliable 
+and demonstrate good reproducibility, validating the effectiveness of 
+the optimized parameter combination.
+4.3. Heat retention time: Single quality optimization analysis
+The experimental results for the heat retention time of the integrated 
+solar water heating system are presented in Table 15 . The corresponding 
+main effects response table and chart, which detail the analysis of heat 
+retention time, are provided in Table 16 and Fig. 19 , respectively. These 
+results offer insights into the influence of various control factors on the 
+system ’ s heat retention performance and guide the identification of 
+optimal parameter combinations.
+The average S/N ratios for each level of the control factors were 
+calculated and compiled into Table 16 , providing a clear representation 
+of the influence of each factor on thermal storage efficiency.
+The main effects response table and chart identify the optimal factor 
+levels for maximizing heat retention time as A2, B1, C2, D3, E1, F1, G1, 
+H2, and I2. These levels correspond to the following configurations: the 
+use of PCM material, 10 % PCM volume, 14 PCM tubes, CuO nanofluid 
+as the working fluid, a mass flow rate of 0.02 kg/s, 9 collector tubes, 
+copper as the collector plate material, a tilt angle of 22.4
+◦
+, and an azi -
+muth angle of 0
+◦
+facing south.According to the main effects response 
+table, the factor with the greatest influence on heat retention time is G 
+(collector plate material), followed by D (working fluid type), F (number 
+of collector tubes), A (PCM material), I (azimuth angle), H (tilt angle), C 
+(number of PCM tubes), E (mass flow rate), and B (PCM volume).
+As shown in Table 17 , the collector plate material exhibits the most 
+significant impact on heat retention time, followed by the working fluid, 
+the number of collector tubes, and the PCM material. In contrast, PCM 
+volume, the number of PCM tubes, mass flow rate, tilt angle, and azi -
+muth angle show minimal influence on heat retention time. Conse -
+quently, these five control factors were grouped into the error term for 
+further analysis.
+To ensure the accuracy and reliability of the single quality optimi -
+zation results, confirmation experiments are conducted to validate the 
+effectiveness and reproducibility of the optimized parameter 
+combination.
+The validation process begins by calculating the overall mean of the 
+Signal-to-Noise (S/N) ratios obtained from the 36 experiments. This is 
+achieved by summing the S/N ratios of all experiments and dividing the 
+total by 36. The calculation method is expressed as follows: 
+η i =
+1
+36
+∑
+36
+i = 1
+η i =
+1
+36
+( 24 . 244 + 20 . 668 + 0 + ⋯ + 29 . 066 ) = 17 . 695 
+Next, the overall mean and the optimal levels of the significant 
+control factors are used to predict the optimized Signal-to-Noise (S/N) 
+ratio. Based on Table 11 , four control factors are identified as critical to 
+heat retention time. The optimal level for each of these factors is 
+determined from Table 10 , enabling the calculation of the predicted 
+optimal S/N ratio. The calculation method is expressed as follows: 
+̂
+S N = η i + ( A
+2
+  η i ) + ( D
+3
+  η i ) + ( F
+1
+  η i ) + ( G
+1
+  η i ) = 33 . 809 
+Finally, the CI value for the 95 % confidence interval is calculated. 
+The calculation method is as follows: 
+Table 14 
+Confirmation Experiment Results for Thermal Storage Efficiency of the Integrated Solar Water Heating System.
+Primary Control Factors 1 2 3 4 5 Mean S/N Ratio
+A
+2
+、 B
+3
+、 C
+2
+、 D
+3
+、 E
+1
+、 F
+1
+、 G
+1
+、 H
+1
+、 I
+2
+92.17 92.23 92.21 92.22 92.19 92.2 39.294
+Table 15 
+Analysis results of heat retention time.
+Frequency 
+Groups
+1 2 3 4 5 Mean S/N 
+ratio
+1 16.31 16.3 16.3 16.33 16.3 16.3 24.244
+2 10.81 10.81 10.8 10.83 10.8 10.8 20.668
+3 0 0 0 0 0 0 0.000
+4 5.26 5.26 5.3 5.33 5.32 5.3 14.486
+5 0 0 0 0 0 0 0.000
+6 22.2 22.23 22.2 22.21 22.18 22.2 26.927
+7 12.33 12.28 12.3 12.33 12.31 12.3 21.798
+8 7.66 7.71 7.73 7.68 7.71 7.7 17.730
+9 12.46 12.51 12.48 12.46 12.51 12.5 21.938
+10 10.1 10.06 10.06 10.08 10.11 10.1 20.086
+11 12.76 12.8 12.83 12.81 12.78 12.8 22.144
+12 7.53 7.48 7.46 7.52 7.51 7.5 17.501
+13 10.36 10.41 10.43 10.38 10.4 10.4 20.341
+14 0 0 0 0 0 0 0.000
+15 17.4 17.38 17.41 17.36 17.43 17.4 24.811
+16 20.06 20.13 20.08 20.13 20.1 20.1 26.064
+17 4.53 4.46 4.48 4.5 4.51 4.5 13.064
+18 0 0 0 0 0 0 0.000
+19 0 0 0 0 0 0 0.000
+20 27.06 27.13 27.11 27.08 27.12 27.1 28.659
+21 18.58 18.61 18.56 18.6 18.63 18.6 25.390
+22 18.06 18.13 18.1 18.11 18.08 18.1 25.154
+23 22.26 22.3 22.28 22.28 22.31 22.3 26.966
+24 0 0 0 0 0 0 0.000
+25 3.56 3.63 3.6 3.58 3.61 3.6 11.126
+26 22.98 23.01 23 23.03 22.96 23 27.235
+27 10.71 10.68 10.73 10.7 10.66 10.7 20.588
+28 21.56 21.63 21.6 21.58 21.61 21.6 26.689
+29 11.01 10.98 11 11.03 10.96 11 20.828
+30 3.76 3.83 3.8 3.78 3.82 3.8 11.596
+31 7.8 7.78 7.79 7.82 7.76 7.8 17.842
+32 10.21 10.18 10.22 10.2 10.19 10.2 20.172
+33 19.33 19.41 19.58 19.5 19.66 19.5 25.801
+34 3.1 3.06 3.12 3.08 3.1 3.1 9.827
+35 8.16 8.22 8.2 8.22 8.18 8.2 18.276
+36 28.38 28.41 28.4 28.36 28.41 28.4 29.066
+Mean value ​ ​ ​ ​ ​ ​ 17.695
+G.-R. Chen et al.                                                                                                                                                                                                                                Energy Conversion and Management: X 26 (2025) 100910 
+16 
+--- PAGE 17 ---
+CI =
+̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅ ̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅ ̅̅̅̅̅ ̅
+F
+a ; 1 , V
+2
+× MS
+e
+×
+[
+1
+n
+eff
++
+1
+r
+]
+√
+=
+̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅ ̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅ ̅̅̅̅ ̅
+4 . 2 × 14 . 00602 × 0 . 422
+√
+= 4 . 98 
+The confidence interval for the optimized heat retention time is 
+calculated to be between 28.8291 and 38.7891. If the Signal-to-Noise 
+(S/N) ratio obtained from the confirmation experiments lies within 
+this range, it indicates that the experiment is both highly accurate and 
+reproducible.
+As shown in Table 18 , the S/N ratio obtained from five confirmation 
+experiments is 29.425, which falls within the 95 % confidence interval. 
+This result confirms that the experimental findings are reliable and 
+demonstrate good reproducibility, validating the effectiveness of the 
+optimized parameter combination.
+4.4. Multi-quality optimization analysis for the integrated solar water 
+heating system
+Practical applications require optimizing multiple performance as -
+pects, such as thermal storage efficiency and heat retention time. To 
+address this, Grey Relational Analysis (GRA) was used to identify the 
+best parameter configuration.
+The process analyzed 36 experimental results, using Signal-to-Noise 
+(S/N) ratios to compare thermal storage efficiency and heat retention 
+time. Maximum and minimum values were identified and normalized, as 
+shown in Table 19 , forming the basis for determining the optimal 
+configuration. This approach ensures the system achieves balanced and 
+effective performance in real-world applications.
+To maximize both thermal storage efficiency and heat retention time, 
+the “ larger-the-better ” approach was used during the analysis. In this 
+Table 16 
+Main effects response table for heat retention time.
+A B C D E F G H I
+Level 1 16.211 18.138 18.110 13.172 18.491 20.917 25.259 18.151 17.431
+Level 2 19.179 17.979 18.263 18.374 16.975 18.585 19.772 18.276 18.949
+Level 3 ​ 16.968 16.712 21.540 17.619 13.583 8.055 16.658 16.705
+Max 19.179 18.138 18.263 21.540 18.491 20.917 25.259 18.276 18.949
+Min 16.211 16.968 16.712 13.172 16.975 13.583 8.055 16.658 16.705
+Diff 2.967 1.170 1.551 8.368 1.516 7.334 17.204 1.618 2.243
+Rank 4 9 7 2 8 3 1 6 5
+Fig. 19. Main effects response chart for heat retention time.
+Table 17 
+Analysis of variance for heat retention time.
+Factor Degrees of freedom (DOF) Sum of squares (SS) Variance (mean square, MS) F-value Contribution P-value Confidence level
+PCM material 1 79.24580 79.24580 4.752 2.56 % 0.042 95.8 %
+PCM volume 2 9.65940 4.82970 0.290 0.31 % 0.751 24.9 %
+PCM (No of tubes) 2 17.53974 8.76987 0.526 0.57 % 0.598 40.2 %
+Working fluid 2 428.4361 214.2180 12.84 13.86 % 0 100.0 %
+Mass flow rate 2 13.88591 6.94296 0.416 0.45 % 0.666 33.4 %
+Number of collector tubes 2 336.9901 168.4950 10.10 10.9 % 0.001 99.9 %
+Collector tube material 2 1853.466 926.7334 55.57 59.98 % 0 100.0 %
+Inclination angle 2 19.45315 9.72657 0.583 0.63 % 0.568 43.2 %
+Azimuth angle 2 31.44773 15.72386 0.943 1.02 % 0.409 59.1 %
+error 18 300.1825 16.67681 ​ ​ ​ ​
+Combined error 28 392.1684 14.00602 ​ ​ ​ ​
+Total 35 3090.307 ​ ​ ​ ​ ​
+Table 18 
+Confirmation experiment results for heat retention time.
+Primary control factor 1 2 3 4 5 Mean value S/N ratio (db)
+A
+2
+、 D
+3
+、 F
+1
+、 G
+1
+29.62 29.57 29.59 29.61 29.58 29.6 29.425
+G.-R. Chen et al.                                                                                                                                                                                                                                Energy Conversion and Management: X 26 (2025) 100910 
+17 
+--- PAGE 18 ---
+method, the highest values from the two sets of Signal-to-Noise (S/N) 
+ratios were chosen as the reference points (labeled as X0), representing 
+the ideal performance. The remaining data were compared against these 
+reference points to assess how closely each setup approached the ideal. 
+The results of these comparisons are shown in Table 20 .
+After completing the grey relational generation, the next step in -
+volves calculating the difference between each comparison sequence 
+and the reference sequence X
+0
+. The calculated differences quantify the 
+deviation of each sequence from the reference, providing the basis for 
+subsequent analysis. The results are presented in Table 21 .
+Finally, the difference sequences are substituted into the grey rela -
+tional coefficient formula to calculate the grey relational grade values 
+for thermal storage efficiency and heat retention time. The average of 
+each set of grey relational grades is computed to obtain the final grey 
+relational grade value. These results are summarized in Table 22 .
+To determine the best overall performance, an analysis was con -
+ducted on the grey relational grades, which represent the combined 
+results for thermal storage efficiency and heat retention time. This 
+analysis identifies how each control factor influences the system ’ s 
+overall performance and helps pinpoint the optimal settings for 
+maximum efficiency. The results, including the recommended optimal 
+levels, are clearly summarized in Table 23 and Fig. 20 .
+According to the main effects response table and chart, the optimal 
+factor levels for multi-quality optimization are A2, B3, C2, D3, E1, F1, 
+G1, H2, and I2. These levels correspond to the following configurations: 
+the use of PCM material, 20 % PCM volume, 14 PCM tubes, CuO 
+nanofluid as the working fluid, a mass flow rate of 0.02 kg/s, 9 collector 
+tubes, copper as the collector plate material, a tilt angle of 22.4
+◦
+, and an 
+azimuth angle of 0
+◦
+facing south.The main effects response table further 
+reveals that the factor with the greatest influence on the thermal storage 
+efficiency of the integrated solar water heating system is G (collector 
+plate material), followed by D (working fluid type), F (number of col -
+lector tubes), A (PCM material), B (PCM volume), H (tilt angle), E (mass 
+flow rate), C (number of PCM tubes), and I (azimuth angle).The results 
+of the confirmation experiments for thermal storage efficiency and heat 
+retention time are detailed in Table 24 and Table 25 , respectively.
+After five confirmation experiments, the thermal storage efficiency 
+reached 94.2 %, and the heat retention time was 31.7 h. The Signal-to- 
+Noise (S/N) ratio for thermal storage efficiency was 39.481, while the S/ 
+N ratio for heat retention time was 30.021. Both values fall within the 
+95 % confidence interval obtained from the single quality optimization 
+process, providing strong evidence of the reliability and reproducibility 
+of the optimized parameters derived through Grey Relational Analysis.
+According to the main effects plot in Fig. 8 , the configuration uti -
+lizing CuO nanofluid as the working fluid, 9 collector tubes, copper 
+collector plates, a mass flow rate of 0.02 kg/s, a tilt angle of 22.4
+◦
+, and a 
+due south azimuth angle demonstrated significant improvements in 
+system performance. The following sections provide a detailed discus -
+sion of each parameter:
+(1) Working fluid: CuO nanofluid.
+The experimental results demonstrated that CuO nanofluid exhibited 
+superior thermal performance compared to Al
+2
+O
+3 
+nanofluid and water. 
+This enhanced performance is primarily attributed to the higher thermal 
+conductivity of CuO nanofluid, which exceeds that of Al
+2
+O
+3 
+nanofluid, 
+with water showing the lowest thermal conductivity among the three.
+Table 19 
+S/N ratios for thermal storage efficiency and heat retention time.
+S/N ratio for thermal storage efficiency 
+(db)
+S/N ratio for thermal storage time 
+(db)
+1 36.218 24.244
+2 35.148 20.668
+3 33.497 0.000
+4 34.436 14.486
+5 33.084 0.000
+6 37.314 26.927
+7 35.284 21.798
+8 34.791 17.730
+9 35.402 21.938
+10 34.823 20.086
+11 35.678 22.144
+12 34.680 17.501
+13 34.933 20.341
+14 34.066 0.000
+15 35.945 24.811
+16 36.827 26.064
+17 34.270 13.064
+18 33.570 0.000
+19 33.945 0.000
+20 37.886 28.659
+21 37.326 25.390
+22 37.050 25.154
+23 37.396 26.966
+24 34.886 0.000
+25 35.432 11.126
+26 37.455 27.235
+27 36.312 20.588
+28 37.326 26.689
+29 36.312 20.828
+30 35.534 11.596
+31 35.505 17.842
+32 35.848 20.172
+33 37.639 25.801
+34 34.518 9.827
+35 35.721 18.276
+36 38.413 29.066
+Max 38.413 29.066
+Min 33.084 0
+Diff 5.329 29.066
+Table 20 
+Grey relational generation for thermal storage efficiency and heat retention 
+time.
+Thermal storage efficiency Thermal storage duration
+X0 1 1
+X1 0.58816619 0.83408264
+X2 0.38736099 0.71107873
+X3 0.07762494 0
+X4 0.25381643 0.4983601
+X5 0 0
+X6 0.7937882 0.92639922
+X7 0.41280529 0.74994245
+X8 0.32047246 0.60997698
+X9 0.43509372 0.75476238
+X10 0.32639907 0.69105395
+X11 0.48683825 0.76184958
+X12 0.29955795 0.60211259
+X13 0.34697411 0.6998008
+X14 0.18431763 0
+X15 0.53699038 0.85359774
+X16 0.7024581 0.89670379
+X17 0.22259295 0.44946279
+X18 0.09134979 0
+X19 0.16156809 0
+X20 0.90119304 0.98599822
+X21 0.79600714 0.87352709
+X22 0.74419108 0.86538409
+X23 0.80925775 0.92774227
+X24 0.33818802 0
+X25 0.44061852 0.3827809
+X26 0.82021822 0.93697836
+X27 0.60570473 0.7082989
+X28 0.79600714 0.9182116
+X29 0.60570473 0.71656199
+X30 0.45980917 0.39893778
+X31 0.45434915 0.61383289
+X32 0.51869234 0.6939981
+X33 0.85480447 0.88764765
+X34 0.26920668 0.3380964
+X35 0.49486032 0.62877749
+X36 1 1
+Max. Value 1 1
+Min. Value 0 0
+G.-R. Chen et al.                                                                                                                                                                                                                                Energy Conversion and Management: X 26 (2025) 100910 
+18 
+--- PAGE 19 ---
+(2) Number of Collector Tubes: 9 Tubes.
+(3) The experimental results indicated that, for a fixed collector 
+surface area, increasing the number of tubes reduces the spacing be -
+tween them. This closer spacing leads to greater thermal interference, 
+which in turn decreases the system ’ s overall thermal efficiency. There -
+fore, maintaining 9 collector tubes provided an optimal balance between 
+spacing and performance.
+(4) Collector tube material: copper.
+(5) Copper, known for its exceptionally high thermal conductivity, 
+exhibited superior performance in the experiments. Compared to 
+aluminum and stainless steel, copper transfers absorbed solar energy to 
+the working fluid more efficiently, resulting in a significant enhance -
+ment of the system ’ s overall thermal efficiency.
+(6) Mass flow rate: 0.02 kg/s.
+(7) The experimental results revealed that a lower mass flow rate of 
+0.02 kg/s allows the working fluid to fully absorb heat, preventing 
+insufficient heat absorption caused by excessively rapid flow rates. 
+Furthermore, a lower mass flow rate reduces the energy consumption of 
+the pump, thereby decreasing operating costs and improving overall 
+system efficiency.
+(8) Tilt angle: 22.4 degrees.
+(9) The experimental results showed that a tilt angle of 22.4 degrees 
+maximized the amount of solar radiation received, outperforming the 
+angles of 20.4 degrees and 24.4 degrees. While 20.4 degrees performed 
+slightly below 22.4 degrees, 24.4 degrees received the least solar radi -
+ation, resulting in lower system efficiency.
+(10) Azimuth angle: due south.
+(11) The experimental results demonstrated that orienting the col -
+lector due south ensured maximum solar radiation exposure throughout 
+the day. This configuration outperformed southeast orientation, which 
+ranked second, and southwest orientation, which received the least solar 
+radiation.
+From the main effect plots in Figs. 18, 19, and 20 , it is evident that 
+both thermal storage efficiency and heat retention time improved 
+significantly when PCM was utilized compared to scenarios without 
+PCM. This demonstrates the substantial impact of PCM on enhancing the 
+overall performance of the integrated solar water heating system.
+Based on the multi-quality optimization experimental results, a PCM 
+volume of 20 % provided an adequate amount of phase change material 
+to effectively absorb and release heat, while 14 PCM tubes offered suf -
+ficient surface area to facilitate efficient heat transfer without signifi -
+cantly increasing the system ’ s thermal resistance. This configuration 
+achieved the optimal balance by enhancing thermal storage efficiency 
+and extending heat retention time, all while minimizing excessive costs 
+and system weight.
+4.5. Comparative analysis of optimized results
+Finally, the optimized research results were compared with findings 
+from recent studies conducted over the past few years. The comparative 
+analysis is presented in Table 26 , highlighting the advancements ach -
+ieved in this study relative to prior research.
+According to the literature, Modi (2020), Gupta (2021) and García- 
+Rinc ´on(2024) reported efficiencies of 52.72 %, 50.27 % and 85 % 
+respectively, in solar water heating systems using nanofluids. In 
+contrast, studies by Mahfuz (2014), Feli ´nski (2016), Itamar (2022), 
+Bernal (2022) and El-Fakharany (2024) demonstrated significantly 
+higher efficiencies for solar water heating systems employing phase 
+change materials (PCMs), achieving 77.41 %, 79 %, 76.08 %, 77.85 % 
+Table 21 
+Difference values for thermal storage efficiency and heat retention time.
+Thermal storage efficiency Thermal storage duration
+X0 0 0
+X1 0.41183381 0.16591736
+X2 0.61263901 0.28892127
+X3 0.92237506 1
+X4 0.74618357 0.5016399
+X5 1 1
+X6 0.2062118 0.07360078
+X7 0.58719471 0.25005755
+X8 0.67952754 0.39002302
+X9 0.56490628 0.24523762
+X10 0.67360093 0.30894605
+X11 0.51316175 0.23815042
+X12 0.70044205 0.39788741
+X13 0.65302589 0.3001992
+X14 0.81568237 1
+X15 0.46300962 0.14640226
+X16 0.2975419 0.10329621
+X17 0.77740705 0.55053721
+X18 0.90865021 1
+X19 0.83843191 1
+X20 0.09880696 0.01400178
+X21 0.20399286 0.12647291
+X22 0.25580892 0.13461591
+X23 0.19074225 0.07225773
+X24 0.66181198 1
+X25 0.55938148 0.6172191
+X26 0.17978178 0.06302164
+X27 0.39429527 0.2917011
+X28 0.20399286 0.0817884
+X29 0.39429527 0.28343801
+X30 0.54019083 0.60106222
+X31 0.54565085 0.38616711
+X32 0.48130766 0.3060019
+X33 0.14519553 0.11235235
+X34 0.73079332 0.6619036
+X35 0.50513968 0.37122251
+X36 0 0
+Table 22 
+Grey relational grade values for thermal storage efficiency and heat retention 
+time.
+Thermal storage efficiency Thermal storage duration Mean value
+X0 1 1 1
+X1 0.54834554 0.75084392 0.64959473
+X2 0.44938205 0.6337768 0.54157943
+X3 0.35152472 0.33333333 0.34242903
+X4 0.401225 0.49918139 0.45020319
+X5 0.33333333 0.33333333 0.33333333
+X6 0.70800289 0.8716864 0.78984465
+X7 0.45989922 0.66661551 0.56325737
+X8 0.42389854 0.56178322 0.49284088
+X9 0.46952489 0.67092695 0.57022592
+X10 0.4260392 0.61808819 0.52206369
+X11 0.49350461 0.67736871 0.58543666
+X12 0.41651323 0.55686269 0.48668796
+X13 0.43364161 0.62484441 0.52924301
+X14 0.38003094 0.33333333 0.35668213
+X15 0.51920561 0.77351215 0.64635888
+X16 0.62692631 0.82878027 0.72785329
+X17 0.39141791 0.47594697 0.43368244
+X18 0.35494972 0.33333333 0.34414153
+X19 0.37357149 0.33333333 0.35345241
+X20 0.83499363 0.97275927 0.90387645
+X21 0.71023448 0.79811911 0.7541768
+X22 0.66154287 0.78787814 0.72471051
+X23 0.72385901 0.8737322 0.7987956
+X24 0.43036224 0.33333333 0.38184778
+X25 0.47197352 0.44753979 0.45975665
+X26 0.73553016 0.88806533 0.81179775
+X27 0.55909946 0.63155148 0.59532547
+X28 0.71023448 0.85941898 0.78482673
+X29 0.55909946 0.63821259 0.59865602
+X30 0.48068103 0.45410695 0.46739399
+X31 0.47817108 0.56422767 0.52119938
+X32 0.5095242 0.62034593 0.56493507
+X33 0.77495887 0.81652336 0.79574112
+X34 0.40624205 0.4303283 0.41828517
+X35 0.4974433 0.5739062 0.53567475
+X36 1 1 1
+G.-R. Chen et al.                                                                                                                                                                                                                                Energy Conversion and Management: X 26 (2025) 100910 
+19 
+--- PAGE 20 ---
+and 64.53 %, respectively. However, no prior research has combined 
+nanofluids and PCMs in solar water heating systems.Further review of 
+the literature reveals that the combination of nanofluids and PCMs is 
+commonly applied in PV/T systems, significantly improving their per -
+formance. For instance, Liu (2023) demonstrated that this combination 
+achieved a notable efficiency of 64.76 % in PV/T systems. To address 
+this gap, To address this gap, we combined nanofluids and PCMs in solar 
+water heating systems and optimized the parameter configurations to 
+enhance system performance. The final experimental results indicate 
+that the combined use of nanofluids and PCMs in solar water heating 
+systems achieves an efficiency of 94.2 %, significantly surpassing the 
+efficiencies reported for systems using nanofluids or PCMs individually. 
+This highlights the potential of integrating these advanced materials to 
+optimize solar water heating system performance.
+5. Conclusions
+The primary objective of this study was to optimize the parameters of 
+a solar water heating system by integrating nanofluids, phase change 
+materials (PCMs), and flat-plate collectors to achieve maximum thermal 
+storage efficiency and extended heat retention time. This research not 
+only provides novel theoretical insights but also demonstrates the 
+practical potential of these innovations, offering a feasible and scalable 
+solution to meet the growing global demand for energy-efficient 
+technologies.
+To achieve this, the Taguchi method was employed to systematically 
+design experiments, focusing on nine critical control factors: the type of 
+PCM material, PCM volume, number of PCM tubes, working fluid type 
+(e.g., water or nanofluids), mass flow rate, number of collector tubes, 
+collector plate material, tilt angle, and azimuth angle. A total of 36 ex -
+periments were conducted, systematically planned using the Taguchi 
+orthogonal array to efficiently evaluate the impact of each parameter on 
+system performance.
+After completing the experiments, data analysis was conducted using 
+Signal-to-Noise (S/N) ratios and main effects analysis to assess the in -
+fluence of the control factors. Analysis of variance (ANOVA) was per -
+formed to identify statistically significant factors contributing to 
+performance enhancement. To optimize both thermal storage efficiency 
+and heat retention time simultaneously, Grey Relational Analysis (GRA) 
+was applied, successfully identifying the optimal parameter configura -
+tion that balances these two quality characteristics.
+This study demonstrates the effectiveness of a systematic 
+Table 23 
+Main effects analysis of grey relational grade.
+A B C D E F G H I
+Lv 1 0.5203 0.5587 0.5686 0.4856 0.5956 0.6422 0.7301 0.5871 0.5796
+Lv 2 0.6372 0.5798 0.5956 0.5933 0.5832 0.5877 0.5805 0.5941 0.5808
+Lv 3 ​ 0.5978 0.5722 0.6574 0.5575 0.5065 0.4259 0.5552 0.5759
+Max 0.6372 0.5978 0.5956 0.6574 0.5956 0.6422 0.7301 0.5941 0.5808
+Min 0.5203 0.5587 0.5686 0.4856 0.5575 0.5056 0.4259 0.5552 0.5759
+Diff 0.1169 0.0391 0.0270 0.1718 0.0381 0.1357 0.3041 0.0389 0.0013
+Rank 4 5 8 2 7 3 1 6 9
+Fig. 20. Main effects plot of grey relational grade.
+Table 24 
+Multi-quality confirmation results for thermal storage efficiency.
+Primary control factor 1 2 3 4 5 Mean value S/N ratio
+A
+2
+、B
+3
+、C
+2
+、D
+3
+、E
+1
+、F
+1
+、G
+1
+、H
+2
+、I
+2
+94.14 94.16 94.2 94.22 94.18 94.2 39.481
+Table 25 
+Multi-quality confirmation results for heat retention time).
+Primary control factor 1 2 3 4 5 Mean value S/N ratio
+A
+2
+、B
+3
+、C
+2
+、D
+3
+、E
+1
+、F
+1
+、G
+1
+、H
+2
+、I
+2
+31.71 31.69 31.72 31.71 31.66 31.7 30.021
+G.-R. Chen et al.                                                                                                                                                                                                                                Energy Conversion and Management: X 26 (2025) 100910 
+20 
+--- PAGE 21 ---
+optimization approach in significantly improving the performance of 
+solar water heating systems. The results highlight that these optimized 
+configurations not only improve energy utilization efficiency and extend 
+heat retention time but are also highly suitable for practical applications 
+in residential and commercial water heating systems. In the context of 
+the global transition toward renewable energy and sustainable devel -
+opment, this research provides critical theoretical support and practical 
+reference for advancing solar thermal technologies that are both effi -
+cient and reliable.
+The key findings and practical implications are as follows: 
+(1) Single-quality optimization results:
+• Thermal storage efficiency: The optimized thermal storage effi -
+ciency reached 92.2 %. The optimal parameter configuration 
+included the use of PCM material, a PCM volume of 20 %, 14 PCM 
+tubes, CuO nanofluid as the working fluid, a mass flow rate of 
+0.02 kg/s, 9 collector tubes, copper collector plates, a tilt angle of 
+20.4
+◦
+, and an azimuth angle of 0
+◦
+facing south. Compared to the 
+non-optimized system, this represents an improvement of 26.04 
+%.
+• Heat retention time: The optimized heat retention time was 29.6 
+h. The corresponding optimal parameters included PCM material, 
+a PCM volume of 10 %, 14 PCM tubes, CuO nanofluid as the 
+working fluid, a mass flow rate of 0.02 kg/s, 9 collector tubes, 
+copper collector plates, a tilt angle of 22.4
+◦
+, and an azimuth angle 
+of 0
+◦
+facing south. This configuration extended the heat retention 
+time by 11.33 h compared to the non-optimized system.
+(2) Multi-quality optimization results:
+The optimized thermal storage efficiency was 94.2 %, and the heat 
+retention time reached 31.7 h. The optimal parameter configuration 
+included PCM material, a PCM volume of 20 %, 14 PCM tubes, CuO 
+nanofluid as the working fluid, a mass flow rate of 0.02 kg/s, 9 collector 
+tubes, copper collector plates, a tilt angle of 22.4
+◦
+, and an azimuth angle 
+of 0
+◦
+facing south. Compared to the non-optimized system, these opti -
+mizations resulted in a 28 % improvement in thermal storage efficiency 
+and an extension of heat retention time by 14.6 h.
+These findings not only validate the effectiveness of systematic 
+optimization techniques like the Taguchi method and Grey Relational 
+Analysis in enhancing the performance of solar water heating systems 
+but also underscore the potential of integrating advanced materials and 
+multi-objective optimization methods to address the challenges of en -
+ergy efficiency and sustainability. By achieving significant improve -
+ments in thermal storage efficiency and heat retention time, this 
+research bridges the gap between theoretical advancements and prac -
+tical applications, providing a scalable solution for residential and 
+commercial energy systems. Furthermore, this study serves as a critical 
+step toward advancing renewable energy technologies, offering valuable 
+insights and actionable strategies to support global sustainability goals 
+and the transition to a low-carbon future.
+CRediT authorship contribution statement
+Guan-Rong Chen: Visualization, Software, Methodology, Investi -
+gation. Ting-Wei Liao: Formal analysis, Data curation, Conceptualiza -
+tion. Chien-Chun Hsieh: Resources, Formal analysis. Jagadish 
+Barman: Writing – review & editing, Validation. Chao-Yang Huang: 
+Validation, Investigation, Data curation. Chung-Feng Jeffrey Kuo: 
+Validation, Supervision, Funding acquisition, Conceptualization.
+Funding
+The research was supported by the National Science and Technology 
+Council of the Republic of China under the grant No: NSTC 112-2622-E- 
+011-028 and NSTC 113-2622-E-011-024.
+Declaration of competing interest
+The authors declare that they have no known competing financial 
+interests or personal relationships that could have appeared to influence 
+the work reported in this paper.
+Acknowledgments
+The financial support provided by Energy Administration, Ministry 
+of Economic Affairs, Taiwan, R.O.C. (Contract No: 114-S0102) is 
+gratefully acknowledged.
+Data availability
+Data will be made available on request.
+References
+[1] Singh P, Singh S, Kumar G, Baweja P, Energy: Crises, challenges and solutions 
+2021;1-17.
+[2] Hassan Q, Viktor P, Al-Musawi TJ, Ali BM, Algburi S, Alzoubi HM, et al. The 
+renewable energy role in the global energy transformations. Renewable Energy 
+Focus 2024;48:100545 .
+[3] Chen HH, Lee AHI. Comprehensive overview of renewable energy development in 
+Taiwan. Renew Sustain Energy Rev 2014;37:215 – 28 .
+[4] Chen CQ, Diao YH, Zhao YH, Wang ZY, Liang L, Wang TY, et al. Thermal 
+performance of a closed collector – storage solar air heating system with latent 
+thermal storage: an experimental study. Energy 2020;202:117764 .
+[5] Sharma A, Chauhan R. Integrated and separate collector storage type low- 
+temperature solar water heating systems with latent heat storage: a review. 
+Sustainable Energy Technol Assess 2022;51:101935 .
+[6] Parida B, Iniyan S, Goic RA. review of solar photovoltaic technologies. Renew 
+Sustain Energy Rev 2011;15(3):1625 – 36 .
+[7] Aguilar Vargas S, Esteves GRT, Maçaira PM, Bastos BQ, Oliveira FLC, Souza RC. 
+Wind power generation: a review and a research agenda. J Clean Prod 2019;218: 
+850 – 70 .
+[8] R. E. N. Members, Renewables 2023 Global Status Report, (2023).
+[9] Kumar R, Rosen MA. Thermal performance of integrated collector storage solar 
+water heater with corrugated absorber surface. Appl Therm Eng 2010;30(13): 
+1764 – 8 .
+[10] Donev G, Van Sark WGJHM, Blok K, Dintchev, O, Solar water heating potential in 
+South Africa in dynamic energy market conditions. Renewable and Sustainable 
+Energy Reviews,2012; 16(5):3002-3013.
+[11] Li W, Markides CN, Zeng M, Peng J,4E evaluations of salt hydrate-based solar 
+thermochemical heat transformer system used for domestic hot water production. 
+Energy,2024; 286:129602.
+[12] Hossain MS, Saidur R, Fayaz H, Rahim NA, Islam MR, Ahamed JU, et al. Review on 
+solar water heater collector and thermal energy performance of circulating pipe. 
+Renew Sustain Energy Rev 2011;15(8):3801 – 12 .
+[13] Hottel HC, Woertz BB. The performance of flat-plate solar-heat collectors. ASME 
+Transactions 1942;64(2):91 – 103 .
+[14] Shariah AM, Rousan A, Rousan KK, Ahmad AA. Effect of thermal conductivity of 
+absorber plate on the performance of a solar water heater. Appl Therm Eng 1999; 
+19(7):733 – 41 .
+[15] Bello MB, Sambo AS. Simulation studies on pipe spacings for a collector and tank 
+sizes for a solar water heater. Energ Conver Manage 1992;33(3):215 – 23 .
+Table 26 
+Comparison of optimized results between this study and recent literature.
+No. Reference Research Topic Efficiency 
+(%)
+1 Mahfuz (2014) [53] PCM-SHWS 77.41 %
+2 Feli ´nski (2016) [54] PCM-SHWS (ETC) 79 %
+3 Modi (2020) [55] Nanofluid-SHWS 
+(FPC)
+52.72 %
+4 Gupta (2021) [56] Nanofluid-SHWS 
+(FPC)
+50.27 %
+5 Bernal (2022) [57] PCM-SHWS 76.08 %
+6 Liu (2023) [44] Nanofluid-PCM-PVT 64.76 %
+7 García-Rinc ´on and Flores-Prieto 
+(2024) [24]
+Nanofluid-SHWS 
+(FPC)
+85 %
+8 Yousif （ 2024 ） [42] Nanofluid-PCM-CPC- 
+SHWS
+77.1 %
+9 El-Fakharany （ 2024 ） [22] PCM-Integrated SAH 64.53 %
+10 Optimization Results of the 
+Present Study
+Nanofluid-PCM- 
+SHWS
+94.2 %
+G.-R. Chen et al.                                                                                                                                                                                                                                Energy Conversion and Management: X 26 (2025) 100910 
+21 
+--- PAGE 22 ---
+[16] Islam R, Ali MH, Pratik NA, Lubaba N, Miyara A. Numerical analysis of a flat plate 
+collector using different types of parallel tube geometry. AIP Adv 2023;13(10): 
+105313 .
+[17] Wang N, Zeng S, Zhou M, Wang S. Numerical study of flat plate solar collector with 
+novel heat collecting components. Int Commun Heat Mass Transfer 2015;69: 
+18 – 22 .
+[18] Moghadam H, Tabrizi FF, Sharak AZ. Optimization of solar flat collector 
+inclination. Desalination 2011;265(1 – 3):107 – 11 .
+[19] Zheng J, Febrer R, Castro J, Kizildag D, Rigola J. A new high-performance flat plate 
+solar collector. numerical modelling and experimental validation. Appl Energy 
+2024;355:122221 .
+[20] Gong S, Li Q, Shao L, Ding Y, Gao W. Performance analysis of V-corrugated flat 
+plate collector containing binary crystal thermal storage materials. Renew Energy 
+2024;221:119705 .
+[21] Li ZY, Gong JH, Wang JR, Lund PD. Optimizing research on flat-plate solar 
+collector based on field synergy theory. Energy Rep 2024;12:1977 – 86 .
+[22] El-Fakharany MK, Abo-Samra AEA, Abdelmaqsoud AM, Marzouk SA. Enhanced 
+performance assessment of an integrated evacuated tube and flat plate collector 
+solar air heater with thermal storage material. Appl Therm Eng 2024;243:122653 .
+[23] Kuo CFJ, Su TL, Jhang PR, Huang CY, Chiu CH. Using the taguchi method and grey 
+relational analysis to optimize the flat-plate collector process with multiple quality 
+characteristics in solar energy collector manufacturing. Energy 2011;36(5): 
+3554 – 62 .
+[24] García-Rinc ´on MA, Flores-Prieto JJ. Nanofluids stability in flat-plate solar 
+collectors: a review. Sol Energy Mater Sol Cells 2024;271:112832 .
+[25] Otanicar T, Phelan PE, Prasher RS, Rosengarten G, Taylor RA. Nanofluid-based 
+direct absorption solar collector. Renew Sustain Energy Rev 2010;2:033102 .
+[26] Hawwash AA, Abdel-Rahman AK, Ookawara S, Nada SA. Experimental study of 
+alumina nanofluids effects on thermal performance efficiency of flat plate solar 
+collectors. GSTF J Eng Technol (JET) 2016;4(1):123 .
+[27] Yousefi T, Veysi F, Shojaeizadeh E, Zinadini S. An experimental investigation on 
+the effect of Al2O3 – H2O nanofluid on the efficiency of flat-plate solar collectors. 
+Renew Energy 2012;39(1):293 – 8 .
+[28] Prakasam MJS, Arjunan TV, Nataraj S. An experimental study of the mass flow 
+rates effect on flat-plate solar water heater performance using Al2O3/water 
+nanofluid. Therm Sci 2017;21:379 – 88 .
+[29] Ashour AF, El-Awady AT, Tawfik MA. Numerical investigation on the thermal 
+performance of a flat plate solar collector using ZnO and CuO water nanofluids 
+under Egyptian weathering conditions. Energy 2022;240:122743 .
+[30] Mirzaei M. Experimental investigation of the assessment of Al2O3 – H2O and 
+CuO – H2O nanofluids in a solar water heating system. J Storage Mater 2017;14: 
+71 – 81 .
+[31] Desisa TR. Experimental and numerical investigation of heat transfer 
+characteristics in solar flat plate collector using nanofluids. Int J Thermofluids 
+2023;18:100325 .
+[32] Tong Y, Lee H, Kang W, Cho H. Energy and exergy comparison of a flat-plate solar 
+collector using water, Al2O3 nanofluid, and CuO nanofluid. Appl Therm Eng 2019; 
+159:113959 .
+[33] Abhat A. Low temperature latent heat thermal energy storage: heat storage 
+materials. Sol Energy 2019;30(4):313 – 32 .
+[34] Lane GA. Low temperature heat storage with phase change materials. Int J Ambient 
+Energy 1980;1(3):155 – 68 .
+[35] Abhat A. Low temperature latent heat thermal energy storage: heat storage 
+materials. Sol Energy 1982;30(4):313 – 32 .
+[36] Feli ´nski P, Sekret R. Effect of PCM application inside an evacuated tube collector 
+on the thermal performance of a domestic hot water system. Energ Build 2017;152: 
+558 – 67 .
+[37] Cabeza LF, Ib ´a ˜nez M, Sol ´e C, Roca J, Nogu ´es M. Experimentation with a water tank 
+including a PCM module. Sol Energy Mater Sol Cells 2006;90(9):1273 – 82 .
+[38] Ferrer G, Sol ´e A, Barreneche C, Martorell I, Cabeza LF. Corrosion of metal 
+containers for use in PCM energy storage. Renew Energy 2015;76:465 – 9 .
+[39] Al-Hinti I, Al-Ghandoor A, Maaly A, Abu Naqeera I, Al-Khateeb Z, Al-Sheikh O. 
+Experimental investigation on the use of water-phase change material storage in 
+conventional solar water heating systems. Energ Conver Manage 2010;51(8): 
+1735 – 40 .
+[40] Manoj Kumar P, Mylsamy K. Experimental investigation of solar water heater 
+integrated with a nanocomposite phase change material: energetic and exergetic 
+approach. J Therm Anal Calorim 2019;136:121 – 32 .
+[41] Zhao J, Gao J, Liao J, Zhou B, Bai Y, Qiang T. An experimental study of the heat 
+storage and the discharge performance and an economic performance analysis of a 
+flat plate Phase Change Material (PCM) Storage Tank. Energies 2022;15(11):4023 .
+[42] Yousif MN, Alomar OR, Saleem AM. Performance of compound parabolic 
+concentrator solar air flat plate collector using phase change material. Appl Therm 
+Eng 2024;240:122224 .
+[43] Kazemian A, Parcheforosh A, Salari A, Ma T. Optimization of a novel photovoltaic 
+thermal module in series with a solar collector using taguchi based grey relational 
+analysis. Sol Energy 2021;215:492 – 507 .
+[44] Liu DK, Hsieh CC, Liao TW, Kuo CFJ. The use of the taguchi method with grey 
+relational analysis for nanofluid-phase change-optimized parameter design at a 
+rooftop solar photovoltaic thermal composite module for small households. 
+Sustainability 2023;15:15163 .
+[45] Memon AH, Peerzada MH, Brohi KM, Memon SA, Mangi SA. Performance 
+evaluation of conventional and hybrid woven fabrics for the development of 
+sustainable personal protective clothing. Environ Sci Pollut Res Int 2020;27: 
+33835 – 47 .
+[46] Sumesh KR, Umesh KR, Kanthavel K. Optimizing various parameters influencing 
+mechanical properties of banana/coir natural fiber composites using grey 
+relational analysis and artificial neural network models. J Ind Text 2020, 
+1528083720930304.
+[47] Üstünta ˘g S, S ¸ enyi ˘git E, Mezarcı ¨oz S, Türksoy HG. Optimization of coating process 
+conditions for denim fabrics by Taguchi method and grey relational analysis. J Nat 
+Fibers 2020:1 – 15 .
+[48] Jogi BF, Tarekar M, Dhajekar RM, Pawade R. Multi objective optimization using 
+Taguchi Grey Relational Analysis (GRA) for CNC turning of Poly-ether-ether- 
+ketone (PEEK) polymer. Polym Polym Compos 2016;24:523 – 8 .
+[49] anbolat AS, Bademlioglu AH, Arslanoglu NU, Kaynakli O. Performance 
+optimization of absorption refrigeration systems using Taguchi, ANOVA and Grey 
+Relational Analysis methods. J Clean Prod 2019; 229: 874-885.
+[50] Park SH, Park YG, Ha MY. A numerical study on the effect of the number and 
+arrangement of tubes on the melting performance of phase change material in a 
+multi-tube latent thermal energy storage system. J Storage Mater 2020;32:101780 .
+[51] Moghadam AJ, Farzane-Gord M, Sajadi M, Hoseyn-Zadeh M. Effects of CuO/water 
+nanofluid on the efficiency of a flat-plate solar collector. Exp Therm Fluid Sci 2014; 
+58:9 – 14 .
+[52] Liu FJ, Chang TP. Optimizing the tilt angle of solar collector under clear sky by 
+particle swarm optimization method. J Appl Sci Eng 2015;18(2):167 – 72 .
+[53] Mahfuz MH, Anisur MR, Kibria MA, Saidur R, Metselaar IHSC. Performance 
+investigation of thermal energy storage system with Phase Change Material (PCM) 
+for solar water heating application. Int Commun Heat Mass Transfer 2014;57: 
+132 – 9 .
+[54] Feli ´nski P, Sekret R. Experimental study of evacuated tube collector/storage system 
+containing paraffin as a PCM. Energy 2016;114:1063 – 72 .
+[55] Modi K, Shukla D, Bhargav B, Devaganiya J, Deshle R, Dhodi J, et al. Efficacy of 
+organic and inorganic nanofluid on thermal performance of solar water heating 
+system. Cleaner Eng Technol 2020;1:100020 .
+[56] Gupta S, Rajale S, Raval F, Sojitra M, Tiwari AK, Joshi A, et al. Comparative 
+performance analysis of flat plate solar collectors with and without aluminium 
+oxide-based nano-fluid. Mater Today Proc 2021;46:5378 – 83 .
+[57] Bernal HIA, Rivas JAM, Ortega Del Rosario MDLA, Saghir MZ. A redesign 
+methodology to improve the performance of a thermal energy storage with phase 
+change materials: a numerical approach. Energies 2022;15:960 .
+G.-R. Chen et al.                                                                                                                                                                                                                                Energy Conversion and Management: X 26 (2025) 100910 
+22 
