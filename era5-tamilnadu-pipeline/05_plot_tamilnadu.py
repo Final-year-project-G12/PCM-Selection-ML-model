@@ -94,9 +94,14 @@ if COLAB:
     PLOT_DIR     = "/content/data/plots"
 else:
     _HERE         = os.path.dirname(os.path.abspath(__file__)) if "__file__" in dir() else os.getcwd()
-    COMBINED_FILE = os.path.join(_HERE, "data", "processed", "climate_tamilnadu_all.csv")
-    PREPROC_FILE  = os.path.join(_HERE, "data", "preprocessed", "full_preprocessed.csv")
-    PLOT_DIR      = os.path.join(_HERE, "data", "plots")
+    if not os.path.exists(os.path.join(_HERE, "data", "processed", "climate_tamilnadu_all.csv")) and \
+       os.path.exists(os.path.join(os.path.dirname(_HERE), "data", "processed", "climate_tamilnadu_all.csv")):
+        _BASE = os.path.dirname(_HERE)
+    else:
+        _BASE = _HERE
+    COMBINED_FILE = os.path.join(_BASE, "data", "processed", "climate_tamilnadu_all.csv")
+    PREPROC_FILE  = os.path.join(_BASE, "data", "preprocessed", "full_preprocessed.csv")
+    PLOT_DIR      = os.path.join(_BASE, "data", "plots")
 
 for _sub in ["maps","timeseries","statistics","features","solar_resource"]:
     os.makedirs(os.path.join(PLOT_DIR, _sub), exist_ok=True)

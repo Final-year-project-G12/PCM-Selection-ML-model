@@ -65,8 +65,13 @@ if COLAB:
 else:
     # ── Local (VS Code / Jupyter) ─────────────────────────────────────
     _HERE      = os.path.dirname(os.path.abspath(__file__)) if "__file__" in dir() else os.getcwd()
-    INPUT_FILE = os.path.join(_HERE, "data", "processed", "climate_tamilnadu_all.csv")
-    OUTPUT_DIR = os.path.join(_HERE, "data", "preprocessed")
+    if not os.path.exists(os.path.join(_HERE, "data", "processed", "climate_tamilnadu_all.csv")) and \
+       os.path.exists(os.path.join(os.path.dirname(_HERE), "data", "processed", "climate_tamilnadu_all.csv")):
+        _BASE = os.path.dirname(_HERE)
+    else:
+        _BASE = _HERE
+    INPUT_FILE = os.path.join(_BASE, "data", "processed", "climate_tamilnadu_all.csv")
+    OUTPUT_DIR = os.path.join(_BASE, "data", "preprocessed")
 
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
