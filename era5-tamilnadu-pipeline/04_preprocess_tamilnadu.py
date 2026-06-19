@@ -32,7 +32,7 @@
 COLAB = False   # ← set True when running in Google Colab
 
 # ── 1. Imports ────────────────────────────────────────────────────────
-import os, warnings, pickle
+import os, gc, warnings, pickle
 warnings.filterwarnings("ignore")
 import numpy as np
 import pandas as pd
@@ -340,7 +340,10 @@ norm_cols = [c for c in df.select_dtypes(include=[np.number]).columns
              if c not in SKIP_NORM]
 
 scalers = {}
-df_norm = df.copy()
+df_norm = df
+del df
+gc.collect()
+
 for col in norm_cols:
     scaler = MinMaxScaler(feature_range=(0, 1))
     df_norm[col] = scaler.fit_transform(
@@ -353,20 +356,25 @@ with open(scalers_path, "wb") as f:
 print(f"  Normalized {len(norm_cols)} columns. Scalers saved → {scalers_path}")
 report_lines.append(f"[Step 7] Normalized {len(norm_cols)} columns.")
 
+float_cols = df_norm.select_dtypes(include=["float64"]).columns
+if len(float_cols):
+    df_norm[float_cols] = df_norm[float_cols].astype(np.float32)
+gc.collect()
+
 
 # ═══════════════════════════════════════════════════════════
 # STEP 8 — TRAIN / VAL / TEST SPLIT (70/15/15, temporal)
 # ═══════════════════════════════════════════════════════════
 print("\n[8/9] Train / Validation / Test split ...")
 
-df_norm   = df_norm.sort_values("timestamp").reset_index(drop=True)
+df_norm.sort_values("timestamp", inplace=True, kind="mergesort")
 n         = len(df_norm)
 train_end = int(n * 0.70)
 val_end   = int(n * 0.85)
 
-train_df = df_norm.iloc[:train_end].reset_index(drop=True)
-val_df   = df_norm.iloc[train_end:val_end].reset_index(drop=True)
-test_df  = df_norm.iloc[val_end:].reset_index(drop=True)
+train_df = df_norm.iloc[:train_end]
+val_df   = df_norm.iloc[train_end:val_end]
+test_df  = df_norm.iloc[val_end:]
 
 print(f"  Train : {len(train_df):,} rows  "
       f"({train_df['timestamp'].min().date()} → {train_df['timestamp'].max().date()})")

@@ -1,0 +1,72 @@
+# ── Python / virtual environments ─────────────────────────────────────
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+.eggs/
+dist/
+build/
+.ipynb_checkpoints/
+
+# ── Secrets (never commit) ────────────────────────────────────────────
+.cdsapirc
+.env
+.env.*
+!.env.example
+
+# ── OS / editor ───────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp
+*~
+
+# ── Local git helpers ───────────────────────────────────────────────────
+.git-msg-filter.py
+
+# ── LaTeX build artifacts (presentation_review2/) ───────────────────────
+*.aux
+*.log
+*.out
+*.synctex.gz
+*.fdb_latexmk
+*.fls
+*.nav
+*.snm
+*.toc
+*.vrb
+*.bbl
+*.blg
+
+# ── ERA5 Tamil Nadu pipeline — large / regenerated data ───────────────
+# Downloaded NetCDF (~48 files, hundreds of MB)
+era5-tamilnadu-pipeline/data/raw/
+
+# Combined & per-location CSVs (~224 files, multi-GB)
+era5-tamilnadu-pipeline/data/processed/
+
+# Preprocessed train/val/test splits + scalers.pkl
+era5-tamilnadu-pipeline/data/preprocessed/
+
+# ── ERA5 pipeline — temp / debug / run outputs ────────────────────────
+era5-tamilnadu-pipeline/cell12_dump.txt
+era5-tamilnadu-pipeline/*_executed.ipynb
+
+# Large interactive plot exports (regenerate locally; GitHub limit 100 MB)
+era5-tamilnadu-pipeline/data/plots/timeseries/B5_all_222_locations_GHI.html
+
+# NetCDF anywhere (safety catch)
+*.nc
+
+# Large preprocessed model artifacts
+*.pkl
+
+# ── PCM_data — raw downloads (keep small processed CSVs tracked) ──────
+PCM_data/data/raw/
