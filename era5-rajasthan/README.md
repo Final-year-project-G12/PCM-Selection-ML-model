@@ -43,7 +43,7 @@ of the current working directory). Defines every input/output path,
 Picks the sampling locations. Downloads the Rajasthan boundary (GADM v4.1,
 admin level 1) and the WorldPop India population raster (2020,
 UN-adjusted, 100m — ~1.5-2GB, one-time download), clips the raster to
-Rajasthan, aggregates population onto a 0.25° grid **aligned to ERA5's own
+Rajasthan, aggregates population onto a 0.25°(27.8 km) grid **aligned to ERA5's own
 grid origin** (so each point maps to a distinct ERA5 cell downstream), ranks
 cells by population, and keeps the minimal set covering ~87.5% of the
 state's total population.
@@ -60,7 +60,32 @@ state's total population.
 For every point and every date 2016-01-01..2025-12-31, computes the exact
 UTC sunrise, solar noon, and sunset via `pvlib`'s SPA algorithm (no manual
 equation-of-time code).
+Why is SPA needed?
 
+Suppose you want to know:
+
+When does the Sun rise today in Jaipur?
+What is the exact time of solar noon?
+What is the solar elevation at 3:42 PM?
+What is the solar azimuth?
+
+You cannot simply use:
+
+Sunrise = 6:00 AM
+Sunset = 6:00 PM
+
+because these depend on:
+
+Latitude
+Longitude
+Date
+Earth's axial tilt
+Earth's elliptical orbit
+Atmospheric refraction
+Time zone / UTC
+Leap years
+
+SPA models all of these effects.
 - Output: `data/processed/suntimes.csv` —
   `point_id, date, event (sunrise|noon|sunset), time_utc`
 - Note: sun events near the Rajasthan/UTC boundary can genuinely fall on the
