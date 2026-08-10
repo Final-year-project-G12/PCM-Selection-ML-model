@@ -11,10 +11,17 @@ independent sources can be cross-checked against each other.
 ```
 00a_build_population_grid.py   →  data/processed/population_grid_points.csv
 00b_build_suntimes.py          →  data/processed/suntimes.csv
+00c_attach_elevation.py        →  population_grid_points.csv gains `elevation_m`
 01_download_era5_rajasthan.py  →  data/raw/era5/points/*.nc
 01b_download_nasapower.py      →  data/raw/nasapower/*.json
 00_unzip_accum.py              →  (fixes zip-disguised-as-.nc files in place)
 02_combine_rajasthan.py        →  data/processed/climate_rajasthan_points.csv
+02b_build_daily_aggregates.py  →  data/processed/daily_aggregates_rajasthan.csv
+                                   data/processed/daily_aggregates_rajasthan_summary.csv
+
+── QA / QC — read-only, safe to run anytime, not part of the linear chain ──
+03_verify_climate_csv.py       →  (stdout report on climate_rajasthan_points.csv)
+03_qc_plots.py                 →  outputs/qc_*.html  (folium maps + plotly charts)
 ```
 
 ## Run Order
@@ -22,14 +29,21 @@ independent sources can be cross-checked against each other.
 ```
 python 00a_build_population_grid.py   # downloads GADM boundary + WorldPop raster, builds population_grid_points.csv
 python 00b_build_suntimes.py          # builds suntimes.csv (sunrise/noon/sunset UTC times, pvlib)
+python 00c_attach_elevation.py        # attaches real per-point elevation_m from ERA5 geopotential
 python 01_download_era5_rajasthan.py  # ERA5 download, sized to the population points + sun-event hours
 python 01b_download_nasapower.py      # NASA POWER cross-check data, per point/year
 python 00_unzip_accum.py              # fixes any CDS zip-disguised-as-.nc files (now scans both old + new ERA5 dirs)
 python 02_combine_rajasthan.py        # merges everything into climate_rajasthan_points.csv
+python 02b_build_daily_aggregates.py  # true daily integrals/indices from cached NASA POWER hourly data
+
+python 03_verify_climate_csv.py       # optional: QA report on climate_rajasthan_points.csv
+python 03_qc_plots.py                 # optional: spatial/distributional QC plots, any time during acquisition
 ```
 
 Each script is resumable — safe to Ctrl-C and re-run; already-completed work
-is skipped automatically.
+is skipped automatically. The two `03_*` scripts are read-only QA tools: they
+never write into the pipeline's data files and can be run at any point,
+including mid-download, to sanity-check progress so far.
 
 ## What each script does
 
@@ -49,7 +63,8 @@ cells by population, and keeps the minimal set covering ~87.5% of the
 state's total population.
 
 - Output: `data/processed/population_grid_points.csv` —
-  `point_id, lat, lon, population, weight`
+  `point_id, lat, lon, population, weight` (`00c_attach_elevation.py` later
+  adds an `elevation_m` column to this same file)
 - Uses a single static 2020 population snapshot for the whole 2016-2025
   study period (WorldPop doesn't publish a distinct India raster per year at
   this resolution) — a standard simplifying assumption, not a bug.
@@ -93,6 +108,19 @@ SPA models all of these effects.
   land at 23:55 UTC the day before) — `time_utc` is always the true instant;
   `date` is pvlib's nominal calendar-date assignment for that event.
 
+### `00c_attach_elevation.py`
+Downloads ERA5's time-invariant surface geopotential field (`z`) over the
+same bounding envelope `01_download_era5_rajasthan.py` uses — one CDS
+request for a single date/time, since orography doesn't change over time —
+and attaches a per-point `elevation_m = z / 9.80665` column to
+`population_grid_points.csv`. Replaces the flat 300m elevation assumption
+`02_combine_rajasthan.py` used to fall back to for every point.
+
+- Output: `data/raw/era5/invariant/era5_RJ_geopotential.nc` (raw cache);
+  `elevation_m` column added to `population_grid_points.csv` in place.
+- Does not touch the sun-event instant/accum cache under
+  `data/raw/era5/points/` — entirely separate download.
+
 ### `01_download_era5_rajasthan.py`
 Downloads ERA5 hourly reanalysis over the bounding envelope of the
 population points (not the whole state), for three narrow UTC hour windows
@@ -135,20 +163,129 @@ event time), and merges them into one row.
 
 - Output: `data/processed/climate_rajasthan_points.csv` — one row per
   point/date/event, with `era5_*` and `power_*` columns side by side for
-  cross-checking, plus point metadata (`lat`, `lon`, `population`, `weight`)
-  and calendar features (`month`, `DOY`, `year`, `season`, `season_code`).
+  cross-checking, plus point metadata (`lat`, `lon`, `population`, `weight`,
+  `elevation_m`) and calendar features (`month`, `DOY`, `year`, `season`,
+  `season_code`).
 - Fully replaces the old pipeline's per-city (`RJ_LOCATIONS`) and opt-in
   full-grid output — nothing else in the repo reads those, so there's no
   need to keep both schemes running.
+- Uses each point's real `elevation_m` (from `00c_attach_elevation.py`) for
+  pvlib solar geometry / clear-sky irradiance if present, falling back to
+  the flat 300m default only if that column is missing or NaN for a point.
+
+### `02b_build_daily_aggregates.py`
+`climate_rajasthan_points.csv` only has 3 instantaneous samples/day
+(sunrise, noon, sunset), which can't produce daily energy integrals, true
+diurnal temperature range, or degree-day counts. This script reads the full
+hourly series already cached by `01b_download_nasapower.py`
+(`data/raw/nasapower/power_{point_id}_{year}.json`) directly — no
+re-download — and builds true per-day aggregates (trapezoidal GHI/clear-sky
+integrals, true daily min/max/mean temperature, mean RH/wind) plus a
+per-point Tier 2 summary (`GHI_daily_kWh`, `SAI`, `kt_daily_mean/std`,
+`cloudy_frac`, `CCI`, `HDD18`, `CDD24`, `DTR_true`, `seasonality`,
+`monsoon_index` — see the script's docstring for exact definitions).
+NASA-POWER-only by design; an ERA5-based daily-integral version would need
+a new CDS request for all 24 hours/day and is out of scope here.
+
+- Output: `data/processed/daily_aggregates_rajasthan.csv` (one row per
+  point/day) and `data/processed/daily_aggregates_rajasthan_summary.csv`
+  (one row per point, the Tier 2 indices).
+- Status tracking: `data/processed/daily_aggregates_status.csv`
+- `cloudy_frac`'s clearness threshold (`kt < 0.3`) is not defined anywhere
+  else in the repo — documented assumption, not a canonical spec value.
+
+### `03_verify_climate_csv.py`
+Read-only QA report on `climate_rajasthan_points.csv` — never modifies it,
+safe to run at any time, including while `02_combine_rajasthan.py` is still
+running (it just reports partial coverage accurately rather than failing).
+Checks, in order: (1) schema — every expected `era5_*`/`power_*`/metadata
+column present; (2) point coverage — every `point_id` from
+`population_grid_points.csv` shows up, flags missing/extra ids; (3) row
+coverage — each point has exactly the rows `suntimes.csv` implies, flags
+partial/duplicate rows; (4) null rates per column against warn/fail
+thresholds (5%/30%) — real gaps are expected (e.g. the documented
+2016-01-01 edge case) but a mostly-empty column signals a bug; (5) physical
+sanity — value-range checks per variable, mirroring the bounds
+`02_combine_rajasthan.py` itself enforces plus a few this script owns
+(pressure, POWER irradiance); (6) cross-source agreement — correlation
+between `era5_GHI`/`power_ALLSKY_SFC_SW_DWN` and `era5_T_amb`/`power_T2M`,
+since agreement between the two independent sources is the whole point of
+pulling both.
+
+- Output: stdout report only (`[OK]`/`[WARN]`/`[FAIL]` per check, exits
+  non-zero if any `[FAIL]`).
+
+HOW TO RUN: `python 03_verify_climate_csv.py`
+
+### `03_qc_plots.py`
+Spatial and distributional sanity-check plots for the data-acquisition
+phase — not final results. Builds folium maps for anything spatial and
+plotly charts for anything distributional/time-series, reading only the
+processed/status CSVs the earlier scripts already produce (never touches
+raw NetCDF/JSON caches — that's `02b`'s job). Every plot is independently
+skippable: if an input file a given plot needs doesn't exist yet, it prints
+a `[SKIP]` warning and moves on instead of crashing, so it stays runnable
+at any point during acquisition.
+
+Folium maps (spatial QC):
+- `qc_population_map.html` — points sized by population, colored by
+  sampling weight, with the Rajasthan boundary overlaid if the GADM
+  GeoJSON from `00a` is still cached.
+- `qc_elevation_map.html` — points colored by `elevation_m` on a
+  terrain-style gradient; flags points with `NaN` elevation (the only real
+  attach-failure signature — see the script's comment on why "close to
+  300m" is *not* used as a flag: that fallback is applied transiently
+  inside `02_combine_rajasthan.py`'s merge step, never written back into
+  `population_grid_points.csv`).
+- `qc_download_status_map.html` — points colored green/yellow/red by
+  combined ERA5+NASA POWER completion. Note: ERA5 downloads are one
+  bbox-wide request per (year, month, var_type), not per point, so ERA5
+  completion is a single pipeline-wide figure applied identically to every
+  point — the map says so in an on-map legend note.
+
+Plotly charts (distributional / time-series QC):
+- `qc_population_weight_scatter.html`, `qc_population_histogram.html`
+- `qc_elevation_histogram.html`, `qc_elevation_boxplot.html` (single
+  Rajasthan group — this pipeline instance has no `state` column since it
+  only ever produces Rajasthan points; not comparable to
+  era5-uttarakhand/'s own output without combining them externally)
+- `qc_suntimes_line.html` — sunrise/noon/sunset UTC hour across
+  2016-2025 for points spanning the longitude range, one subplot per
+  event; annotates the documented cross-midnight wraparound if visible
+  rather than treating it as a bug
+- `qc_download_status_by_year.html` — completion bar chart per year per
+  source (`complete`/`partial`=not-yet-attempted/`failed`)
+- `qc_rejection_window.html` — histogram of requested-vs-matched reading
+  time offset against the 3h rejection threshold; **currently always
+  skipped**, because `climate_rajasthan_points.csv` only stores the
+  *requested* sun-event time, not the actual matched ERA5/POWER reading
+  timestamp — `02_combine_rajasthan.py` would need two extra output
+  columns (`era5_matched_time_utc`, `power_matched_time_utc`) for this to
+  work.
+
+- Output: `outputs/*.html` (all standalone, self-contained files) plus a
+  stdout QC summary (point count, elevation min/max/mean, completion % per
+  source per year).
+
+HOW TO RUN: `python 03_qc_plots.py`
 
 ## Requirements
 
 ```
-pip install geopandas rasterio requests pandas numpy xarray netCDF4 pvlib scipy cdsapi
+pip install geopandas rasterio requests pandas numpy xarray netCDF4 pvlib scipy cdsapi folium branca plotly
 ```
 
-`geopandas`/`rasterio` are only needed for `00a`; the rest of the pipeline
-only needs the others.
+`geopandas`/`rasterio` are only needed for `00a`; `folium`/`branca`/`plotly`
+are only needed for `03_qc_plots.py`; the rest of the pipeline only needs
+the others.
+
+### Other files in this folder
+- `.cdsapirc` — your personal CDS/Copernicus API credentials (`url:` /
+  `key:` lines), read by `config.py`'s `load_cds_credentials()`. Not
+  committed — keep this file private; it's your own account's API key.
+- `.gitignore` — excludes the generated `data/` and `outputs/` trees (raw
+  downloads, processed CSVs, QC plots) from version control, so only the
+  pipeline code itself is tracked.
 
 ## Notes / known limitations
 
@@ -158,9 +295,17 @@ only needs the others.
   day come out as a natural `NaN` rather than a wrong value. Every other
   month boundary is bridged automatically (see `01_download_era5_rajasthan.py`'s
   docstring for why).
-- **Elevation**: population points don't carry elevation data, so
-  `02_combine_rajasthan.py` uses a flat 300m approximation for solar-geometry
-  calculations (same approximation the old pipeline's full-grid mode used).
+- **Elevation**: `00c_attach_elevation.py` attaches real per-point elevation
+  from ERA5's invariant geopotential field; `02_combine_rajasthan.py` falls
+  back to a flat 300m approximation only if that column is missing (same
+  approximation the old pipeline's full-grid mode used).
+- **Elevation is a grid-cell mean**: ERA5's native grid is ~0.25°(~28km), so
+  its orography value for a point is the *mean* elevation of that whole
+  grid cell, not the point's exact local elevation. This is fine where
+  terrain is fairly flat (Rajasthan, Assam, coastal Tamil Nadu) but smooths
+  out real relief in high-relief regions (e.g. Uttarakhand's 200m-7000m+
+  range) — an accepted, documented caveat, not something this pipeline
+  tries to fix further.
 - **WorldPop download size**: ~1.5-2GB, one-time, cached in
   `data/raw/population/`. The download auto-retries (up to 5 attempts) and
   resumes from where it left off via HTTP Range requests if the connection
