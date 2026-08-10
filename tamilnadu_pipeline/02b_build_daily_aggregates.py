@@ -142,16 +142,27 @@ def build_tier2_row(point_id, daily_df):
 
     is_cloudy = daily_df["kt_daily"] < KT_CLOUDY_THRESHOLD
     row["cloudy_frac_true"] = is_cloudy.mean()
-    run_id = (is_cloudy != is_cloudy.shift()).cumsum()
+    # A dropped day (see MIN_HOURS_PER_DAY filter above) must NOT silently
+    # bridge two separate cloudy runs into one longer one. Force a break at
+    # every calendar-date gap > 1 day before computing run lengths.
+    date_gap = pd.to_datetime(daily_df["date"]).diff().dt.days.fillna(1)
+    gap_break = date_gap > 1
+    run_id = ((is_cloudy != is_cloudy.shift()) | gap_break).cumsum()
     run_lengths = is_cloudy.astype(int).groupby(run_id).transform("sum")
     row["CCI_true"] = int((run_lengths * is_cloudy.astype(int)).max()) if len(run_lengths) else 0
+    row["n_date_gaps_gt1day"] = int(gap_break.sum())
 
     row["DTR_true_mean"] = daily_df["DTR_true"].mean()
     row["Ta_mean_true"] = daily_df["Ta_mean_true"].mean()
     row["Ta_p95_true"] = daily_df["Ta_mean_true"].quantile(0.95)
     row["Ta_p05_true"] = daily_df["Ta_mean_true"].quantile(0.05)
-    row["HDD18_true"] = np.maximum(0, 18 - daily_df["Ta_mean_true"]).sum()
-    row["CDD24_true"] = np.maximum(0, daily_df["Ta_mean_true"] - 24).sum()
+    # Annualise: sum-over-all-usable-days would be ~10x a real annual HDD/CDD
+    # figure for a 10-year record — divide by the actual years spanned so the
+    # number means what a reader expects ("HDD18 = 480/year", not "4800").
+    n_years_spanned = daily_df["date"].apply(lambda d: pd.to_datetime(d).year).nunique()
+    n_years_spanned = max(n_years_spanned, 1)
+    row["HDD18_true"] = np.maximum(0, 18 - daily_df["Ta_mean_true"]).sum() / n_years_spanned
+    row["CDD24_true"] = np.maximum(0, daily_df["Ta_mean_true"] - 24).sum() / n_years_spanned
     row["RH_mean_true"] = daily_df["RH_mean_true"].mean()
     row["wind_mean_true"] = daily_df["wind_mean_true"].mean()
 
@@ -204,6 +215,13 @@ def main():
     print("  DONE")
     print(f"  Points processed : {len(tier2_rows)}/{len(points_df)}  ({n_skipped} skipped)")
     print(f"  Point-days       : {len(daily_all):,}")
+    gap_flags = tier2_df[tier2_df["n_date_gaps_gt1day"] > 20]
+    if len(gap_flags):
+        print(f"  [NOTE] {len(gap_flags)} point(s) have >20 multi-day gaps over the "
+              f"10-year record — their CCI_true is more approximate than usual "
+              f"(gap-day fix already prevents runs bridging across a gap, but "
+              f"frequent gaps still mean less continuous coverage):")
+        print("    " + ", ".join(gap_flags["point_id"].tolist()))
     print(f"  Saved: {OUT_DAILY}")
     print(f"  Saved: {OUT_TIER2}")
     print("=" * 68)

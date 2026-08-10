@@ -144,8 +144,12 @@ def build_signature_tier1(point_id, point_df):
         (is_cloudy != is_cloudy.shift()).cumsum()).transform("sum")
     row["CCI_proxy"] = int((run_lengths * is_cloudy.astype(int)).max()) if len(run_lengths) else 0
 
-    row["HDD18_proxy"] = np.maximum(0, 18 - d["Ta_daily_mean"]).sum()
-    row["CDD24_proxy"] = np.maximum(0, d["Ta_daily_mean"] - 24).sum()
+    # Annualise (same fix as 02b_build_daily_aggregates.py's Tier-2 version) —
+    # sum-over-10-years would silently be ~10x a real annual HDD/CDD figure.
+    n_years_here = pd.to_datetime(d["date"]).dt.year.nunique()
+    n_years_here = max(n_years_here, 1)
+    row["HDD18_proxy"] = np.maximum(0, 18 - d["Ta_daily_mean"]).sum() / n_years_here
+    row["CDD24_proxy"] = np.maximum(0, d["Ta_daily_mean"] - 24).sum() / n_years_here
 
     row["RH_mean"] = point_df["era5_RHum"].mean()
     t_dep = point_df["era5_T_amb"] - point_df["era5_T_dew"]

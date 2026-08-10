@@ -9,7 +9,7 @@ a PCM with an unreachable melting point but great latent heat can still
 score well in TOPSIS and be physically useless. Filtering first prevents
 that (plan v3.0 Section 8, opening paragraph).
 
-Filters applied (Table 12; two are noted as NOT applied — see below):
+Filters applied (all eight from Table 12 now implemented):
   1. Melting window     : Tm in [Tm_target-5, Tm_target+8] C
   2. Absolute band       : Tm in [42, 70] C regardless of cluster
   3. Latent heat floor   : L >= 0.7 x L_required for that cluster
@@ -20,15 +20,25 @@ Filters applied (Table 12; two are noted as NOT applied — see below):
   5. Supercooling veto    : exclude if supercooling > 8K (only applies
                             where the value is known; NaN passes through
                             flagged, not excluded)
-  NOT applied (need data this project doesn't have yet — flagged as
-  future work, not silently skipped):
-    - Charging feasibility at the cluster's 5th-percentile insolation day
-      (needs a full daily GHI percentile per cluster, not just the mean
-      in cluster_profiles_tamilnadu.csv)
-    - Corrosion veto against cluster HSI 75th percentile (needs a real
-      corrosion_class per PCM; the database currently only distinguishes
-      "low_organic" vs "check_manually" for the one inorganic PCM)
-    - Safety exclusion (no toxicity data in the current database)
+  6. Corrosion veto        : exclude "check_manually"-class PCMs in any
+                            cluster whose HSI is above the 75th percentile
+                            ACROSS ALL CLUSTERS. Currently a near-no-op —
+                            your 25-row database is almost entirely organic
+                            (nothing flagged "check_manually" except one
+                            inorganic hydrate) — becomes load-bearing once
+                            you add real salt hydrates or extend to Assam.
+  7. Safety exclusion      : keyword veto against the flammability field
+                            ("highly/extremely flammable", "toxic"). Also
+                            currently a no-op given your data — paraffins/
+                            fatty acids are "combustible", not "highly
+                            flammable" in standard hazard classification.
+  NOT applied (still needs data this project doesn't have):
+    - Charging feasibility at the cluster's true 5th-percentile insolation
+      day (07b_charging_feasibility.py gives a HEURISTIC proxy for this via
+      kt_mean/kt_std, not the literal Table-12 mechanism, which needs a
+      real daily-GHI percentile per cluster plus a collector efficiency
+      curve — that level of rigor is what Phase 7's grey-box model now
+      provides instead, per-PCM, per-cluster, via simulated performance).
 
 If a cluster keeps fewer than 5 candidates, the melting window is
 automatically relaxed by 2K and retried (per Section 8's stated rule). If
@@ -64,9 +74,10 @@ LATENT_HEAT_FRACTION = 0.7
 CYCLES_FLOOR = 300
 SUPERCOOLING_MAX_K = 8.0
 MIN_SURVIVORS, MAX_RELAX_STEPS, RELAX_STEP_K = 5, 4, 2.0
+SAFETY_EXCLUDE_KEYWORDS = ("highly flammable", "extremely flammable", "toxic")
 
 
-def filter_cluster(pcm_db, tm_target, l_required, window_relax=0.0):
+def filter_cluster(pcm_db, tm_target, l_required, cluster_hsi, hsi_p75_global, window_relax=0.0):
     lo = tm_target - WINDOW_LOWER_OFFSET - window_relax
     hi = tm_target + WINDOW_UPPER_OFFSET + window_relax
 
@@ -85,8 +96,27 @@ def filter_cluster(pcm_db, tm_target, l_required, window_relax=0.0):
     df["pass_supercooling"] = np.where(
         df["supercooling_known"], df["supercooling_K"].abs() <= SUPERCOOLING_MAX_K, True)
 
+    # Corrosion veto (Table 12): only bites for PCMs flagged "check_manually"
+    # (currently just the one inorganic salt-hydrate-class candidate) AND
+    # only in a cluster whose humidity-stress index sits above the 75th
+    # percentile ACROSS ALL CLUSTERS (Table 12's literal wording). With a
+    # database of mostly organic PCMs this will mostly be a no-op right
+    # now — it becomes load-bearing once you add real salt hydrates or
+    # extend to a more humid state (Assam).
+    cluster_is_high_hsi = cluster_hsi > hsi_p75_global
+    df["pass_corrosion"] = ~((df["corrosion_class"] == "check_manually") & cluster_is_high_hsi)
+
+    # Safety exclusion (Table 12): keyword check against the flammability
+    # field. Your current 25-row database has no candidate flagged this way
+    # (paraffins/fatty acids are "combustible", not "highly flammable" in
+    # standard hazard classification) — this is a real filter, just
+    # currently a no-op given your data, not a fake one.
+    flam_text = df["flammable"].astype(str).str.lower()
+    df["pass_safety"] = ~flam_text.str.contains("|".join(SAFETY_EXCLUDE_KEYWORDS), na=False)
+
     df["passes_all"] = (df["pass_melting_window"] & df["pass_absolute_band"] &
-                         df["pass_latent_heat"] & df["pass_cycling"] & df["pass_supercooling"])
+                         df["pass_latent_heat"] & df["pass_cycling"] & df["pass_supercooling"] &
+                         df["pass_corrosion"] & df["pass_safety"])
     df["window_lo"], df["window_hi"], df["window_relax_applied"] = lo, hi, window_relax
     return df
 
@@ -115,6 +145,11 @@ def main():
         return
 
     all_rows = []
+    hsi_p75_global = profiles["HSI"].quantile(0.75) if "HSI" in profiles.columns else np.inf
+    if "HSI" not in profiles.columns:
+        print("\n  [NOTE] cluster_profiles_tamilnadu.csv has no HSI column — "
+              "corrosion veto will be a no-op (never triggers) rather than error out.")
+
     for _, prof in profiles.iterrows():
         cid = int(prof["cluster_id"])
         # Uses the regime-capped Tm_target if 07b_charging_feasibility.py was
@@ -122,10 +157,12 @@ def main():
         tm_target = (prof["Tm_target_C_regime_capped"]
                      if "Tm_target_C_regime_capped" in prof.index else prof["Tm_target_C"])
         l_required = prof["L_required_kJ_per_kg"]
+        cluster_hsi = prof.get("HSI", -np.inf)
 
         relax = 0.0
         for step in range(MAX_RELAX_STEPS + 1):
-            result = filter_cluster(pcm_db, tm_target, l_required, window_relax=relax)
+            result = filter_cluster(pcm_db, tm_target, l_required, cluster_hsi,
+                                     hsi_p75_global, window_relax=relax)
             n_survivors = int(result["passes_all"].sum())
             if n_survivors >= MIN_SURVIVORS or step == MAX_RELAX_STEPS:
                 break
