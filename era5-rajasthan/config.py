@@ -23,6 +23,12 @@ DOWNLOAD_STATUS_FILE = RAW_ERA5_DIR / "download_status.csv"
 RAW_POINTS_DIR = RAW_ERA5_DIR / "points"
 POINTS_DOWNLOAD_STATUS_FILE = RAW_ERA5_DIR / "download_status_points.csv"
 
+# Time-invariant fields (e.g. surface geopotential / orography) — one cached
+# file each, not per-year — kept separate from points/ so elevation lookups
+# never touch the sun-event instant/accum cache.
+RAW_INVARIANT_DIR = RAW_ERA5_DIR / "invariant"
+GEOPOTENTIAL_FILE = RAW_INVARIANT_DIR / "era5_RJ_geopotential.nc"
+
 RAW_POPULATION_DIR = DATA_DIR / "raw" / "population"
 RAW_BOUNDARY_DIR = DATA_DIR / "raw" / "boundary"
 RAW_POWER_DIR = DATA_DIR / "raw" / "nasapower"
@@ -37,8 +43,18 @@ POPULATION_GRID_FILE = PROCESSED_DIR / "population_grid_points.csv"
 SUNTIMES_FILE = PROCESSED_DIR / "suntimes.csv"
 COMBINED_POINTS_FILE = PROCESSED_DIR / "climate_rajasthan_points.csv"
 
+DAILY_AGGREGATES_FILE = PROCESSED_DIR / "daily_aggregates_rajasthan.csv"
+DAILY_AGGREGATES_SUMMARY_FILE = PROCESSED_DIR / "daily_aggregates_rajasthan_summary.csv"
+DAILY_AGGREGATES_STATUS_FILE = PROCESSED_DIR / "daily_aggregates_status.csv"
+
+CLIMATE_SIGNATURE_FILE = PROCESSED_DIR / "climate_signature_rajasthan.csv"
+
 PREPROCESSED_DIR = DATA_DIR / "preprocessed"
 PLOTS_DIR = DATA_DIR / "plots"
+
+# QC plots (03_qc_plots.py) — kept top-level, separate from data/, since
+# these are throwaway sanity-check artifacts, not pipeline data.
+OUTPUTS_DIR = BASE_DIR / "outputs"
 
 CDSAPI_RC = BASE_DIR / ".cdsapirc"
 
@@ -47,6 +63,7 @@ def ensure_data_dirs():
     for directory in (
         RAW_GRID_DIR,
         RAW_POINTS_DIR,
+        RAW_INVARIANT_DIR,
         RAW_POPULATION_DIR,
         RAW_BOUNDARY_DIR,
         RAW_POWER_DIR,
@@ -54,6 +71,7 @@ def ensure_data_dirs():
         PROCESSED_GRID_DIR,
         PREPROCESSED_DIR,
         PLOTS_DIR,
+        OUTPUTS_DIR,
     ):
         directory.mkdir(parents=True, exist_ok=True)
 
