@@ -1,7 +1,10 @@
 # 08 — Phase 6 Audit: Multi-Criteria Ranking Engine
 
-Script: `08_mcdm_ranking_rajasthan.py` (984 lines) — the current implementation frontier ("I have
-already implemented up to Phase 6").
+Script: `08_mcdm_ranking_rajasthan.py` (984 lines). **Updated 2026-08-11 — Phases 7 and 8
+(`09_physics_validation_rajasthan.py`, `10_recommendation_cards_rajasthan.py`) are now also
+implemented and run; this script is no longer the implementation frontier. It now also stamps a
+cross-phase provenance fingerprint and hard-fails if its input doesn't match — see the new section
+below.**
 
 ## Purpose
 
@@ -141,10 +144,26 @@ cross-method-agreement check. No external/physics validation yet (that is Phase 
 `mcdm_rankings_rajasthan.csv`, `mcdm_method_agreement_rajasthan.csv`,
 `outputs/qc_montecarlo_inclusion_rajasthan.html`.
 
+## Cross-phase provenance stamping and hard-fail check (added 2026-08-11)
+
+Before doing anything else, `load_survivors()` now fingerprints the CURRENT on-disk
+`cluster_profiles_rajasthan.csv` (`provenance_lib.file_fingerprint()`/`fingerprint_id()`) and
+compares it against the `upstream_cluster_profile_fingerprint` stamp embedded in Phase 5's survivor
+file — `assert_fingerprint_match()` raises `SystemExit` (not a warning) on any mismatch. This exists
+because Phase 7 caught Phase 5's and Phase 6's outputs disagreeing cluster-by-cluster on which PCMs
+belonged to which `cluster_id`, traced to Phase 4's GMM cluster labels not being stable across
+separate re-runs (see `06_PHASE_4_AUDIT.md`'s second documented bug and `19_PHASE_7_ONWARD.md`'s full
+incident writeup). This script's own output (`mcdm_rankings_rajasthan.csv`) is now stamped with the
+same fingerprint, which Phase 7 and Phase 8 each verify in turn.
+
 ## Dependencies
 
 Requires Phase 5's κ-calibrated survivor set (itself provisional pending database expansion) and
-Phase 4's cluster profiles. Nothing downstream exists yet — Phase 7/8 will consume this output.
+Phase 4's cluster profiles, now verified via the provenance check above. Feeds Phase 7
+(`09_physics_validation_rajasthan.py`, which computes Spearman rho between this script's Borda/
+Copeland ranks and simulated solar fraction) and, via Phase 7, Phase 8
+(`10_recommendation_cards_rajasthan.py`, which also re-imports this script as a module to recompute
+the per-criterion contribution decomposition against its own already-saved weight formula).
 
 ## Problems / risks
 
@@ -166,5 +185,9 @@ Phase 4's cluster profiles. Nothing downstream exists yet — Phase 7/8 will con
 
 **COMPLETE as implemented, with three caught-and-fixed bugs (evidence of working self-audit) and
 two structural caveats (AHP not elicited, cost/corrosion are placeholders) that should be stated
-plainly rather than presented as finished.** This is genuinely "up to Phase 6" — Phase 7 does not
-yet exist in any form.
+plainly rather than presented as finished.** Phase 7 (`09_physics_validation_rajasthan.py`) has since
+run against this script's output and returned a genuine negative validation result (Spearman rho
+≤0.4 for all 3 clusters) — see `19_PHASE_7_ONWARD.md`. This script's own ranking is not thereby
+"wrong" — the negative result is at least partly attributable to the same undersized PCM database
+this file already flags as a structural caveat. This is no longer "up to Phase 6" — Phase 7 and 8
+both exist, have run, and are documented in `19_PHASE_7_ONWARD.md`.

@@ -117,9 +117,6 @@ a linear script-order convention, not a build system).
   point set changed since `suntimes.csv`/ERA5/POWER were built against an older version — a silent
   point-set/downstream-data mismatch is possible if `00a` is re-run without re-running the entire
   chain after it.
-- **Single static 2020 population snapshot** used to weight sampling across the whole 2016–2025
-  study period — explicitly documented as a standard, accepted simplifying assumption (population
-  distribution shifts far slower than weather), not a bug.
 - **`00b`'s altitude=0 hardcoding** for the SPA sunrise/sunset computation is a minor inconsistency
   with the elevation-aware solar geometry used later in `02_combine_rajasthan.py`, though its
   practical effect on sunrise/sunset clock time is negligible.

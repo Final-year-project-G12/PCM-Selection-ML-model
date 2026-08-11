@@ -13,12 +13,21 @@ Phase 4's cross-region 05_cluster_regions.py can concatenate both states'
 outputs directly.
 
 INPUTS:
-  data/processed/climate_rajasthan_points.csv           (sun-event samples:
-      sunrise/noon/sunset, 02_combine_rajasthan.py's output — physical
-      units. NOTE: this file's era5_GHI/LW_down/precipitation columns were
-      corrupted by a since-fixed deaccumulation bug (see accum_to_flux()
-      in 02_combine_rajasthan.py) — if you re-generate this file, re-run
-      02_combine_rajasthan.py first; this script does not re-derive GHI.)
+  data/processed/climate_rajasthan_points_clean.csv      (sun-event samples:
+      sunrise/noon/sunset, physical units — 03b_quality_check_rajasthan.py's
+      output, NOT 02_combine_rajasthan.py's raw output directly. CORRECTED
+      2026-08-11: this script used to read climate_rajasthan_points.csv
+      straight from 02_combine, with no outlier detection or reported
+      missing-data handling in between — 03b_quality_check_rajasthan.py
+      fills that gap (Hampel-filter winsorizing + point-seasonal-mean gap
+      imputation, both audited via *_outlier_flag columns and
+      quality_report_rajasthan.{md,json}) and this script now reads its
+      output instead. Same schema, same physical units. NOTE: the file
+      this ultimately derives from had its era5_GHI/LW_down/precipitation
+      columns corrupted by a since-fixed deaccumulation bug (see
+      accum_to_flux() in 02_combine_rajasthan.py) — if you regenerate from
+      scratch, re-run 02_combine_rajasthan.py, then 03b_quality_check_
+      rajasthan.py, in that order, before this script.)
   data/processed/daily_aggregates_rajasthan_summary.csv (Tier 2, one row
       per point — GHI_daily_kWh, SAI, kt_daily_mean/std, cloudy_frac, CCI,
       HDD18, CDD24, DTR_true, seasonality, monsoon_index)
@@ -151,8 +160,18 @@ APPLIED — see the printed report and the docstrings below for detail:
      already reference) now means the worst-month version. kt_p05 itself
      is also kept unchanged (still used nowhere else, retained for record).
 
+REQUIRED LIBRARIES (install if missing):
+  pip install pandas numpy scikit-learn plotly
+
 HOW TO RUN:
   python 04_climate_signature_rajasthan.py
+
+PLOTS ADDED 2026-08-11 (signature-level QC, see "SIGNATURE-LEVEL QC PLOTS"
+section near the end of this file): outputs/signature_distributions_
+rajasthan.html (histogram of every clustering-input column, 320 points)
+and outputs/signature_point_map_rajasthan.html (geographic view of
+GHI_daily_kWh and monsoon_index) — in addition to the pre-existing
+outputs/signature_correlation_heatmap_rajasthan.html.
 """
 
 import warnings
@@ -166,9 +185,10 @@ import pandas as pd
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 from config import (
-    COMBINED_POINTS_FILE,
+    CLEANED_POINTS_FILE,
     DAILY_AGGREGATES_FILE,
     DAILY_AGGREGATES_SUMMARY_FILE,
     SUNTIMES_FILE,
@@ -243,9 +263,14 @@ print("\n[1/9] Loading inputs ...")
 
 pts_cols = ["point_id", "date", "event", "era5_T_amb", "era5_RHum",
             "era5_GHI", "era5_CSI", "era5_W_spd"]
-events_df = pd.read_csv(COMBINED_POINTS_FILE, usecols=pts_cols, parse_dates=["date"])
+# Reads the QUALITY-CHECKED file (03b_quality_check_rajasthan.py's output),
+# NOT the raw 02_combine_rajasthan.py output directly — corrected
+# 2026-08-11 when that quality-check step was introduced. Same schema as
+# the raw file (Hampel-winsorized + gap-imputed, with added
+# *_outlier_flag columns this script doesn't need and doesn't read).
+events_df = pd.read_csv(CLEANED_POINTS_FILE, usecols=pts_cols, parse_dates=["date"])
 events_df["event"] = pd.Categorical(events_df["event"], categories=EVENT_ORDER, ordered=True)
-print(f"  climate_rajasthan_points.csv : {len(events_df):,} rows, "
+print(f"  climate_rajasthan_points_clean.csv : {len(events_df):,} rows, "
       f"{events_df['point_id'].nunique()} points")
 
 sun_df = pd.read_csv(SUNTIMES_FILE, parse_dates=["date"])
@@ -571,6 +596,58 @@ if flagged_pairs:
 else:
     print("\n  No pair with |r| > 0.9 remains in the final feature set "
           "(beyond what the PCA step already absorbed).")
+
+
+# ═══════════════════════════════════════════════════════════
+# SIGNATURE-LEVEL QC PLOTS (added 2026-08-11 — fills the same plot-gap
+# category as 03c_plots_raw_rajasthan.py / 03b_quality_check_plots_
+# rajasthan.py, but at the SIGNATURE level: does the 320-point signature
+# matrix itself look sane, before Phase 4 clusters it?)
+# ═══════════════════════════════════════════════════════════
+
+print("\nSignature-level QC plots ...")
+
+# F. Signature index distributions — histogram of every clustering-input
+#    column across all 320 points, so an implausible spike/skew is visible
+#    BEFORE it propagates into GMM clustering (e.g. a bimodal column here
+#    is a preview of a Level A cluster split on that feature alone).
+n_cols_grid = 4
+n_rows_grid = int(np.ceil(len(corr_cols_nonconst) / n_cols_grid))
+fig = make_subplots(rows=n_rows_grid, cols=n_cols_grid, subplot_titles=corr_cols_nonconst)
+for idx, col in enumerate(corr_cols_nonconst):
+    r, c = divmod(idx, n_cols_grid)
+    fig.add_trace(go.Histogram(x=sig[col], showlegend=False, marker_color="#4c72b0"),
+                  row=r + 1, col=c + 1)
+fig.update_layout(title="Climate Signature — Distribution of Every Clustering-Input Column "
+                         "(320 points, Rajasthan)",
+                   height=max(600, 220 * n_rows_grid), showlegend=False)
+dist_path = OUTPUTS_DIR / "signature_distributions_rajasthan.html"
+fig.write_html(str(dist_path))
+print(f"  Saved: {dist_path}")
+
+# G. Point-signature map — geographic view of two headline signature
+#    values (GHI_daily_kWh, monsoon_index), side by side, so a spatial
+#    pattern (e.g. west-Rajasthan-hotter-and-drier) can be sanity-checked
+#    against known geography before Phase 4 clusters on it.
+fig = make_subplots(rows=1, cols=2, subplot_titles=["GHI_daily_kWh (Tier 2 daily mean)", "monsoon_index (Jun-Sep GHI-fraction proxy)"])
+fig.add_trace(go.Scatter(
+    x=sig["lon"], y=sig["lat"], mode="markers",
+    marker=dict(size=7, color=sig["GHI_daily_kWh"], colorscale="YlOrRd",
+                colorbar=dict(title="kWh/m^2/day", x=0.44), showscale=True),
+    text=sig.index, name="GHI_daily_kWh",
+), row=1, col=1)
+fig.add_trace(go.Scatter(
+    x=sig["lon"], y=sig["lat"], mode="markers",
+    marker=dict(size=7, color=sig["monsoon_index"], colorscale="Blues",
+                colorbar=dict(title="monsoon_index", x=1.0), showscale=True),
+    text=sig.index, name="monsoon_index",
+), row=1, col=2)
+fig.update_layout(title="Point-Signature Map — Rajasthan (320 points)", showlegend=False)
+fig.update_yaxes(scaleanchor="x", scaleratio=1, row=1, col=1)
+fig.update_yaxes(scaleanchor="x2", scaleratio=1, row=1, col=2)
+map_path = OUTPUTS_DIR / "signature_point_map_rajasthan.html"
+fig.write_html(str(map_path))
+print(f"  Saved: {map_path}")
 
 print("\n" + "=" * 68)
 print("  PHASE 3 COMPLETE — Rajasthan")

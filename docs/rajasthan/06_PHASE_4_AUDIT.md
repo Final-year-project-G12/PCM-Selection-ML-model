@@ -52,11 +52,16 @@ inactive) to drop deterministic-by-construction features like `daylength_mean`/`
 from the fit if needed.
 
 ### External validation
-**Explicitly stubbed, not fabricated.** Köppen-Geiger and NBC/ECBC climate-zone validation are
-described in detail as TODOs (with the exact source — Beck et al. 2018, DOI:10.1038/sdata.2018.214
-— named for Köppen) but `koppen_ari = koppen_nmi = None` and `nbc_ari = nbc_nmi = None` are
-hardcoded, never computed. State-identity external validation is explicitly noted as "not meaningful
-yet" for a single-state run.
+**Köppen-Geiger is now wired in for real (updated 2026-08-11)** — Beck et al. (2018),
+doi:10.1038/sdata.2018.214, 1-km raster, genuine per-point classification lookup (not a stub).
+Rajasthan's 320 points classify as BSh=203, BWh=85, Aw=20, Cwa=12. Result: ARI(GMM cluster, Köppen
+class)=0.19, NMI=0.32 — low-to-moderate agreement, read as "the GMM finds climate structure at a
+finer resolution than Köppen's broad classes capture within Rajasthan" (a plausible, legitimate
+finding in its own right, arguably the point of empirical clustering instead of applying Köppen
+directly) rather than evidence the clustering failed to find anything real. NBC/ECBC climate-zone
+validation remains stubbed (`nbc_ari = nbc_nmi = None`) — no local India-specific zone lookup exists
+in this project tree, not fabricated. State-identity external validation is explicitly noted as "not
+meaningful yet" for a single-state run.
 
 ## A documented, fixed methodology bug: GMM covariance type
 
@@ -73,6 +78,29 @@ vs 0.3090) — confirming the fix changes *how confidently* the model reports it
 the answer is. Two alternative fixes (bumping `reg_covar`, PCA-reducing the feature set first) were
 also verified to work but rejected as either a less-principled band-aid or a loss of the
 per-named-index interpretability the framework doc requires for Level A.
+
+## A second documented, fixed bug: GMM cluster-index instability across re-runs (2026-08-11)
+
+**Distinct from the covariance-type fix above** — found while building Phase 7, not during this
+phase's own original construction. sklearn's `GaussianMixture` gives no guarantee that cluster index
+0 refers to the same physical climate group across separate re-runs of this script, even with the
+same `random_state=42`, if anything about the fit changes between runs (the `full`→`diag` covariance
+fix itself is one such change). Symptom: Phase 5's and Phase 6's outputs (both downstream of this
+script) disagreed cluster-by-cluster on which PCMs belonged to which `cluster_id` — Phase 5's
+"cluster 0" candidate set matched Phase 6's "cluster 2" set verbatim, and vice versa, because the two
+phases had been run against different invocations of this script.
+
+**Fix**: immediately after the final Level-A GMM fit, hard labels are canonically relabeled 0..k-1 by
+sorting each raw cluster's MEAN LATITUDE ascending (south to north) — a simple, always-available,
+fit-independent ordering key computed directly from the points themselves, not from anything the GMM
+produces. "Cluster 0" now means the same physical (southernmost) climate regime regardless of which
+run produced the underlying fit, as long as the underlying point PARTITION is equivalent. This does
+**not** protect against Phase 5/6/7/8 being run against a genuinely DIFFERENT partition from a
+different re-run (different data or parameters) — that risk is separately covered by a hard-fail
+provenance-fingerprint check (`provenance_lib.py`) now run at every Phase 5→6→7→8 handoff, which
+raises `SystemExit` (not a warning) if a downstream phase's input doesn't match the current on-disk
+`cluster_profiles_rajasthan.csv`. See `19_PHASE_7_ONWARD.md` for the full incident writeup and
+`21_REPRODUCIBILITY.md` for the provenance mechanism.
 
 ## Actual Rajasthan result (k=3, ground-truthed from the real output files)
 
@@ -108,15 +136,21 @@ validation.
 ## Validation
 
 Bootstrap-ARI stability (internal), silhouette/BIC/Davies-Bouldin/Calinski-Harabasz (internal),
-season-tautology ANOVA check (Level B internal). External classification validation: **not yet
-present** (stubbed).
+season-tautology ANOVA check (Level B internal). External classification validation: Köppen-Geiger
+now real (ARI=0.19, NMI=0.32 — see above); NBC/ECBC still stubbed.
 
 ## Outputs
 
 `cluster_assignments_rajasthan_levelA.csv`, `cluster_assignments_rajasthan_levelB.csv`,
 `bic_selection_rajasthan.csv` (Level A only — Level B's k-scan is console-printed, never persisted),
 `cluster_profiles_rajasthan.csv`, `cluster_profile_cards_rajasthan.md`,
-`outputs/qc_cluster_map_rajasthan.html`.
+`outputs/qc_cluster_map_rajasthan.html`, `koppen_validation_rajasthan.csv` (cluster_id x Köppen-class
+contingency counts), `level_b_feature_importance_rajasthan.csv`,
+`level_b_season_tautology_rajasthan.csv`, `level_b_season_contingency_rajasthan.csv`. Plus, added
+2026-08-11: `outputs/qc_k_selection_curve_rajasthan.html` (BIC + silhouette vs. k, chosen k marked),
+`outputs/qc_cluster_profile_bars_rajasthan.html` (headline signature indices by cluster),
+`outputs/qc_cluster_population_share_rajasthan.html` (population-share pie chart) — pure
+visualization of data this script already computes.
 
 ## Dependencies
 
@@ -135,14 +169,21 @@ constraint is evaluated per cluster using `Tm_target_C`, `Tm_target_capped_C`,
   unweighted mean if population weights are `None` or sum to zero — no warning printed; low
   practical risk given Rajasthan's actual weight distribution, but worth knowing if a future state's
   data is sparser.
-- External validation being fully stubbed means the clustering's "these are real climate regimes,
-  not clustering artifacts" claim currently rests entirely on internal statistical measures
-  (silhouette/BIC/bootstrap-ARI) — a reviewer could reasonably ask for the Köppen cross-check before
-  accepting N1 as fully substantiated.
+- External validation is now partially wired in (Köppen) but NBC/ECBC remains stubbed — the
+  clustering's "these are real climate regimes, not clustering artifacts" claim now rests on internal
+  statistical measures PLUS one external classification (low-to-moderate agreement, itself a
+  legitimate finding), not internal statistics alone.
+- **GMM cluster-index labels are not stable across separate re-runs of this script** (see the second
+  documented bug above) — anyone re-running this script and comparing against a previously-saved
+  Phase 5/6/7/8 output MUST re-run the full downstream chain, not assume `cluster_id=0` still means
+  the same climate regime. The canonical-relabeling fix mitigates but does not eliminate this risk
+  for a genuinely different partition; the provenance hard-fail check is the actual safety net.
 
 ## Status
 
-**COMPLETE — with a caught-and-fixed covariance-modeling bug, and external validation still
-stubbed.** The internal clustering result (k=3) is statistically well-supported; the "these are real
-climate regimes" claim would be strengthened materially by wiring in the already-specified
-Köppen-Geiger check before final write-up.
+**COMPLETE — with TWO caught-and-fixed bugs (GMM covariance type; GMM cluster-index instability
+across re-runs) and Köppen-Geiger external validation now wired in (NBC/ECBC still stubbed).** The
+internal clustering result (k=3) is statistically well-supported and now partially externally
+corroborated; the cluster-index-instability fix and its accompanying provenance hard-fail check are
+what make the downstream Phase 5→6→7→8 chain trustworthy across separate re-runs — see
+`19_PHASE_7_ONWARD.md` for the real incident this was caught from.

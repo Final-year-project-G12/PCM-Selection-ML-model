@@ -1,9 +1,16 @@
 # 04 — Phase 2 Audit: Preprocessing and Cross-Source Validation
 
 Scripts: `02_combine_rajasthan.py`, `02b_build_daily_aggregates.py`, `03_verify_climate_csv.py`,
-`03_qc_plots.py`, `03b_agreement_analysis.py`. **This is the most scientifically consequential phase
-in the pipeline** — see `14_ERA5_POWER_VALIDATION.md` for the full validation story and
-`09_ERA5_DATA_PIPELINE.md` for the deaccumulation deep-dive; this file gives the phase-level audit.
+`03_qc_plots.py`, `03b_agreement_analysis.py`, `03c_plots_raw_rajasthan.py` (added 2026-08-11, raw
+QC plots). **This is the most scientifically consequential phase in the pipeline** — see
+`14_ERA5_POWER_VALIDATION.md` for the full validation story and `09_ERA5_DATA_PIPELINE.md` for the
+deaccumulation deep-dive; this file gives the phase-level audit.
+
+**Phase 2.5 note**: `03b_quality_check_rajasthan.py` and `03b_validate_quality_fix_rajasthan.py`
+(Hampel-filter outlier winsorizing + missing-data imputation, producing `climate_rajasthan_points_
+clean.csv`) sit BETWEEN this phase and Phase 3 — see `15_QUALITY_CONTROL.md` Part 2 for the full
+audit. This phase's own output (`climate_rajasthan_points.csv`) is Phase 2.5's INPUT, not Phase 3's
+input directly (see the corrected Dependencies section below).
 
 ## Purpose
 
@@ -105,9 +112,16 @@ WARN-only and can never fail the whole QA script on cross-source disagreement al
 
 ## Dependencies
 
-Requires Phase 1's complete point/time/NetCDF/JSON set. Everything from Phase 3 onward reads
-`climate_rajasthan_points.csv` and/or `daily_aggregates_rajasthan_summary.csv` — this is the single
-most-depended-upon output file in the entire pipeline.
+Requires Phase 1's complete point/time/NetCDF/JSON set. **Corrected 2026-08-11 — this section
+previously said "Everything from Phase 3 onward reads `climate_rajasthan_points.csv` directly,"
+which is now factually wrong.** Phase 2.5 (`03b_quality_check_rajasthan.py`) reads
+`climate_rajasthan_points.csv` and produces `climate_rajasthan_points_clean.csv`; Phase 3
+(`04_climate_signature_rajasthan.py`) reads the CLEAN file, not this phase's raw output directly —
+see `15_QUALITY_CONTROL.md` Part 2. `daily_aggregates_rajasthan_summary.csv` (from `02b`, not
+touched by the quality-check step) is still read directly by Phase 3. This file
+(`climate_rajasthan_points.csv`) remains the single most-depended-upon RAW output in the pipeline,
+but it is no longer the most-depended-upon FINAL input to Phase 3 — that is now the Phase 2.5 clean
+file.
 
 ## Problems / risks
 

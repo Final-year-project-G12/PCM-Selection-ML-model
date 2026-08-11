@@ -93,6 +93,19 @@ inverted in an earlier version ("FIXED 2026-08-11: an earlier version of this lo
 inequality backwards, which counted candidates as 'admitted' at kappa values far above their actual
 breakeven — caught by a direct contradiction in the output").
 
+## Cross-phase provenance stamping (added 2026-08-11)
+
+Both output files now carry an `upstream_cluster_profile_fingerprint` column (constant per file),
+computed by `provenance_lib.file_fingerprint()`/`fingerprint_id()` (mtime+size+row_count of
+`cluster_profiles_rajasthan.csv` at the moment this script reads it). This exists because Phase 7
+caught a real bug: Phase 5's and Phase 6's outputs had been generated from two different on-disk
+states of `cluster_profiles_rajasthan.csv` (different runs of `05_cluster_rajasthan.py`), causing
+them to disagree cluster-by-cluster on which PCMs belonged to which `cluster_id` despite matching in
+total row count. Phase 6 now reads this stamp and hard-fails (`SystemExit`, not a warning) if it
+doesn't match the `cluster_profiles_rajasthan.csv` currently on disk — see `provenance_lib.py` and
+`19_PHASE_7_ONWARD.md` for the full incident writeup, and `06_PHASE_4_AUDIT.md` for the companion fix
+(canonical cluster relabeling) in the script that actually produces the labels.
+
 ## Corrosion veto — structurally inert on this run's data
 
 Only one database row (`savE® HS36`) is salt-hydrate-typed, and it is already excluded by
@@ -125,7 +138,8 @@ persisted, which is itself the validation mechanism — nothing is silently drop
 
 Requires Phase 4's cluster profiles (`Tm_target_C`, `Tm_target_capped_C`, `L_required_kJ_per_kg`,
 `HSI_sunrise`) and the shared PCM database. Feeds Phase 6 directly and exclusively via the
-κ-calibrated survivor set.
+κ-calibrated survivor set, and — since 2026-08-11 — Phase 6 verifies this handoff via the provenance
+fingerprint stamp described above before trusting it.
 
 ## Problems / risks
 

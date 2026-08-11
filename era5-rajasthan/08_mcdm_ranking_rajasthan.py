@@ -134,6 +134,7 @@ import plotly.graph_objects as go
 from scipy.stats import spearmanr, kendalltau
 
 from config import PROCESSED_DIR, BASE_DIR, OUTPUTS_DIR, ensure_data_dirs
+from provenance_lib import file_fingerprint, fingerprint_id, assert_fingerprint_match
 
 ensure_data_dirs()
 
@@ -231,6 +232,17 @@ def load_survivors():
 
     df = pd.read_csv(SURVIVORS_FILE)
     profiles = pd.read_csv(PROFILE_FILE)
+
+    # Provenance hard-fail check — added 2026-08-11 after Phase 7 caught
+    # this exact class of bug (Phase 5's and Phase 6's outputs disagreeing
+    # on cluster_id/pcm_id pairing because they were run against two
+    # different on-disk versions of cluster_profiles_{state}.csv). This
+    # is a HARD STOP, not a printed warning — see provenance_lib.py.
+    profile_fp_id = fingerprint_id(file_fingerprint(PROFILE_FILE))
+    assert_fingerprint_match(profile_fp_id, df, PROFILE_FILE.name, SURVIVORS_FILE.name)
+    print(f"  Provenance check PASSED — {SURVIVORS_FILE.name} was built from the SAME "
+          f"{PROFILE_FILE.name} currently on disk (fingerprint {profile_fp_id}).")
+
     survivors = df[df["survives_all"] == True].copy()
 
     missing_clusters = [cid for cid in profiles["cluster_id"]
@@ -245,7 +257,7 @@ def load_survivors():
 
     print(f"  Loaded {len(survivors)} survivor rows across {survivors['cluster_id'].nunique()} "
           f"clusters from {SURVIVORS_FILE.name}")
-    return survivors, profiles
+    return survivors, profiles, profile_fp_id
 
 
 # ═══════════════════════════════════════════════════════════
@@ -802,7 +814,7 @@ def main():
     t0 = time.time()
     log_header(f"PHASE 6 — MCDM RANKING ENGINE — {STATE_NAME.title()}")
 
-    survivors, profiles = load_survivors()
+    survivors, profiles, profile_fp_id = load_survivors()
     rich = pd.concat([load_rich_pcm_properties(), literature_rich_properties()],
                       ignore_index=True, sort=False)
     survivors = survivors.merge(rich, on=["pcm_id", "family"], how="left", suffixes=("", "_rich"))
@@ -944,6 +956,7 @@ def main():
             all_output_rows.append(row)
 
     out_df = pd.DataFrame(all_output_rows)
+    out_df["upstream_cluster_profile_fingerprint"] = profile_fp_id
     out_df.to_csv(OUT_FILE, index=False)
 
     pairwise_out = pd.concat(all_pairwise_rows, ignore_index=True)

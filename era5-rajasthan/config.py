@@ -31,6 +31,17 @@ GEOPOTENTIAL_FILE = RAW_INVARIANT_DIR / "era5_RJ_geopotential.nc"
 
 RAW_POPULATION_DIR = DATA_DIR / "raw" / "population"
 RAW_BOUNDARY_DIR = DATA_DIR / "raw" / "boundary"
+
+# Beck et al. 2018 Koppen-Geiger present-climate classification, 1-km
+# resolution GeoTIFF ("present" = 1980-2016 climatology), used by
+# 05_cluster_rajasthan.py for external validation of the Level A GMM
+# clusters. DOI:10.1038/sdata.2018.214; source ZIP (Beck_KG_V1.zip)
+# downloaded from https://ndownloader.figshare.com/files/12407516 (figshare
+# article 6396959) and cached here, same one-time-download-then-cache
+# pattern as RAW_POPULATION_DIR above.
+RAW_KOPPEN_DIR = DATA_DIR / "raw" / "koppen"
+KOPPEN_RASTER_FILE = RAW_KOPPEN_DIR / "Beck_KG_V1_present_0p0083.tif"
+KOPPEN_LEGEND_FILE = RAW_KOPPEN_DIR / "legend.txt"
 RAW_POWER_DIR = DATA_DIR / "raw" / "nasapower"
 POWER_DOWNLOAD_STATUS_FILE = RAW_POWER_DIR / "download_status_power.csv"
 
@@ -42,6 +53,16 @@ CLIMATE_COMBINED_FILE = PROCESSED_DIR / "climate_rajasthan_all.csv"
 POPULATION_GRID_FILE = PROCESSED_DIR / "population_grid_points.csv"
 SUNTIMES_FILE = PROCESSED_DIR / "suntimes.csv"
 COMBINED_POINTS_FILE = PROCESSED_DIR / "climate_rajasthan_points.csv"
+
+# 03b_quality_check_rajasthan.py's output — Hampel-filtered/winsorized +
+# gap-imputed version of COMBINED_POINTS_FILE, same schema plus per-
+# variable *_outlier_flag columns. 04_climate_signature_rajasthan.py reads
+# THIS file, not COMBINED_POINTS_FILE directly, as of that quality-check
+# script's introduction.
+CLEANED_POINTS_FILE = PROCESSED_DIR / "climate_rajasthan_points_clean.csv"
+
+QUALITY_REPORT_MD_FILE = PROCESSED_DIR / "quality_report_rajasthan.md"
+QUALITY_REPORT_JSON_FILE = PROCESSED_DIR / "quality_report_rajasthan.json"
 
 DAILY_AGGREGATES_FILE = PROCESSED_DIR / "daily_aggregates_rajasthan.csv"
 DAILY_AGGREGATES_SUMMARY_FILE = PROCESSED_DIR / "daily_aggregates_rajasthan_summary.csv"
@@ -66,6 +87,7 @@ def ensure_data_dirs():
         RAW_INVARIANT_DIR,
         RAW_POPULATION_DIR,
         RAW_BOUNDARY_DIR,
+        RAW_KOPPEN_DIR,
         RAW_POWER_DIR,
         PROCESSED_NAMED_DIR,
         PROCESSED_GRID_DIR,

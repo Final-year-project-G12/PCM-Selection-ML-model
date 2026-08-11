@@ -6,7 +6,9 @@
 > physical mechanism?'. If that sentence cannot be completed, the index is removed."
 
 This section maps each retained feature to that justification explicitly — see `05_PHASE_3_AUDIT.md`
-for the exact formulas.
+for the exact formulas. (This mapping itself is unaffected by the 2026-08-11 changes elsewhere in the
+pipeline — see `05_PHASE_3_AUDIT.md` for the two new signature-level QC plots and the corrected
+Phase 2.5 input file.)
 
 ## Feature → thermal behavior → PCM requirement → PCM property map
 

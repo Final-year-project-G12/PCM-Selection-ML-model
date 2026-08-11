@@ -11,8 +11,11 @@ by what physical mechanism?'. If that sentence cannot be completed, the index is
 
 ## Inputs
 
-`climate_rajasthan_points.csv`, `daily_aggregates_rajasthan{,_summary}.csv`, `suntimes.csv`,
-`population_grid_points.csv` (all from Phases 1–2).
+**Corrected 2026-08-11**: `climate_rajasthan_points_CLEAN.csv` (Phase 2.5's output —
+`03b_quality_check_rajasthan.py`'s Hampel-filtered/imputed clean file, NOT `02_combine_rajasthan.py`'s
+raw output directly, since 2026-08-11 — see `15_QUALITY_CONTROL.md` Part 2 and `04_PHASE_2_AUDIT.md`'s
+corrected Dependencies section), `daily_aggregates_rajasthan{,_summary}.csv`, `suntimes.csv`,
+`population_grid_points.csv` (Phases 1–2/2.5).
 
 ## Processing — Tier 1 (sun-event statistics, `signature_lib.build_tier1_signature()`)
 
@@ -136,7 +139,12 @@ collinearity from PCA-absorbed collinearity.
 
 ## Outputs
 
-`climate_signature_rajasthan.csv` — 320 rows × 86 columns.
+`climate_signature_rajasthan.csv` — 320 rows × 86 columns. Plus, added 2026-08-11: `outputs/
+signature_distributions_rajasthan.html` (histogram of every clustering-input column across all 320
+points — a bimodal column here previews a possible Level-A cluster split on that feature alone) and
+`outputs/signature_point_map_rajasthan.html` (geographic view of `GHI_daily_kWh` and `monsoon_index`)
+— both pure visualization of data this script already computes, in addition to the pre-existing
+`outputs/signature_correlation_heatmap_rajasthan.html`.
 
 ## Dependencies
 
@@ -151,10 +159,11 @@ Feeds Phase 4 (clustering) and Phase 5 (feasibility targets `Tm_target_C`, `Tm_t
   **explicitly self-flags that this file was not found in the project tree** — a real, honestly-logged
   gap, not a fabricated citation. Resolve before final write-up (either locate the file or update the
   in-code pointer).
-- **Forward-dated docstring**: "Correction 5" (the `kt_worst_month` fix) is dated **2026-08-11** in
-  the source comment, one day after this audit's reference date of 2026-08-10 — likely a clock or
-  environment date-context artifact rather than a real inconsistency, but worth a quick sanity check
-  against actual file modification timestamps before treating the fix as already "settled" history.
+- **RESOLVED — "forward-dated docstring" concern.** A previous version of this audit flagged
+  "Correction 5" (the `kt_worst_month` fix)'s 2026-08-11 date as a likely clock/environment artifact.
+  It is not: 2026-08-11 is a real date with many independently-verified, mutually-consistent same-day
+  fixes across this codebase (the GMM canonical-relabeling fix, `provenance_lib.py`, `physics_lib.py`'s
+  two solver bugs — see `20_IMPLEMENTATION_ISSUES.md` items 8-10). This fix is settled history.
 - **`T_mains_est_C` is unsourced** — flagged above; this feeds directly into `L_required_kJ_per_kg`,
   which is the constraint that currently zeros out the entire feasibility filter (Phase 5), so this
   is not a low-priority gap.

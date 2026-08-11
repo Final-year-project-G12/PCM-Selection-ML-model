@@ -132,6 +132,7 @@ import numpy as np
 import pandas as pd
 
 from config import PROCESSED_DIR, BASE_DIR, ensure_data_dirs
+from provenance_lib import file_fingerprint, fingerprint_id
 
 ensure_data_dirs()
 
@@ -437,6 +438,12 @@ def main():
         raise SystemExit(f"ERROR: {PCM_MANUFACTURER_CSV} not found.")
 
     profiles = pd.read_csv(PROFILE_FILE)
+    # Provenance stamp — added 2026-08-11 after Phase 7 caught Phase 5's
+    # and Phase 6's outputs disagreeing on cluster_id/pcm_id pairing
+    # because they'd been run against two different on-disk versions of
+    # this exact file. See provenance_lib.py's module docstring.
+    profile_fp_id = fingerprint_id(file_fingerprint(PROFILE_FILE))
+    print(f"  {PROFILE_FILE.name} fingerprint: {profile_fp_id}")
     manuf = load_manufacturer_rows(PCM_MANUFACTURER_CSV)
     lit = literature_rows()
     pcm_db = pd.concat([manuf, lit], ignore_index=True, sort=False)
@@ -530,12 +537,13 @@ def main():
                               **{f"excluded_{k}": v for k, v in exclude_counts.items()}})
 
     out_df = pd.DataFrame(all_rows)
+    out_df["upstream_cluster_profile_fingerprint"] = profile_fp_id
     col_order = ["cluster_id", "pcm_id", "family", "pcm_type", "Tm_C", "latent_heat_kJ_kg",
                  "cycles_tested", "supercooling_K", "flammable_raw", "encapsulated_raw", "source",
                  "relax_round_used", "melting_window_widen_K",
                  "c1_melting_window", "c2_absolute_band", "c3_latent_heat", "c4_cycling",
                  "c5_supercooling", "c6_charging_feasibility", "c7_corrosion_veto", "c8_safety",
-                 "survives_all"]
+                 "survives_all", "upstream_cluster_profile_fingerprint"]
     out_df = out_df[[c for c in col_order if c in out_df.columns]]
     out_df.to_csv(OUT_FILE, index=False)
 
@@ -616,12 +624,14 @@ def main():
                                     "n_rescuable_by_kappa_total": len(rescuable_sorted)})
 
     calib_out_df = pd.DataFrame(calib_all_rows)
+    calib_out_df["upstream_cluster_profile_fingerprint"] = profile_fp_id
     calib_col_order = ["cluster_id", "pcm_id", "family", "pcm_type", "Tm_C", "latent_heat_kJ_kg",
                         "cycles_tested", "supercooling_K", "flammable_raw", "encapsulated_raw",
                         "source", "breakeven_kappa", "rescuable_by_kappa", "calibrated_kappa",
                         "calibration_status", "c1_melting_window", "c2_absolute_band",
                         "c3_latent_heat", "c4_cycling", "c5_supercooling", "c6_charging_feasibility",
-                        "c7_corrosion_veto", "c8_safety", "survives_all"]
+                        "c7_corrosion_veto", "c8_safety", "survives_all",
+                        "upstream_cluster_profile_fingerprint"]
     calib_out_df = calib_out_df[[c for c in calib_col_order if c in calib_out_df.columns]]
     calib_out_df.to_csv(OUT_FILE_KAPPA_CALIBRATED, index=False)
 
