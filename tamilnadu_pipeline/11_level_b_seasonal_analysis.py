@@ -64,7 +64,9 @@ WINDOW_LOWER_OFFSET, WINDOW_UPPER_OFFSET = 5.0, 8.0
 LATENT_HEAT_FRACTION = 0.7
 SIGMA_TM = 4.0
 T_DELIVERY_C = 50.0
-DRAW_RATE_KG_PER_S = 60.0 / 1000 / 60
+# BUG FIX v3.1 — match 04b_climate_signature.py (Avargani et al. 2021: 300 L/day)
+DRAW_VOLUME_L = 300.0
+DRAW_MASS_KG = DRAW_VOLUME_L * 1.0
 CP_WATER = 4.186
 ASSUMED_PCM_MASS_KG = 50.0
 USE_CLIMATE_RELATIVE_LATENT_HEAT = True   # must match 08_mcdm_ranking.py's setting —
@@ -159,8 +161,8 @@ def main():
                 continue
             ta_mean_season = season_rows["era5_T_amb"].mean()
             t_mains_season = ta_mean_season - 2.0
-            q_night_kw = DRAW_RATE_KG_PER_S * CP_WATER * (T_DELIVERY_C - t_mains_season)
-            l_required_season = (q_night_kw * 3600 * 7) / ASSUMED_PCM_MASS_KG
+            q_total_kj = DRAW_MASS_KG * CP_WATER * (T_DELIVERY_C - t_mains_season)
+            l_required_season = q_total_kj / ASSUMED_PCM_MASS_KG
 
             ranked = rank_seasonal(pcm_db, tm_target, l_required_season, weights)
             if ranked is None:

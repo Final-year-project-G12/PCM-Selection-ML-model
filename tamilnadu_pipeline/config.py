@@ -46,6 +46,7 @@ COMBINED_POINTS_FILE = PROCESSED_DIR / "climate_tamilnadu_points.csv"
 
 PREPROCESSED_DIR = DATA_DIR / "preprocessed"
 PLOTS_DIR = DATA_DIR / "plots"
+OUTPUTS_DIR = BASE_DIR / "outputs"
 
 CDSAPI_RC = BASE_DIR / ".cdsapirc"
 
@@ -61,6 +62,7 @@ def ensure_data_dirs():
         PROCESSED_GRID_DIR,
         PREPROCESSED_DIR,
         PLOTS_DIR,
+        OUTPUTS_DIR,
     ):
         directory.mkdir(parents=True, exist_ok=True)
 

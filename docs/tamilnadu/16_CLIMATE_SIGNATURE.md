@@ -19,3 +19,12 @@ The climate signature variables represent specific physical stresses on a solar 
 - `int_RH_x_TaMinusTm`: Measures ambient condensation risk on cold storage boundaries.
 - `int_wind_x_TaMinusTsoil`: Estimates evening heat loss from tank to surroundings.
 - `int_CCI_x_1minusSAI`: Quantifies combined cloudy autonomy requirement.
+
+## Literature Support
+| Feature | Reference | Source |
+|---|---|---|
+| Climate → PCM target mapping | Singh et al. (2025) Table 2 | `sources/Singh2025PCM_SWH_ComprehensiveReview_summary.md` |
+| Interaction terms for ML | Liu et al. (2025) — feature engineering for PCM TES | `sources/Liu2025AI_PCM_TES_Prediction_Optimization_summary.md` |
+| HDD18/CDD24 degree-days | Standard building/climate practice | `10_TEMPORAL_PROCESSING.md` |
+| HSI humidity stress | Thom (1959) | `17_LITERATURE_MAPPING.md` |
+| Abdellatif PCM modeling | Abdellatif (2025) review | `sources/Abdellatif2025PCM_Modeling_Review_summary.md` |

@@ -30,3 +30,11 @@ Objective 1 covers the entire recommendation pipeline:
 4. **N4**: Four-method MCDM consensus reporting (TOPSIS, GRA, PROMETHEE II, VIKOR) rather than a single method.
 5. **N5**: Falsifiable physics-based validation rather than self-referential MCDM ranks.
 6. **N6**: Population-weighted sampling rather than uniform spatial grids.
+
+## Literature Support
+| Topic | Reference | Source |
+|---|---|---|
+| Tamil Nadu climate diversity | Singh et al. (2025) — SWH regional context | `sources/Singh2025PCM_SWH_ComprehensiveReview_summary.md` |
+| PCM-SWH system scope | Al-Mamun (2023) state of art | `sources/AlMamun2023SWH_StateOfArt_summary.md` |
+| AI for SWH optimization | Odoi & Yorke (2025) | `sources/OdoiYorke2025AI_SWH_Review_summary.md` |
+| Framework deliverables D1–D8 | Objective1_PCM_Climate_Framework_Plan_v3.docx | — |

@@ -13,3 +13,11 @@
 
 ## Elevation Approximation
 - Tamil Nadu has a flat default terrain assumption of 150 m. This is a reasonable approximation for the coastal plains and interior tablelands where the majority of the population lives, but ignores the high elevation of the Western Ghats (e.g., Ooty, ~2,240 m). For a multi-state deployment (especially Uttarakhand), actual elevation extraction is mandatory.
+
+## Literature Support
+| Topic | Reference | Source |
+|---|---|---|
+| Population-weighted grid design | Framework doc N6 | `01_PROJECT_CONTEXT.md` |
+| GADM administrative boundaries | GADM v4.1 database | Standard GIS practice |
+| WorldPop density raster | WorldPop 2020 UN-adjusted | `03_PHASE_1_AUDIT.md` |
+| ERA5 grid alignment | ECMWF 0.25° reanalysis grid | `02_DATA_SOURCES_AND_VARIABLES.md` |

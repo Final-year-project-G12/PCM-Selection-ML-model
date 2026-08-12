@@ -33,3 +33,12 @@ Determine the coordinates (where) and timestamps (when) to sample climate data, 
 
 ## Status
 **COMPLETE**
+
+## Literature Support
+| Component | Reference | Source |
+|---|---|---|
+| Population-weighted sampling | WorldPop 2020 UN-adjusted raster | GADM/WorldPop documentation |
+| Solar position algorithm | Reda & Andreas (2004) SPA via pvlib | `12_SOLAR_GEOMETRY.md` |
+| ERA5 reanalysis download | ECMWF ERA5 hourly data | `02_DATA_SOURCES_AND_VARIABLES.md` |
+| NASA POWER hourly cache | NASA POWER API documentation | `14_ERA5_POWER_VALIDATION.md` |
+| Novelty N6 population weighting | Framework doc v3.0 | `01_PROJECT_CONTEXT.md` |

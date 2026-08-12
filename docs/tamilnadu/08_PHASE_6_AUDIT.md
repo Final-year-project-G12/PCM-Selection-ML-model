@@ -35,3 +35,13 @@ Rank the surviving PCM candidates in each cluster using four independent multi-c
 
 ## Status
 **COMPLETE**
+
+## Literature Support
+| Component | Reference | Source |
+|---|---|---|
+| TOPSIS | Hwang & Yoon (1981); Chen et al. (2025) SWH MCDM | `sources/Chen2025TaguchiGRA_PCM_Nanofluid_SWH_summary.md` |
+| GRA | Deng (1982); Chen et al. (2025) | `sources/Chen2025TaguchiGRA_PCM_Nanofluid_SWH_summary.md` |
+| PROMETHEE II | Brans & Mareschal (2005) | Standard MCDM literature |
+| VIKOR | Opricovic & Tzeng (2004) | Standard MCDM literature |
+| Monte Carlo uncertainty | Chopra et al. (2023) techno-economic MC | `sources/Chopra2023HPETC_MonteCarlo_TechnoEconomic_summary.md` |
+| Entropy+AHP weight blend | Framework doc Table 13 | `17_LITERATURE_MAPPING.md` |

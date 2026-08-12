@@ -11,7 +11,7 @@ your 4 days trying to onboard another state's data.
 | Phase | What's needed | Status |
 |---|---|---|
 | 1. Data Collection | ERA5 + NASA POWER, 133 TN points, 3 sun-events/day, 10 years | **Done.** |
-| 2. Preprocessing & QC | 13-step sequence + Tier-2 daily-integral repair | **Done, plus 2 bugs fixed:** HDD18/CDD24 annualization, CCI gap-bridging. See `CHANGELOG.md`. |
+| 2. Preprocessing & QC | 13-step sequence + Tier-2 daily-integral repair + v3.1 fixes | **Code fixed (v3.1).** Deaccumulation, quantile mapping, agreement analysis. **Re-run required.** See `CHANGELOG.md`. |
 | 3. Climate Signature | 2-tier ~18-index vector per point, Tm_target/L_required, PCA, standardization | **Done, same annualization fix applied.** |
 | 4. Climate Regime Clustering (Level A) | GMM, BIC-selected K, silhouette sanity | **Done.** |
 | 4b. Level B (seasonal) | Check whether Top-3 flips between seasons | **Code delivered, not yet run.** `11_level_b_seasonal_analysis.py`. |

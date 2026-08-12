@@ -164,6 +164,65 @@ log(f"\n  Total values NaN'd by physical validation: {sum(clipped_counts.values(
 
 
 # ═══════════════════════════════════════════════════════════
+# STEP 2b — PER-SEASON QUANTILE MAPPING (ERA5 GHI → NASA POWER)
+# ═══════════════════════════════════════════════════════════
+log("\n[2b/13] Per-season quantile mapping (daytime era5_GHI > 0) ...")
+
+SEASON_ORDER = ["Winter", "Summer", "Monsoon", "Retreat"]
+N_QUANTILES = 100
+ERA5_GHI_COL = "era5_GHI"
+POWER_GHI_COL = "power_ALLSKY_SFC_SW_DWN"
+
+if ERA5_GHI_COL in df.columns and POWER_GHI_COL in df.columns and "season" in df.columns:
+    df["season"] = pd.Categorical(df["season"], categories=SEASON_ORDER, ordered=True)
+    qmap_rows = []
+
+    def _fit_quantile_mapper(era5_vals, power_vals):
+        qs = np.linspace(0, 1, N_QUANTILES + 1)
+        era5_q = np.quantile(era5_vals, qs)
+        power_q = np.quantile(power_vals, qs)
+        era5_q_u, idx = np.unique(era5_q, return_index=True)
+        power_q_u = power_q[idx]
+
+        def mapper(x):
+            return np.interp(x, era5_q_u, power_q_u, left=power_q_u[0], right=power_q_u[-1])
+
+        return mapper
+
+    for season in SEASON_ORDER:
+        mask = (
+            (df["season"] == season)
+            & (df[ERA5_GHI_COL] > 0)
+            & df[ERA5_GHI_COL].notna()
+            & df[POWER_GHI_COL].notna()
+        )
+        paired = df.loc[mask]
+        if len(paired) < 30:
+            log(f"  {season}: only {len(paired)} paired daytime rows — skipping QM")
+            continue
+        mapper = _fit_quantile_mapper(paired[ERA5_GHI_COL].values, paired[POWER_GHI_COL].values)
+        before_mbe = float((paired[ERA5_GHI_COL] - paired[POWER_GHI_COL]).mean())
+        corrected = mapper(paired[ERA5_GHI_COL].values)
+        after_mbe = float((corrected - paired[POWER_GHI_COL]).mean())
+        df.loc[paired.index, ERA5_GHI_COL] = corrected
+        if "era5_CSI" in df.columns and "era5_GHI_clearsky" in df.columns:
+            cs = df.loc[paired.index, "era5_GHI_clearsky"]
+            df.loc[paired.index, "era5_CSI"] = np.where(
+                cs > 10, (corrected / cs).clip(0, 1.5), 0)
+        qmap_rows.append({"season": season, "n": len(paired),
+                          "MBE_before": round(before_mbe, 2),
+                          "MBE_after": round(after_mbe, 2)})
+        log(f"  {season}: n={len(paired):,}  MBE {before_mbe:>7.2f} -> {after_mbe:>7.2f} W/m²")
+
+    if qmap_rows:
+        qmap_df = pd.DataFrame(qmap_rows)
+        qmap_df.to_csv(PREPROCESSED_DIR / "ghi_quantile_mapping_report.csv", index=False)
+        log("  Saved: ghi_quantile_mapping_report.csv")
+else:
+    log("  [SKIP] era5_GHI / power_ALLSKY_SFC_SW_DWN / season not all present")
+
+
+# ═══════════════════════════════════════════════════════════
 # STEP 3 — HAMPEL FILTER / MAD  (per point, per event, over date order)
 # ═══════════════════════════════════════════════════════════
 log("\n[3/13] Hampel filter (MAD-based outlier flagging) ...")

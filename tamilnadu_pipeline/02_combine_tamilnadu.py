@@ -22,7 +22,7 @@ PIPELINE
 1. For each point in population_grid_points.csv: nearest-neighbor snap to
    the ERA5 grid (extract_nearest, unchanged from the original pipeline),
    concatenate its full instant+accum hourly series across all years,
-   deaccumulate, and compute solar geometry.
+   accum_to_flux, and compute solar geometry.
 2. For each (point_id, date, event) row in suntimes.csv, pick the ERA5
    hourly value nearest in time to that event's exact UTC timestamp.
 3. Do the same nearest-hour lookup against that point's cached NASA POWER
@@ -205,23 +205,17 @@ def compute_rh(T_c, Td_c):
         0, 100)
 
 
-def deaccumulate(s):
+def accum_to_flux(s):
     """
-    ERA5 hourly reanalysis: accumulated values reset every 12 h.
-    Resets happen at hours 1 and 13 UTC (start of each forecast run).
-    diff() gives increments between consecutive downloaded hours; at reset
-    hours the raw value is used directly since there's no valid predecessor.
-
-    Generalizes correctly to ANY hour set (not just a fixed 3x-daily
-    pattern) as long as every non-reset target hour's immediate predecessor
-    was also downloaded — which 01_download_era5_tamilnadu.py's ACCUM_HOURS
-    construction guarantees (INSTANT_HOURS ∪ {h-1 for h in INSTANT_HOURS}).
+    CDS point downloads already return each hour's own accumulated value,
+    not a running total since the last 00Z/12Z forecast start.  A diff()-based
+    deaccumulation subtracts consecutive hourly fluxes and drives GHI to
+    near-zero (noon r ≈ 0.40 vs NASA POWER).  Stateless clipping passes the
+    raw hourly value through; the caller applies /3600 or *1000 for units.
+    Matches the Rajasthan pipeline fix (see docs/era5_tamilnadu/09_ERA5_DATA_PIPELINE.md).
     """
     s = pd.Series(np.asarray(s, dtype=float), index=s.index).copy()
-    diff = s.diff()
-    reset_mask = s.index.hour.isin([1, 13])
-    diff[reset_mask] = s[reset_mask]
-    return diff.clip(lower=0)
+    return s.clip(lower=0)
 
 
 def compute_solar(df, lat, lon, alt):
@@ -275,13 +269,13 @@ def apply_unit_conversions(df):
     tp_col   = next((c for c in df.columns if c == "tp"), None)
 
     if ssrd_col:
-        df["GHI"]         = (deaccumulate(df[ssrd_col].astype(float)) / 3600).clip(0)
+        df["GHI"]         = (accum_to_flux(df[ssrd_col].astype(float)) / 3600).clip(0)
     if fdir_col:
         df["avg_sdirswrf"] = df[fdir_col].astype(float).clip(0)
     if strd_col:
-        df["LW_down"]     = (deaccumulate(df[strd_col].astype(float)) / 3600).clip(0)
+        df["LW_down"]     = (accum_to_flux(df[strd_col].astype(float)) / 3600).clip(0)
     if tp_col:
-        df["precipitation"] = (deaccumulate(df[tp_col].astype(float)) * 1000).clip(0)
+        df["precipitation"] = (accum_to_flux(df[tp_col].astype(float)) * 1000).clip(0)
 
     if "GHI" in df.columns:
         df.loc[df["GHI"] < 0,    "GHI"] = 0
@@ -385,7 +379,7 @@ def nearest_row(series_df, target_time, max_hours=MAX_MATCH_HOURS):
 
 def process_point_era5(lat, lon, instant_ds, accum_ds):
     """Nearest-neighbor snap to the ERA5 grid, concatenate the full
-    instant+accum hourly series across all years, deaccumulate, compute
+    instant+accum hourly series across all years, accum_to_flux, compute
     solar geometry. Returns (era5_df, grid_lat, grid_lon)."""
     fi_frames, fa_frames = [], []
     grid_lat_used = grid_lon_used = None

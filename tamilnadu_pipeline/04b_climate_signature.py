@@ -64,8 +64,22 @@ T_DELIVERY_C = 50.0
 DT_APPROACH_C = 7.0
 TM_TARGET_C = T_DELIVERY_C + DT_APPROACH_C   # 57 C, indirect-system assumption
 
-DRAW_RATE_KG_PER_S = 60.0 / 1000 / 60
-CP_WATER = 4.186
+# --- HOT-WATER DRAW SIZING (BUG FIX v3.1) -----------------------------------
+# Previous code: DRAW_RATE_KG_PER_S = 60.0 / 1000 / 60  → 0.001 kg/s (WRONG)
+#   This converts 60 L/min → m³/s but OMITS the ×1000 kg/m³ density factor,
+#   giving a night draw of only 25.2 kg over 7 h instead of a domestic-scale
+#   draw.  That makes L_required ≈ 52 kJ/kg, rendering the latent-heat floor
+#   (0.7 × 52 = 36 kJ/kg) a no-op — every PCM in the database clears it.
+#
+# FIX: use a flat domestic daily draw volume (Avargani et al. 2021: 300 L/day)
+# distributed over a 7-hour overnight storage window.  Mass = 300 kg (water
+# density 1 kg/L).  This is consistent with the Rajasthan pipeline and with
+# the 10_physics_validation.py draw schedule (75 kg × 2 draws = 150 kg/day
+# for the smaller validation tank — the signature uses a full household draw).
+DRAW_VOLUME_L   = 300.0               # litres per day (domestic household)
+DRAW_MASS_KG    = DRAW_VOLUME_L * 1.0  # kg (density of water ≈ 1 kg/L)
+DRAW_HOURS      = 7.0                  # overnight storage window (hours)
+CP_WATER        = 4.186               # kJ/(kg·K)
 ASSUMED_PCM_MASS_KG = 50.0
 
 KT_CLOUDY_THRESHOLD = 0.35
@@ -230,9 +244,16 @@ print("\n[3/6] Derived PCM-facing quantities (Tm_target, L_required) ...")
 
 sig["Tm_target_C"] = TM_TARGET_C
 sig["T_mains_est_C"] = sig["Ta_mean"] - 2.0
-q_night_kw = DRAW_RATE_KG_PER_S * CP_WATER * (T_DELIVERY_C - sig["T_mains_est_C"])
-sig["L_required_kJ_per_kg"] = (q_night_kw * 3600 * 7) / ASSUMED_PCM_MASS_KG
+
+# L_required = total thermal energy to heat DRAW_MASS_KG of water from mains
+# temperature to T_DELIVERY_C, divided by the assumed PCM mass.  Units:
+#   DRAW_MASS_KG [kg] × CP_WATER [kJ/(kg·K)] × ΔT [K] → kJ total
+#   ÷ ASSUMED_PCM_MASS_KG [kg] → kJ/kg  (specific latent heat target)
+q_total_kJ = DRAW_MASS_KG * CP_WATER * (T_DELIVERY_C - sig["T_mains_est_C"])
+sig["L_required_kJ_per_kg"] = q_total_kJ / ASSUMED_PCM_MASS_KG
 print(f"  Tm_target: constant {TM_TARGET_C:.0f} C across all points")
+print(f"  Draw volume: {DRAW_VOLUME_L:.0f} L ({DRAW_MASS_KG:.0f} kg), "
+      f"delivery at {T_DELIVERY_C:.0f} C, PCM mass {ASSUMED_PCM_MASS_KG:.0f} kg")
 print(f"  L_required range: {sig['L_required_kJ_per_kg'].min():.0f} - "
       f"{sig['L_required_kJ_per_kg'].max():.0f} kJ/kg")
 
