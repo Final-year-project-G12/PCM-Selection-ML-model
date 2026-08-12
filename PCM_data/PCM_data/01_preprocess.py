@@ -46,7 +46,7 @@ from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(SCRIPT_DIR, "data")
 
-IN_PATH = os.path.join(DATA_DIR, "PCM_Properties.csv")
+IN_PATH = os.path.join(DATA_DIR, "PCM_Properties_55records_42_70C_dense.csv")
 OUT_LEAN = os.path.join(DATA_DIR, "PCM_Properties_cleaned_mice_pmm.csv")
 OUT_DETAILED = os.path.join(DATA_DIR, "PCM_Properties_cleaned_mice_pmm_detailed.csv")
 N_ITER = 8          # MICE refinement rounds
@@ -56,7 +56,7 @@ RANDOM_STATE = 42
 COLUMN_MAP = {
     "Product": "product",
     "Manufacturer": "manufacturer",
-    "Type": "pcm_type_raw",
+    "Type": "pcm_type",
     "Appearance": "appearance",
     "Melting Temperature (°C)": "Tm_melting",
     "Freezing/Congealing Temperature (°C)": "Tm_freezing",
@@ -107,14 +107,32 @@ def parse_messy_numeric(val):
     peak_match = re.search(r"peak:\s*([0-9.]+)", s, re.IGNORECASE)
     if peak_match:
         return float(peak_match.group(1))
+    # New format seen in this dataset: "48 and 43" — a range using "and"
+    # instead of a dash. Treated the same way as a dash-range: midpoint.
+    and_match = re.match(r"^(-?\d+\.?\d*)\s+and\s+(-?\d+\.?\d*)$", s, re.IGNORECASE)
+    if and_match:
+        return (float(and_match.group(1)) + float(and_match.group(2))) / 2.0
+    # Plain dash range, e.g. "43-37" or "38-43" or "43.6-46.0". This MUST be
+    # matched with an anchored two-group pattern rather than a blind
+    # findall(r"-?\d+...") — a naive findall misreads the separating dash as
+    # a negative sign on the second number (e.g. "43-37" -> [43, -37]
+    # instead of [43, 37]), silently corrupting every descending range and
+    # roughly half of ascending ones too. This bug was masked in an earlier
+    # dataset because every range there happened to carry a "peak: X"
+    # annotation that short-circuited parsing before reaching this branch —
+    # it is not safe to assume that will always be true.
+    range_match = re.match(r"^\s*(-?\d+\.?\d*)\s*-\s*(-?\d+\.?\d*)", s)
+    if range_match:
+        try:
+            return (float(range_match.group(1)) + float(range_match.group(2))) / 2.0
+        except ValueError:
+            pass
     numbers = re.findall(r"-?\d+\.?\d*", s)
     if not numbers:
         return np.nan
-    if "-" in s and len(numbers) >= 2 and not s.startswith("-"):
-        try:
-            return (float(numbers[0]) + float(numbers[1])) / 2.0
-        except ValueError:
-            pass
+    # (Dash-ranges are already handled above via range_match; anything
+    # reaching here with multiple numbers is an unrecognized format — take
+    # the first number rather than guessing at a midpoint.)
     return float(numbers[0])
 
 
@@ -127,8 +145,14 @@ def load_raw(path: str) -> pd.DataFrame:
             df[col + "_original_text"] = df[col]
             df[col] = df[col].apply(parse_messy_numeric)
 
-    df["pcm_type"] = df["pcm_type_raw"].str.replace(r"\s*\(.*\)", "", regex=True).str.strip()
-    df["is_rt_line"] = df["pcm_type_raw"].str.contains("RT-line", na=False).astype(int)
+    # This dataset's "Type" field is already a rich, chemically meaningful
+    # category (e.g. "Organic n-alkane", "Organic fatty acid", "Organic
+    # (RT-line)", "Organic/composite blend" — 11 distinct subtypes here,
+    # vs. just "Organic"/"Inorganic" in the smaller dataset). Unlike the
+    # earlier script, it is used as-is (not stripped to a broad category
+    # plus a hand-rolled product-line flag) — the full text is one-hot
+    # encoded directly as a predictor further down, preserving that extra
+    # chemical-family signal for similarity matching.
 
     # Nucleation is only meaningful relative to each PCM's own freezing point
     # (degrees of supercooling) — imputed as that offset, not an absolute value.
@@ -149,7 +173,8 @@ def mice_rf_pmm_impute(df: pd.DataFrame):
     original_missing["Tm_nucleation"] = working_values["Tm_nucleation"].isna()
 
     type_dummies = pd.get_dummies(work["pcm_type"], prefix="type").astype(float)
-    extra_predictors = pd.concat([work[["is_rt_line"]], type_dummies], axis=1)
+    manu_dummies = pd.get_dummies(work["manufacturer"], prefix="manu").astype(float)
+    extra_predictors = pd.concat([type_dummies, manu_dummies], axis=1)
 
     # ---- MICE initialization: crude column-mean fill just to bootstrap ----
     imputed = working_values.fillna(working_values.mean())
@@ -222,6 +247,49 @@ def mice_rf_pmm_impute(df: pd.DataFrame):
                         "donor_values": display_donor_values,
                         "donor_weights": weights.tolist(),
                     })
+
+    # ---- Flag columns where regression genuinely couldn't be fit ----
+    # (fewer than 3 real observations in the WHOLE dataset — e.g. this
+    # dataset has only 1 known Nucleation Temperature out of 55 rows). These
+    # never went through the RF+PMM loop above, so `imputed[col]` for them
+    # is still sitting at the crude initialization fill (the mean of
+    # whatever handful of real values exist — with n=1 that's just that one
+    # value, applied to every missing row). That's the best any method can
+    # do with this little evidence, but it must be logged as low-confidence
+    # rather than silently presented as an equal-quality MICE+RF+PMM result.
+    low_confidence_cols = [c for c in numeric_cols if (~original_missing[c]).sum() < 3]
+    for col in low_confidence_cols:
+        known_positions = np.where(~original_missing[col].values)[0]
+        if len(known_positions) == 0:
+            continue  # genuinely zero data anywhere — cannot impute at all
+        for row_i in np.where(original_missing[col].values)[0]:
+            if col == "Tm_nucleation":
+                # Use the MICE-refined Tm_freezing (`imputed`), not the raw
+                # pre-imputation column (`work`) — Tm_freezing itself has
+                # plenty of donor support (29/55 known, well above the n<3
+                # threshold) and is already fully resolved by this point in
+                # the loop, but `work["Tm_freezing"]` still holds NaN for
+                # any row where freezing point was ALSO originally missing.
+                # Reading the raw column here silently produced NaN for
+                # every such row.
+                donor_vals_abs = (
+                    imputed["Tm_freezing"].iloc[known_positions].values
+                    - working_values["Tm_nucleation"].iloc[known_positions].values
+                )
+                pred_abs = float(imputed["Tm_freezing"].iloc[row_i] - imputed["Tm_nucleation"].iloc[row_i])
+            else:
+                donor_vals_abs = working_values[col].iloc[known_positions].values
+                pred_abs = float(imputed[col].iloc[row_i])
+            donor_log[col].append({
+                "product": work.iloc[row_i]["product"],
+                "own_manufacturer": work.iloc[row_i]["manufacturer"],
+                "predicted_value": pred_abs,
+                "donor_manufacturers": work.iloc[known_positions]["manufacturer"].tolist(),
+                "donor_products": work.iloc[known_positions]["product"].tolist(),
+                "donor_values": donor_vals_abs.tolist(),
+                "donor_weights": [1.0 / len(known_positions)] * len(known_positions),
+                "low_confidence": True,
+            })
 
     # ---- Write numeric results back, translating nucleation subcool -> absolute ----
     for col in numeric_cols:
@@ -319,12 +387,18 @@ def build_provenance_table(donor_log, cat_donor_log):
     rows = []
     for col, entries in donor_log.items():
         for e in entries:
+            method = ("Insufficient data (fewer than 3 real values in the entire "
+                      "dataset) — value carried from the only donor(s) available, "
+                      "not a fitted MICE+RF+PMM prediction. Treat as low confidence."
+                      if e.get("low_confidence") else
+                      "MICE + Random Forest + PMM (weighted blend of real donor values)")
             row = {
                 "product": e["product"],
                 "manufacturer": e["own_manufacturer"],
                 "property": col,
                 "predicted_value": round(e["predicted_value"], 4),
-                "prediction_method": "MICE + Random Forest + PMM (weighted blend of real donor values)",
+                "confidence": "LOW (n<3 donors)" if e.get("low_confidence") else "Standard",
+                "prediction_method": method,
             }
             for i in range(len(e["donor_products"])):
                 row[f"donor_{i+1}_product"] = e["donor_products"][i]
@@ -340,6 +414,7 @@ def build_provenance_table(donor_log, cat_donor_log):
                 "manufacturer": e["own_manufacturer"],
                 "property": col,
                 "predicted_value": e["predicted_value"],
+                "confidence": "Standard",
                 "prediction_method": "Random Forest classifier (nearest known-label PCMs shown as evidence)",
             }
             for i in range(len(e["donor_products"])):
@@ -351,7 +426,7 @@ def build_provenance_table(donor_log, cat_donor_log):
 
     prov = pd.DataFrame(rows)
     donor_cols = sorted([c for c in prov.columns if c.startswith("donor_")])
-    front_cols = ["product", "manufacturer", "property", "predicted_value", "prediction_method"]
+    front_cols = ["product", "manufacturer", "property", "predicted_value", "confidence", "prediction_method"]
     return prov[front_cols + donor_cols]
 
 
@@ -363,7 +438,7 @@ def main():
     cleaned, donor_log, cat_donor_log, _ = mice_rf_pmm_impute(raw)
     after_missing = cleaned[check_cols].isna().sum()
 
-    front = ["product", "manufacturer", "pcm_type_raw", "pcm_type", "is_rt_line"]
+    front = ["product", "manufacturer", "pcm_type"]
 
     # Group each property's three related columns together — value, whether
     # it was predicted, and exactly what the manufacturer's sheet said —
@@ -395,6 +470,11 @@ def main():
     for col in [c for c in cleaned.columns if c.endswith("_original_text")]:
         cleaned[col] = cleaned[col].fillna("Not reported by manufacturer")
 
+    # The multi-column "detailed" file (value + imputed-flag + original-text
+    # per attribute) is kept only as an optional audit artifact, not the
+    # main deliverable — it was the source of the "two columns for one
+    # attribute" confusion. Everyday use should be the lean file below,
+    # which has exactly one clean, fully-numeric column per attribute.
     cleaned.to_csv(OUT_DETAILED, index=False)
 
     # Single clean column per attribute — no imputed-flag columns, no
@@ -402,7 +482,7 @@ def main():
     # not-reported value has already been replaced with its predicted
     # number (or predicted category, for flammability/appearance) directly
     # in these columns — nothing further to look up elsewhere.
-    lean_cols = ["product", "manufacturer", "pcm_type", "is_rt_line", "appearance"] + NUMERIC_COLS + ["flammability"]
+    lean_cols = ["product", "manufacturer", "pcm_type", "appearance"] + NUMERIC_COLS + ["flammability"]
     lean_cols = [c for c in lean_cols if c in cleaned.columns]
     cleaned[lean_cols].to_csv(OUT_LEAN, index=False)
 
@@ -438,13 +518,19 @@ def make_plots(raw, cleaned, donor_log, check_cols):
     import seaborn as sns
 
     # ---- 1. Missingness before/after ----
-    fig, axes = plt.subplots(1, 2, figsize=(15, 5))
+    # Figure height scales with row count so labels stay legible — a fixed
+    # 5-inch height (fine for 18 rows) badly cramps 55 product-name labels.
+    n_rows = len(raw)
+    fig_h = max(5, 0.22 * n_rows)
+    fig, axes = plt.subplots(1, 2, figsize=(15, fig_h))
     sns.heatmap(raw[check_cols].isna(), cbar=False, cmap="rocket_r",
                 yticklabels=raw["product"], ax=axes[0])
     axes[0].set_title("Missing values — BEFORE")
+    axes[0].tick_params(axis='y', labelsize=8)
     sns.heatmap(cleaned[check_cols].isna(), cbar=False, cmap="rocket_r",
                 yticklabels=cleaned["product"], ax=axes[1])
     axes[1].set_title("Missing values — AFTER (MICE + RF + PMM)")
+    axes[1].tick_params(axis='y', labelsize=8)
     plt.tight_layout()
     plt.savefig(os.path.join(DATA_DIR, "01_missingness_before_after.png"), dpi=150)
     plt.close(fig)
@@ -474,19 +560,23 @@ def make_plots(raw, cleaned, donor_log, check_cols):
     # ---- 3. Imputed-vs-reported sanity strip plot for key columns ----
     key_cols = ["Tm_nucleation", "TC_liquid", "TC_solid", "Cp_solid", "heat_storage_Wh_kg"]
     key_cols = [c for c in key_cols if c in cleaned.columns]
+    manufacturers = cleaned["manufacturer"].unique()
+    marker_cycle = ["o", "s", "^", "D", "v", "P", "X", "*"]
+    markers = {m: marker_cycle[i % len(marker_cycle)] for i, m in enumerate(manufacturers)}
+
     fig, axes = plt.subplots(1, len(key_cols), figsize=(4 * len(key_cols), 5), sharey=False)
     for ax, col in zip(axes, key_cols):
         flag_col = col + "_imputed"
-        for manu, marker in zip(cleaned["manufacturer"].unique(), ["o", "s"]):
+        for i, manu in enumerate(manufacturers):
             sub = cleaned[cleaned["manufacturer"] == manu]
             reported = sub[~sub[flag_col]]
             imputed = sub[sub[flag_col]]
             ax.scatter([manu[:5]] * len(reported), reported[col], color="#2A9D8F",
-                       marker=marker, label="Reported" if manu == cleaned["manufacturer"].unique()[0] else None, zorder=3)
+                       marker=markers[manu], label="Reported" if i == 0 else None, zorder=3)
             ax.scatter([manu[:5]] * len(imputed), imputed[col], color="#E76F51",
-                       marker=marker, label="Imputed" if manu == cleaned["manufacturer"].unique()[0] else None, zorder=3)
+                       marker=markers[manu], label="Imputed" if i == 0 else None, zorder=3)
         ax.set_title(col)
-        ax.tick_params(axis='x', rotation=20)
+        ax.tick_params(axis='x', rotation=45)
     axes[0].legend(loc="upper left", fontsize=8)
     plt.tight_layout()
     plt.savefig(os.path.join(DATA_DIR, "03_imputed_vs_reported_sanity.png"), dpi=150)
