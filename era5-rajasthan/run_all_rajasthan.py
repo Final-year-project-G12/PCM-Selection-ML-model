@@ -66,7 +66,8 @@ default — none of steps 1-8 read their output, so they cannot break the
 core chain; each one's failure is logged and does NOT stop the run,
 unlike the core chain above):
   03_verify_climate_csv.py, 03_qc_plots.py, 03b_agreement_analysis.py,
-  03c_plots_raw_rajasthan.py, 03b_quality_check_plots_rajasthan.py,
+  03b_coverage_viz_rajasthan.py, 03c_plots_raw_rajasthan.py,
+  03b_quality_check_plots_rajasthan.py,
   03b_validate_quality_fix_rajasthan.py (LAST among optionals — it
   re-runs 04_climate_signature_rajasthan.py a SECOND time internally as
   part of its own before/after diff, which is expected, not a bug in
@@ -134,6 +135,7 @@ OPTIONAL_SCRIPTS = [
     "03_verify_climate_csv.py",
     "03_qc_plots.py",
     "03b_agreement_analysis.py",
+    "03b_coverage_viz_rajasthan.py",
     "03c_plots_raw_rajasthan.py",
     "03b_quality_check_plots_rajasthan.py",
     "03b_validate_quality_fix_rajasthan.py",   # last: re-runs 04 internally
