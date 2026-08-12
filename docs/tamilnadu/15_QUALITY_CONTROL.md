@@ -22,3 +22,12 @@ Writes a report to `qc_report.txt`.
 - Checks that the final missingness rate is **<0.1%** for all features.
 - Checks that duplicate rows are **0**.
 - Fails the pipeline run if these checks are violated.
+
+## Literature Support
+| QC Method | Reference | Source |
+|---|---|---|
+| Physical bounds (Table 9) | Framework doc v3.0 | `04_preprocess_tamilnadu.py` BOUNDS dict |
+| Hampel MAD outlier filter | Hampel (1974) | Standard time-series QC |
+| MICE imputation | Rubin (1987); Van Buuren (2018) | sklearn IterativeImputer |
+| Quantile mapping (Step 2b, v3.1) | Mansouri et al. (2025) | `sources/Mansouri2025MultimodalRenewableForecasting_summary.md` |
+| PASS/FAIL gate | Framework doc §5 | `21_REPRODUCIBILITY.md` |

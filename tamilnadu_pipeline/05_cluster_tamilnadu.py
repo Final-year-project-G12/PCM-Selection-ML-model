@@ -99,7 +99,17 @@ def main():
 
     rows = []
     for k in k_candidates_safe:
-        gmm = GaussianMixture(n_components=k, covariance_type="full",
+        # covariance_type="diag" (diagonal) — NOT "full" — is the correct choice
+        # for 133 samples with 27+ feature dimensions.  A full covariance matrix
+        # requires (D*(D+1)/2) = 378 parameters PER component; with K=5 that is
+        # 1,890 parameters fit on only 133 data points, severely overdetermining
+        # the model and causing membership probability saturation (probs ≈ 1.0
+        # at boundaries).  Diagonal covariance assumes feature independence after
+        # PCA and requires only D=27 parameters per component, consistent with
+        # standard practice for high-dimensional, low-sample-count GMM.
+        # (See docs/era5_tamilnadu/20_IMPLEMENTATION_ISSUES.md, issue #4 and
+        #  docs/era5_tamilnadu/METHODS.md, §05 for full justification.)
+        gmm = GaussianMixture(n_components=k, covariance_type="diag",
                                random_state=RANDOM_STATE, n_init=5)
         labels = gmm.fit_predict(X)
         bic = gmm.bic(X)
@@ -146,8 +156,9 @@ def main():
     print(f"  Saved: {OUT_DIR / 'kmeans_comparison_tamilnadu.csv'}")
 
     k_final_safe = min(K_FINAL, len(X) - 1)
-    print(f"\n[3/4] Final Gaussian Mixture fit at K={k_final_safe} ...")
-    gmm_final = GaussianMixture(n_components=k_final_safe, covariance_type="full",
+    print(f"\n[3/4] Final Gaussian Mixture fit at K={k_final_safe} "
+          f"(covariance_type=diag, see METHODS.md §05) ...")
+    gmm_final = GaussianMixture(n_components=k_final_safe, covariance_type="diag",
                                  random_state=RANDOM_STATE, n_init=10)
     hard_labels = gmm_final.fit_predict(X)
     soft_probs = gmm_final.predict_proba(X)

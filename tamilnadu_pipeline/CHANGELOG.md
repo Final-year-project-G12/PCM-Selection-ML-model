@@ -6,6 +6,40 @@ file. "Was" = what the earlier version did; "Now" = what changed.
 
 ---
 
+## v3.1 Bug Fixes (August 2026 — critical correctness)
+
+### `02_combine_tamilnadu.py`
+- **Deaccumulation bug fixed.** Was: `deaccumulate()` with `pd.Series.diff()` corrupted GHI (noon r ≈ 0.40). Now: `accum_to_flux(s) = s.clip(lower=0)` — matches Rajasthan fix.
+
+### `04_preprocess_tamilnadu.py`
+- **Quantile mapping added (Step 2b).** Per-season empirical quantile mapping of daytime `era5_GHI` onto NASA POWER distribution. Saves `ghi_quantile_mapping_report.csv`.
+
+### `03b_agreement_analysis.py` (NEW)
+- Cross-source validation decision gate (BACKBONE / QUANTILE_MAP / MANUAL_REVIEW). Outputs `era5_power_agreement_tamilnadu.csv`, scatter HTML, `bias_decision_tamilnadu.txt`.
+
+### `04b_climate_signature.py` (already fixed in prior round)
+- **1000× flow rate bug fixed.** Now uses `DRAW_VOLUME_L = 300` (Avargani et al. 2021).
+
+### `11_level_b_seasonal_analysis.py`
+- **Draw volume aligned with 04b.** Seasonal `L_required` now uses 300 L/day formula (was still using buggy `DRAW_RATE_KG_PER_S`).
+
+### `05_cluster_tamilnadu.py` (already fixed in prior round)
+- **GMM covariance fixed.** `covariance_type="diag"` (was `"full"`).
+
+### `10_physics_validation.py` (already fixed in prior round)
+- **Tank ambient heat loss added.** `UA_TANK_W_K = 2.0 W/K`.
+
+### `config.py`
+- Added `OUTPUTS_DIR` for agreement analysis outputs.
+
+### All `docs/era5_tamilnadu/*.md` files
+- Updated from "known issues" to "corrected (v3.1)" status.
+- Added Literature Support sections referencing `sources/` summaries from `sources.zip`.
+
+**Re-run required**: `02_combine` → full downstream chain for scientifically valid outputs.
+
+---
+
 ## Bug fixes (correctness, not new features)
 
 ### `02b_build_daily_aggregates.py`

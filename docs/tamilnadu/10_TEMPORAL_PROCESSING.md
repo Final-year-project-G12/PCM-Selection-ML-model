@@ -11,3 +11,10 @@
 - Chronological sorting is applied before Hampel outlier detection and feature lags.
 - Lag features (`lag1d`, `lag7d`, `lag30d`) are shifted within `(point_id, event)` groups. A date-gap check is implemented to prevent lag bridging over missing periods.
 - In `02b_build_daily_aggregates.py`, a calendar day is only integrated if it has **>=20 valid hours** of NASA POWER data.
+
+## Literature Support
+| Topic | Reference | Source |
+|---|---|---|
+| UTC/IST alignment | Reda & Andreas (2004) SPA sun events | `12_SOLAR_GEOMETRY.md` |
+| Daily GHI integration | Ghodusinejad et al. (2026) — temporal aggregation | `sources/Ghodusinejad2026SolarIrradianceForecasting_summary.md` |
+| HDD18/CDD24 degree-days | Standard building energy practice | `15_QUALITY_CONTROL.md` |

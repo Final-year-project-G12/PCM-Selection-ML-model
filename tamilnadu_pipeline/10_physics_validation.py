@@ -122,6 +122,22 @@ A_P_M2 = 3.5
 DEFAULT_PCM_DENSITY_KG_M3 = 800.0
 DEFAULT_CP_JKGK = 2000.0
 
+# ─── Ambient tank heat-loss term (BUG FIX v3.1) ──────────────────────────
+# The original model omitted tank-to-ambient losses.  Without this term the
+# tank stays at delivery temperature all night, producing solar fractions of
+# 90-99% and 0-1 complete PCM freeze-melt cycles per year — both outside the
+# published 54-84% SF benchmark band (plan v3.0 Table 16) and physically
+# unrealistic for a domestic solar water heater.
+#
+# UA_TANK_W_K represents the total conductance of the tank shell to ambient
+# air.  For a well-insulated 150 L stainless-steel tank with 50 mm mineral
+# wool insulation (k ≈ 0.04 W/m·K), the outer area is ≈ 1.5 m² and the
+# effective U-value is ≈ 0.8 W/m²·K → UA ≈ 1.2 W/K.  A slightly higher
+# value of 2.0 W/K is used here as a conservative (higher loss) estimate
+# consistent with real-world installation imperfections and pipe losses.
+# Reported as a stated assumption per the framework plan.
+UA_TANK_W_K = 2.0   # W/K  tank-to-ambient conductance (stated assumption)
+
 DRAW_HOURS_LOCAL = [7, 19]
 DRAW_MASS_KG = 75.0
 T_DELIVERY_C = 50.0
@@ -144,15 +160,18 @@ def pick_representative_year(daily_point_df):
 
 
 def build_hourly_drivers(year_df, sun_df, point_id):
-    """Returns hourly arrays (len = 24*n_days): Tc (collector coil temp
-    driving the tank), T_mains (daily, held constant within a day),
-    local_hour (0-23) for draw-timing checks."""
+    """Returns hourly arrays (len = 24*n_days):
+      Tc        — collector coil temperature driving the tank [C]
+      T_mains   — mains water temperature (constant within a day) [C]
+      hour_of_day — local hour 0-23
+      Tamb      — raw ambient air temperature [C] (needed by tank loss term)
+    """
     sun_local = sun_df[sun_df["point_id"] == point_id].copy()
     sun_local["date"] = pd.to_datetime(sun_local["date"]).dt.date
     sun_local["time_utc"] = pd.to_datetime(sun_local["time_utc"], utc=True)
     sun_pivot = sun_local.pivot_table(index="date", columns="event", values="time_utc", aggfunc="first")
 
-    Tc_all, Tmains_all, hour_all = [], [], []
+    Tc_all, Tmains_all, hour_all, Tamb_all = [], [], [], []
 
     for _, day in year_df.iterrows():
         d = pd.to_datetime(day["date"]).date()
@@ -187,11 +206,12 @@ def build_hourly_drivers(year_df, sun_df, point_id):
             Tc_all.append(tc)
             Tmains_all.append(t_mains)
             hour_all.append(h)
+            Tamb_all.append(tamb)   # <-- raw ambient temp, separate from Tc
 
-    return np.array(Tc_all), np.array(Tmains_all), np.array(hour_all)
+    return np.array(Tc_all), np.array(Tmains_all), np.array(hour_all), np.array(Tamb_all)
 
 
-def simulate_pcm_swh_year(Tc, T_mains, hour_of_day, pcm_row, dt=3600.0):
+def simulate_pcm_swh_year(Tc, T_mains, hour_of_day, pcm_row, tamb_arr=None, dt=3600.0):
     Tm = pcm_row["Tm_C"]
     Hf = pcm_row["latent_heat_kJ_kg"] * 1000.0   # J/kg
     density = pcm_row.get("density_solid_kg_m3", np.nan)
@@ -224,19 +244,33 @@ def simulate_pcm_swh_year(Tc, T_mains, hour_of_day, pcm_row, dt=3600.0):
 
     for i in range(len(Tc)):
         tc, tmains, h = Tc[i], T_mains[i], hour_of_day[i]
+        # ambient temperature for this hour (used in tank loss term)
+        # build_hourly_drivers stores Ta in the Tc array via tamb + solar gain;
+        # we need raw tamb here.  Since Tc = tamb + eff*isolar/20, we cannot
+        # easily separate them after the fact.  Instead we track ambient
+        # independently via a separate Tamb array built in build_hourly_drivers.
+        # IMPLEMENTATION NOTE: This function receives a pre-built Tamb array
+        # (tamb_arr) added to the signature in the corrected build_hourly_drivers.
+        tamb = tamb_arr[i] if tamb_arr is not None else 30.0   # fallback: Tamil Nadu mean
+
+        # Tank-to-ambient heat loss [J] this step:  Q_loss = UA * (Tw - tamb) * dt
+        # Incorporated into the backward-Euler denominator to maintain
+        # unconditional stability (treats loss as linear in Tw at step end).
+        loss_coeff = UA_TANK_W_K * dt / (M_W_KG * C_W_JKGK)   # dimensionless
 
         if phase == 1:
             c = 1.0 / tau_ps
-            denom1 = 1 + dt * a + dt * b
-            Tw_new = ((Tw + dt * a * tc) * (1 + dt * c) + dt * b * (Tp + dt * c * Tw)) / \
+            denom1 = 1 + dt * a + dt * b + loss_coeff
+            Tw_new = ((Tw + dt * a * tc + loss_coeff * tamb) * (1 + dt * c)
+                      + dt * b * (Tp + dt * c * Tw)) / \
                      (denom1 * (1 + dt * c) - dt * b * dt * c)
             Tp_new = (Tp + dt * c * Tw_new) / (1 + dt * c)
             Tw, Tp = Tw_new, Tp_new
             if Tp >= Tm:
                 phase, Tp, Qp = 2, Tm, 0.0
         elif phase == 2:
-            denom = 1 + dt * a + dt * b
-            Tw_new = (Tw + dt * a * tc + dt * b * Tm) / denom
+            denom = 1 + dt * a + dt * b + loss_coeff
+            Tw_new = (Tw + dt * a * tc + dt * b * Tm + loss_coeff * tamb) / denom
             dQ = H_P_WM2K * A_P_M2 * max(0.0, Tw_new - Tm) * dt
             Qp += dQ
             Tw = Tw_new
@@ -246,8 +280,9 @@ def simulate_pcm_swh_year(Tc, T_mains, hour_of_day, pcm_row, dt=3600.0):
                 was_liquid_this_day = True
         else:  # phase 3
             c = 1.0 / tau_pl
-            denom1 = 1 + dt * a + dt * b
-            Tw_new = ((Tw + dt * a * tc) * (1 + dt * c) + dt * b * (Tp + dt * c * Tw)) / \
+            denom1 = 1 + dt * a + dt * b + loss_coeff
+            Tw_new = ((Tw + dt * a * tc + loss_coeff * tamb) * (1 + dt * c)
+                      + dt * b * (Tp + dt * c * Tw)) / \
                      (denom1 * (1 + dt * c) - dt * b * dt * c)
             Tp_new = (Tp + dt * c * Tw_new) / (1 + dt * c)
             Tw, Tp = Tw_new, Tp_new
@@ -300,16 +335,17 @@ def main():
                   f"in its best year — skipping (need a more complete year).")
             continue
 
-        Tc, T_mains, hour_of_day = build_hourly_drivers(year_df, sun_df, medoid)
+        Tc, T_mains, hour_of_day, Tamb = build_hourly_drivers(year_df, sun_df, medoid)
         print(f"\n  Cluster {int(cid)}  medoid={medoid}  "
               f"year={pd.to_datetime(year_df['date']).dt.year.iloc[0]}  "
-              f"({len(year_df)} days, {len(Tc)} hourly steps)")
+              f"({len(year_df)} days, {len(Tc)} hourly steps)  "
+              f"[UA_TANK={UA_TANK_W_K} W/K ambient loss active]")
 
         candidates = scores_df[scores_df["cluster_id"] == cid].sort_values("consensus_rank")
         candidates = candidates.head(MAX_PCMS_PER_CLUSTER)
 
         for _, pcm_row in candidates.iterrows():
-            sim = simulate_pcm_swh_year(Tc, T_mains, hour_of_day, pcm_row)
+            sim = simulate_pcm_swh_year(Tc, T_mains, hour_of_day, pcm_row, tamb_arr=Tamb)
             in_band = BENCHMARK_SF_LOW <= sim["annual_solar_fraction"] <= BENCHMARK_SF_HIGH
             all_results.append({
                 "cluster_id": cid, "medoid_point": medoid, "name": pcm_row["name"],
