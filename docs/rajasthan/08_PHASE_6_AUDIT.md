@@ -112,16 +112,27 @@ sampled from `Normal(mean, std)` of real, non-imputed values **within the same P
 applied only to `latent_heat` and `thermal_conductivity`; `Tm` always uses plain ±1K noise
 regardless of imputation status.
 
-## Actual Rajasthan result (ground-truthed)
+## Actual Rajasthan result — RE-RUN 2026-08-14 against the expanded 55-row database (current)
 
-`mcdm_rankings_rajasthan.csv`: 20 rows across 3 clusters (n=5/8/7 survivors). `Tm_fitness` dominates
-entropy weight in Clusters 0 (48.2%) and 1 (49.4%) — both exceed the script's own 40%
-"near-total-domination" flag threshold, which prints a caution citing Oluah (2020)'s 72.12%
-thermal-conductivity-domination precedent as a cautionary comparator. Cluster 2's dominant criterion
-is `supercooling` (56.5%). **Kendall's W**: Cluster 0 = 0.4375 (below the 0.6 ambiguous threshold,
-additionally tagged `candidate_pool_status="undersized"`, n=5<8), Cluster 1 = 0.536, Cluster 2 =
-0.589 — **no cluster currently reaches the "strong agreement" (W>0.8) band**, and Cluster 0 is
-explicitly ambiguous by the project's own stated threshold.
+`mcdm_rankings_rajasthan.csv`: **39 rows across 3 clusters (n=9/14/16 survivors)**, up from the
+pre-expansion 20 rows (n=5/8/7). Two bugs (`is_rt_line` column removed by the rewritten
+`01_preprocess.py`, and a `PCM_data/PCM_data/` path-nesting mismatch) had to be fixed first to make
+this re-run possible at all — see `07_PHASE_5_AUDIT.md` for the full writeup; the `family` field this
+script uses for Monte Carlo same-family donor fallback now derives from the real `manufacturer` column
+(6 values) rather than the old binary Rubitherm/Pluss flag.
+
+**The dominant entropy criterion changed for every cluster**: `supercooling` now dominates all three
+(Cluster 0 = 63.8%, Cluster 1 = 48.6%, Cluster 2 = 57.0%) — all three exceed the script's own 40%
+"near-total-domination" flag threshold (previously it was `Tm_fitness` dominating Clusters 0/1 at
+48.2%/49.4%, with `supercooling` only dominant in Cluster 2). **Kendall's W**: Cluster 0 = 0.388
+(down from 0.4375, still below the 0.6 ambiguous threshold — but **no longer tagged undersized**,
+n=9 now within the healthy 8–20 band, so low agreement here can no longer be attributed to sample
+size), Cluster 1 = 0.635 (up from 0.536, now crosses into the "moderate" band), Cluster 2 = 0.634 (up
+from 0.589, also now "moderate") — **no cluster reaches the "strong agreement" (W>0.8) band**, and
+Cluster 0's persistently low W despite a healthy sample size is a new finding worth its own scrutiny
+(possible genuine method disagreement on this cluster's ranking, not a data-sparsity artifact). GRA is
+newly flagged by the script's own diagnostic as the "structural outlier" method (lowest mean pairwise
+rho vs. the other three) in all three clusters — not previously called out by name in this file.
 
 ## Literature support
 
@@ -167,11 +178,15 @@ the per-criterion contribution decomposition against its own already-saved weigh
 
 ## Problems / risks
 
-- **Every ranking currently produced is provisional**, self-tagged as such in every output row,
-  because it runs on (a) a 25-row-vs-40-60-target PCM database and (b) a κ-relaxed rather than
-  nominal-threshold survivor pool. Re-running Phase 6 after the database expansion is not optional
-  cleanup — it will likely change which candidates even enter the ranking.
-- **`cost` and `corrosion` are effectively structural placeholders**, not measured criteria — a
+- **Resolved 2026-08-14**: Phase 6 has now been re-run against the expanded 55-row database (see
+  above) — the `pcm_database_status` tag on every output row now reads `"COMPLETE — 55-row
+  manufacturer database..."` rather than `"PROVISIONAL — ~25-row..."`. The ranking still runs on a
+  κ-relaxed rather than nominal-threshold survivor pool (that policy question remains genuinely
+  open, see `19_PHASE_7_ONWARD.md`), and its output has not yet been re-validated by a Phase 7
+  re-run — so "provisional pending physics validation" still applies, just not "provisional pending
+  database expansion" any more.
+- **`cost` and `c
+orrosion` are effectively structural placeholders**, not measured criteria — a
   reader could reasonably ask why 12% of the total AHP weight budget (6%+6%) rides on data that
   doesn't exist yet for `cost` and is a binary type-proxy for `corrosion`.
 - **AHP is not actually AHP-elicited** — flag this precisely in any write-up; the current weights are
@@ -185,9 +200,18 @@ the per-criterion contribution decomposition against its own already-saved weigh
 
 **COMPLETE as implemented, with three caught-and-fixed bugs (evidence of working self-audit) and
 two structural caveats (AHP not elicited, cost/corrosion are placeholders) that should be stated
-plainly rather than presented as finished.** Phase 7 (`09_physics_validation_rajasthan.py`) has since
-run against this script's output and returned a genuine negative validation result (Spearman rho
-≤0.4 for all 3 clusters) — see `19_PHASE_7_ONWARD.md`. This script's own ranking is not thereby
-"wrong" — the negative result is at least partly attributable to the same undersized PCM database
-this file already flags as a structural caveat. This is no longer "up to Phase 6" — Phase 7 and 8
-both exist, have run, and are documented in `19_PHASE_7_ONWARD.md`.
+plainly rather than presented as finished.** **Update, 2026-08-14: this script has now been re-run
+against the expanded 55-row database** — 39 survivors across 3 clusters (up from 20), no cluster
+undersized, Kendall's W 0.388/0.635/0.634 (Clusters 1–2 now "moderate," Cluster 0 still ambiguous but
+no longer explainable by small sample size). Two bugs blocking this re-run (`is_rt_line` column
+removed by the rewritten preprocessing script; a `PCM_data/PCM_data/` path mismatch) were found and
+fixed — see `07_PHASE_5_AUDIT.md`. **Update, 2026-08-14 (later same day): Phase 7 has now ALSO been
+re-run against this fresh ranking** (`09_physics_validation_rajasthan.py`) — the negative validation
+result persists (Spearman rho = -0.385/+0.125/-0.097 across the 3 clusters, mean -0.119, all still in
+the ≤0.4 "genuine negative" band vs. the pre-expansion -0.900/-0.096/-0.198) — so the larger database
+did **not** resolve the MCDM-vs-physics disagreement; if anything Cluster 0's now-healthy sample size
+(n=9, no longer undersized) makes its persistently-low Kendall's W a more concerning finding, not a
+less concerning one. Phase 8 (`10_recommendation_cards_rajasthan.py`) has also been re-run and
+produced new Top-1 picks (RT50 / savE® OM50 / savE® OM50) — see `19_PHASE_7_ONWARD.md` for the full
+current-state writeup. Every phase in this chain (5 through 8) is now current as of 2026-08-14; no
+further re-run is pending.

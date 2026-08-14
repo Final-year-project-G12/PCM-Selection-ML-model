@@ -9,6 +9,14 @@ clustering pass. Phase 7 (Physics Validation) returns a genuine, honestly-report
 changes what can be claimed about the pipeline's own MCDM ranking (see "What cannot yet be claimed"
 below).
 
+**Update, 2026-08-12**: the PCM property database prerequisite that this report previously named as
+the single blocking gap has been closed — expanded from 18/25 rows to 55 rows, inside the 40–60-row
+target (see `07_PHASE_5_AUDIT.md`). Phases 5–8 have not yet been re-run against the expanded
+database, so every phase-5-through-8 number in this report below is still the pre-expansion result.
+The blocking item has moved from "expand the database" to "regenerate
+`PCM_Properties_cleaned_mice_pmm_detailed.csv` (currently missing from disk) and re-run Phases 5–8" —
+see "Prerequisites for a FINAL (non-provisional) result" and "Recommended next implementation" below.
+
 ## Completed phases
 
 Phase 1 (Data Collection) — complete, 320/320 points, 240/240 ERA5 files, 3200/3200 POWER files.
@@ -60,9 +68,13 @@ aggregation with its own independent cross-phase consistency re-verification.
 
 ## Weakest components
 
-1. **The PCM property database** — 18–25 rows against a 40–60-row target, structurally unable to
-   satisfy its own nominal latent-heat feasibility constraint. This is the single component most
-   likely to change Phase 5/6's actual numeric results once fixed.
+1. **The PCM property database — row-count gap now closed (2026-08-12), pipeline re-run still
+   pending.** Expanded from 18–25 rows to 55 rows, inside the 40–60-row target. The pre-expansion
+   database was structurally unable to satisfy its own nominal latent-heat feasibility constraint;
+   whether the expanded database still is remains unverified, because Phases 5–8 have not yet been
+   re-run against it, and the detailed imputation output
+   (`PCM_Properties_cleaned_mice_pmm_detailed.csv`) both scripts read is currently missing from disk.
+   This re-run is now the single item most likely to change Phase 5/6's actual numeric results.
 2. **AHP weighting is not actually elicited** — presented as a TODO in code, but this distinction
    needs to be equally explicit in any write-up that describes the weighting methodology.
 3. **External classification validation** — Köppen-Geiger is now wired in (real per-point lookup,
@@ -145,8 +157,9 @@ kind of honest-negative-result reporting the framework doc's own §10 asked for.
 
 ## What cannot yet be claimed
 
-That the current Top-3 PCM recommendation per cluster is final (it is provisional pending database
-expansion), that the clustering result is externally validated against a complete set of independent
+That the current Top-3 PCM recommendation per cluster is final (it is provisional pending re-run
+against the now-expanded 55-row database — the expansion itself is complete, the re-run is not), that
+the clustering result is externally validated against a complete set of independent
 classifications (Köppen only, NBC/ECBC still stubbed), that AHP pairwise elicitation informed the
 criterion weights (it did not — Table 13 priors were used unmodified), or — the change from the
 previous version of this report — **that the MCDM ranking has been confirmed by physics simulation**.
@@ -157,22 +170,27 @@ database size," not "the MCDM ranking is physics-validated."
 
 ## Prerequisites for a FINAL (non-provisional) result
 
-(1) PCM database expansion to the 40–60-row target — **still the single blocking item**, now with
+(1) **PCM database expansion to the 40–60-row target — DONE (2026-08-12): 55 rows.** What is not yet
+done is propagating that expansion through the pipeline: regenerating
+`PCM_Properties_cleaned_mice_pmm_detailed.csv` (currently missing from disk) and re-running Phases
+5–8 against it. This is now the single blocking item, replacing the expansion task itself — with
 Phase 7 evidence that it matters even more than previously known: Cluster 0's negative rho may be
-attributable to its undersized candidate pool (n=5) rather than a genuine MCDM/physics mismatch, and
-the PCM-mass sensitivity check shows the physics ranking is stable regardless of PCM sizing — meaning
-the database, not a simulation parameter, is the likely lever that would actually change the result.
-(2) A settled feasibility-constraint policy (accept calibrated κ, or rank-by-proximity). (3) Ideally,
-resolution of the quantile-mapping-correction-application question, since Phase 7's calibration
-benchmarks are sensitive to the GHI values driving the simulated solar resource. (4) NBC/ECBC external
-validation, if time permits.
+attributable to its undersized (pre-expansion) candidate pool (n=5) rather than a genuine MCDM/physics
+mismatch, and the PCM-mass sensitivity check shows the physics ranking is stable regardless of PCM
+sizing — meaning the database, not a simulation parameter, is the likely lever that would actually
+change the result. (2) A settled feasibility-constraint policy (accept calibrated κ, or
+rank-by-proximity). (3) Ideally, resolution of the quantile-mapping-correction-application question,
+since Phase 7's calibration benchmarks are sensitive to the GHI values driving the simulated solar
+resource. (4) NBC/ECBC external validation, if time permits.
 
 ## Recommended next implementation
 
-All 8 phases exist and run end-to-end. In order: finish the PCM database expansion → re-run
-`07 → 08 → 09 → 10` (`python run_all_rajasthan.py --from 07_feasibility_filter_rajasthan.py`) against
-the expanded database → see whether the negative Phase 7 rho persists → decide and document the
-feasibility-constraint policy → (optional) wire in NBC/ECBC external validation for Phase 4.
+All 8 phases exist and run end-to-end. The PCM database expansion is finished (55 rows). In order:
+regenerate `PCM_Properties_cleaned_mice_pmm_detailed.csv` (`python PCM_data/PCM_data/01_preprocess.py`
+— currently missing from disk) → re-run `07 → 08 → 09 → 10` (`python run_all_rajasthan.py --from
+07_feasibility_filter_rajasthan.py`) against the expanded database → see whether the negative Phase 7
+rho persists → decide and document the feasibility-constraint policy → (optional) wire in NBC/ECBC
+external validation for Phase 4.
 
 ## Final verdict
 
@@ -188,11 +206,14 @@ two caught-and-fixed numerical bugs) and ready to describe in full. What is NOT 
 OUTPUT (the negative Spearman rho) as final, because it rests on the same undersized PCM database
 that already limits Phases 5–6.
 
-**NOT READY — a clearly-identified, already-in-progress fix required** for Phases 5–8 as a
-*final* result — not because the code is wrong (all four phases run correctly and their bugs are
-fixed), but because the PCM database input is genuinely too small, and the pipeline's own
-self-diagnosis (zero survivors at nominal thresholds, provisional tags on every Phase 6/7/8 row,
-a negative physics-validation result consistent with an undersized candidate pool) already says so.
-This is not a discouraging finding: it is the pipeline correctly reporting its own current
+**NOT READY YET, BUT THE BLOCKING FIX IS NOW ONE RE-RUN AWAY** for Phases 5–8 as a *final* result —
+not because the code is wrong (all four phases run correctly and their bugs are fixed), and no longer
+because the PCM database input is too small (that gap closed 2026-08-12, 18/25→55 rows). What remains
+is mechanical, not scientific: regenerate the missing `PCM_Properties_cleaned_mice_pmm_detailed.csv`
+and re-run Phases 5–8 against the expanded database. Every number currently on disk (zero survivors at
+nominal thresholds, provisional tags on every Phase 6/7/8 row, the negative physics-validation result)
+is from the pre-expansion run and should be treated as superseded, not final, until that re-run
+happens. This is not a discouraging finding: it is the pipeline correctly reporting its own current
 limitation, at every layer it was asked to check, which is exactly what a well-instrumented
-methodology should do.
+methodology should do — the limitation has just moved from "not enough data" to "haven't re-run with
+the new data yet."

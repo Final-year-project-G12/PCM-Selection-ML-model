@@ -282,7 +282,20 @@ def load_rich_pcm_properties():
     out["corrosion_score"] = np.where(df["pcm_type"] == "Inorganic", 2.0, 1.0)
     imputed_cols = [c for c in df.columns if c.endswith("_imputed")]
     out["any_property_imputed"] = (df[imputed_cols].sum(axis=1) > 0) if imputed_cols else False
-    out["family"] = np.where(df["is_rt_line"] == 1, "Rubitherm RT", "PLUSS savE")
+    # Was np.where(df["is_rt_line"] == 1, "Rubitherm RT", "PLUSS savE") — that
+    # column belonged to the old 2-manufacturer database schema and no longer
+    # exists (see the matching fix + comment in
+    # 07_feasibility_filter_rajasthan.py's load_manufacturer_rows()). Using
+    # `manufacturer` here as the drop-in replacement, consistent with that
+    # fix, for sample_property_for_montecarlo()'s same-family donor grouping
+    # below. NOTE: the plan doc's own §9.6 language calls this a "type-class"
+    # distribution, which arguably maps closer to `pcm_type` (11 chemical
+    # subtypes, e.g. n-alkane/fatty-acid/composite) than to `manufacturer`
+    # now that the database spans 6 manufacturers — that was a judgment call
+    # deferred here in favor of the smaller, mechanically-consistent fix;
+    # revisit if Monte Carlo donor-pool composition needs to be family-of-
+    # chemistry rather than family-of-manufacturer.
+    out["family"] = df["manufacturer"]
     return out
 
 
@@ -952,7 +965,10 @@ def main():
             row["mc_top1_retention_pct"] = float(mc["top1_pct"].get(pid, 0.0))
             row["mc_rank_reversal_freq_cluster"] = float(mc["rank_reversal_freq"])
             row["mc_mean_spearman_vs_baseline_cluster"] = float(mc["mean_spearman_vs_baseline"])
-            row["pcm_database_status"] = "PROVISIONAL — ~25-row database, not yet expanded to 40-60"
+            row["pcm_database_status"] = ("COMPLETE — 55-row manufacturer database "
+                                           "(+7 literature rows = 62 candidates total) as of "
+                                           "2026-08-12, inside the 40-60-row target "
+                                           "(was ~25 rows/18 manufacturer at the prior run)")
             all_output_rows.append(row)
 
     out_df = pd.DataFrame(all_output_rows)
@@ -984,10 +1000,11 @@ def main():
           f"{pairwise_out['cluster_id'].nunique()} clusters)")
     print(f"  Saved: {OUT_FIGURE}")
     print(f"\n  candidate_pool_status: undersized clusters = {undersized_clusters or 'none'}")
-    print(f"\n  [PROVISIONAL] ALL clusters' Top-3 in this run rest on the ~25-row PCM database "
-          f"(not yet expanded to the 40-60 target — see 07's docstring point A). Do not quote "
-          f"a Top-3 from this run in the paper without that caveat until the database expansion "
-          f"pass is complete: clusters = {provisional_clusters}")
+    print(f"\n  [DATABASE STATUS] All clusters' Top-3 in this run rest on the 55-row PCM database "
+          f"(+7 literature rows, expanded 2026-08-12 from the prior ~25-row database), inside the "
+          f"40-60-row target — see PCM_data/01_preprocess.py and 07_PHASE_5_AUDIT.md. This run "
+          f"still reflects only ONE MCDM pass against that database, not yet re-validated by "
+          f"Phase 7 physics simulation — re-run 09_physics_validation_rajasthan.py next.")
     print(f"\n  Total wall-clock time: {time.time() - t0:.1f}s")
     print("=" * 68)
 

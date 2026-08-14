@@ -79,9 +79,11 @@ Phase 4 — CLIMATE REGIME CLUSTERING
                                external validation now actually wired in, not stubbed)
         ↓
 Phase 5 — FEASIBILITY FILTERING  (+ shared PCM property database, run independently)
-  01_preprocess.py (PCM_data/) → PCM_Properties_cleaned_mice_pmm{,_detailed}.csv (18 rows, MICE-RF-PMM)
+  01_preprocess.py (PCM_data/) → PCM_Properties_cleaned_mice_pmm{,_detailed}.csv (55 rows, MICE-RF-PMM —
+                                   expanded 2026-08-12 from the prior 18-row database, see below)
   07_feasibility_filter_rajasthan.py → feasibility_survivors_rajasthan{,_kappa_calibrated}.csv
-        ↓  [FINDING: 0 survivors at nominal kappa=0.7 — see 07_PHASE_5_AUDIT.md]
+        ↓  [Pre-expansion FINDING: 0 survivors at nominal kappa=0.7 — see 07_PHASE_5_AUDIT.md.
+            NOT yet re-verified against the expanded 55-row database — outputs on disk are stale.]
 Phase 6 — MULTI-CRITERIA RANKING ENGINE
   08_mcdm_ranking_rajasthan.py → mcdm_rankings_rajasthan.csv, mcdm_method_agreement_rajasthan.csv
   (TOPSIS + PROMETHEE II + VIKOR + GRA, Borda/Copeland/Kendall's W, 1000-draw Monte Carlo)
@@ -113,7 +115,7 @@ failure — see `21_REPRODUCIBILITY.md`.
 | 2.5 — Quality Check | `03b_quality_check`, `03b_validate_quality_fix` | **COMPLETE — 3 sequential corrections, see 15_QUALITY_CONTROL.md** | Hampel filter initially over-corrected genuine cloud-driven GHI/CSI variability; fixed by excluding those two variables from outlier detection entirely |
 | 3 — Climate Signature | `signature_lib.py`, `04` | **COMPLETE — 5 documented corrections** | Tm_target=57°C fixed; Tm_target_capped varies by regime; now reads the Phase 2.5 CLEAN file |
 | 4 — Regime Clustering | `05` | **COMPLETE — with 2 caught-and-fixed bugs** | k=3 (GMM `diag` covariance, fixed from `full`); GMM cluster-index instability fixed via canonical relabeling (2026-08-11); Koppen-Geiger external validation wired in (ARI=0.19, NMI=0.32 vs GMM) |
-| 5 — Feasibility Filtering | `01_preprocess`, `07` | **COMPLETE but produces 0 survivors at nominal thresholds** | PCM database still 18/25 rows, not the target 40–60; latent-heat floor structurally unreachable at κ=0.7; now stamps a provenance fingerprint |
+| 5 — Feasibility Filtering | `01_preprocess`, `07` | **PCM database prerequisite now COMPLETE (55 rows); Phase 5 output on disk is STALE, pending re-run** | Database expanded 18→55 rows (2026-08-12), inside the 40–60 target; `feasibility_survivors_rajasthan.csv` still reflects the pre-expansion 25-candidate pool and the old 0-survivors-at-κ=0.7 finding — re-run required, see "What remains" |
 | 6 — MCDM Ranking | `08` | **COMPLETE — with 3 caught-and-fixed bugs, 1 documented deviation** | Runs on κ-relaxed survivor pool; N_DRAWS=1000 not 5000 (documented); AHP pairwise elicitation still a TODO stub; now hard-fails on a provenance mismatch |
 | 7 — Physics Validation | `physics_lib.py`, `09` | **COMPLETE — 2 caught-and-fixed bugs in the solver, real calibration iteration, genuine NEGATIVE result** | Spearman rho = -0.900 (Cluster 0) / -0.096 (Cluster 1) / -0.198 (Cluster 2) — MCDM ranking is NOT confirmed by physics simulation for any cluster; see `19_PHASE_7_ONWARD.md` |
 | 8 — Recommendation Cards | `10` | **COMPLETE** | Pure aggregation of Phases 4/6/7 into `recommendation_cards_rajasthan.md`, hard-fails on cross-phase cluster-identity mismatch |
@@ -191,10 +193,20 @@ specified but not yet implemented.
    (~610–643 kJ/kg ceiling vs best-case ~252 kJ/kg latent heat) — **0 of 75 cluster×candidate rows
    survive at the nominal κ=0.7**, and the pipeline currently relies on an ad hoc per-cluster
    κ-relaxation pass to produce any MCDM input at all.
-6. **[OPEN]** PCM property database is 18 rows (25 counting literature-only rows in the vestigial
-   TN-branch script), well short of the 40–60-row target the framework doc specifies for the
-   corrected 42–70°C band — this is the same gap the user's independent PCM-database-expansion task
-   is meant to close, and it is a **hard prerequisite** for Phase 5/6 results to be trustworthy.
+6. **[RESOLVED, prerequisite met 2026-08-12 — pipeline re-run still pending]** PCM property database
+   expanded from 18 rows (25 counting literature-only rows in the vestigial TN-branch script) to
+   **55 rows** (14 Rubitherm RT-line + 7 Pluss savE + 4 PCM Products Ltd/PlusICE + 5 PureTemp +
+   1 CrodaTherm + 24 literature-sourced n-alkane/fatty-acid/composite rows), now inside the framework
+   doc's 40–60-row target for the 42–70°C band. The row-count/manufacturer-diversity gap the user's
+   parallel PCM-database-expansion task targeted is closed. **What is still true**: zero rows in the
+   expanded database are salt-hydrate/inorganic-typed, so the corrosion-veto constraint remains
+   structurally inert regardless, and the framework doc's 55–63°C salt-hydrate-specific coverage gap
+   is not closed (though that melting-point band is now densely covered by organics — RT54HC/RT55/
+   RT57HC/PureTemp 58/CrodaTherm 60/RT60/RT62HC/PureTemp 63). **What has NOT yet happened**:
+   `PCM_Properties_cleaned_mice_pmm_detailed.csv` — the exact file `07_feasibility_filter_rajasthan.py`
+   and `08_mcdm_ranking_rajasthan.py` read — is currently absent from disk and must be regenerated
+   (`python PCM_data/PCM_data/01_preprocess.py`), and Phases 5–8's outputs on disk are all still from
+   the pre-expansion run. See `07_PHASE_5_AUDIT.md` for full detail.
 7. **[OPEN, minor]** Inconsistent Monsoon month definitions between `02_combine_rajasthan.py`
    (Jun–Aug) and `02b_build_daily_aggregates.py` (Jun–Sep), feeding different downstream indices.
 8. **[OPEN, minor]** `avg_sdirswrf` (direct-radiation surrogate) unit handling is inconsistent with
@@ -240,13 +252,17 @@ Phases 1–8 are all now implemented and have been run end-to-end (via `run_all_
 single consistent Phase 4 clustering pass. What remains is resolving what Phase 7's genuine
 negative result means for the project's claims, not building more pipeline:
 
-1. **Expand the PCM property database** to the 40–60-row, 42–70°C-band target (the user's parallel
-   task) — still the single highest-leverage open item. Every Phase 6/7/8 output is still tagged
-   `pcm_database_status = "PROVISIONAL — ~25-row database, not yet expanded to 40-60"`, and Phase 7's
-   own inherited-caveats discussion (`09_physics_validation_rajasthan.py`'s docstring) explicitly
-   flags that Cluster 0's negative rho may be better explained by its undersized candidate pool
-   (n=5) than by a genuine MCDM/physics disagreement. **Re-running Phases 5-8 after the database
-   expansion is not optional cleanup — it will likely change the result, not just the numbers.**
+1. **Regenerate `PCM_Properties_cleaned_mice_pmm_detailed.csv` and re-run Phases 5–8** against the
+   now-expanded 55-row PCM database — this is now the single highest-leverage open item, replacing the
+   database-expansion task itself (that part is done, see known issue 6 above). Every Phase 6/7/8
+   output currently on disk is still tagged `pcm_database_status = "PROVISIONAL — ~25-row database, not
+   yet expanded to 40-60"` because it predates the expansion, and Phase 7's own inherited-caveats
+   discussion (`09_physics_validation_rajasthan.py`'s docstring) explicitly flags that Cluster 0's
+   negative rho may be better explained by its undersized candidate pool (n=5) than by a genuine
+   MCDM/physics disagreement. **Re-running Phases 5-8 is not optional cleanup — it will likely change
+   the result, not just the numbers.** Concretely: `python PCM_data/PCM_data/01_preprocess.py`
+   (regenerates the missing `_detailed.csv`), then `python run_all_rajasthan.py --from
+   07_feasibility_filter_rajasthan.py`.
 2. Decide and document the κ-relaxation policy for the latent-heat constraint (accept per-cluster
    calibrated κ, or rank-by-proximity-to-L_required instead of hard-gating, per Correction 4's own
    recommendation in `04_climate_signature_rajasthan.py`'s docstring).
@@ -260,8 +276,13 @@ negative result means for the project's claims, not building more pipeline:
 
 ## Recommended next step
 
-Expand the PCM property database (item 1 above), then re-run the full chain
-(`python run_all_rajasthan.py --from 07_feasibility_filter_rajasthan.py`) and see whether Phase 7's
-result changes. Phase 7 was deliberately run anyway against the current provisional database — see
-`19_PHASE_7_ONWARD.md` for the reasoning and the full completion report, including why running it
-now (rather than waiting) was itself informative.
+The PCM database expansion (18→55 rows) is done — regenerate the missing
+`PCM_Properties_cleaned_mice_pmm_detailed.csv` (`python PCM_data/PCM_data/01_preprocess.py`), then
+re-run the full chain from Phase 5 (`python run_all_rajasthan.py --from
+07_feasibility_filter_rajasthan.py`) and see whether Phase 7's negative result changes. Phase 7 was
+deliberately run anyway against the *pre-expansion* provisional database — see `19_PHASE_7_ONWARD.md`
+for the reasoning and the full completion report, including why running it now (rather than waiting)
+was itself informative. Every number currently in `feasibility_survivors_rajasthan.csv`,
+`mcdm_rankings_rajasthan.csv`, `physics_validation_rajasthan.csv`,
+`spearman_rho_by_cluster_rajasthan.csv`, and `recommendation_cards_rajasthan.md` still reflects the
+pre-expansion 18/25-row database and should be treated as superseded pending this re-run.

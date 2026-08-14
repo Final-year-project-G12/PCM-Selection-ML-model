@@ -393,10 +393,12 @@
 
 ### Script
 > "Before any ranking happens, we build a trustworthy shortlist. Our database has
-> twenty-five PCMs — eighteen from manufacturer datasheets, seven from published
-> literature. Where properties are missing, we fill them with a Random Forest–based
-> estimator that respects known physical relationships, like how density and thermal
-> conductivity and phase tend to move together.
+> fifty-five PCMs — thirty-one from manufacturer datasheets across five manufacturers,
+> twenty-four from published literature — expanded this month from an earlier
+> twenty-five-PCM version specifically to close the row-count gap against our own
+> forty-to-sixty target. Where properties are missing, we fill them with a Random
+> Forest–based estimator that respects known physical relationships, like how density and
+> thermal conductivity and phase tend to move together.
 >
 > Then we apply eight hard filters — melting range, latent-heat floor, cycling stability,
 > safety, and more — *before* any ranking method sees the data. The reason filtering comes
@@ -407,17 +409,20 @@
 > relaxed gradually rather than leaving the cluster with an empty candidate pool."
 
 ### Numbers to have cold
-- Database size: 25 PCMs (18 datasheet + 7 literature)
+- Database size: 55 PCMs (31 datasheet across 5 manufacturers + 24 literature), expanded
+  2026-08-12 from an earlier 25-PCM version, now inside the 40–60 PCM target
 - 8 hard filters
 - Minimum survivor threshold before filter relaxation: 5
 
 ### Anticipated Q&A
-- **Q: "25 PCMs seems like a small database — is that a limitation?"**
-  A: **Yes, explicitly — don't undersell this.** Per the Phase 6 audit, every ranking
-  output is self-tagged as *provisional* precisely because it runs on a 25-PCM database
-  against a stated 40–60 PCM target, plus a relaxed (not nominal-threshold) survivor pool.
-  Database expansion is a planned next step, not an oversight — but be upfront that
-  current rankings should be read as preliminary.
+- **Q: "55 PCMs — is that actually enough now, and are your results based on it?"**
+  A: **Be precise here — the database expansion and the pipeline re-run are two separate
+  things.** The database itself now meets our stated 40–60-row target (up from 25), closing
+  that specific gap. But the ranking numbers on the following slides (Kendall's W, the
+  Spearman rho physics-validation result) were generated *before* this expansion, against
+  the older 25-PCM pool, and have not yet been regenerated against the expanded database —
+  say so plainly if asked which numbers are current. Re-running Phases 5 through 8 against
+  the 55-PCM database is the immediate next step, not a hypothetical future one.
 - **Q: "How do you justify Random Forest imputation instead of just excluding PCMs with
   missing data?"**
   A: Missingness here is structural, not random — entire property columns are missing for
@@ -433,7 +438,7 @@
 **Suggested time: 75 sec**
 
 ### Script
-> "This is the detail behind that 25-PCM database. Raw manufacturer datasheets come in with
+> "This is the detail behind that 55-PCM database. Raw manufacturer datasheets come in with
 > wildly inconsistent formatting — a regex parser handles every messy variant we found:
 > ranges become midpoints, approximate values get their symbols stripped, genuinely
 > non-numeric entries like 'under trial' are correctly left as missing rather than forced
@@ -521,8 +526,10 @@
   A: It's an honest finding, not a failure to hide. Two things soften it: cluster 0's
   survivor pool is undersized (n=5) — low sample count naturally produces less stable
   rank agreement regardless of method quality — and this is exactly why we run Phase 7's
-  independent physics validation rather than stopping at the MCDM stage. Low agreement is
-  a signal to expand the database and re-run, which the pipeline already flags for.
+  independent physics validation rather than stopping at the MCDM stage. This 0.44 was
+  measured against our earlier 25-PCM database; we've since expanded it to 55 PCMs and the
+  re-run that would show whether cluster 0's agreement improves is our immediate next step,
+  not yet done.
 - **Q: "If cost has no real data, why include it as a criterion at all instead of dropping
   it?"**
   A: It's currently a structural placeholder, correctly weighted to zero by the fix
@@ -570,20 +577,25 @@
 - ⚠️ **This slide's narration implies validation succeeded — check this before presenting
   as a success.** Per the Phase 6 audit's closing note: Phase 7 actually returned Spearman
   ρ ≤ 0.4 for **all three clusters** — a genuine **negative** validation result, at least
-  partly attributable to the same undersized PCM database already flagged. If asked "did
-  the physics validation confirm your rankings," **the honest answer is currently no** —
-  say so, and frame it the way the audit does: not evidence the ranking is wrong, but
-  evidence the database needs expansion before a strong claim can be made either way.
+  partly attributable to the same undersized (25-PCM) database this figure was measured
+  against. That database has since been expanded to 55 PCMs, but Phase 7 has not yet been
+  re-run against it, so this ρ ≤ 0.4 figure is still the current, only-available number. If
+  asked "did the physics validation confirm your rankings," **the honest answer is currently
+  no** — say so, and frame it the way the audit does: not evidence the ranking is wrong, but
+  evidence that expects re-checking once the (now-complete) database expansion is
+  propagated through a fresh Phase 5–8 run.
 
 ### Anticipated Q&A
 - **Q: "Did the physics simulation actually confirm your top-ranked PCMs perform best?"**
   A: **Not yet, and that should be said directly.** Spearman correlation between the
   simulated performance and the MCDM ranking came in at or below 0.4 across all three
   clusters — a weak, not-yet-confirming result. We read this alongside Phase 6's own
-  self-flagged caveat that every ranking is provisional given the current 25-PCM database
-  — the negative validation result and the undersized database are very plausibly linked,
-  not independent problems. This is presented as an honest open finding, and re-running
-  Phase 6 and 7 after database expansion is the planned next step.
+  self-flagged caveat that every ranking is provisional given the (then) 25-PCM database
+  it ran on — the negative validation result and the undersized database are very plausibly
+  linked, not independent problems. This is presented as an honest open finding. The
+  database has since been expanded to 55 PCMs, meeting our stated target; re-running
+  Phase 5 through 8 against it — not further database work — is now the immediate next
+  step.
 - **Q: "Why build your own tank simulation instead of validating against real installed
   systems?"**
   A: Real-world field data collection at this scale (multiple climate regimes, controlled
