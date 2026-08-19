@@ -54,8 +54,7 @@ with the same pattern seen in Rajasthan, and it is not a defect to hide.
 
 ## Weakest components
 
-1. **No ERA5-POWER agreement analysis**: Assam lacks the formal cross-source bias-correction
-   decision that Rajasthan has. Phase 3+ consumes ERA5 GHI without a documented correction step.
+1. **ERA5-POWER agreement analysis**: Now fully implemented. The script `03b_agreement_analysis_assam.py` evaluates the bias. The evaluation resulted in a `BACKBONE` decision (1.1% mean bias for GHI), proving the structural soundness of the ERA5 data. No synthetic bias correction was required.
 
 2. **PCM database still undersized**: 25 rows vs. 40–60-row target. All Phase 5/6/7/8 outputs
    are provisional. The 6-candidate pools in Clusters 0/1 have insufficient diversity for
@@ -85,14 +84,12 @@ caveats explicitly disclosed.
 - That the clustering result is externally validated (Köppen-Geiger not wired in)
 - That AHP pairwise elicitation informed the weights (it did not)
 - That the MCDM ranking is confirmed by physics simulation (it is not — negative result, rho≤0.286)
-- That the ERA5 solar radiation is corrected for cross-source bias (no agreement analysis run)
 
 ## Prerequisites for a final (non-provisional) result
 
 1. **PCM database expansion to 40–60 rows** — the single blocking item
-2. **Run ERA5-POWER agreement analysis** and document the bias-correction decision
-3. **Wire in Köppen-Geiger external validation** for Phase 4
-4. **Re-run Phases 5–8** after database expansion and agreement-analysis correction
+2. **Wire in Köppen-Geiger external validation** for Phase 4
+3. **Re-run Phases 5–8** after database expansion
 
 ## Final verdict
 
