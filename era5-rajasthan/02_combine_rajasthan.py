@@ -22,10 +22,11 @@ PIPELINE
 1. For each point in population_grid_points.csv: nearest-neighbor snap to
    the ERA5 grid (extract_nearest, unchanged from the original pipeline),
    concatenate its full instant+accum hourly series across all years,
-   deaccumulate (deaccumulate(), unchanged — see its docstring for why the
-   hour-1/hour-13 reset special-case generalizes correctly to the new
-   sun-event-aligned, non-fixed hour set downloaded by
-   01_download_era5_rajasthan.py), and compute solar geometry.
+   convert the accum fields (ssrd/strd/tp) to physical units via
+   accum_to_flux() — see its docstring for why this is NOT a diff-based
+   deaccumulation (that was the pre-2026-08 approach; it silently produced
+   near-zero GHI, see the docstring and 03b_agreement_analysis.py) — and
+   compute solar geometry.
 2. For each (point_id, date, event) row in suntimes.csv, pick the ERA5
    hourly value nearest in time to that event's exact UTC timestamp
    (space-matching already happened in step 1 — one nearest-grid-cell
@@ -73,10 +74,13 @@ ensure_data_dirs()
 YEARS  = [str(y) for y in range(2016, 2026)]
 MONTHS = [f"{m:02d}" for m in range(1, 13)]
 
-# Population points don't carry elevation data; use the same flat-terrain
-# approximation the old pipeline's full-grid mode used (most of Rajasthan
-# sits in the 200-500m band — see module docstring in the removed
-# process_full_grid for precedent).
+# Fallback only — real per-point elevation now comes from population_df's
+# `elevation_m` column (attached by 00c_attach_elevation.py from ERA5's
+# invariant geopotential field). This flat-terrain constant is used only if
+# that column is missing or NaN for a given point (e.g. 00c hasn't been run
+# yet) — most of Rajasthan sits in the 200-500m band anyway, so it's a safe
+# fallback there, but see the README caveat about ERA5 orography being a
+# grid-cell mean in high-relief regions.
 DEFAULT_ALT_M = 300
 
 # Reject an ERA5/POWER nearest-hour match if it's farther than this from
@@ -210,29 +214,38 @@ def compute_rh(T_c, Td_c):
         0, 100)
 
 
-def deaccumulate(s):
+def accum_to_flux(s):
     """
-    ERA5 hourly reanalysis: accumulated values reset every 12 h.
-    Resets happen at hours 1 and 13 UTC (start of each forecast run).
-    diff() gives increments between consecutive downloaded hours; at reset
-    hours the raw value is used directly since there's no valid predecessor.
+    Formerly named deaccumulate() and implemented as diff() against the
+    previous downloaded hour, with a special case at hours 1/13 (first
+    step after a reset) — on the assumption that ERA5's "accum" fields
+    (ssrd/strd/tp) were cumulative since the last 00Z/12Z forecast start
+    (the classic ERA5/MARS convention) and needed manual deaccumulation.
 
-    This generalizes correctly to ANY hour set (not just a fixed
-    01/02/07/08/13/14 pattern) as long as every non-reset target hour's
-    immediate predecessor was also downloaded — which
-    01_download_era5_rajasthan.py's ACCUM_HOURS construction guarantees
-    (INSTANT_HOURS ∪ {h-1 for h in INSTANT_HOURS}). The reset-hour
-    special-case is mathematically required, not just an optimization:
-    hour 13's predecessor (hour 12) belongs to a *different* 12-hour
-    accumulation cycle, so diffing against it would produce garbage
-    (a large 12-hour total minus the start of the next cycle) — using the
-    raw value directly at hours 1 and 13 sidesteps that.
+    That assumption doesn't hold for what this pipeline's CDS download
+    actually returns. 03b_agreement_analysis.py flagged near-zero ERA5 GHI
+    against NASA POWER (median ERA5 ~2 W/m^2 vs POWER's ~37 W/m^2, noon
+    Pearson r ~0.01); tracing it back to the raw NetCDF showed each
+    downloaded hour is ALREADY its own ~1-hour accumulated value, not a
+    running total — checked directly across 11 (year, month) samples
+    spanning 2016-2025 and every season, 34-44% of consecutive-hour raw
+    values were LOWER than their predecessor within the same nominal
+    "cycle," which is impossible for a genuine cumulative-since-reset
+    field (it can only increase until the next reset). Skipping the diff
+    and converting the raw value directly reproduces physically correct
+    GHI, with seasonal peaks tracking Rajasthan's known climatology
+    (~900 W/m^2 pre-monsoon, ~700 W/m^2 monsoon, ~650 W/m^2 winter).
+
+    So: no diffing, no reset-hour special case — the raw value for each
+    downloaded hour already IS that hour's accumulated quantity; this
+    function only applies the physical-unit conversion (by the caller,
+    via /3600 or *1000 — see apply_unit_conversions()). Do NOT reintroduce
+    a diff()/reset step here without re-running 03b_agreement_analysis.py's
+    raw-vs-diffed comparison first — that's the whole point of renaming
+    this away from deaccumulate().
     """
     s = pd.Series(np.asarray(s, dtype=float), index=s.index).copy()
-    diff = s.diff()
-    reset_mask = s.index.hour.isin([1, 13])
-    diff[reset_mask] = s[reset_mask]
-    return diff.clip(lower=0)
+    return s.clip(lower=0)
 
 
 def compute_solar(df, lat, lon, alt):
@@ -286,13 +299,13 @@ def apply_unit_conversions(df):
     tp_col   = next((c for c in df.columns if c == "tp"), None)
 
     if ssrd_col:
-        df["GHI"]         = (deaccumulate(df[ssrd_col].astype(float)) / 3600).clip(0)
+        df["GHI"]         = (accum_to_flux(df[ssrd_col].astype(float)) / 3600).clip(0)
     if fdir_col:
         df["avg_sdirswrf"] = df[fdir_col].astype(float).clip(0)
     if strd_col:
-        df["LW_down"]     = (deaccumulate(df[strd_col].astype(float)) / 3600).clip(0)
+        df["LW_down"]     = (accum_to_flux(df[strd_col].astype(float)) / 3600).clip(0)
     if tp_col:
-        df["precipitation"] = (deaccumulate(df[tp_col].astype(float)) * 1000).clip(0)
+        df["precipitation"] = (accum_to_flux(df[tp_col].astype(float)) * 1000).clip(0)
 
     if "GHI" in df.columns:
         df.loc[df["GHI"] < 0,    "GHI"] = 0
@@ -395,10 +408,11 @@ def nearest_row(series_df, target_time, max_hours=MAX_MATCH_HOURS):
 # PROCESS ONE POINT
 # ═══════════════════════════════════════════════════════════
 
-def process_point_era5(lat, lon, instant_ds, accum_ds):
+def process_point_era5(lat, lon, instant_ds, accum_ds, alt_m=DEFAULT_ALT_M):
     """Nearest-neighbor snap to the ERA5 grid, concatenate the full
-    instant+accum hourly series across all years, deaccumulate, compute
-    solar geometry. Returns (era5_df, grid_lat, grid_lon)."""
+    instant+accum hourly series across all years, convert accum fields to
+    flux units (accum_to_flux()), compute solar geometry. Returns
+    (era5_df, grid_lat, grid_lon)."""
     fi_frames, fa_frames = [], []
     grid_lat_used = grid_lon_used = None
 
@@ -435,7 +449,7 @@ def process_point_era5(lat, lon, instant_ds, accum_ds):
 
     df = df[~df.index.duplicated(keep="first")]
     df = apply_unit_conversions(df)
-    df = compute_solar(df, lat, lon, alt=DEFAULT_ALT_M)
+    df = compute_solar(df, lat, lon, alt=alt_m)
 
     # ERA5 time index decoded tz-naive UTC (see decode_time) — localize so
     # it compares against suntimes.csv's tz-aware time_utc.
@@ -445,8 +459,11 @@ def process_point_era5(lat, lon, instant_ds, accum_ds):
 
 def process_point(point_row, instant_ds, accum_ds, sun_df):
     point_id = point_row.point_id
+    alt_m = getattr(point_row, "elevation_m", DEFAULT_ALT_M)
+    if alt_m is None or (isinstance(alt_m, float) and np.isnan(alt_m)):
+        alt_m = DEFAULT_ALT_M
     era5_df, grid_lat, grid_lon = process_point_era5(
-        point_row.lat, point_row.lon, instant_ds, accum_ds)
+        point_row.lat, point_row.lon, instant_ds, accum_ds, alt_m=alt_m)
     power_df = load_power_series(point_id)
 
     if era5_df is None and power_df is None:
@@ -465,6 +482,7 @@ def process_point(point_row, instant_ds, accum_ds, sun_df):
             "point_id": point_id,
             "lat": point_row.lat, "lon": point_row.lon,
             "population": point_row.population, "weight": point_row.weight,
+            "elevation_m": alt_m,
             "date": r.date, "event": r.event, "time_utc": target,
             "grid_lat": grid_lat, "grid_lon": grid_lon,
         }

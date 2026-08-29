@@ -9,3 +9,14 @@ data/raw/
 # population_grid_points.csv, suntimes.csv.
 data/processed/
 data/preprocessed/
+# QC plots (03_qc_plots.py) and every later phase's regenerated HTML/MD
+# outputs — cluster_profile_cards_rajasthan.md, recommendation_cards_
+# rajasthan.md, qc_*.html, bias_decision_rajasthan.txt, etc. — none of
+# this is source, all of it is reproducible by re-running the phase
+# scripts (this line was previously missing its actual pattern below
+# the comment, leaving the whole directory untracked-but-not-ignored).
+outputs/
+# Phase 7's top-level regenerated summary (physics_lib.py/09_physics_
+# validation_rajasthan.py's OUT_SUMMARY_TXT) — not under data/ or
+# outputs/, so needs its own line.
+physics_validation_summary_rajasthan.txt
