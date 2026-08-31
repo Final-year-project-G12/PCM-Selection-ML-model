@@ -3,10 +3,12 @@
 
 > Each section below covers one slide: a spoken narration script (aim for the stated time),
 > the numbers you must not fumble, and likely panel questions with suggested answers.
-> **A flag carried through this whole deck**: several slides use Rajasthan-sourced numbers
-> (k=3, 320 points) while the pipeline-map table says K_FINAL=5 / 133 points (Tamil Nadu).
-> Decide *before* presenting which state this specific run/slide-set describes, and be ready
-> to answer "which state is this?" cleanly — it will come up.
+> **Critical: Know which state this slide describes.** This pipeline applies to four states in parallel:
+> - **Rajasthan (furthest along):** 320 population-weighted points, 3 climate regimes, 2016–2025 (10 years)
+> - **Tamil Nadu (in progress):** 222 named locations, 5 climate regimes, 2024–2025 (2 years)
+> - **Uttarakhand (in progress):** state-specific parameters — see Uttarakhand docs
+> - **Assam (in progress):** state-specific parameters — see Assam docs
+> **Do not mix numbers across states.** Every number you quote must be attributed to its correct state.
 
 ---
 
