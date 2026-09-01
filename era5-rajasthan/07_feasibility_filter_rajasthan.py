@@ -181,7 +181,14 @@ def load_manufacturer_rows(csv_path):
     df = pd.read_csv(csv_path)
     out = pd.DataFrame()
     out["pcm_id"] = df["product"]
-    out["family"] = np.where(df["is_rt_line"] == 1, "Rubitherm RT", "PLUSS savE")
+    # Was np.where(df["is_rt_line"] == 1, "Rubitherm RT", "PLUSS savE") — that
+    # column belonged to the old 2-manufacturer (Rubitherm/Pluss) database
+    # schema and no longer exists; the current 01_preprocess.py keeps a real
+    # `manufacturer` column instead (Rubitherm/Pluss/PCM Products Ltd/
+    # PureTemp/CrodaTherm/Literature), which is a strictly more informative
+    # family label now that the database spans 6 manufacturers, not 2. Not
+    # used in any constraint logic (is_salt_hydrate() checks pcm_type only).
+    out["family"] = df["manufacturer"]
     out["pcm_type"] = df["pcm_type"]
     out["Tm_C"] = df["Tm_melting"]
     out["Tm_freezing_C"] = df["Tm_freezing"]

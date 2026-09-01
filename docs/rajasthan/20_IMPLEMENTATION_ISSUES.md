@@ -50,15 +50,26 @@ understate the rigor actually demonstrated.
 
 ## Open, high-priority
 
-11. **PCM database undersized**: 18 rows canonical (25 counting a vestigial branch's literature
-    additions), vs. the 40–60-row / 42–70°C-band target. Directly causes item 12, and — new finding
-    — is now also the leading suspect for Phase 7's negative Cluster-0 result (undersized n=5 pool,
-    Kendall's W=0.4375). This is the single item most likely to change every downstream phase's
-    numeric result once resolved.
-12. **Zero survivors at nominal feasibility thresholds**: `L ≥ 0.7×L_required` is unreachable by any
-    current candidate given the corrected `L_required` ceiling (~610–643 kJ/kg vs. best-case ~252
-    kJ/kg latent heat). The pipeline currently runs on an ad hoc per-cluster κ-relaxation pass, not a
-    settled policy. See `07_PHASE_5_AUDIT.md`.
+11. **[RESOLVED, prerequisite met 2026-08-12 — re-run of Phases 5-8 still pending]** PCM database
+    expanded from 18 rows canonical (25 counting a vestigial branch's literature additions) to **55
+    rows** (14 Rubitherm RT-line + 7 Pluss savE + 4 PCM Products Ltd + 5 PureTemp + 1 CrodaTherm + 24
+    literature-sourced rows), now inside the 40–60-row / 42–70°C-band target. Still zero salt-hydrate
+    or other inorganic rows, so the corrosion-veto-inertness issue (see `07_PHASE_5_AUDIT.md`) is
+    unaffected. This directly caused item 12 (below) and was the leading suspect for Phase 7's
+    negative Cluster-0 result (undersized n=5 pool, Kendall's W=0.4375) — **neither of those
+    downstream effects has been re-checked yet**, because Phases 5–8 have not been re-run against the
+    expanded database, and the imputation script's `PCM_Properties_cleaned_mice_pmm_detailed.csv`
+    output (which Phase 5/6 read directly) is currently missing from disk and needs regenerating
+    first (`python PCM_data/PCM_data/01_preprocess.py`). This is still the single item most likely to
+    change every downstream phase's numeric result — the expansion just moved the blocker from
+    "database too small" to "database expanded but not yet propagated through the pipeline."
+12. **Zero survivors at nominal feasibility thresholds (pre-expansion result, not yet re-checked)**:
+    `L ≥ 0.7×L_required` was unreachable by any candidate in the pre-expansion 18/25-row database
+    given the corrected `L_required` ceiling (~610–643 kJ/kg vs. best-case ~252 kJ/kg latent heat).
+    Whether the expanded 55-row database (item 11) contains any candidate closer to that ceiling is
+    unknown until Phase 5 is re-run — not assumed either way. The pipeline currently runs on an ad hoc
+    per-cluster κ-relaxation pass, not a settled policy, regardless of the outcome. See
+    `07_PHASE_5_AUDIT.md`.
 13. **Quantile-mapping correction not persisted**: Phase 2's bias-correction is computed and
     reported but never written back into `climate_rajasthan_points.csv` — Phase 3+ consumes
     uncorrected (though deaccumulation-fixed) GHI. See `04_PHASE_2_AUDIT.md`, `14_ERA5_POWER_VALIDATION.md`.

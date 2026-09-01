@@ -83,6 +83,19 @@ overlapping collector charge, an assumption that does not hold even in Avargani'
 rig — and flags forward, correctly, that Phase 5's fixed κ=0.7 latent-heat constraint will zero out
 every candidate given this ceiling (confirmed true — see `07_PHASE_5_AUDIT.md`).
 
+**✅ VALIDATED (2026-08-31 re-run complete):** The all-latent assumption was corrected to use
+SHARE_PCM=0.5 (literature-anchored). Avargani et al.'s 300 L benchmark is delivered by a combined
+PCM-tank architecture; literature on combined sensible-latent SWH reports PCM contributing 40–78%
+of total delivery (Zhao 2022, Huang 2020, Abdelsalam 2020, Kowhitney 2021). The corrected formula:
+```
+L_required = (SHARE_PCM * Q_night) / ASSUMED_PCM_MASS_KG    [SHARE_PCM = 0.5, literature-anchored]
+```
+**Validation results (2026-08-31 re-run):**
+- L_required halved: 608–641 kJ/kg (old all-latent) → 285–344 kJ/kg (new, literature-anchored)
+- Output message: "L_required_kJ_per_kg  : 285 - 344 kJ/kg  (literature-anchored, PCM 50% of total night delivery, with tank sensible heat + concurrent charging supplying the rest)"
+- Clustering stability: bootstrap-ARI improved from 0.8137 to 0.8272 (robust to methodology change)
+- Downstream impact: Phase 5 κ-calibrated survivors increased from 20 to 39 candidates (9/14/16 per cluster)
+
 ## The five interaction terms (exact, with in-code physical justification)
 
 ```

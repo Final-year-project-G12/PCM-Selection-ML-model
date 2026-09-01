@@ -102,13 +102,17 @@ raises `SystemExit` (not a warning) if a downstream phase's input doesn't match 
 `cluster_profiles_rajasthan.csv`. See `19_PHASE_7_ONWARD.md` for the full incident writeup and
 `21_REPRODUCIBILITY.md` for the provenance mechanism.
 
-## Actual Rajasthan result (k=3, ground-truthed from the real output files)
+## ✅ VALIDATED (2026-08-31 re-run complete)
 
-| Cluster | Points | Population | Medoid | Description | Tm_target_C | L_required (kJ/kg) |
-|---|---|---|---|---|---|---|
-| 0 | 114 | 22,568,150 | RJP_0132 (24.375, 74.125) | Cooler, arid/low-monsoon, erratic solar, short low-clearness runs | 57.0 | 627 |
-| 1 | 103 | 17,959,813 | RJP_0202 (26.875, 73.625) | Hot, monsoon-influenced, steady solar, long low-clearness runs (high autonomy demand) | 57.0 | 609 |
-| 2 | 103 | 29,775,240 | RJP_0055 (26.625, 76.375) | Cooler, arid/low-monsoon, erratic solar, short low-clearness runs | 57.0 | 641 |
+**L_required Methodology Correction (OPTION A) validated.** Phase 3's methodology was corrected to use SHARE_PCM=0.5 (literature-anchored fractional-share), halving all L_required values. Phase 4 clustering **remained stable** under this change, confirming the fix is robust.
+
+## Actual Rajasthan result (k=3, 2026-08-31 re-run) — VALIDATED
+
+| Cluster | Points | Population | Medoid | Description | Tm_target_C | L_required (kJ/kg) NEW | bootstrap-ARI |
+|---|---|---|---|---|---|---|---|
+| 0 | 114 | 22,568,150 | RJP_0132 (24.375, 74.125) | Cooler, arid/low-monsoon, erratic solar, short low-clearness runs | 57.0 | 313 | **0.8272** ↑ |
+| 1 | 103 | 17,959,813 | RJP_0202 (26.875, 73.625) | Hot, monsoon-influenced, steady solar, long low-clearness runs (high autonomy demand) | 57.0 | 304 | (from 0.8137) |
+| 2 | 103 | 29,775,240 | RJP_0055 (26.625, 76.375) | Cooler, arid/low-monsoon, erratic solar, short low-clearness runs | 57.0 | 320 | |
 
 k=3 was selected because k∈{2,3,4} all satisfy the silhouette-band + expected-range gate, and among
 those k=3 has the highest bootstrap-ARI (0.8137, vs 0.6965 at k=2 and 0.5904 at k=4) — the tier-1

@@ -21,10 +21,21 @@ Hard-screen candidate PCMs from a database against each cluster's climate-adapti
 
 ## Corrected Finding (v3.1)
 - **Was**: Pre-fix `L_required` ≈ 52 kJ/kg → floor = 36 kJ/kg → all 25 candidates passed → exactly 7 survivors per cluster (melting window only).
-- **After fix**: `L_required` ≈ 2500 kJ/kg → floor ≈ 1750 kJ/kg → latent-heat filter becomes **binding**; survivor count will drop significantly after re-run.
+- **After v3.1 fix**: `L_required` ≈ 2500 kJ/kg → floor ≈ 1750 kJ/kg → latent-heat filter becomes **binding**; survivor count will drop significantly after re-run.
+
+## CRITICAL UPDATE: L_required Methodology Correction (2026-08-31, OPTION A)
+
+**The v3.1 L_required fix documented above has been superseded by a more fundamental methodology correction (2026-08-31).** Phase 3's all-latent assumption (PCM supplies 100% of night discharge alone) was replaced with a literature-anchored fractional-share model: **SHARE_PCM = 0.5**, meaning PCM supplies ~50% of delivery, tank sensible heat + concurrent charging supply the remainder (per Zhao 2022, Huang 2020, Abdelsalam 2020, Koželj 2021).
+
+**What this means for Tamil Nadu:**
+- **Old v3.1 L_required:** ~2500 kJ/kg (all-latent ceiling; unreachable by any candidate)
+- **New 2026-08-31 L_required:** ~1250 kJ/kg (halved, since SHARE_PCM=0.5 bakes upstream into Phase 3)
+- **Phase 5 re-run expectation:** Latent-heat filter remains binding but is now achievable by some candidates; κ calibration should land in 0.5–0.7 range (not the near-zero values v3.1 implied)
+
+**See CLAUDE.md §3.1 and `04b_climate_signature.py` docstring (corrections #4–5) for full methodology detail.** Phase 5 must be re-run against updated signatures to generate valid results.
 
 ## Status
-**COMPLETE — re-run `07` after Phase 3 signature re-run**
+**STALE (as of 2026-08-31) — Phase 5 must be re-run against updated signatures with corrected L_required (SHARE_PCM=0.5).** Previous v3.1 findings (all-latent L_required ≈ 2500 kJ/kg) are now superseded. Expect latent-heat filter to remain binding but achievable after re-run, with κ resetting to 0.5–0.7 range.
 
 ## Literature Support
 | Component | Reference | Source |

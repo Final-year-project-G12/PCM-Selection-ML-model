@@ -7,6 +7,37 @@ docs already cite it by name, but its content below is now a completion report a
 spec, not a forward-looking plan. The original spec (calibration gates, interpretation bands, output
 file list) is preserved below where it was actually followed, since it turned out to be accurate.**
 
+**STATUS UPDATE (2026-08-12): the PCM property database that every result below is self-flagged as
+"provisional" against has since been expanded from 18/25 rows to 55 rows (inside the 40–60-row
+target) — see `07_PHASE_5_AUDIT.md`.**
+
+**STATUS UPDATE (2026-08-14): Phases 5 and 6 have now been re-run end-to-end against the expanded
+55-row database (62 candidates including the 7 literature rows) — see `07_PHASE_5_AUDIT.md` and
+`08_PHASE_6_AUDIT.md` for full detail. Two previously-undocumented bugs (a `PCM_data/PCM_data/`
+path-nesting mismatch, and both scripts referencing a `is_rt_line` column the rewritten preprocessing
+script no longer produces) had to be fixed first — both are now fixed. Headline changes from the
+re-run: the κ-calibrated survivor pool grew from 20 to 39 candidates (9/14/16 per cluster vs. the old
+5/8/7), and **Cluster 0 — previously `insufficient_even_at_kappa_0`, unable to reach 8 survivors at
+any κ — now reaches 9 survivors at κ=0.2, `in_band`**. No cluster is flagged undersized any more.
+Kendall's W moved to 0.388/0.635/0.634 (was 0.4375/0.536/0.589) — Clusters 1 and 2 crossed from
+"ambiguous" into "moderate" agreement, while Cluster 0 stayed low despite no longer being undersized,
+which is itself a new, more concerning finding (see `08_PHASE_6_AUDIT.md`).**
+
+**STATUS UPDATE (2026-08-14, later same day): Phases 7 and 8 have now ALSO been re-run** against the
+fresh Phase 6 output (`09_physics_validation_rajasthan.py` then `10_recommendation_cards_rajasthan.py`,
+both completed clean, all cross-phase fingerprint checks and the independent medoid cross-check
+passing). **The negative validation result persists and does not resolve with the larger database**:
+new Spearman rho = **-0.385 (Cluster 0, n=9), +0.125 (Cluster 1, n=14), -0.097 (Cluster 2, n=16)**,
+mean -0.119 — compare to the pre-expansion -0.900/-0.096/-0.198. Two of three clusters got *less*
+negative (0 and 2), Cluster 1 flipped sign from -0.096 to +0.125, but **all three remain in this
+file's own "genuine negative result" band (ρ≤0.4)** — the larger, healthier candidate pool did not
+flip the headline finding. The rest of this file's original Spearman-rho table, calibration numbers,
+and Phase 8 description below are now superseded by the fresh numbers in the two new sections
+inserted just above "What remains" — kept below for the historical record of what the pre-expansion
+run looked like, not as the current result.
+
+**⚠️ CRITICAL UPDATE (2026-08-31): L_required Methodology Correction — ALL RESULTS ABOVE ARE NOW STALE.** Phase 3's L_required methodology was corrected 2026-08-31 to use SHARE_PCM=0.5 (literature-anchored fractional share) instead of all-latent assumption, halving L_required values. This cascades through Phase 5 (κ calibrations change), Phase 6 (survivor set changes), and Phases 7–8 (validation and rankings change). **All Phases 5–8 must be re-run** against updated signatures before these results are valid. The Spearman-rho values, Cluster-0-insufficiency findings, and recommendation outputs documented above are superseded. See CLAUDE.md §3.1 for full methodology detail.**
+
 ## What actually happened, in order
 
 1. **The prerequisite this file originally insisted on ("do not run Phase 7 against the current
@@ -189,11 +220,216 @@ naming exactly which cluster_id and file disagree, if any mismatch is found. Thi
 beyond what the original spec asked for, added because this exact class of bug had already been
 caught once this session.
 
+## Re-run result, 2026-08-14 (current — supersedes the pre-expansion table/sections above)
+
+**Calibration gates, re-checked against the fresh run**: 100% of medoids still land in the 54-84%
+benchmark band using calibration PCM RT47 — Cluster 0 (RJP_0132) 64.2%, Cluster 1 (RJP_0202) 65.1%,
+Cluster 2 (RJP_0055) 63.7% (same medoid points and calibration PCM as before, so this number is
+expected to be stable — it does not depend on the candidate pool). PCM-vs-plain-tank comparator:
+still ~-0.0% (structural, per the original section above — unchanged by the database expansion, as
+expected since it doesn't touch the calibration PCM or tank sizing). PCM-mass sensitivity sweep:
+re-run with the same conclusion — ranking of the 5 representative candidates is identical at every
+mass tested (50-800kg), so the negative rho below is still not an artifact of insufficient
+differentiation at the pipeline's default 50kg sizing.
+
+**Real experiment**: ran all 39 (cluster, PCM) combinations now (9+14+16, up from 20), same medoids,
+same 2025 real hourly weather. Every candidate still crosses both 10% and 90% melt fraction over the
+year — no PCM stuck permanently solid or liquid.
+
+**Result — Spearman rho, MCDM Borda rank vs. simulated solar-fraction rank (current):**
+
+| Cluster | Medoid | n candidates | rho vs Borda | Kendall's W (Phase 6) | Interpretation |
+|---|---|---|---|---|---|
+| 0 | RJP_0132 | 9 (was 5) | **-0.385** (p=0.306), was -0.900 | 0.3875 (was 0.4375, still below 0.6) | NEGATIVE — less extreme, no longer explainable by undersized pool |
+| 1 | RJP_0202 | 14 (was 8) | **+0.125** (p=0.670), was -0.096 | 0.6346 (was 0.536, now "moderate") | NEGATIVE (still ≤0.4) — sign flipped positive but magnitude too small to count as confirming |
+| 2 | RJP_0055 | 16 (was 7) | **-0.097** (p=0.720), was -0.198 | 0.6342 (was 0.589, now "moderate") | NEGATIVE — less extreme |
+
+Mean rho across clusters: **-0.119** (was roughly -0.40 pre-expansion, using an unweighted mean of
+the old three values). **All three clusters still land in this file's own ρ≤0.4 "genuine negative
+result" band — the larger, healthier PCM database did not flip the headline finding.** The direction
+moved (two clusters less negative, one flipped sign), but not the magnitude needed to call any
+cluster confirmed.
+
+**Cluster 0's caveat has changed character, not resolved.** Pre-expansion, Cluster 0 was undersized
+(n=5, below the 8-20 healthy band) *and* had the lowest Kendall's W — both pointed at the same root
+cause (too few candidates for the four MCDM methods to agree on). Post-expansion, Cluster 0 is now a
+healthy n=9 pool, yet its Kendall's W (0.3875) is still the lowest of the three clusters and still
+below the 0.6 ambiguous threshold — **sample size is now ruled out as the explanation**. The four
+MCDM methods genuinely disagree with each other on Cluster 0's ranking even with an adequate candidate
+pool, which is a more concerning finding than the pre-expansion "just needs more data" diagnosis (see
+`08_PHASE_6_AUDIT.md`'s note that GRA is the newly-identified structural outlier method across all
+three clusters, not previously called out by name).
+
+**This "old Cluster 0" identity claim is verified by direct join, not assumed**:
+`spearman_rho_by_cluster_rajasthan.csv` (Phase 7's own output) carries Phase 6's `kendalls_w_cluster`
+value alongside its own rho for the same `cluster_id`, and for `cluster_id=0` those two numbers are
+`kendalls_w_cluster=0.3875` / `rho=-0.385` — the identical 0.3875 confirms this is the same physical
+cluster (not a re-indexed one) whose method-agreement was already flagged as low in Phase 6. Cluster 0
+is also the only one of the three where `borda_copeland_top3_disagree=True` (Copeland-vs-simulation
+rho=-0.402, essentially the same as Borda's -0.385) — both of Phase 6's independent consensus
+mechanisms disagree with the physics simulation on this cluster, not just one of them, which is the
+converging low-agreement + low-simulation-agreement signal called out above, now stated precisely
+rather than inferred.
+
+**Fingerprint chain confirmed non-stale**: `mcdm_rankings_rajasthan.csv` and
+`physics_validation_rajasthan.csv` both carry the identical `upstream_cluster_profile_fingerprint`
+stamp (`2552_3_1786473072.891`) as of this re-run — Phase 7 verified against the exact same on-disk
+`cluster_profiles_rajasthan.csv` state Phase 6 was built from, not a stale earlier fingerprint. Had
+this mismatched, `09_physics_validation_rajasthan.py` would have raised `SystemExit` before computing
+any rho at all — it didn't, so the chain held.
+
+**Dominant entropy criterion, updated**: `supercooling` now dominates entropy weight in **all three**
+clusters (63.8% / 48.6% / 57.0%), not just Cluster 2 as before (`Tm_fitness` no longer dominates
+anywhere). All three exceed the script's own 40% near-total-domination flag threshold. This
+physics model still does not simulate supercooling (idealized solid-liquid transition, no nucleation
+delay), so a disagreement concentrated on that criterion — which now applies to every cluster, not
+just Cluster 2 — cannot be resolved by this simulation and should not be read as evidence the MCDM
+supercooling weight itself is wrong.
+
+## Phase 8 — re-run result, 2026-08-14 (current)
+
+`10_recommendation_cards_rajasthan.py` re-ran clean against the fresh Phase 5/6/7 outputs: the
+fingerprint-stamp check and the independent medoid cross-check both passed for all 3 clusters, and its
+internal "summary table vs. individual cards drawn from the same computed values" consistency
+assertion also passed. New Top-1 picks: **Cluster 0 → RT50**, **Cluster 1 → savE® OM50**,
+**Cluster 2 → savE® OM50**. Every card explicitly states physics validation does NOT confirm its
+Top-3 ordering for that cluster (rho values as in the table above, band=NEGATIVE in all three) —
+the caveat language from the original spec (see the Phase 8 section above) is present in the
+regenerated file exactly as before, just with updated numbers.
+
+**On the per-criterion contribution decomposition "matching Phase 6's weights"** (checked precisely,
+not just assumed clean because the script exited 0): there is no separate persisted Phase-6 weight
+file for Phase 8 to compare against — `08_mcdm_ranking_rajasthan.py`'s own docstring states plainly
+that it "never persisted the weighted-normalized decision matrix or the per-cluster blended weight
+vector." What `10_recommendation_cards_rajasthan.py` actually does (per its own module docstring,
+`compute_criterion_contributions()`) is **import Phase 6 as a module and call its own
+`entropy_weights()`/`blended_weights()` functions directly** against the current fingerprinted
+survivor data — a re-run of Phase 6's deterministic weight formula on the same inputs, not an
+independently-derived alternate calculation. Given the fingerprint chain confirmed above (Phase 8 read
+the same `cluster_profiles_rajasthan.csv`-derived data Phase 6 did) and that no code in either script
+changed between the two runs, agreement here is expected by construction rather than a check that
+could have caught a "new bug" — the meaningful independent checks in this script are the medoid
+cross-check and the fingerprint-stamp check (both described above), which genuinely could have failed
+and didn't.
+
+## Cluster 0 supercooling/entropy diagnostic — 2026-08-14 (read-only, no canonical file touched)
+
+Follow-up on the two open items above ("why do the four MCDM methods disagree on Cluster 0
+specifically" and "supercooling now dominates entropy weight everywhere"), run as a read-only
+diagnostic against the already-reconciled Phase 5/6/7 outputs — no script's `main()` was invoked
+(`08_mcdm_ranking_rajasthan.py`'s functions were imported directly; its `main()` is guarded by
+`if __name__ == "__main__"`, so no canonical output file was regenerated), and the one sensitivity
+re-run (below) was written to a scratch file, never to `data/processed/`.
+
+**Working hypothesis going in**: supercooling's entropy weight in Cluster 0 (63.8%, the highest of
+the three clusters) is inflated because it's partly measured/partly imputed data, and because the
+other 7 criteria are unusually tight in Cluster 0 specifically. **Both halves of that hypothesis
+were checked directly and found wrong in their specifics — but a real, more precise mechanism was
+found in their place.**
+
+1. **Raw entropy weight (isolated from the AHP blend) confirms supercooling is the outlier, worst in
+   Cluster 0**: 0.638 (C0) vs 0.486 (C1) vs 0.570 (C2), against ≤0.03 for every criterion except
+   Tm_fitness (0.304/0.454/0.380) in all three. Corrosion and cost sit at 0 for the correct reason
+   (corrosion is a near-constant 1.0/2.0 structural proxy in these pools; cost is always NaN) — not
+   the same failure mode as the already-fixed "<2 real values" bug from Phase 6.
+
+2. **NOT a measured-vs-flagged-unknown split.** Cluster 0 has 9 survivors; only 1 (`C22H46`) is
+   `c5_supercooling == flag_unknown` and is excluded from the entropy calculation entirely. The other
+   8 are real, measured values: `{savE® OM42: 1.0, RT47: 0.0, n-Docosane: 0.2, Lauric acid: 0.0,
+   RT45HC: 0.0, savE® OM46: 2.0, n-Tricosane: 2.6, RT50: -0.5}` (min -0.5, max 2.6, mean 0.663,
+   std 1.104). The dispersion driving the entropy weight is real measured data, not an artifact of
+   how unknown values are handled.
+
+3. **NOT "the other 7 criteria are unusually tight in Cluster 0."** Coefficient of variation (CV) for
+   the other criteria in Cluster 0 is comparable to or *higher* than in Clusters 1/2 (e.g. thermal
+   conductivity CV 0.361 vs 0.299/0.222; vol_latent_heat 0.163 vs 0.092/0.131) — the opposite of what
+   the hypothesis predicted. What actually differs is that **supercooling's own CV is highest in
+   Cluster 0** (1.667 vs 1.014/1.182), which tracks its entropy weight directly. Mechanism: supercooling
+   is a cost criterion whose physically desirable value is near zero. Cluster 0 has three exact 0.0 K
+   readings and one slightly negative -0.5 K reading (measurement noise around zero, not a real
+   physical anomaly) alongside two real outliers (2.0, 2.6 K). `entropy_weights()` clips negative
+   values to `1e-12` before computing Shannon entropy (a documented requirement of the formula, not a
+   bug) — this treats the -0.5 K reading as near-total informational certainty rather than "noise near
+   zero," which combines with the near-zero-mean CV inflation to produce an outsized entropy weight.
+   This is a known pathology of Shannon-entropy weighting on near-zero-ideal cost criteria, not
+   specific to this codebase, and is amplified here by n=9 giving few points to average the
+   near-zero cluster over.
+
+4. **Confirmed independently, in the code's own words: the physics model cannot evaluate supercooling
+   at all**, regardless of what its entropy weight is. `09_physics_validation_rajasthan.py` already
+   states this explicitly (the "Barqawi's 3-phase model assumes ideal solid-liquid transition at Tm
+   with no nucleation delay" passage, quoted above); `physics_lib.py`'s `simulate_pcm_swh_year()`
+   accepts only `Tm_C`, `latent_heat_kJ_kg`, density, Cp, and thermal conductivity as PCM inputs — no
+   supercooling parameter exists anywhere in the model. This is a structural scope limitation,
+   independent of items 1-3.
+
+5. **Sensitivity test** (Cluster 0 only: supercooling's blended weight forced down to its AHP-prior
+   value alone — 0.075, cluster-HSI-adjusted — with the remaining 8 weights renormalized to sum to 1;
+   compared against the already-computed `simulation_rank` in `physics_validation_rajasthan.csv`, no
+   physics re-simulation needed):
+
+   | | Kendall's W | Spearman rho vs. Phase 7 `simulation_rank` |
+   |---|---|---|
+   | Baseline (entropy-blended, on-disk) | 0.388 | **-0.385** (p=0.31) |
+   | Capped (supercooling → AHP-only) | **0.271** (worse) | **+0.561** (p=0.12 — direction flips, not significant at n=9) |
+
+   Capping supercooling's weight flips MCDM-vs-physics agreement from negative to positive, consistent
+   with items 3-4 above. But it makes Kendall's W (cross-MCDM-method agreement) *worse*, not better —
+   TOPSIS↔PROMETHEE pairwise agreement collapses from ρ=0.77 (baseline) to ρ=-0.02 (capped) as
+   Tm_fitness's weight rises to backfill the removed supercooling weight, and PROMETHEE's native
+   V-shape Tm-handling diverges further from the other 3 methods' shared Gaussian score once Tm
+   dominates. GRA remains the persistent structural outlier in both weight regimes, consistent with
+   `08_PHASE_6_AUDIT.md`'s existing finding.
+
+**Verdict: both (a) an entropy-weighting artifact and (b) a structural physics-model scope
+limitation are real, and they don't fully overlap.**
+
+- **(b) is unconditional**: wherever supercooling drives the MCDM ranking, physics validation cannot
+  arbitrate that disagreement in principle. State this plainly as a validator-scope limitation, not a
+  "the MCDM ranking is wrong" finding.
+- **(a) is real but the mechanism is different from what was hypothesized**: near-zero-clustered
+  measured values plus the entropy formula's negative-value clipping, not measured-vs-imputed data,
+  and not unusually tight dispersion elsewhere in Cluster 0 specifically.
+- **Cluster 0's low Kendall's W is not simply a symptom of the inflated supercooling weight** — the
+  sensitivity test shows removing that inflation lowers W further, exposing a second, independent
+  disagreement source (PROMETHEE's native Tm-handling vs. the other 3 methods) that the supercooling
+  weight had been partially masking. This answers this file's own open question above ("diagnosing
+  why the four MCDM methods disagree… is the natural next investigative step") only partially: GRA and
+  PROMETHEE's divergent Tm-handling are both load-bearing, and no single-criterion reweighting fixes
+  both at once.
+
+**Recommendation for a follow-up pass (not implemented here)**: (i) state the physics-model scope
+limitation on supercooling explicitly in the write-up, citing this section; (ii) consider a
+variance-floor/CV-based regularization for near-zero-ideal cost criteria in the entropy formula,
+analogous to the existing <2-real-values→weight-0 guard — but flag explicitly that it will not by
+itself raise Cluster 0's Kendall's W, since a second, independent PROMETHEE-vs-GRA/TOPSIS structural
+disagreement exists regardless of the weight vector and needs its own investigation.
+
 ## What remains
 
-Same as `00_MASTER_OVERVIEW.md`'s "What remains" section: expand the PCM property database, decide
-the κ-relaxation policy, then re-run `07 → 08 → 09 → 10` (`python run_all_rajasthan.py --from
-07_feasibility_filter_rajasthan.py`) and see whether the negative rho persists. Given the PCM-mass
-sensitivity finding above (ranking is stable regardless of PCM sizing), the negative result is
-unlikely to be explained away by a parameter tweak — a real, larger, more diverse candidate pool is
-the honest next lever to pull.
+**Update, 2026-08-14: Phases 5, 6, 7, and 8 are all now current**, re-run end-to-end against the
+expanded 55-row (62-candidate) database with results reconciled via the fingerprint/medoid checks
+described above. The full chain (`07 → 08 → 09 → 10`) has been executed and its output verified by
+reading the regenerated CSVs and Markdown directly, not assumed from a prior run. What remains open is
+no longer "re-run Phase 7/8" — it is a genuine methodology question the re-run did not resolve:
+
+- **The MCDM-vs-physics disagreement is real and persists at the larger database size.** Cluster 0's
+  case is now the cleanest evidence of this — a healthy, non-undersized candidate pool (n=9) still
+  produces the lowest cross-method agreement (Kendall's W=0.3875) of the three clusters, which rules
+  out "not enough data" as the explanation. **Partially diagnosed as of the 2026-08-14 diagnostic
+  above**: it is not a single-cause problem — a supercooling-entropy-weighting artifact and an
+  independent PROMETHEE-vs-GRA/TOPSIS structural disagreement are both load-bearing, and a sensitivity
+  test showed fixing the former (capping supercooling's weight) makes the latter *worse*, not better.
+  What still remains open: the PROMETHEE/GRA structural disagreement itself has not been diagnosed at
+  the same level of detail — that is the next investigative step, not a re-run of any existing script.
+- **`supercooling` now dominates entropy weight in every cluster (was 1 of 3)**, and the physics model
+  structurally cannot validate or contradict a supercooling-driven ranking (no nucleation delay in the
+  model) — **confirmed directly in `physics_lib.py`'s required-input list** as of the diagnostic above,
+  not just inferred from the disagreement pattern. Whether to (a) accept this as a known, documented
+  blind spot, (b) down-weight supercooling via a revisited AHP prior or an entropy-formula
+  regularization for near-zero-ideal cost criteria (see the diagnostic section's recommendation above),
+  or (c) extend `physics_lib.py` to model supercooling is an open policy decision, not a bug.
+- **The κ-relaxation policy remains a separate, still-open item** regardless of what this re-run
+  showed — every survivor and every recommendation card is still built on a κ-relaxed rather than
+  nominal-threshold (κ=0.7) pool, because the nominal threshold still produces 0 survivors everywhere
+  (see `07_PHASE_5_AUDIT.md`).

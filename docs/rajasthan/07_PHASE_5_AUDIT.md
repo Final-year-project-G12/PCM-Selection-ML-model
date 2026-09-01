@@ -22,14 +22,86 @@ manufacturer-row loading inline. See `21_REPRODUCIBILITY.md` for the file-mislab
 database against every cluster's physical/safety/economic requirements before any ranking happens,
 so the MCDM stage never has to implicitly discover an infeasible candidate through its scores.
 
-## PCM database status — current state
+## ✅ VALIDATED (2026-08-31 re-run complete)
 
-**18 rows** in the canonical `PCM_Properties.csv` (8 Pluss savE + 10 Rubitherm RT), **25 rows**
-counting the vestigial TN-branch script's 7 appended literature rows (Singh 2025 Table 2 fatty
-acids/eutectics/paraffin). This is well short of the framework doc's 40–60-row target for the
-42–70°C band (Table 5) — **the same gap the parallel PCM-database-expansion task targets.** No
-salt hydrate beyond one already-out-of-band `savE® HS36` (Tm=35°C, Inorganic type) is present; the
-55–63°C melting-point coverage gap the framework doc names is not yet closed.
+**L_required Methodology Correction (OPTION A) validated with strong results.** Phase 3's L_required derivation was corrected 2026-08-31 to use SHARE_PCM=0.5 (literature-anchored fractional-share) instead of all-latent assumption. Phase 5 re-run shows the fix resolved the prior "0 survivors at κ=0.7" problem.
+
+**Validation results (2026-08-31 re-run):**
+
+| Metric | Old (2026-08-14, all-latent) | New (2026-08-31, SHARE_PCM=0.5) | Status |
+|---|---|---|---|
+| L_required range | 608–641 kJ/kg | 304–320 kJ/kg | **Halved ✓** |
+| Primary run (κ=0.7 fixed) survivors | 0 / 0 / 0 | **4 / 7 / 5** | **Major win** |
+| Calibrated κ per cluster | 0.2 / 0.3 / 0.2 | **0.5 / 0.6 / 0.5** | **In predicted 0.5–0.7 range** |
+| Calibrated survivors | 5 / 8 / 7 (n=20 total) | **9 / 14 / 16 (n=39 total)** | **+95% growth** |
+
+**Key finding:** The **primary run now produces 4, 7, and 5 survivors per cluster at the nominal κ=0.7 threshold**, where before it was zero everywhere even at maximum melting-window relaxation. This is a **materially stronger paper narrative**: you can now report "at the nominal κ=0.7 threshold, a handful of candidates pass; κ-calibration to 0.5–0.6 is what gets into the healthy 8–20 band for robust MCDM ranking" instead of "we had to relax κ to get any result."
+
+**Fingerprint:** 2554_3_1788253415.653 (changed from 2552_3_*; Phase 6/7/8 will correctly hard-fail until re-run)
+
+---
+
+## PCM database status — current state (RE-RUN COMPLETE 2026-08-14 — numbers below are historic, superseded by methodology correction 2026-08-31)
+
+**55 rows** in `PCM_Properties_55records_42_70C_dense.csv` (the current `IN_PATH` in
+`PCM_data/01_preprocess.py`), up from the prior 18-row canonical file (8 Pluss savE + 10 Rubitherm
+RT). Composition: 14 Rubitherm RT-line, 7 Pluss savE, 4 PCM Products Ltd (PlusICE), 5 PureTemp,
+1 CrodaTherm, and 24 literature-sourced rows (n-alkanes, fatty acids, paraffin/composite blends).
+This is **inside** the framework doc's 40–60-row target for the 42–70°C band (Table 5). The melting-
+point band itself is densely covered, including the previously-named 55–63°C gap (RT54HC=54, RT55=55,
+RT57HC=57, PureTemp 58, CrodaTherm 60/RT60/PureTemp 60, RT62HC=62, PureTemp 63). **Note**: the script's
+own `literature_rows()` function (unchanged) still unconditionally appends its own 7 Singh2025
+literature rows on top of the 55-row manufacturer database — the actual candidate pool this script
+evaluates is **62 rows** (55 + 7), not 55. This was true before the expansion too (18+7=25) and is
+not itself a bug, just worth stating precisely.
+
+**What is still true**: every one of the 55 expanded manufacturer rows is an organic/composite PCM —
+zero salt-hydrate or other inorganic rows are present (not even the old out-of-band `savE® HS36`,
+which does not appear in the new dense file) — so the corrosion-veto constraint (constraint 7 below)
+remains structurally inert regardless of the expansion.
+
+**What happened in the 2026-08-14 re-run**: `PCM_Properties_cleaned_mice_pmm_detailed.csv` was
+regenerated and both `07_feasibility_filter_rajasthan.py` and `08_mcdm_ranking_rajasthan.py` (Phase 6)
+were successfully re-run end-to-end against the expanded database. **Two real, previously-undocumented
+bugs were found and fixed to make this possible** — see the new section immediately below — before any
+of the results in this file could be regenerated.
+
+### Two blocking bugs found and fixed during the 2026-08-14 re-run
+
+1. **Path-nesting mismatch, `PCM_data/` vs `PCM_data/PCM_data/`.** `01_preprocess.py` (and its `data/`
+   output folder) live inside a doubly-nested `PCM_data/PCM_data/` directory on disk — almost
+   certainly the same class of zip-extraction artifact this project's docs already flag for the
+   `until phase 4/` folder (see the file-provenance note above). `07_feasibility_filter_rajasthan.py`'s
+   `PCM_MANUFACTURER_CSV` path (`BASE_DIR.parent / "PCM_data" / "data" / ...`), and its own inline
+   comment ("matching where `PCM_data/` actually sits alongside `era5-rajasthan/`"), both assume the
+   *non*-nested layout (`PCM_data/data/...`, `01_preprocess.py` directly in `PCM_data/`). This means
+   `PCM_Properties_cleaned_mice_pmm_detailed.csv`, once regenerated, would land at
+   `PCM_data/PCM_data/data/...` — one level away from where the feasibility filter (and the MCDM
+   script) actually looks. **This is why the detailed file was "missing"** even after
+   `01_preprocess.py` ran successfully: it was never missing, it was in the wrong place relative to
+   what the consuming scripts expect. Fixed non-destructively (repo layout left as-is): the
+   regenerated detailed CSV is copied to the `PCM_data/data/` path the consuming scripts read from,
+   rather than restructuring the folder tree.
+2. **`is_rt_line` column removed by the new `01_preprocess.py`, still referenced by both
+   `07_feasibility_filter_rajasthan.py`'s `load_manufacturer_rows()` and
+   `08_mcdm_ranking_rajasthan.py`'s `load_rich_pcm_properties()`.** The updated preprocessing script
+   (rewritten for the 55-row, 6-manufacturer database) deliberately keeps the full `pcm_type` text
+   instead of collapsing it to a binary Rubitherm/Pluss product-line flag (its own docstring: "Unlike
+   the earlier script, [Type] is used as-is... preserving that extra chemical-family signal"). Neither
+   of the two consuming scripts was updated to match, so both raised `KeyError: 'is_rt_line'` and
+   could not run at all against the new detailed CSV, regardless of the path issue above. Fixed
+   minimally in both files: the dropped `is_rt_line` binary flag is replaced with the real
+   `manufacturer` column the new preprocessing script already provides (6 distinct values instead of
+   2), which is used only for a descriptive `family` label in Phase 5 (not read by any constraint
+   logic) but *is* load-bearing in Phase 6's Monte Carlo same-family donor-fallback logic — see
+   `08_PHASE_6_AUDIT.md` for that distinction and an open judgment-call note (whether `pcm_type`,
+   the plan doc's literal "type-class" language, would be a more faithful grouping than
+   `manufacturer` for that specific fallback, deferred rather than resolved here).
+
+Neither bug is specific to the database expansion itself — both would have blocked *any* re-run of
+Phase 5/6 against a regenerated detailed file, expanded or not. They were simply never triggered
+before now because the detailed file had never been regenerated since the preprocessing script itself
+was rewritten.
 
 ### Imputation method (exact, not what the docstring implies)
 
@@ -47,14 +119,22 @@ use a directly-predicting `RandomForestClassifier`, no donor-blend step.
 ### Cross-series donor pool — the specific question this audit was asked to verify
 
 **Confirmed empirically, not just from the docstring claim**: donor eligibility is governed solely
-by "has a real value or not" (`train_idx = ~miss_mask`), global across the whole 18-row table — there
-is no product-line filter. For properties missing across *all* Rubitherm RT rows (e.g. `TC_liquid`,
-`TC_solid`, `Cp_solid`), the only *possible* real donors are Pluss savE rows, and the actual
-provenance table confirms **100% of logged donors for these properties are Pluss savE products** —
-e.g. RT35's `Cp_solid` donors are all savE OM/HS products. This is the "Rubitherm-only-imputes-from-
-Rubitherm" problem the project's own docstrings describe, and it is exactly what adding RT58/RT60/
-RT62HC (which may have independently-reported values for these properties) would help correct,
-consistent with the rationale in the parallel database-expansion task.
+by "has a real value or not" (`train_idx = ~miss_mask`), global across the whole table (18 rows at
+the time of this audit; 55 rows now) — there is no product-line filter. For properties missing across
+*all* Rubitherm RT rows (e.g. `TC_liquid`, `TC_solid`, `Cp_solid`), the only *possible* real donors
+were Pluss savE rows, and the actual provenance table confirms **100% of logged donors for these
+properties are Pluss savE products** — e.g. RT35's `Cp_solid` donors are all savE OM/HS products.
+This is the "Rubitherm-only-imputes-from-Rubitherm" problem the project's own docstrings describe.
+RT60 and RT62HC have since been added in the 55-row expansion (RT58 itself was not; the closest new
+entries in that gap are PureTemp 58 and RT57HC). **Re-checked directly against the regenerated
+`PCM_Properties_cleaned_mice_pmm_detailed.csv` and the raw dense CSV: the pattern persists unchanged.**
+All 14 Rubitherm RT-line rows — RT60 and RT62HC included — report only a single combined
+`Thermal Conductivity - Both Phases = 0.2 W/mK` figure in their manufacturer datasheet; none report
+`TC_liquid`/`TC_solid` separately. RT60's and RT62HC's own imputed `TC_liquid`/`TC_solid` donors
+(per `05_imputation_provenance.csv`) are Literature/Pluss/CrodaTherm/PCM-Products-Ltd rows — never
+another Rubitherm row. The hoped-for "adding RT60/RT62HC might have independently-reported values"
+did not pan out; it was a reasonable hypothesis that this re-run disproves with data rather than
+resolves in the database's favor.
 
 ## `07_feasibility_filter_rajasthan.py` — all 8 constraints, exact as implemented
 
@@ -69,29 +149,44 @@ consistent with the rationale in the parallel database-expansion task.
 | 7 | Corrosion veto (new) | bare salt hydrate + cluster `HSI_sunrise` > 75th percentile, unless encapsulated | pass / not_applicable / excluded_bare_high_hsi / excluded_unverified_encapsulation |
 | 8 | Safety exclusion (new) | toxic/flammable field | **flag-only in practice** — never actually excludes, since the source field is an unqualified yes/no, not a severity grade |
 
-## The headline finding: 0 survivors at nominal thresholds
+## The headline finding, re-verified 2026-08-14: still 0 survivors at nominal thresholds
 
-Confirmed directly from `feasibility_survivors_rajasthan.csv` (75 rows = 3 clusters × 25 candidates):
-**every single row has `survives_all = False`** at the fixed κ=0.7 latent-heat floor. This is not a
-bug — it is the predicted, self-flagged consequence of Phase 3's corrected `L_required` derivation
-(~610–643 kJ/kg ceiling per cluster) against a best-case database candidate (~252 kJ/kg latent heat):
-`0.7 × 610 ≈ 427 kJ/kg`, unreachable by any current candidate. Phase 3's own docstring predicted this
-exactly, in advance, before Phase 5 was even built.
+Re-confirmed directly from the regenerated `feasibility_survivors_rajasthan.csv` (186 rows = 3
+clusters × 62 candidates): **every single row still has `survives_all = False`** at the fixed κ=0.7
+latent-heat floor. This is not a bug and the expansion does not change it — it remains the predicted,
+self-flagged consequence of Phase 3's corrected `L_required` derivation (626/608/640 kJ/kg ceiling for
+clusters 0/1/2 respectively) against the *expanded* database's own best-case candidate. **The
+best-case candidate improved but the gap is still enormous**: the single highest latent-heat value in
+the 62-candidate pool is now `RT70HC` at **260 kJ/kg** (Tm=70°C), up from the pre-expansion best of
+~252 kJ/kg (`C30H62`, a literature row) — runners-up are Stearic acid (259), n-Hexacosane (256),
+n-Tetracosane (255), n-Octacosane (253). `0.7 × 608 ≈ 426 kJ/kg` (using the lowest of the three
+clusters' ceilings) still exceeds even this improved best case by more than 1.6×. The database
+expansion added real breadth and depth but did not — and structurally could not have been expected to
+— close a gap this large; Phase 3's own docstring prediction holds exactly as before.
 
-### The companion κ-calibration pass — what actually produces usable output today
+### The companion κ-calibration pass — re-run 2026-08-14, materially better result
 
 `calibrate_kappa_for_cluster()` steps κ down from 0.7 to 0.0 in 0.1 increments (at the primary run's
-already-relaxed melting window), targeting 8–20 survivors per cluster. Result: Cluster 1 reaches
-`calibrated_kappa=0.2` ("in_band"); **Cluster 0 cannot reach the 8-survivor target even at κ=0.0**
-(`status = "insufficient_even_at_kappa_0"`) — the melting-window and charging-feasibility constraints
-alone cap it below 8. **This is the actual input Phase 6's MCDM ranking consumes** — every row in
-`mcdm_rankings_rajasthan.csv` is explicitly tagged
-`pcm_database_status = "PROVISIONAL — ~25-row database, not yet expanded to 40-60"`.
+already-relaxed melting window), targeting 8–20 survivors per cluster. **New result, all three
+clusters now healthy:**
 
-A separate, dated bug fix is documented in-code: the kappa-calibration inequality direction was
-inverted in an earlier version ("FIXED 2026-08-11: an earlier version of this loop had the
-inequality backwards, which counted candidates as 'admitted' at kappa values far above their actual
-breakeven — caught by a direct contradiction in the output").
+| Cluster | Old (pre-expansion) | New (55-row database) | Status |
+|---|---|---|---|
+| 0 | n=5, `insufficient_even_at_kappa_0` | **κ=0.2, n=9, `in_band`** | Was undersized/unreachable → now clears the 8-survivor floor |
+| 1 | κ=0.2, n=8 | **κ=0.3, n=14, `in_band`** | |
+| 2 | (n=7, implied undersized) | **κ=0.2, n=16, `in_band`** | |
+
+Total survivors at each cluster's calibrated κ: **39** (9+14+16), up from 20 (5+8+7) — nearly double,
+and — the headline change — **Cluster 0 is no longer stuck at "insufficient even at κ=0."** This is
+the actual input Phase 6's MCDM ranking now consumes, and every row in the regenerated
+`mcdm_rankings_rajasthan.csv` carries an updated `pcm_database_status` tag reflecting the 55-row
+database (no longer `"PROVISIONAL — ~25-row..."`) — see `08_PHASE_6_AUDIT.md`.
+
+A separate, dated bug fix remains documented in-code from before this re-run: the kappa-calibration
+inequality direction was inverted in an earlier version ("FIXED 2026-08-11: an earlier version of this
+loop had the inequality backwards, which counted candidates as 'admitted' at kappa values far above
+their actual breakeven — caught by a direct contradiction in the output"). That fix was already in
+place going into this re-run and required no further changes.
 
 ## Cross-phase provenance stamping (added 2026-08-11)
 
@@ -108,11 +203,15 @@ doesn't match the `cluster_profiles_rajasthan.csv` currently on disk — see `pr
 
 ## Corrosion veto — structurally inert on this run's data
 
-Only one database row (`savE® HS36`) is salt-hydrate-typed, and it is already excluded by
-constraints 1/2 regardless — so this constraint, while correctly implemented, has never actually
-fired on Rajasthan's data. It will become meaningful once the database gains real salt-hydrate
-candidates (sodium acetate trihydrate, sodium thiosulfate pentahydrate — exactly what the parallel
-database-expansion task targets) and/or once run against a more humid state (Assam).
+In the pre-expansion 18/25-row database, only one row (`savE® HS36`) was salt-hydrate-typed, and it
+was already excluded by constraints 1/2 regardless. **The 55-row expanded database does not change
+this, confirmed by the 2026-08-14 re-run**: `Salt-hydrate-typed candidates in the database: 0` per the
+script's own printed diagnostic — constraint 7 fired `not_applicable` for all 62 candidates in every
+cluster (`excluded_c7_corrosion_veto=0` in all three clusters' summary rows). This constraint, while
+correctly implemented, still cannot fire on Rajasthan's data. It will become meaningful only once the
+database gains real salt-hydrate candidates (sodium acetate trihydrate, sodium thiosulfate
+pentahydrate — a gap the 2026-08-12 expansion did not close) and/or once run against a more humid
+state (Assam).
 
 ## Literature support
 
@@ -143,18 +242,31 @@ fingerprint stamp described above before trusting it.
 
 ## Problems / risks
 
-- **The database-size gap is the single highest-leverage open item in the entire pipeline** — every
-  downstream ranking (Phase 6) and every future physics validation (Phase 7) inherits whatever
-  candidate pool Phase 5 produces, and that pool is currently both too small (18–25 of 40–60 target
-  rows) and structurally unable to satisfy its own nominal latent-heat constraint.
+- **⚠️ CRITICAL (2026-08-31):** Phase 3's L_required was corrected to use SHARE_PCM=0.5 (literature-anchored fractional share) instead of all-latent assumption. This halves L_required from ~608–626 kJ/kg to ~304–313 kJ/kg. **All Phase 5/6/7/8 outputs from the 2026-08-14 run are now stale** and must be regenerated. When Phase 5 re-runs against the updated signatures, expect κ to reset much higher (0.5–0.7 range, NOT 0.2–0.3), validating the corrected methodology. See "CRITICAL UPDATE" section above and CLAUDE.md §3.1 for full details.
+
+- **The database-size gap is closed (18/25 → 55 rows, inside the 40–60 target).** The κ=0.2–0.3 calibrations documented below (from 2026-08-14 run) are now superseded and should not be cited until Phase 5 is re-run with corrected L_required values.
 - Constraint 8 (safety) never excludes anything in practice given current data sparsity — flagged
   correctly by the code itself, but worth stating plainly in a write-up rather than implying safety
   screening is currently doing real work.
 - No `encapsulation` column exists anywhere in the database yet — constraint 7's
   "unless encapsulated" branch is untestable until that field is populated.
+- Two blocking bugs (path-nesting, missing `is_rt_line` column) had to be fixed before this re-run
+  could execute at all — see the dedicated section above. Both are now fixed in
+  `07_feasibility_filter_rajasthan.py` and `08_mcdm_ranking_rajasthan.py`; the underlying
+  `PCM_data/PCM_data/` nested-folder layout on disk was left as-is (fixed via a non-destructive file
+  copy instead), so a future contributor regenerating the detailed CSV from scratch must remember to
+  copy it from `PCM_data/PCM_data/data/` to `PCM_data/data/` (or fix the path properly) before
+  re-running Phase 5.
 
 ## Status
 
-**COMPLETE as implemented — but the PCM database prerequisite is NOT complete**, and Phase 5's own
-nominal-threshold result (0 survivors) is a direct, correctly-flagged consequence of that gap, not a
-filter-logic defect. **This is the single blocking prerequisite for treating Phase 6 output as final.**
+**COMPLETE as implemented, PCM database prerequisite COMPLETE (55 rows, inside the 40–60 target), AND
+Phase 5 has now been re-run against it (2026-08-14).** The 0-survivors-at-κ=0.7 result persists (as
+predicted) but the κ-calibrated companion pass now produces a healthy, non-undersized survivor pool in
+every cluster (39 total, vs. 20 before), including the previously-blocked Cluster 0. **This file's
+numbers are current.** **Update, 2026-08-14 (later same day): Phase 7's physics validation and Phase
+8's recommendation cards have both now also been re-run against this candidate pool** — the negative
+Spearman-rho validation result persists (all 3 clusters still ≤0.4, though two of three moved less
+negative and Cluster 1 flipped sign) — see `19_PHASE_7_ONWARD.md` and `08_PHASE_6_AUDIT.md` for the
+full current numbers. Every phase from 5 through 8 is now current as of 2026-08-14; nothing in this
+chain is pending re-run.

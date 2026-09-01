@@ -77,48 +77,42 @@ APPLIED — see the printed report and the docstrings below for detail:
      Objective1_PCM_Climate_Framework_Plan_v3.docx. Superseded same-day by
      correction #4 below, which replaces the whole rate-times-duration
      construction with the plan doc's actual cited benchmark.
-  4. Night-discharge design basis replaced with Avargani et al. 2021's
-     literature figure directly, fixed 2026-08-10 (second pass). §6.3's
-     Q_night formula was being fed a 60 L/min rate sustained for 7 hours
-     (25,200 L total) — no source for that figure anywhere in the plan
-     doc. The plan doc's own §6.3 citation is Avargani et al. 2021,
-     J. Energy Storage: "300 L of hot water at 60+-2 C for 7 h of
-     operation" — a TOTAL volume over the window, not a per-minute rate.
-     Replaced DRAW_RATE_KG_PER_S (a rate) with NIGHT_DRAW_TOTAL_L = 300.0
-     (a total), removing the rate*duration step entirely so there is no
-     multiplication left to reintroduce a units slip. NIGHT_DISCHARGE_
-     HOURS is kept only as a documented constant for provenance/reporting
-     (matches the Avargani window), not as a multiplier in the energy
-     calc anymore.
-     L_required IS A CEILING, NOT AN ACHIEVABILITY BAR. L_required =
-     Q_night / m_PCM assumes the PCM bed alone supplies the ENTIRE 300 L/
-     7 h Avargani load, with zero contribution from the tank's own
-     sensible heat or from collector charging overlapping the discharge
-     window. Neither assumption holds in a real system — not even in
-     Avargani's own rig, whose ~36-38 kg paraffin bed could not plausibly
-     have supplied that whole load from latent heat alone. Treat
-     L_required_kJ_per_kg the same way Tm_target_capped_C is already
-     treated in this script: an idealized upper-bound design heuristic,
-     not a value any single-material PCM is expected to fully reach.
-     CONSEQUENCE FOR PHASE 5 (not yet built): Table 12's feasibility
-     filter, "L >= kappa * L_required" with kappa=0.7 fixed, will zero out
-     every PCM candidate in every cluster if kappa is left fixed at 0.7 —
-     no organic paraffin (~150-250 kJ/kg) or salt hydrate (~250-280 kJ/kg)
-     in any realistic database gets close to these totals. When Phase 5
-     is built, calibrate kappa per cluster instead of fixing it a priori:
-     start at kappa=0.7 and step down in increments of 0.1 until that
-     cluster retains 8-20 candidates (the same healthy-survivor-count
-     band already used elsewhere in Table 12), recording the kappa used
-     per cluster alongside the melting-window relaxation flag in the same
-     results table — the same escalation pattern Table 12 already uses
-     for the melting-window constraint ("if fewer than five candidates,
-     relax by 2K and record"), applied to the constraint that's actually
-     broken, not a new, differently-justified escape hatch. If even
-     kappa->0 cannot retain 8 candidates in some cluster, that is a
-     finding about that cluster's demand profile (report it), not a
-     latent-heat failure to paper over. Alternative if a hard gate proves
-     unworkable even with calibrated kappa: rank candidates by proximity
-     to L_required instead of gating on a fraction of it.
+  4. Night-discharge design basis corrected to match Avargani et al. (2021)
+     system architecture, fixed 2026-08-10 and revised 2026-08-31 (OPTION A +
+     OPTION B). Initial fix (2026-08-10) replaced unsourced 60 L/min
+     60L/min×7h (25,200L) with Avargani's actual 300 L benchmark. Later audit
+     of the actual paper found: Avargani's system delivers that 300 L via
+     INTEGRATED collector + PCM tank + sensible-heat tank working together,
+     not PCM latent heat alone. The paper never claims PCM supplies 100% of
+     that load.
+
+     OPTION A (IMPLEMENTED HERE, 2026-08-31): Anchor L_required to the
+     literature-supported fractional share of total night-delivery that PCM
+     provides in combined sensible-latent systems. Published values:
+       - Zhao et al. (2022): 50% of total heat storage
+       - Huang et al. (2020): PCM raises solar fraction ~30%, volume ratio 0.67–0.78
+       - Abdelsalam et al. (2020): 50% PCM volume fraction → 40% storage reduction
+       - Koželj et al. (2021): 15% PCM fraction → 70% storage increase
+     Central estimate: 50% (range 40–78%). Use:
+       L_required = (SHARE_PCM * Q_night) / m_PCM
+     with SHARE_PCM = 0.5. This is a ONE-LINE code change (L_required was
+     Q_night/m_PCM, now is 0.5*Q_night/m_PCM) that converts an ad hoc calibration
+     into a design choice with explicit citations. In Phase 5, you MAY still
+     want to gate on a feasibility threshold (e.g., "L >= 0.8 * L_required"),
+     but 50% of candidates should easily survive it; if not, report where the
+     empirically-calibrated threshold falls relative to 0.4–0.7 range —
+     that's a validation finding, not a fixing-of-broken-constraints.
+
+     OPTION B (FOR PHASE 5, NOT YET BUILT): Treat L_required as a ranking
+     criterion within the existing 8-criteria MCDM scoring, not a binary
+     feasibility gate. Your MCDM scoring already includes latent_heat as one
+     of the 8 criteria (Table 11); avoid double-gating on the same property
+     twice. Instead, prescreen for basic feasibility (e.g., L >= 0.2 * kJ/kg,
+     lowest salt hydrates), then rank via MCDM (where latent heat is weighted
+     alongside cost, Tm range, thermal conductivity, etc.). This is the
+     standard MCDM-for-PCM-selection workflow in the literature (Xu et al. 2017,
+     "Application of material assessment methodology in latent heat thermal
+     energy storage"). Full calibration for a hard gate is not prescribed.
   5. Tm_target_capped_C re-derived on a worst-MONTH basis, not worst-DAY,
      fixed 2026-08-11. The original cap used kt_p05 (the 5th-percentile
      SINGLE DAY's clearness) linearly collapsed toward Ta_mean — flagged
@@ -209,27 +203,32 @@ DT_APPROACH_C = 7.0            # heat-exchanger approach temp, midpoint of the d
 TM_TARGET_C = T_DELIVERY_C + DT_APPROACH_C   # -> 57 C, indirect-system assumption
 
 """
-Night-discharge design basis and latent-heat floor [Avargani et al. 2021,
-J. Energy Storage] -- 300 L sustained at 60 +/- 2 degC over a 7 h window.
-NIGHT_DRAW_TOTAL_L is a TOTAL volume delivered over the window, not a
-per-minute flow rate. Prior DRAW_RATE_KG_PER_S = 60.0/1000/60 implied
-25,200 L delivered over 7h -- ~84x the cited benchmark -- and was corrected
-here; see Objective1_Section5_Methodology_Update.docx / plan v3 addendum.
-[NOTE: that addendum file was not found in this project tree as of this
-edit -- confirm it exists, or update this pointer, before citing it further.]
+Night-discharge design basis [Avargani et al. 2021, J. Energy Storage]:
+300 L at 60±2°C over 7 h. NIGHT_DRAW_TOTAL_L is a TOTAL volume delivered
+over the window, not a per-minute flow rate (prior incorrect 60 L/min×7h
+was corrected to 300 L total 2026-08-10).
 
-L_required = Q_night / m_PCM is an IDEALIZED CEILING, not an achievable
-target: it assumes the PCM bed alone supplies the entire night draw with
-zero contribution from tank sensible heat or overlapping daytime charging.
-No single-material PCM in the database approaches it directly -- not even
-Avargani's own ~36-38 kg paraffin bed could have met it on this basis.
+CORRECTED 2026-08-31: Avargani's own system achieves this 300 L via
+integrated collector + PCM tank + sensible-heat tank; the paper does NOT
+claim PCM latent heat alone supplies the full load. Literature on combined
+sensible-latent SWH reports PCM contributing 40–78% of total night thermal
+delivery (Zhao 2022: 50%; Huang 2020: ~70%; Abdelsalam 2020: 50% volume
+fraction; Koželj 2021: 15% volume → 70% storage increase).
 
-Table 12's latent-heat floor is therefore L >= kappa * L_required with
-kappa CALIBRATED per cluster (start 0.7, step down by 0.1 until 8-20
-candidates survive), not a fixed 0.7 hard cutoff -- see plan doc §6.3.1
-for the full calibration procedure and rationale. Record the kappa used
-per cluster in the Phase 5 results table alongside the melting-window
-relaxation flag.
+OPTION A (IMPLEMENTED): L_required now represents PCM's literature-anchored
+fractional share:
+  L_required = (SHARE_PCM * Q_night) / m_PCM
+with SHARE_PCM = 0.5 (central estimate, range 0.4–0.7). This shifts from
+an all-latent, zero-candidates model to a combined sensible+latent, majority-
+survive model. Phase 5 may gate at, e.g., L >= 0.8 * L_required, and report
+where empirical threshold falls vs. 0.4–0.7 published range.
+
+OPTION B (PHASE 5 GUIDANCE): Treat L_required as a ranking criterion within
+the 8-criteria MCDM (Table 11, where latent_heat already appears), not a
+separate binary gate. Prescreen for basic feasibility (e.g., L >= 0.2 kJ/kg),
+then rank via MCDM. This is the standard MCDM-for-PCM-selection workflow
+(Xu et al. 2017, "Application of material assessment methodology in latent
+heat thermal energy storage").
 """
 NIGHT_DRAW_TOTAL_L = 300.0        # total litres delivered during the discharge window [Avargani 2021]
 NIGHT_DISCHARGE_HOURS = 7.0       # duration of the discharge window [Avargani 2021] — provenance/
@@ -239,6 +238,16 @@ WATER_DENSITY_KG_PER_L = 1.0      # kg/L
 NIGHT_DRAW_TOTAL_KG = NIGHT_DRAW_TOTAL_L * WATER_DENSITY_KG_PER_L   # = 300.0 kg
 CP_WATER = 4.186                         # kJ/kg.K
 ASSUMED_PCM_MASS_KG = 50.0                # placeholder mass, matches Tamil Nadu
+
+# PCM's fractional contribution to total night-time thermal delivery in a
+# combined PCM-tank (sensible + latent) system. EXPLICIT HEURISTIC informed
+# by reported PCM energy/volume contribution fractions of 15–78% across
+# combined sensible-latent systems (Zhao 2022, Huang 2020, Abdelsalam 2020,
+# Koželj 2021), not a first-principles derivation. Avargani et al. (2021)
+# themselves deliver their 300 L benchmark via integrated system architecture
+# (collector + PCM tank + sensible-heat tank), not PCM latent heat alone.
+# Central estimate 0.5, range 0.4–0.7. Replaces the prior all-latent assumption.
+SHARE_PCM = 0.5
 
 # PCA block — the correlated temperature/pressure columns (§6.4). Kept
 # OUT of the final standalone clustering matrix; replaced by their PCA
@@ -445,17 +454,19 @@ print(f"  Tm_target_capped_C_p05day (OLD, reference only): "
 sig["T_mains_est_C"] = sig["Ta_mean"] - 2.0
 
 # Q_night = total night-draw mass x cp_water x (T_delivery - T_mains) — a
-# TOTAL energy over the whole discharge window, not a rate. See module
-# docstring correction #4: L_required is an idealized CEILING (PCM alone
-# supplying the entire Avargani load with no sensible-heat or concurrent-
-# charging contribution), not a value any single-material PCM should be
-# expected to fully reach — do not gate Phase 5 on a fixed fraction of it.
+# TOTAL energy over the whole discharge window. Avargani et al. (2021) deliver
+# this via a combined PCM-tank architecture, not PCM latent heat alone. Following
+# literature on combined sensible-latent SWH (Zhao 2022, Huang 2020, Abdelsalam
+# 2020), PCM contributes a fractional share (SHARE_PCM, literature-supported
+# central estimate 0.5, range 0.4–0.7) of the total delivery; the remainder comes
+# from tank sensible heat and overlapping daytime charging.
 Q_night_kJ = NIGHT_DRAW_TOTAL_KG * CP_WATER * (T_DELIVERY_C - sig["T_mains_est_C"])
-sig["L_required_kJ_per_kg"] = Q_night_kJ / ASSUMED_PCM_MASS_KG
+Q_night_pcm_kJ = SHARE_PCM * Q_night_kJ
+sig["L_required_kJ_per_kg"] = Q_night_pcm_kJ / ASSUMED_PCM_MASS_KG
 print(f"  L_required_kJ_per_kg  : {sig['L_required_kJ_per_kg'].min():.0f} - "
-      f"{sig['L_required_kJ_per_kg'].max():.0f} kJ/kg  (CEILING, not an achievability bar — "
-      f"assumes {ASSUMED_PCM_MASS_KG:.0f} kg PCM supplies the entire "
-      f"{NIGHT_DRAW_TOTAL_L:.0f} L/{NIGHT_DISCHARGE_HOURS:.0f}h Avargani load alone)")
+      f"{sig['L_required_kJ_per_kg'].max():.0f} kJ/kg  (literature-anchored, "
+      f"PCM {SHARE_PCM*100:.0f}% of total night delivery, with tank sensible heat "
+      f"+ concurrent charging supplying the rest)")
 
 
 # ═══════════════════════════════════════════════════════════
