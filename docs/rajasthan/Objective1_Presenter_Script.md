@@ -1,6 +1,10 @@
 # Objective 1 — Presenter Script & Reference Notes
 ### For the "What Was Actually Implemented" → "Physics Validation" slide sequence
 
+⚠️ **CRITICAL (2026-08-31): Pending Phase 3–8 Re-run** — Phase 3's L_required methodology was corrected 2026-08-31. All numerical results in this script (latent-heat requirements, Phase 5 κ calibrations, Phase 6 rankings, Phase 7 Spearman rho values) are from the pre-correction run and are now STALE. **Do not cite or present these numbers as current.** Wait for Phase 3–8 re-run before making any public presentation. Update this document once results are regenerated.
+
+---
+
 > Each section below covers one slide: a spoken narration script (aim for the stated time),
 > the numbers you must not fumble, and likely panel questions with suggested answers.
 > **Critical: Know which state this slide describes.** This pipeline applies to four states in parallel:

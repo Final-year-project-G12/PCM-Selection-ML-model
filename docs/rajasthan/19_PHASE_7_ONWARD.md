@@ -34,7 +34,9 @@ file's own "genuine negative result" band (ρ≤0.4)** — the larger, healthier
 flip the headline finding. The rest of this file's original Spearman-rho table, calibration numbers,
 and Phase 8 description below are now superseded by the fresh numbers in the two new sections
 inserted just above "What remains" — kept below for the historical record of what the pre-expansion
-run looked like, not as the current result.**
+run looked like, not as the current result.
+
+**⚠️ CRITICAL UPDATE (2026-08-31): L_required Methodology Correction — ALL RESULTS ABOVE ARE NOW STALE.** Phase 3's L_required methodology was corrected 2026-08-31 to use SHARE_PCM=0.5 (literature-anchored fractional share) instead of all-latent assumption, halving L_required values. This cascades through Phase 5 (κ calibrations change), Phase 6 (survivor set changes), and Phases 7–8 (validation and rankings change). **All Phases 5–8 must be re-run** against updated signatures before these results are valid. The Spearman-rho values, Cluster-0-insufficiency findings, and recommendation outputs documented above are superseded. See CLAUDE.md §3.1 for full methodology detail.**
 
 ## What actually happened, in order
 

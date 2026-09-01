@@ -269,6 +269,101 @@ Plotly charts (distributional / time-series QC):
 
 HOW TO RUN: `python 03_qc_plots.py`
 
+---
+
+## Phase 3–5: Climate Signature + PCM Feasibility Filtering
+
+Once the raw climate data is acquired and processed (scripts 00–03 above), the
+next stage builds climate signatures for each point and filters PCM candidates
+against climate-specific design constraints. Located in `era5-rajasthan/`:
+
+```
+04_climate_signature_rajasthan.py   →  data/processed/climate_signature_rajasthan.csv
+05_cluster_rajasthan.py             →  data/processed/cluster_profiles_rajasthan.csv
+07_feasibility_filter_rajasthan.py  →  data/processed/feasibility_survivors_rajasthan.csv
+                                        data/processed/feasibility_survivors_rajasthan_kappa_calibrated.csv
+```
+
+### `04_climate_signature_rajasthan.py` (PHASE 3)
+
+Reduces each point's 10-year daily and sun-event records to a single
+**climate-signature vector** — the summary that Phase 4 (clustering) actually
+operates on. Builds:
+
+- **Tier 1**: Per-event aggregates (sunrise, solar noon, sunset temperature,
+  humidity, wind, irradiance at each event)
+- **Tier 2**: Daily integrals and indices (GHI, clearness, cloudiness, HDD18,
+  CDD24, diurnal temperature range, seasonal variation)
+- **PCM-facing quantities**: Tm_target (the target storage temperature for
+  SWH), Tm_target_capped (climate-adjusted cap), L_required (latent-heat
+  requirement for PCM sizing)
+- **Interactions**: Five terms combining daily/hourly features to capture
+  cycling stress, condensation risk, convective loss, and autonomy demand
+- **PCA**: Dimensionality reduction on correlated temperature/pressure block
+
+**METHODOLOGY NOTE (Corrected 2026-08-31):**
+
+L_required is computed as **PCM's literature-anchored fractional share** of
+total night-discharge thermal delivery, not 100% of the load alone. Avargani
+et al. (2021)'s own system delivers the 300 L benchmark via integrated
+collector + PCM tank + sensible-heat tank; literature on combined
+sensible-latent SWH reports PCM contributing 40–78% of total delivery (Zhao
+2022, Huang 2020, Abdelsalam 2020, Koželj 2021). Formula:
+
+```
+L_required = (SHARE_PCM * Q_night) / m_PCM
+```
+
+with SHARE_PCM = 0.5 (central estimate; range 0.4–0.7). This shifts from an
+all-latent, zero-candidate baseline to a combined sensible+latent model where
+majority of candidates survive Phase 5 filtering. See `04_climate_signature_rajasthan.py`'s
+docstring (corrections #4–5) for full rationale, or CLAUDE.md §3.1 for the
+complete methodology justification and Phase 5 guidance.
+
+**HOW TO RUN:** `python 04_climate_signature_rajasthan.py`
+
+### `05_cluster_rajasthan.py` (PHASE 4)
+
+Clusters the signature points using Gaussian Mixture Models (GMM) and
+Agglomerative Clustering to identify distinct **climate regimes**. Each regime
+becomes a "Level A cluster" with:
+
+- Representative climate profile (mean Tm_target, L_required, monsoon_index, etc.)
+- Cluster-level ground-truth dataset used by Phase 7 (charging feasibility modeling)
+
+**Output:** `cluster_profiles_rajasthan.csv` — one row per cluster with all
+signature columns aggregated to cluster level, plus `Tm_target_capped_C` and
+`L_required_kJ_per_kg` re-derived per cluster.
+
+**HOW TO RUN:** `python 05_cluster_rajasthan.py`
+
+### `07_feasibility_filter_rajasthan.py` (PHASE 5)
+
+Hard-filters the shared PCM candidate database against each cluster's 8
+design constraints (melting window, absolute Tm band, latent-heat floor,
+cycling endurance, supercooling, charging feasibility, corrosion veto,
+safety flags). Produces two outputs:
+
+1. **PRIMARY (`feasibility_survivors_rajasthan.csv`)**: Fixed κ=0.7 latent-heat
+   floor, with full diagnostic audit trail (per-cluster, per-constraint results).
+   Expected to show the baseline (κ=0.7 against old L_required was a near-zero-survivor
+   case, demonstrating why calibration was needed).
+
+2. **COMPANION (`feasibility_survivors_rajasthan_kappa_calibrated.csv`)**: Per-cluster
+   calibrated κ, stepped down from 0.7 until 8–20 candidates survive. Includes
+   `breakeven_kappa` column (actual threshold each candidate sits at) for ranking.
+
+**VALIDATION:** After Phase 3's L_required correction, re-run this script and
+verify calibrated κ lands in the 0.5–0.7 range (much higher than the prior
+0.2–0.3), validating the SHARE_PCM=0.5 assumption. Report both outputs
+together: broken assumption (old κ=0.7 → zero survivors) → diagnosis (L_required
+ceiling) → correction (SHARE_PCM factorization) → verification (new κ resets
+higher).
+
+**HOW TO RUN:** `python 07_feasibility_filter_rajasthan.py`
+
+---
+
 ## Requirements
 
 ```

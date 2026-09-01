@@ -10,6 +10,11 @@ for the exact formulas. (This mapping itself is unaffected by the 2026-08-11 cha
 pipeline — see `05_PHASE_3_AUDIT.md` for the two new signature-level QC plots and the corrected
 Phase 2.5 input file.)
 
+⚠️ **NOTE (2026-08-31): L_required Methodology Correction** — The L_required feature discussed below
+now uses SHARE_PCM=0.5 (literature-anchored fractional share) instead of the prior all-latent assumption,
+halving its computed values. See `05_PHASE_3_AUDIT.md` for the correction detail. The feature-to-PCM-property
+*mapping* (what L_required constrains) is unchanged; only its numeric basis has shifted.
+
 ## Feature → thermal behavior → PCM requirement → PCM property map
 
 ```

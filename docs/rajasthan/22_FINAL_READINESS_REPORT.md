@@ -17,6 +17,8 @@ The blocking item has moved from "expand the database" to "regenerate
 `PCM_Properties_cleaned_mice_pmm_detailed.csv` (currently missing from disk) and re-run Phases 5–8" —
 see "Prerequisites for a FINAL (non-provisional) result" and "Recommended next implementation" below.
 
+⚠️ **CRITICAL UPDATE (2026-08-31): L_required Methodology Correction** — Phase 3's L_required methodology was corrected 2026-08-31, halving L_required values (600–650 kJ/kg → 300–325 kJ/kg) and cascading through Phases 5–8. **All results documented in this report (κ calibrations, Spearman rho values, recommendations) are now STALE.** Phases 5–8 must be re-run against updated signatures. This supersedes the "regenerate preprocessing output and re-run" item above; the NEWER prerequisite is "re-run Phases 3 (climate signature only), 4, 5–8 in sequence." See CLAUDE.md §3.1 and `04_climate_signature_rajasthan.py` docstring for full methodology detail.
+
 ## Completed phases
 
 Phase 1 (Data Collection) — complete, 320/320 points, 240/240 ERA5 files, 3200/3200 POWER files.

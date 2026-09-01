@@ -1,5 +1,9 @@
 # 00 — Master Overview: ERA5 Rajasthan Climate → PCM Selection Pipeline
 
+⚠️ **CRITICAL UPDATE (2026-08-31): L_required Methodology Correction** — Phase 3's methodology was corrected 2026-08-31, halving L_required values and cascading through Phases 4–8. All outputs from Phases 5–8 documented in this overview are now STALE and must be regenerated. Documented results (κ calibrations, Spearman rho validation values, rankings) below are superseded. See CLAUDE.md §3.1 and `04_climate_signature_rajasthan.py` docstring for full detail.
+
+---
+
 ## Project objective
 
 Final-year B.Tech CSE project (Group 12, Amrita School of Engineering, Guide: Dr. T. Deepika):
