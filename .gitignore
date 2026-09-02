@@ -68,5 +68,42 @@ era5-tamilnadu-pipeline/data/plots/timeseries/B5_all_222_locations_GHI.html
 # Large preprocessed model artifacts
 *.pkl
 
-# ── PCM_data — raw downloads (keep small processed CSVs tracked) ──────
+# ── PCM_data — raw downloads ──────────────────────────────────────────
 PCM_data/data/raw/
+PCM_data/pcm_cleaned_new.csv
+
+# ── ERA5 Assam pipeline — large / regenerated data ────────────────────
+# Downloaded raw ERA5 / NASA POWER files
+era5-assam/data/raw/
+
+# Combined points CSV (623 MB) and all other processed CSVs/outputs
+era5-assam/data/processed/*.csv
+era5-assam/data/processed/by_location/
+era5-assam/data/processed/grid/
+era5-assam/data/processed/clustering/*.csv
+era5-assam/data/processed/clustering/*.joblib
+era5-assam/data/processed/pcm/
+
+# Preprocessed parquet files and scalers
+era5-assam/data/preprocessed/parquet/
+era5-assam/data/preprocessed/*.csv
+era5-assam/data/preprocessed/*.pkl
+era5-assam/data/preprocessed/*.joblib
+
+# Generated plot outputs (regenerate by running 05_plot_assam.py)
+era5-assam/data/plots/
+
+# Suntimes / daily aggregates (large intermediate files)
+era5-assam/data/processed/suntimes.csv
+era5-assam/data/processed/daily_aggregates_assam.csv
+
+# ── ERA5 Rajasthan pipeline — large data ──────────────────────────────
+era5-rajasthan/data/raw/
+era5-rajasthan/data/processed/*.csv
+era5-rajasthan/data/preprocessed/
+era5-rajasthan/data/plots/
+
+# ── Global safety catches ──────────────────────────────────────────────
+# Block accidental commit of large binary / model artifacts
+*.joblib
+*.parquet
