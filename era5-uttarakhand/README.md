@@ -445,20 +445,18 @@ reuse that output directly instead of re-running it here.
 
 ### `06_build_pcm_database.py`
 Phase 5 prep. Builds the candidate PCM database this pipeline screens
-against — sources from `PCM_data`'s cleaned manufacturer rows (18, fully
-populated via traceable imputation, not blindly zeroed) plus ~7 literature-
-added rows, ~25 candidates total in the corrected 42-70°C melting band.
+against — sourced from `PCM_data`'s MICE+RF+PMM-cleaned CSV, which now
+contains **55 rows** (31 manufacturer + 24 literature) spanning 6 brands
+(Rubitherm, Pluss, PCM Products Ltd., PureTemp, CrodaTherm, and literature
+n-alkanes/fatty acids/composites), all fully imputed, covering the 42-70 °C
+melting band.
 
 - **Expects `PCM_data/` as a sibling folder** of this pipeline
   (`INPUT_CSV = PROCESSED_DIR.parent.parent / "PCM_data" / "data" / ...`)
   — either place it one level above this folder, or edit `INPUT_CSV` at
   the top of the script to point wherever you put it.
-- Output: `data/processed/pcm/pcm_candidates.csv`
-- **Known coverage gap, stated in its own docstring**: ~25 rows is short
-  of the 40-60 target; specific missing rows (RT58/RT60/RT62HC, PLUSS
-  OM55/OM65, a properly-sourced salt hydrate) are listed there. The
-  pipeline is correct either way — this is a coverage question, not a
-  correctness one.
+- Output: `data/processed/pcm/pcm_database_uttarakhand.csv`
+- The 55-row set meets the 40-60 candidate target from the plan doc.
 
 ### `07b_charging_feasibility.py`
 Optional — run **before** `07_feasibility_filter.py` if you want its
@@ -564,10 +562,10 @@ random-forest imputation).
   "the same sun event, 7 days earlier," not "7 hours earlier." This is
   called out at each relevant step in that script's own log output so it's
   traceable in a methodology write-up.
-- **PCM database coverage**: ~25 candidates against a 40-60 target (see
-  `06`'s section above) — a coverage gap, not a correctness issue.
-  Corrosion veto and 5th-percentile-day charging feasibility aren't fully
-  wired into `07` yet either (see `07`'s section above).
+- **PCM database coverage**: 55 rows (31 manufacturer + 24 literature)
+  across 6 brands, meeting the 40-60 candidate target (see `06`'s section
+  above). Corrosion veto and 5th-percentile-day charging feasibility aren't
+  fully wired into `07` yet either (see `07`'s section above).
 - **Phase 7 (physics-based validation) has no script here.** A minimal
   single-PCM grey-box lumped-enthalpy-tank simulation per cluster,
   compared against published annual-solar-fraction benchmarks (54-84%),
