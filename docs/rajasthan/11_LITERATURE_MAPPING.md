@@ -1,5 +1,12 @@
 # 17 — Literature Mapping
 
+**Documentation note (2026-09-02):** Standalone concept files `10_TEMPORAL_PROCESSING.md` and
+`11_SPATIAL_PROCESSING.md` have been consolidated into `03_PHASE_1_AUDIT.md` and
+`04_PHASE_2_AUDIT.md` respectively, with full justification for each method. The research gap
+mapping has been moved into `00_MASTER_OVERVIEW.md` under the new "Research gaps addressed
+(N1–N6 novelty mapping)" section. This file (`17_LITERATURE_MAPPING.md`) remains the authoritative
+reference for all methodology-component-to-source mappings.
+
 ## Method
 
 Sources checked, in priority order: (1) `PCM-Selection-ML-model/Sources/` — 21 full paper summaries

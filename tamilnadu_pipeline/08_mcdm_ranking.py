@@ -54,8 +54,8 @@ N_MONTE_CARLO_DRAWS = 5000 by default (matches the plan; reduce if you
 need faster iteration while developing, but restore 5000 for the number
 you actually report). Per draw:
   - Weights perturbed via a Dirichlet draw centered on the nominal
-    entropy+AHP blended weight vector (concentration below is a stated
-    assumption, not measured — documented).
+    entropy+literature-prior blended weight vector (concentration below is a
+    stated assumption, not measured — documented).
   - PCM properties perturbed: Tm +/- Gaussian(0, 1K), latent heat and
     thermal conductivity +/- Gaussian scaled to 5%/10% relative std (per
     plan v3.0 Section 9.6's stated uncertainty bands).
@@ -74,6 +74,17 @@ OUTPUT : data/processed/pcm/mcdm_topk_by_cluster.csv
 
 HOW TO RUN:
   python 08_mcdm_ranking.py
+
+WEIGHTING METHODOLOGY (IMPORTANT CLARIFICATION)
+-------------------------------------------------
+Criterion weights combine entropy (data-derived from this cluster's PCM
+candidates) with literature-informed prior weights from the project plan's
+Table 13 (plan v3.0 Section 9.3), not a formally elicited AHP pairwise
+judgment matrix. AHP_PAIRWISE_MATRIX remains a TODO stub — when/if pairwise
+expert elicitation is performed, replace the LITERATURE_PRIOR constants
+below with ahp_weights_from_pairwise() output. Until then, this blended
+approach (λ=0.5 entropy, 0.5 literature-informed) is the current standard
+across all three regional pipelines.
 """
 
 import warnings
@@ -91,7 +102,7 @@ OUT_FULL = PROCESSED_DIR / "pcm" / "mcdm_full_scores_by_cluster.csv"
 OUT_MC = PROCESSED_DIR / "pcm" / "monte_carlo_stability.csv"
 
 SIGMA_TM = 4.0
-ENTROPY_AHP_LAMBDA = 0.5
+ENTROPY_PRIOR_LAMBDA = 0.5
 GRA_ZETA = 0.5
 PROMETHEE_Q, PROMETHEE_P = 0.10, 0.30    # indifference/preference, fraction of [0,1] range
 VIKOR_V = 0.5
@@ -117,7 +128,7 @@ MC_RANDOM_SEED = 42
 # prints either way).
 USE_CLIMATE_RELATIVE_LATENT_HEAT = True
 
-AHP_PRIOR_BASE = {
+LITERATURE_PRIOR_BASE = {
     "f_Tm": 0.24 / 0.80,
     "latent_heat_kJ_kg": 0.20 / 0.80,
     "rho_H_MJ_m3": 0.12 / 0.80,
@@ -126,9 +137,9 @@ AHP_PRIOR_BASE = {
 }
 LATENT_CRITERION_NAME = ("latent_heat_margin_ratio" if USE_CLIMATE_RELATIVE_LATENT_HEAT
                           else "latent_heat_kJ_kg")
-AHP_PRIOR = {(LATENT_CRITERION_NAME if k == "latent_heat_kJ_kg" else k): v
-             for k, v in AHP_PRIOR_BASE.items()}
-CRITERIA = list(AHP_PRIOR.keys())
+LITERATURE_PRIOR = {(LATENT_CRITERION_NAME if k == "latent_heat_kJ_kg" else k): v
+                    for k, v in LITERATURE_PRIOR_BASE.items()}
+CRITERIA = list(LITERATURE_PRIOR.keys())
 
 
 # ═══════════════════════════════════════════════════════════
@@ -339,9 +350,9 @@ def rank_cluster(df):
 
     M = minmax_normalize(df, CRITERIA)
     w_entropy = entropy_weights(M)
-    w_ahp = np.array([AHP_PRIOR[c] for c in CRITERIA])
-    w_ahp = w_ahp / w_ahp.sum()
-    w_final = ENTROPY_AHP_LAMBDA * w_entropy + (1 - ENTROPY_AHP_LAMBDA) * w_ahp
+    w_prior = np.array([LITERATURE_PRIOR[c] for c in CRITERIA])
+    w_prior = w_prior / w_prior.sum()
+    w_final = ENTROPY_PRIOR_LAMBDA * w_entropy + (1 - ENTROPY_PRIOR_LAMBDA) * w_prior
     w_final = w_final / w_final.sum()
 
     df["topsis_score"] = topsis(M, w_final)

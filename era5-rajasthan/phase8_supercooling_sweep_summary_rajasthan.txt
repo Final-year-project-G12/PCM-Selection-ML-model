@@ -1,0 +1,135 @@
+﻿================================================================================
+  PHASE 8 SUPERCOOLING PENALTY SENSITIVITY SWEEP - FINAL RESULTS & ANALYSIS
+  Rajasthan | 2026-09-01 (CORRECTED - using supercooling_K, not Tm_nucleation)
+================================================================================
+
+CRITICAL CORRECTION (Before/After)
+──────────────────────────────────────────────────────────────────────────────
+BEFORE: Phase 8 used Tm_nucleation (all survivors = 0.0 K) → penalty inert
+AFTER:  Phase 8 now uses supercooling_K = Tm_C - Tm_freezing_C → penalty ACTIVE
+
+supercooling_K across survivors (N=18 unique PCMs):
+  Mean: 1.27 K  |  Std: 1.29 K  |  Min: -0.50 K  |  Max: 3.50 K
+  Real variance exists. Penalty should now have measurable effect.
+
+CORRECTED SWEEP RESULTS (Spearman rho)
+──────────────────────────────────────────────────────────────────────────────
+
+               k=0.0      k=0.1      k=0.2      k=0.3      Trend
+Cluster 0:   -0.385    -0.385    -0.385    -0.385     NO CHANGE
+Cluster 1:   +0.125    +0.059    +0.059    +0.077     WORSENS then improves
+Cluster 2:   -0.097    -0.118    -0.136    -0.136     WORSENS
+
+KEY FINDINGS
+──────────────────────────────────────────────────────────────────────────────
+
+1. CLUSTER 0 (No supercooling effect):
+   - rho constant at -0.385 across all k
+   - Interpretation: Cluster 0's candidates have low/uniform supercooling_K
+     so the penalty has negligible discriminative effect
+
+2. CLUSTER 1 (Penalty REDUCES positive agreement):
+   - Baseline (k=0.0): rho = +0.125 (weak positive agreement)
+   - With penalty (k=0.1-0.3): rho = +0.059 to +0.077 (worse, near zero)
+   - Net effect: Penalty DEGRADES the physics/MCDM alignment
+   - The MCDM ranking agrees ~12.5% with physics; penalty reduces that to 6-8%
+
+3. CLUSTER 2 (Penalty WORSENS negative agreement):
+   - Baseline (k=0.0): rho = -0.097 (weak negative agreement)
+   - With penalty (k=0.1+): rho = -0.118 to -0.136 (worse, more negative)
+   - Net effect: Penalty INCREASES the physics/MCDM disagreement
+   - The MCDM ranking disagreed ~9.7% with physics; penalty increases that to 12-14%
+
+CALIBRATION STATUS: All k values PASS
+──────────────────────────────────────────────────────────────────────────────
+✓ Energy conservation: PASS (residual 1.638e-13, all k)
+✓ Draw-profile integration: PASS (300.00 kg/day, all k)
+✓ Calibration: 100% medoids in 54-84% band at all k
+
+The penalty implementation is correct and does not break the model.
+
+HONEST INTERPRETATION: NEGATIVE RESULT (PENALTY MAKES THINGS WORSE)
+──────────────────────────────────────────────────────────────────────────────
+
+Finding: Applying the supercooling penalty to the physics model REDUCES
+physics/MCDM agreement in Clusters 1-2, making the ranking WORSE, not better.
+
+Possible explanations:
+
+1. PENALTY FORMULATION IS INCORRECT:
+   The assumed mechanism (reduced h_p in cooled state) may not capture
+   supercooling's real effect. Supercooling in real PCMs:
+   - Delays solidification (yes, modeled via reduced h_p)
+   - But may INCREASE thermal stratification in the tank (not modeled)
+   - May affect charge/discharge hysteresis differently than assumed
+   - The grey-box model's 2-node architecture may be too coarse to
+     accurately represent supercooling dynamics
+
+2. SUPERCOOLING IS NOT THE LIMITING FACTOR:
+   Phase 6 assigned supercooling 48-64% weight in the MCDM ranking.
+   Phase 8 results suggest this weight is OVER-ESTIMATED relative to
+   supercooling's actual impact on solar fraction in this system.
+   Other criteria (Tm_fitness, latent heat, thermal conductivity) may
+   dominate the observed solar-fraction variation more than MCDM assumes.
+
+3. SYSTEM DYNAMICS MASK THE PENALTY:
+   At PCM_MASS_KG=50 kg (pipeline-consistent), the 300 kg water tank's
+   sensible thermal mass dominates system behavior (noted in Phase 7
+   calibration). A 3.5 K supercooling effect on a 50 kg PCM bed may be
+   too small to move the needle on annual solar fraction when the tank's
+   own 300 kg sensible heat swamps the dynamics.
+
+IMPLICATION FOR PHASE 7 INTERPRETATION
+──────────────────────────────────────────────────────────────────────────────
+
+Phase 7's negative rho (Clusters 0, 2) and weak positive rho (Cluster 1)
+should NOT be interpreted as "the MCDM supercooling weight is correct but
+the physics model doesn't simulate it."
+
+Instead: The results suggest that supercooling's real-world effect on
+system performance may be SMALLER than the MCDM weighting (48-64%)
+implies, or that the assumed penalty mechanism does not accurately
+capture supercooling dynamics in this tank/PCM configuration.
+
+FUTURE WORK
+──────────────────────────────────────────────────────────────────────────────
+
+1. REVISIT THE PENALTY MECHANISM:
+   - Consider alternative formulations: nucleation-rate kinetics, 
+     latent-heat release delay, hysteresis loops
+   - Test against empirical PCM discharge curves from literature
+   - May require more sophisticated modeling than h_p reduction alone
+
+2. INCREASE PCM MASS:
+   - Re-run sensitivity at PCM_MASS_KG = 100, 200 kg (from Phase 7 sweep)
+   - Test whether supercooling effect becomes visible at larger PCM scale
+
+3. RECALIBRATE MCDM WEIGHTS:
+   - Phase 6 may have over-weighted supercooling relative to its
+     observed effect on thermal performance
+   - Suggest re-running Phase 5/6 with reduced supercooling entropy weight
+
+4. VALIDATE AGAINST EXPERIMENTAL DATA:
+   - Collect real PCM-SWH discharge curves for same candidates
+   - Compare measured vs simulated solar fractions with/without penalty
+   - Would reveal whether the penalty captures real physics or is misguided
+
+CONCLUSION
+──────────────────────────────────────────────────────────────────────────────
+
+✓ Implementation: Correct. Now uses right field (supercooling_K), properly
+  toggleable, energy-conserving.
+
+✗ Effect on rankings: NEGATIVE. Penalty WORSENS physics/MCDM agreement in
+  Clusters 1-2 instead of improving it.
+
+⊘ Root cause: Either penalty formulation is incorrect, or supercooling's
+  real effect is smaller/different than MCDM weighting assumes.
+
+This is an HONEST NEGATIVE RESULT that reveals a potential mismatch between
+MCDM supercooling weighting (48-64%) and its actual impact on observable
+thermal performance. Rather than declaring success, we report this finding
+clearly as a diagnostic for future refinement of either the penalty
+mechanism or the MCDM criterion weights.
+
+================================================================================

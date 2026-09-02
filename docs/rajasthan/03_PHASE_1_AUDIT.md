@@ -82,6 +82,89 @@ solar-thermal application specifically because the physically meaningful instant
 starts (sunrise), peak charging (noon), and when discharge begins (sunset) — are what the downstream
 Tier-1 climate signature and Tm_target/L_required derivations are actually built from.
 
+## Spatial Processing Justification
+
+**ERA5 grid alignment (0.25° to ERA5's own grid origin):**
+Each population-weighted sampling point's cell center is deliberately aligned to an ERA5 grid node.
+This 1:1 population-to-ERA5 mapping eliminates grid-misalignment error and justifies the
+nearest-neighbor (not interpolated) extraction method used downstream in Phase 2.
+
+**Rajasthan boundary & population aggregation:**
+GADM v4.1 admin-level-1 boundary provides the state border; WorldPop 100 m raster supplies
+per-pixel population. The 87.5% population-coverage target ensures results are defensible for
+where people actually live, not over-weighted toward sparse/desert regions. This choice directly
+supports the downstream deliverable: regime-level PCM recommendations, not point-exact microclimate
+models.
+
+**Nearest-neighbor grid extraction:**
+No interpolation is used when extracting ERA5 or elevation values. Each point inherits its
+containing 0.25° cell's value exactly. This is correct for the population-aligned, regular-grid
+design, though it means nearby points in the same cell receive identical ERA5 readings — an expected,
+harmless consequence of the sampling design.
+
+**Elevation handling:**
+ERA5's geopotential gives grid-cell-mean elevation, not point-exact local elevation. This is
+acceptable for Rajasthan's comparatively flat terrain (mostly 200–500 m), though it would matter more
+for high-relief states. The pipeline does not attempt to retroactively reweight the population grid
+by elevation; elevation is used only downstream for solar-position calculations in Phase 2.
+
+**Why this spatial approach is appropriate:**
+The goal is regime-level PCM recommendations across representative, population-weighted points, not
+microclimate modeling of every location. The spatial design is internally consistent and
+correctly-reasoned for this stated purpose.
+
+## Temporal Processing Justification (Dates, Times, Sunrise/Sunset)
+
+**UTC as sole time reference:**
+All timestamps are UTC (`time_utc` in `suntimes.csv`, ERA5's native timezone, NASA POWER requested
+with `time-standard=UTC`). No IST (India Standard Time, UTC+5:30) conversion is applied upstream.
+This is reasonable (UTC avoids daylight-saving/timezone-drift issues) and consistent internally, but
+any figure intended for a general audience ("sunrise at 6 AM") needs explicit UTC→IST conversion at
+presentation time, not before.
+
+**Sunrise/noon/sunset via pvlib SPA:**
+`pvlib.location.Location.get_sun_rise_set_transit(dates, method="spa")` implements Reda & Andreas
+(2004) Solar Position Algorithm. No manual equation-of-time code. The `altitude=0` hardcoding for
+this specific call (minor inconsistency with elevation-aware geometry later; negligible impact on
+sunrise/sunset clock time, though it does matter for solar position/irradiance downstream).
+
+**Cross-midnight UTC handling (circular-window algorithm):**
+Real, documented case: an eastern Rajasthan point's summer sunrise can land at 23:55 UTC of the
+*previous* UTC calendar date (e.g. Dholpur, 2020-06-21 sunrise at 2020-06-20 23:55:54 UTC). The
+`circular_hour_window()` algorithm in `01_download_era5_rajasthan.py` correctly handles this by
+finding the largest unobserved circular gap in the sorted hour set, taking the rest as the "arc,"
+then padding and wrapping with modulo-24 arithmetic. This is a correct, general solution to a
+genuine, common edge case, not a hack.
+
+**Leap years and date range:**
+2016-01-01 through 2025-12-31 inclusive = 3653 days (correctly includes leap years 2016, 2020,
+2024: 10×365 + 3 = 3653). Ground-truthed directly: 320 points × 3653 days × 3 events = 3,506,880
+rows, exact match.
+
+**Nearest-in-time matching (3-hour rejection window):**
+When pairing a sun-event instant to an ERA5 or POWER timestamp, a match farther than 3 hours is
+rejected, turning missing/sparse readings into `NaN` rather than wrong pairings. Applied
+independently to both sources — no requirement that ERA5 and POWER share the same matched timestamp.
+This is a genuine gap worth noting: the actual matched times are never recorded (only the requested
+`time_utc` appears in output), so rejection-window diagnostics are difficult without adding output
+columns.
+
+**Sun-event-aligned vs. fixed-clock-hour sampling:**
+Sampling at astronomically-computed sunrise/noon/sunset (not fixed 02:00/08:00/14:00 UTC) ensures
+the sampled instants are physically meaningful for solar-thermal systems across all 320 points, all
+seasons, all 10 years. A fixed-clock-hour scheme would sample "sunrise" at genuinely different solar
+elevation angles depending on season/longitude, contaminating sunrise-indexed climate indices with
+seasonal/spatial artifacts unrelated to actual climate. Sun-event alignment is essential for the
+downstream climate-signature construction's validity.
+
+**Seasonal definitions:**
+`02_combine_rajasthan.py`'s SEASON_MAP (Winter=Dec-Feb, Summer=Mar-May, Monsoon=Jun-Aug,
+Retreat=Sep-Nov) is currently inconsistent with `02b_build_daily_aggregates.py`'s monsoon window
+(Jun-Sep). `signature_lib.py` matches `02_combine_rajasthan.py` by design (Jun-Aug), so the *season
+column* used in Tier-1 clustering is consistent, but the *monsoon_index* feature is computed against
+Jun-Sep. Reconcile before final write-up (either both Jun-Aug or both Jun-Sep, justified against IMD
+convention, which typically treats Jun-Sep for Rajasthan).
+
 ## Literature support
 
 Reda & Andreas (2004), "Solar position algorithm for solar radiation applications," *Solar Energy*

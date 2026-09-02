@@ -148,7 +148,7 @@ def log_header(title):
 # DYNAMIC IMPORT — 08_mcdm_ranking_rajasthan.py's filename starts with a
 # digit, so it cannot be `import`ed normally; loaded via importlib instead.
 # Its module-level code (path constants, ensure_data_dirs(), the
-# AHP_WEIGHTS_TABLE13 sum-to-1 assert) runs harmlessly on load; main() is
+# LITERATURE_WEIGHTS_TABLE13 sum-to-1 assert) runs harmlessly on load; main() is
 # NEVER called (guarded by `if __name__ == "__main__":` in that file) —
 # only its already-defined weight/matrix functions are reused below.
 # ═══════════════════════════════════════════════════════════
@@ -432,7 +432,7 @@ def main():
                       ignore_index=True, sort=False)
     survivors_rich_all = mcdm_survivors.merge(rich, on=["pcm_id", "family"], how="left",
                                                suffixes=("", "_rich"))
-    ahp_w = mcdm_mod.AHP_WEIGHTS_TABLE13
+    prior_w = mcdm_mod.LITERATURE_WEIGHTS_TABLE13
     hsi_min, hsi_max = profiles["HSI_sunrise"].min(), profiles["HSI_sunrise"].max()
 
     mean_max_membership = assign.groupby("cluster_id")["max_membership_prob"].mean()
@@ -486,10 +486,10 @@ def main():
 
         # --- criterion-contribution decomposition for THIS cluster's pool ---
         cand_df = survivors_rich_all[survivors_rich_all["cluster_id"] == cid].reset_index(drop=True)
-        cluster_ahp_w = mcdm_mod.reweight_corrosion_for_cluster(ahp_w, prof.HSI_sunrise, hsi_min, hsi_max)
+        cluster_prior_w = mcdm_mod.reweight_corrosion_for_cluster(prior_w, prof.HSI_sunrise, hsi_min, hsi_max)
         matrix_for_entropy = mcdm_mod.build_criteria_matrix(cand_df, tm_target)
         ent_w = mcdm_mod.entropy_weights(matrix_for_entropy)
-        blend_w = mcdm_mod.blended_weights(ent_w, cluster_ahp_w)
+        blend_w = mcdm_mod.blended_weights(ent_w, cluster_prior_w)
         contributions = compute_criterion_contributions(mcdm_mod, cand_df, blend_w, tm_target)
 
         top3_rows = []
