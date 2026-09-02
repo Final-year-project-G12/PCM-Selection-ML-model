@@ -10,7 +10,7 @@ The methodological choices in the Tamil Nadu implementation are mapped to peer-r
 | **Bias Correction** | Per-season empirical quantile mapping | Mansouri et al. (2025) | `Mansouri2025MultimodalRenewableForecasting_summary.md` | Medium |
 | **SWH Discomfort/HSI** | Thom's Discomfort Index | Thom (1959) | — | Strong |
 | **Hot Water Demand** | 300 L daily draw at 50°C | Avargani et al. (2021) | — | Medium |
-| **PCM Database** | 25 candidates (Rubitherm + literature) | Singh et al. (2025); Martinez (2025) | `Singh2025PCM_SWH_ComprehensiveReview_summary.md`, `Martinez2025PCM_Industrial_TES_summary.md` | Strong |
+| **PCM Database** | 62 candidates: 55 manufacturer-derived MICE+RF+PMM-completed records plus 7 literature records | Singh et al. (2025); Martinez (2025) | `Singh2025PCM_SWH_ComprehensiveReview_summary.md`, `Martinez2025PCM_Industrial_TES_summary.md` | Strong |
 | **Climate Sizing** | Tm_target worst-month ratio | Durin et al. (2018) | — | Strong |
 | **GMM Regime Discovery** | K=5, diagonal covariance | Liu et al. (2025) | `Liu2025AI_PCM_TES_Prediction_Optimization_summary.md` | Medium |
 | **MCDM Stack** | TOPSIS, GRA, PROMETHEE II, VIKOR + Borda | Chen et al. (2025) | `Chen2025TaguchiGRA_PCM_Nanofluid_SWH_summary.md` | Strong |

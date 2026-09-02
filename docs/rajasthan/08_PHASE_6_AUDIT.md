@@ -13,6 +13,10 @@ via two independent consensus mechanisms, and quantify ranking stability via Mon
 final recommendation is not an artifact of any single method's assumptions or of fixed-point
 property values.
 
+## CRITICAL UPDATE: L_required Methodology Correction (2026-08-31)
+
+**All Phase 6 outputs from before this date are now STALE.** Phase 3's L_required methodology was corrected 2026-08-31 (SHARE_PCM=0.5), which halves L_required and cascades through Phase 5's feasibility filtering (changing κ calibrations) and into this script's survivor input set. The survivor set fed to Phase 6 is now different; ranking results will change. **Phase 5 and 6 must both be re-run** against updated signatures before these results are valid. See CLAUDE.md §3.1 for full detail.
+
 ## Inputs
 
 `feasibility_survivors_rajasthan_kappa_calibrated.csv` (or equivalent survivor set),

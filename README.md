@@ -1,6 +1,8 @@
 # ERA5 Tamil Nadu Climate Data Pipeline
 ### Complete hourly climate & solar resource dataset for all of Tamil Nadu (2024–2025)
 
+**Part of a four-state parallel study:** This pipeline applies the same 8-phase methodology across Rajasthan (320 points, 2016–2025 — most complete), Tamil Nadu (222 locations, 2024–2025 — in progress), Uttarakhand, and Assam. Each state has its own parameters, data sources, and results — do not mix numbers across states.
+
 ---
 
 ## What This Project Does — Big Picture

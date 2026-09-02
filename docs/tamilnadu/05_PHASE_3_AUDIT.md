@@ -16,10 +16,12 @@ Collapse each point's 10-year hourly/daily weather into a single climate signatu
 5. **PCA Reduction**: 4 components on temperature/climate block (>95% variance).
 6. **Standardization**: z-scoring for GMM clustering matrix.
 
-## Corrected Finding (v3.1 — 1000× Flow Rate Bug)
+## Current Finding
 - **Was**: `DRAW_RATE_KG_PER_S = 60.0 / 1000 / 60` → 0.001 kg/s → `L_required` ≈ 52 kJ/kg (latent-heat filter bypassed).
-- **Fixed**: `DRAW_VOLUME_L = 300`, `DRAW_MASS_KG = 300 kg` → `L_required` ≈ 2500 kJ/kg (realistic domestic scale).
-- **Also fixed in**: `11_level_b_seasonal_analysis.py` (seasonal L_required uses same formula).
+- **Fixed**: `DRAW_VOLUME_L = 300`, `DRAW_MASS_KG = 300 kg` (realistic domestic scale).
+- **Current model**: `SHARE_PCM = 0.5`; PCM supplies half of the delivery energy while sensible storage and concurrent charging supply the remainder.
+- **Current generated result**: cluster `L_required` values are approximately 301-326 kJ/kg. These are run-specific outputs, not a universal constant.
+- **Also applied in**: `11_level_b_seasonal_analysis.py` (seasonal `L_required` uses the same share model).
 
 ## Status
 **COMPLETE (v3.1 fixes applied — re-run `04b` for updated signatures)**

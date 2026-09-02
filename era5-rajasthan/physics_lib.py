@@ -347,6 +347,16 @@ ENERGY_CONSERVATION_RTOL = 1e-6
 
 FILL_VALUE = -999.0   # NASA POWER's documented missing-data sentinel
 
+# ─── SUPERCOOLING PENALTY (Phase 8, sensitivity sweep) ────────────────────
+# When Tm_nucleation < Tp < Tm (supercooled liquid state), reduce effective h_p
+# proportionally to the degree of subcooling:
+#   h_p_effective = h_p × (1 - k × ΔT_subcooling / 10)
+# where ΔT_subcooling = Tm_freezing - Tm_nucleation (in K),
+# k is the proportionality factor (dimensionless), and 10 K is the reference scale.
+# Clamped to h_p_effective ≥ 0.3 × h_p (no reduction beyond 70%).
+# Set SUPERCOOLING_PENALTY_K = 0.0 to disable (current Phase 7 baseline).
+SUPERCOOLING_PENALTY_K = 0.0  # Controlled externally for sensitivity sweep
+
 
 def hourly_draw_fractions():
     """24-length array, fraction of DRAW_TOTAL_KG_PER_DAY drawn in each
@@ -477,6 +487,11 @@ def simulate_pcm_swh_year(hourly_df, pcm_row, draw_fracs=None, dt=3600.0,
     module docstring) density_solid_kg_m3, Cp_solid_JkgK, Cp_liquid_JkgK,
     TC_solid_WmK.
 
+    If supercooling penalty is enabled (SUPERCOOLING_PENALTY_K > 0), pcm_row
+    should also provide Tm_nucleation; if absent, it defaults to Tm_C (no
+    subcooling). The penalty reduces h_p in the supercooled range
+    (Tm_nucleation < Tp < Tm) proportionally to the subcooling degree.
+
     Returns a dict of annual metrics (solar fraction, hours meeting
     delivery temp, mean/min/max melt fraction, complete cycles) plus,
     if track_energy_balance=True, the max per-step relative energy-
@@ -496,6 +511,14 @@ def simulate_pcm_swh_year(hourly_df, pcm_row, draw_fracs=None, dt=3600.0,
     Cp_l = float(Cp_l) if Cp_l == Cp_l else DEFAULT_CP_LIQUID_JKGK
     tc_solid = pcm_row.get("TC_solid_WmK", np.nan)
     tc_solid = float(tc_solid) if tc_solid == tc_solid else DEFAULT_TC_SOLID_WMK
+
+    # Extract supercooling degree for the penalty term.
+    # CRITICAL: Use supercooling_K (Tm_C - Tm_freezing_C), NOT Tm_nucleation.
+    # supercooling_K measures the undercooling before solidification starts.
+    # If supercooling_K is absent or NaN, default to 0.0 (no penalty).
+    delta_T_subcooling = pcm_row.get("supercooling_K", np.nan)
+    delta_T_subcooling = float(delta_T_subcooling) if delta_T_subcooling == delta_T_subcooling else 0.0
+    delta_T_subcooling = max(0.0, delta_T_subcooling)  # Clamp to non-negative
 
     Mp = PCM_MASS_KG
     Vp = Mp / density
@@ -588,8 +611,22 @@ def simulate_pcm_swh_year(hourly_df, pcm_row, draw_fracs=None, dt=3600.0,
                 phase = 3
                 Tp = Tm + max(0.0, Qp - Qp_max) / (Mp * Cp_l + 1e-9)
                 was_liquid = True
-        else:  # phase 3
-            c = 1.0 / tau_pl
+        else:  # phase 3 — post-melt sensible cooling
+            # SUPERCOOLING PENALTY: when PCM has measured supercooling degree,
+            # reduce h_p proportionally during cooling phase (as if solidification
+            # is delayed by the supercooling effect).
+            # supercooling_K (Tm_C - Tm_freezing_C) represents the undercooling
+            # the PCM experiences before solidification begins.
+            if SUPERCOOLING_PENALTY_K > 0 and delta_T_subcooling > 0:
+                # h_p_effective = h_p × (1 - k × supercooling_K / 10)
+                # Models the effect: larger subcooling → slower h_p → longer discharge delay
+                penalty_factor = 1.0 - SUPERCOOLING_PENALTY_K * delta_T_subcooling / 10.0
+                Hp_effective = Hp * max(0.3, penalty_factor)  # Clamp at 70% reduction
+                tau_pl_effective = Mp * Cp_l / (Hp_effective * Ap)
+            else:
+                tau_pl_effective = tau_pl
+
+            c = 1.0 / tau_pl_effective
             denom1 = 1 + dt * a_step + dt * b
             Tw_new = ((Tw + dt * a_step * tc) * (1 + dt * c) + dt * b * Tp) / \
                      (denom1 * (1 + dt * c) - dt * b * dt * c)

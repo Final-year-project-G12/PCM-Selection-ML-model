@@ -61,25 +61,27 @@ literature-calibrated either — the doc's own stated justification:
   distinction matters for the same reason it mattered for the
   collector-cap heuristic.
 
-WEIGHTS
--------
-w_j = lambda*w_entropy_j + (1-lambda)*w_AHP_j, lambda=0.5 (plan doc §9.3).
-AHP_WEIGHTS_TABLE13 below are the plan doc's Table 13 indicative weights,
-used as the AHP prior UNTIL a real elicited pairwise comparison matrix is
-available — AHP_PAIRWISE_MATRIX is a clearly marked TODO block; fill it in
-and ahp_weights_from_pairwise() will compute weights + consistency ratio
-(must be <0.10 per the plan doc) automatically instead.
+WEIGHTS & CLARIFICATION
+-----------------------
+w_j = lambda*w_entropy_j + (1-lambda)*w_literature_prior_j, lambda=0.5
+(plan doc §9.3). LITERATURE_WEIGHTS_TABLE13 below are the plan doc's
+Table 13 indicative literature-informed priors, NOT a formally elicited
+AHP pairwise comparison matrix. The eigenvector-method AHP code exists as
+a placeholder but is never invoked (PAIRWISE_MATRIX = None). Until a real
+elicited pairwise comparison is performed, this blended approach (50%
+entropy, 50% literature priors) is the current standard.
+
 Entropy-weight stability: per Nabavi et al. (2023, Ind. Eng. Chem. Res.),
 entropy weights are measurably MORE sensitive to matrix perturbation than
 other schemes — and here they're computed on filtered matrices as small as
 5 rows (Cluster 0), exactly the regime where that sensitivity bites
 hardest. This script reports the entropy weight vector alongside the
-AHP-only (lambda=0) vector per cluster, flags any single criterion whose
-entropy weight exceeds 40% (near-total domination — same read as the
-Oluah 2020 72.12%-on-thermal-conductivity fixture the plan doc itself
-cites as a cautionary example), and compares the Top-3 at lambda=0 vs
-lambda=0.5 the same way the daylength_mean ablation checked whether Level
-B clustering's dominant feature was load-bearing for the result.
+literature-prior-only (lambda=0) vector per cluster, flags any single
+criterion whose entropy weight exceeds 40% (near-total domination — same
+read as the Oluah 2020 72.12%-on-thermal-conductivity fixture the plan doc
+itself cites as a cautionary example), and compares the Top-3 at lambda=0
+vs lambda=0.5 the same way the daylength_mean ablation checked whether
+Level B clustering's dominant feature was load-bearing for the result.
 
 RANKING METHODS
 ----------------
@@ -168,9 +170,9 @@ CRITERIA_TYPE = {   # "benefit" (higher better) or "cost" (lower better) —
     "thermal_conductivity": "benefit", "cycling": "benefit",
     "supercooling": "cost", "corrosion": "cost", "cost": "cost",
 }
-AHP_WEIGHTS_TABLE13 = {   # plan doc's INDICATIVE starting weights, used as
-    "Tm_fitness": 0.24,   # the AHP prior until a real pairwise elicitation
-    "latent_heat": 0.20,  # (see AHP_PAIRWISE_MATRIX TODO below) replaces it
+LITERATURE_WEIGHTS_TABLE13 = {   # plan doc's INDICATIVE starting weights, used as
+    "Tm_fitness": 0.24,   # literature-informed priors until a real pairwise elicitation
+    "latent_heat": 0.20,  # (see PAIRWISE_MATRIX TODO below) replaces it
     "vol_latent_heat": 0.12,
     "thermal_conductivity": 0.13,
     "cycling": 0.11,
@@ -178,19 +180,19 @@ AHP_WEIGHTS_TABLE13 = {   # plan doc's INDICATIVE starting weights, used as
     "corrosion": 0.06,   # cluster-dependent — see reweight_corrosion_for_cluster()
     "cost": 0.06,
 }
-assert abs(sum(AHP_WEIGHTS_TABLE13.values()) - 1.0) < 1e-9
+assert abs(sum(LITERATURE_WEIGHTS_TABLE13.values()) - 1.0) < 1e-9
 
 # ═══════════════════════════════════════════════════════════
-# TODO: real AHP pairwise elicitation
+# TODO: real AHP pairwise elicitation (FUTURE ENHANCEMENT)
 # ═══════════════════════════════════════════════════════════
 # Fill in an 8x8 Saaty pairwise comparison matrix (criteria in CRITERIA
-# order) from your guide/faculty elicitation, set AHP_PAIRWISE_MATRIX
+# order) from your guide/faculty elicitation, set PAIRWISE_MATRIX
 # below (currently None), and this script will compute weights via the
 # eigenvector method AND the consistency ratio (must be <0.10 per plan doc
-# §9.3) automatically instead of using AHP_WEIGHTS_TABLE13 directly.
+# §9.3) automatically instead of using LITERATURE_WEIGHTS_TABLE13 directly.
 # Record who provided the judgements when you fill this in.
-AHP_PAIRWISE_MATRIX = None
-AHP_ELICITED_BY = None   # e.g. "Dr. X, thermal engineering faculty, 2026-XX-XX"
+PAIRWISE_MATRIX = None
+ELICITED_BY = None   # e.g. "Dr. X, thermal engineering faculty, 2026-XX-XX"
 
 RI_TABLE = {1: 0.0, 2: 0.0, 3: 0.58, 4: 0.90, 5: 1.12, 6: 1.24, 7: 1.32, 8: 1.41,
             9: 1.45, 10: 1.49}
@@ -419,14 +421,14 @@ def entropy_weights(matrix):
     return weights
 
 
-def blended_weights(entropy_w, ahp_w, lam=LAMBDA_BLEND):
-    return {c: lam * entropy_w[c] + (1 - lam) * ahp_w[c] for c in CRITERIA}
+def blended_weights(entropy_w, prior_w, lam=LAMBDA_BLEND):
+    return {c: lam * entropy_w[c] + (1 - lam) * prior_w[c] for c in CRITERIA}
 
 
 def ahp_weights_from_pairwise(matrix):
     """Eigenvector-method AHP weights + consistency ratio. Used only if
-    AHP_PAIRWISE_MATRIX is filled in; otherwise AHP_WEIGHTS_TABLE13 is
-    used directly as the (documented placeholder) AHP prior."""
+    PAIRWISE_MATRIX is filled in; otherwise LITERATURE_WEIGHTS_TABLE13 is
+    used directly as the (documented placeholder) literature-prior weight."""
     n = matrix.shape[0]
     eigvals, eigvecs = np.linalg.eig(matrix)
     idx = np.argmax(eigvals.real)
@@ -835,17 +837,17 @@ def main():
     hsi_min, hsi_max = profiles["HSI_sunrise"].min(), profiles["HSI_sunrise"].max()
 
     print(f"\n  Criteria (plan doc Table 13): {CRITERIA}")
-    print(f"  Nominal AHP weights (Table 13 indicative, TODO real elicitation): "
-          f"{AHP_WEIGHTS_TABLE13}")
-    if AHP_PAIRWISE_MATRIX is not None:
-        ahp_w, cr = ahp_weights_from_pairwise(np.array(AHP_PAIRWISE_MATRIX))
-        print(f"  Real AHP pairwise matrix supplied -> weights={ahp_w}  CR={cr:.4f}"
+    print(f"  Nominal literature-prior weights (Table 13 indicative, TODO real pairwise elicitation): "
+          f"{LITERATURE_WEIGHTS_TABLE13}")
+    if PAIRWISE_MATRIX is not None:
+        prior_w, cr = ahp_weights_from_pairwise(np.array(PAIRWISE_MATRIX))
+        print(f"  Real pairwise matrix supplied -> weights={prior_w}  CR={cr:.4f}"
               f"  ({'OK, <0.10' if cr < 0.10 else 'FAILS plan doc CR<0.10 requirement — revisit elicitation'})")
     else:
-        ahp_w = AHP_WEIGHTS_TABLE13
-        print("  No AHP_PAIRWISE_MATRIX supplied — using Table 13 indicative weights as the AHP prior directly.")
+        prior_w = LITERATURE_WEIGHTS_TABLE13
+        print("  No PAIRWISE_MATRIX supplied — using Table 13 indicative weights as the literature-prior baseline directly.")
 
-    dirichlet_check_alpha = np.array(list(ahp_w.values())) * DIRICHLET_CONCENTRATION
+    dirichlet_check_alpha = np.array(list(prior_w.values())) * DIRICHLET_CONCENTRATION
     print(f"  Dirichlet concentration={DIRICHLET_CONCENTRATION} chosen for ~+/-20% weight variation "
           f"(alpha sum={dirichlet_check_alpha.sum():.1f})")
 
@@ -870,13 +872,13 @@ def main():
 
         matrix = build_criteria_matrix(cand_df, tm_target)
         ent_w = entropy_weights(matrix)
-        cluster_ahp_w = reweight_corrosion_for_cluster(ahp_w, cluster_hsi, hsi_min, hsi_max)
-        blend_w = blended_weights(ent_w, cluster_ahp_w)
+        cluster_prior_w = reweight_corrosion_for_cluster(prior_w, cluster_hsi, hsi_min, hsi_max)
+        blend_w = blended_weights(ent_w, cluster_prior_w)
 
         dominant = max(ent_w, key=ent_w.get)
         print(f"  Entropy weights: {{{', '.join(f'{k}={v:.3f}' for k, v in ent_w.items())}}}")
-        print(f"  AHP-only (cluster-adjusted) weights: "
-              f"{{{', '.join(f'{k}={v:.3f}' for k, v in cluster_ahp_w.items())}}}")
+        print(f"  Literature-prior (cluster-adjusted) weights: "
+              f"{{{', '.join(f'{k}={v:.3f}' for k, v in cluster_prior_w.items())}}}")
         print(f"  Blended (lambda=0.5) weights: "
               f"{{{', '.join(f'{k}={v:.3f}' for k, v in blend_w.items())}}}")
         if ent_w[dominant] > 0.40:
@@ -885,11 +887,11 @@ def main():
                   f"the plan doc's own cautionary example for why entropy alone is untrustworthy).")
 
         borda_05, ranks_05, _ = run_pipeline_once(cand_df, blend_w, tm_target, matrix)
-        borda_00, ranks_00, _ = run_pipeline_once(cand_df, cluster_ahp_w, tm_target, matrix)
+        borda_00, ranks_00, _ = run_pipeline_once(cand_df, cluster_prior_w, tm_target, matrix)
         top3_05 = set(borda_05.sort_values(ascending=False).head(3).index)
         top3_00 = set(borda_00.sort_values(ascending=False).head(3).index)
         print(f"  Top-3 at lambda=0.5: {sorted(top3_05)}")
-        print(f"  Top-3 at lambda=0.0 (AHP only): {sorted(top3_00)}")
+        print(f"  Top-3 at lambda=0.0 (literature-prior only): {sorted(top3_00)}")
         print(f"  {'SAME Top-3 set regardless of entropy weighting — robust.' if top3_05 == top3_00 else 'Top-3 CHANGES with entropy weighting — entropy is load-bearing for this cluster, not just large in isolation.'}")
 
         copeland_scores = copeland(ranks_05)

@@ -1,5 +1,9 @@
 # 00 — Master Overview: ERA5 Rajasthan Climate → PCM Selection Pipeline
 
+⚠️ **CRITICAL UPDATE (2026-08-31): L_required Methodology Correction** — Phase 3's methodology was corrected 2026-08-31, halving L_required values and cascading through Phases 4–8. All outputs from Phases 5–8 documented in this overview are now STALE and must be regenerated. Documented results (κ calibrations, Spearman rho validation values, rankings) below are superseded. See CLAUDE.md §3.1 and `04_climate_signature_rajasthan.py` docstring for full detail.
+
+---
+
 ## Project objective
 
 Final-year B.Tech CSE project (Group 12, Amrita School of Engineering, Guide: Dr. T. Deepika):
@@ -88,15 +92,21 @@ Phase 6 — MULTI-CRITERIA RANKING ENGINE
   08_mcdm_ranking_rajasthan.py → mcdm_rankings_rajasthan.csv, mcdm_method_agreement_rajasthan.csv
   (TOPSIS + PROMETHEE II + VIKOR + GRA, Borda/Copeland/Kendall's W, 1000-draw Monte Carlo)
         ↓
-Phase 7 — PHYSICS-BASED VALIDATION  ◄── CURRENT IMPLEMENTATION FRONTIER (complete)
+Phase 7 — PHYSICS-BASED VALIDATION (complete)
   physics_lib.py + 09_physics_validation_rajasthan.py → physics_validation_rajasthan.csv,
-    spearman_rho_by_cluster_rajasthan.csv, outputs/qc_calibration_check_rajasthan.html,
-    physics_validation_summary_rajasthan.txt
-  (lumped-enthalpy PCM+tank model, real hourly NASA POWER weather, cited draw profile;
-   RESULT: genuine NEGATIVE validation, rho = -0.900 / -0.096 / -0.198 across the 3 clusters —
-   see 19_PHASE_7_ONWARD.md)
+    spearman_rho_by_cluster_rajasthan.csv, outputs/qc_calibration_check_rajasthan.html
+  (lumped-enthalpy PCM+tank model, real hourly NASA POWER weather, cited draw profile, full calibration;
+   RESULT: genuine NEGATIVE validation, rho = -0.385 / +0.125 / -0.097 across 3 clusters;
+   dominant MCDM criterion is supercooling (48–64%) but model cannot simulate it — see 09_PHASE_7_AUDIT.md)
         ↓
-Phase 8 — RECOMMENDATION CARDS (complete)
+Phase 8 — SUPERCOOLING PENALTY SENSITIVITY ANALYSIS (complete)
+  08_phase8_supercooling_sweep.py → phase8_supercooling_sweep_rajasthan.csv
+  (implements proportional h_p reduction for supercooling_K, sensitivity sweep k ∈ [0.0,0.1,0.2,0.3];
+   RESULT: penalty WORSENS physics/MCDM agreement in Clusters 1-2 (rho degrades from +0.125→+0.059–0.077,
+   and from -0.097→-0.118–0.136); suggests supercooling's real effect <48% MCDM weight, or penalty
+   mechanism incorrect — see 10_PHASE_8_AUDIT.md for full analysis)
+        ↓
+Phase 9 — RECOMMENDATION CARDS (complete)
   10_recommendation_cards_rajasthan.py → outputs/recommendation_cards_rajasthan.md
   (pure aggregation of Phases 4/6/7, one card per cluster + cross-cluster summary table, hard-fails
    on any cross-phase cluster-identity mismatch via provenance_lib.py)
@@ -117,8 +127,9 @@ failure — see `21_REPRODUCIBILITY.md`.
 | 4 — Regime Clustering | `05` | **COMPLETE — with 2 caught-and-fixed bugs** | k=3 (GMM `diag` covariance, fixed from `full`); GMM cluster-index instability fixed via canonical relabeling (2026-08-11); Koppen-Geiger external validation wired in (ARI=0.19, NMI=0.32 vs GMM) |
 | 5 — Feasibility Filtering | `01_preprocess`, `07` | **PCM database prerequisite now COMPLETE (55 rows); Phase 5 output on disk is STALE, pending re-run** | Database expanded 18→55 rows (2026-08-12), inside the 40–60 target; `feasibility_survivors_rajasthan.csv` still reflects the pre-expansion 25-candidate pool and the old 0-survivors-at-κ=0.7 finding — re-run required, see "What remains" |
 | 6 — MCDM Ranking | `08` | **COMPLETE — with 3 caught-and-fixed bugs, 1 documented deviation** | Runs on κ-relaxed survivor pool; N_DRAWS=1000 not 5000 (documented); AHP pairwise elicitation still a TODO stub; now hard-fails on a provenance mismatch |
-| 7 — Physics Validation | `physics_lib.py`, `09` | **COMPLETE — 2 caught-and-fixed bugs in the solver, real calibration iteration, genuine NEGATIVE result** | Spearman rho = -0.900 (Cluster 0) / -0.096 (Cluster 1) / -0.198 (Cluster 2) — MCDM ranking is NOT confirmed by physics simulation for any cluster; see `19_PHASE_7_ONWARD.md` |
-| 8 — Recommendation Cards | `10` | **COMPLETE** | Pure aggregation of Phases 4/6/7 into `recommendation_cards_rajasthan.md`, hard-fails on cross-phase cluster-identity mismatch |
+| 7 — Physics Validation | `physics_lib.py`, `09` | **COMPLETE — 2 caught-and-fixed bugs, real calibration, genuine NEGATIVE result** | Spearman rho = -0.385 (Cluster 0) / +0.125 (Cluster 1) / -0.097 (Cluster 2); MCDM ranking weakly/negatively correlates with simulated solar fraction; dominant criterion is supercooling (48–64%) but model cannot simulate it — see `09_PHASE_7_AUDIT.md` |
+| 8 — Supercooling Penalty | `physics_lib.py`, `08_phase8_supercooling_sweep.py` | **COMPLETE — Sensitivity sweep k ∈ [0.0,0.1,0.2,0.3], honest negative result** | Penalty implementation is correct (energy conservation passes); but worsens physics/MCDM agreement instead of improving it — rho degrades Cluster 1 from +0.125 to +0.059, and Cluster 2 from -0.097 to -0.136; suggests supercooling weight is over-estimated or mechanism is incorrect — see `10_PHASE_8_AUDIT.md` |
+| 9 — Recommendation Cards | `10` | **COMPLETE** | Pure aggregation of Phases 4/6/7 into `recommendation_cards_rajasthan.md`, hard-fails on cross-phase cluster-identity mismatch |
 
 ## Current architecture
 
@@ -236,15 +247,58 @@ specified but not yet implemented.
     conservation now holds to machine precision (~1e-13 relative residual) — see `physics_lib.py`'s
     own module docstring for the full diagnosis.
 
-## Research gaps addressed
+## Research gaps addressed (N1–N6 novelty mapping)
 
-The framework doc frames its contribution via **novelty positions N1–N6** (discovered regimes vs
-hand-picked zones; two-tier signature vs single temperature; corrected 42–70°C SWH band vs 18–28°C
-building-comfort band; Top-3+consensus vs single winner; physics-validated vs self-referential MCDM;
-population-weighted regimes), **not** the RG1–RG5 taxonomy used elsewhere in this project's literature
-summaries (which belongs to a companion DRL/control objective document). See
-`18_RESEARCH_GAP_MAPPING.md` for the full, disambiguated mapping — conflating the two systems would
-misrepresent what Objective 1 itself claims to contribute.
+### Important disambiguation
+
+Two distinct gap/novelty systems exist:
+- **N1–N6** (framework doc §3, Table 3): Objective 1's own novelty positioning, specific to this
+  climate-signature/clustering/MCDM/validation pipeline.
+- **RG1–RG5** (project-wide framing): research gaps for the broader multi-objective project
+  (this objective plus downstream DRL-control and hardware-prototype objectives). RG1–RG5 do
+  not appear in `Objective1_PCM_Climate_Framework_Plan_v3.docx` itself.
+
+Conflating these two would misattribute claims — Objective 1 does not address all five RG gaps
+directly (only RG5); the others are fed by this objective's output but addressed across multiple
+objectives.
+
+### Phase → N (novelty claim) mapping
+
+| Phase | Primary N-claim(s) | How it contributes |
+|---|---|---|
+| 1 — Data Collection | N6 | Population-weighted, sun-event-aligned sampling — not a uniform grid or arbitrary city list |
+| 2 — Preprocessing & Validation | (supports all) | The deaccumulation-bug catch and QUANTILE_MAP decision are the evidentiary basis for claiming the climate backbone (Phases 3+) is trustworthy — without this phase, none of N1–N5 would be defensible |
+| 3 — Climate Signature | N2, N3 | Two-tier signature (not a single temperature); Tm_target/L_required corrected to the 42–70°C SWH band (not the 18–28°C comfort band a naive approach might reuse) |
+| 4 — Regime Clustering | N1 | GMM-discovered regimes (k=3, statistically selected, not hand-picked); external validation now PARTIALLY wired in (Köppen-Geiger, ARI=0.19/NMI=0.32) — N1's "discovered, not hand-picked" claim is now supported by internal statistical measures PLUS one external classification cross-check (NBC/ECBC still open) |
+| 5 — Feasibility Filtering | N3 (partial) | Enforces the corrected 42–70°C band and SWH-specific constraints; **database-size gap closed 2026-08-12** (18–25 → 55 rows, inside the 40–60 target) — N3's practical value depended on having enough real in-band candidates to filter; that prerequisite is now met, but Phase 5 has not yet been re-run against the expanded database, so N3's demonstrated value in the current on-disk output is still the pre-expansion result |
+| 6 — MCDM Ranking | N4 | Four-method consensus + Monte Carlo, not a single TOPSIS winner; Kendall's W explicitly reports when consensus is *not* strong (Cluster 0, W=0.4375) rather than hiding disagreement — this honest reporting is itself part of N4's value proposition |
+| 7 — Physics Validation (COMPLETE) | N5 | Independently validated the MCDM ranking against simulated solar fraction — **the result is a genuine NEGATIVE validation (Spearman rho ≤0.4, all 3 clusters)**, not a confirmation. This is itself evidence for N5 as a methodology (the validation was performed rigorously and reported honestly, exactly per the framework doc's own "write it out plainly" instruction) even though it does not currently confirm the MCDM ranking's output — N5's claim should read "the ranking WAS physics-tested, honestly, with a negative result attributable in part to the still-undersized PCM database" not "the ranking IS physics-validated." See `19_PHASE_7_ONWARD.md`. |
+| 8 — Recommendation Cards (COMPLETE) | (packaging) | Aggregates N1–N5's evidence, including Phase 7's negative result and its caveats, into the final deliverable format — `10_recommendation_cards_rajasthan.py`'s own caveats section surfaces the physics-validation band per cluster, not just the MCDM Top-3 |
+
+### Phase → RG (broader project research gap) mapping — explicitly indirect
+
+Since RG1–RG5 belong to the *broader* multi-objective project rather than Objective 1 itself, this
+mapping describes how Objective 1's output **feeds** the later objectives that directly address
+RG1–RG4, and how Objective 1 itself directly addresses RG5:
+
+| Phase | Related RG | Nature of contribution |
+|---|---|---|
+| 1–2 (Data Collection, Validation) | RG5 | Supplies the validated, uncertainty-characterized climate data a later predictive-optimization-under-uncertainty component (RG5, "no predictive optimization under climatic uncertainty") would need as its own input |
+| 3–4 (Signature, Clustering) | RG5 | Climate regimes are themselves a climatic-uncertainty-aware framing (population-weighted, statistically validated) — a direct, not merely feeding, contribution to RG5 |
+| 5–6 (Feasibility, MCDM) | RG5 | Monte Carlo uncertainty propagation over PCM property/weight perturbation is Objective 1's own predictive-optimization-under-uncertainty contribution |
+| 7 (Physics Validation) | RG4 (indirect) | A grey-box simulation is not a real-world experiment, but it is Objective 1's step toward the experimental-validation direction RG4 (limited real-world experimental validation) ultimately calls for — the framework doc itself frames Phase 7 as "what makes the result publishable, not skippable" |
+| 8 (Recommendation Cards) | RG2, RG3 (feeding, not addressing) | The per-regime PCM recommendation is the direct input a later hardware-prototype objective (RG2) and demand-alignment objective (RG3) would consume — Objective 1 does not itself build a prototype or model household demand |
+| — | RG1 | **Not addressed by Objective 1 at all** — real-time adaptive control is explicitly out of this objective's scope (framework doc §1.2) |
+
+### Important note
+
+This mapping does not assert that Objective 1 "solves" RG1–RG4 — only RG5 is directly addressed by
+this objective's own methodology (Monte Carlo uncertainty propagation, regime-level rather than
+single-point climate targets). RG1–RG4 are gaps the *broader* project addresses across multiple
+objectives, and Objective 1's role there is to produce a validated, regime-aware PCM recommendation
+that the later objectives can build on — not to close those gaps itself. Presenting this mapping with
+that distinction intact is more defensible in a viva than claiming Objective 1 single-handedly
+addresses all five research gaps.
 
 ## What remains
 

@@ -51,7 +51,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-from config import PREPROCESSED_DIR, PROCESSED_DIR
+from config import PREPROCESSED_DIR, PROCESSED_DIR, SHARE_PCM
 
 SIGNATURE_DIR = PROCESSED_DIR / "signatures"
 SIGNATURE_DIR.mkdir(parents=True, exist_ok=True)
@@ -245,15 +245,16 @@ print("\n[3/6] Derived PCM-facing quantities (Tm_target, L_required) ...")
 sig["Tm_target_C"] = TM_TARGET_C
 sig["T_mains_est_C"] = sig["Ta_mean"] - 2.0
 
-# L_required = total thermal energy to heat DRAW_MASS_KG of water from mains
-# temperature to T_DELIVERY_C, divided by the assumed PCM mass.  Units:
-#   DRAW_MASS_KG [kg] × CP_WATER [kJ/(kg·K)] × ΔT [K] → kJ total
-#   ÷ ASSUMED_PCM_MASS_KG [kg] → kJ/kg  (specific latent heat target)
+# L_required = PCM-specific latent heat target (kJ/kg PCM).
+# OPTION A (2026-08-31): SHARE_PCM = 0.5 — PCM supplies ~50% of overnight
+# delivery; tank sensible heat + concurrent charging supply the remainder
+# (Zhao 2022; Huang 2020; Abdelsalam 2020; Koželj 2021). See 07_PHASE_5_AUDIT.md.
 q_total_kJ = DRAW_MASS_KG * CP_WATER * (T_DELIVERY_C - sig["T_mains_est_C"])
-sig["L_required_kJ_per_kg"] = q_total_kJ / ASSUMED_PCM_MASS_KG
+sig["L_required_kJ_per_kg"] = (q_total_kJ * SHARE_PCM) / ASSUMED_PCM_MASS_KG
 print(f"  Tm_target: constant {TM_TARGET_C:.0f} C across all points")
 print(f"  Draw volume: {DRAW_VOLUME_L:.0f} L ({DRAW_MASS_KG:.0f} kg), "
-      f"delivery at {T_DELIVERY_C:.0f} C, PCM mass {ASSUMED_PCM_MASS_KG:.0f} kg")
+      f"delivery at {T_DELIVERY_C:.0f} C, PCM mass {ASSUMED_PCM_MASS_KG:.0f} kg, "
+      f"SHARE_PCM={SHARE_PCM}")
 print(f"  L_required range: {sig['L_required_kJ_per_kg'].min():.0f} - "
       f"{sig['L_required_kJ_per_kg'].max():.0f} kJ/kg")
 

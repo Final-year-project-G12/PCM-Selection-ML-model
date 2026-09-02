@@ -2,14 +2,14 @@
 
 The Tamil Nadu pipeline has fully implemented both phases.
 
-## Phase 7: Grey-Box Physics Validation (`10_physics_validation.py`) — v3.1 corrected
+## Phase 7: Grey-Box Physics Validation (`10_physics_validation.py`) — current run
 1. **Model Structure**: 3-phase lumped-enthalpy tank (Barqawi 2025): sensible solid → isothermal melting → sensible liquid.
 2. **Numerical Method**: Backward Euler (implicit), hourly `dt = 3600 s`.
 3. **v3.1 fix**: Ambient tank heat loss `UA_TANK_W_K = 2.0 W/K` added to prevent artificially high solar fractions and enable PCM cycling.
-4. **Pre-fix validation outcome** (will improve after re-run):
-   - Spearman ρ: 0.18–0.54 (weak agreement — caused by signature/filter bugs, now fixed).
-   - Solar fractions: 90–99% (outside 54–84% benchmark band).
-   - Cycles/year: 0–1 (PCM never froze due to missing heat loss).
+4. **Current validation outcome**:
+   - Spearman ρ by cluster is approximately **-0.471 to 0.094**, with mean **-0.151**. This is weak agreement and does not validate the MCDM ordering.
+   - Solar fractions are approximately **85.3-99.6%**; **0%** of simulations fall within the published 54-84% benchmark band.
+   - Complete cycles/year remain **0-1**, so the tank assumptions require diagnosis before treating the simulated performance as calibrated.
 
 ## Corrected Root Causes (v3.1)
 | Cause | Fix |
@@ -21,9 +21,10 @@ The Tamil Nadu pipeline has fully implemented both phases.
 ## Phase 8: Recommendation Cards (`09_recommendation_cards.py`)
 - Aggregates cluster profiles, MCDM rankings, physics validation, Monte Carlo stability into `recommendation_cards.md`.
 - Re-run `09` after `10` to include updated Spearman ρ and solar fractions.
+- The current cards were regenerated after the updated ranking and physics runs and contain five cluster recommendations.
 
 ## Status
-**COMPLETE (v3.1 fixes applied — re-run `10` → `09` for updated validation)**
+**COMPLETE for the current generated artifacts.** Re-run `10` → `09` whenever the PCM database, climate signatures, or ranking outputs change.
 
 ## Literature Support
 | Component | Reference | Source |

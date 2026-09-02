@@ -12,7 +12,7 @@ Governing document: `Objective1_PCM_Climate_Framework_Plan_v3.docx` ("the framew
 2. **Double-Source Validation**: Pulls ERA5 reanalysis and NASA POWER satellite/model data for the same coordinates and times, validating one against the other.
 3. **Two-Tier Climate Signature**: Redefines 10 years of hourly/daily data into instantaneous sun-event statistics (Tier 1) and true daily-integral indices (Tier 2).
 4. **Climate Regimes (Level A & B)**: Clusters points into spatial climate regimes (Level A) using Gaussian Mixture Models (GMM) and performs seasonal sensitivity analysis (Level B).
-5. **PCM Feasibility & Screening**: Filters a 25-candidate database (18 manufacturer + 7 literature) against physical, corrosion, and safety constraints.
+5. **PCM Feasibility & Screening**: Filters the current 62-candidate database (55 manufacturer-derived + 7 literature) against physical, corrosion, and safety constraints. The feasibility CSV retains a full per-candidate audit; current runs retain 9-15 candidates per cluster.
 6. **Multi-Criteria Decision Making (MCDM)**: Ranks feasibility survivors using four independent methods (TOPSIS, GRA, PROMETHEE II, VIKOR) with Monte Carlo uncertainty propagation.
 7. **Grey-Box Physics Validation**: Solves a lumped-enthalpy tank simulation using backward Euler, driven by the real 10-year daily weather of each regime's medoid point, evaluating Spearman rank concordance.
 8. **Recommendation Cards**: Generates markdown summary cards for each climate regime.
@@ -36,7 +36,7 @@ Phase 2 — PREPROCESSING & CROSS-SOURCE VALIDATION
   04c_postprocess_plots.py      → post-cleaning QA plots
         ↓
 Phase 3 — CLIMATE SIGNATURE CONSTRUCTION
-  04b_climate_signature.py      → climate_signature_tamilnadu.csv (300 L/day draw, v3.1)
+  04b_climate_signature.py      → climate_signature_tamilnadu.csv (300 L/day draw, SHARE_PCM=0.5)
   04d_signature_interactive.py  → interactive signature exploration maps
         ↓
 Phase 4 — CLIMATE REGIME CLUSTERING
@@ -62,9 +62,9 @@ Phase 8 — RECOMMENDATION CARDS
 |---|---|---|---|
 | 1 — Data Collection | `00a`, `00b`, `01`, `01b`, `00_unzip_accum` | **COMPLETE** | 133 points, 240 NetCDF files, 1330 NASA POWER JSON files. |
 | 2 — Preprocessing & QA | `02`, `02b`, `03`, `03b`, `04`, `04c` | **COMPLETE (v3.1 fixes applied)** | Deaccumulation replaced with `accum_to_flux()`. Per-season quantile mapping in Step 2b. Re-run required for new outputs. |
-| 3 — Climate Signature | `04b`, `04d` | **COMPLETE (v3.1 fixes applied)** | 300 L/day draw volume; realistic `L_required` (~2500 kJ/kg). Re-run required. |
+| 3 — Climate Signature | `04b`, `04d` | **COMPLETE** | 300 L/day draw with `SHARE_PCM=0.5`; current generated cluster targets are approximately 301-326 kJ/kg. |
 | 4 — GMM Clustering | `05`, `05b`, `11` | **COMPLETE (v3.1 fixes applied)** | K=5 regimes, `covariance_type="diag"`. Level B seasonal re-rank uses corrected draw volume. |
-| 5 — Feasibility | `07` | **COMPLETE — re-run after Phase 3** | Latent-heat floor now binding after L_required fix; survivor count will change. |
+| 5 — Feasibility | `06`, `07` | **COMPLETE** | 62 PCM records are audited per cluster; current pass counts are 9-15 and vary by cluster. |
 | 6 — MCDM Ranking | `08` | **COMPLETE** | 4-method Borda + 5000-draw Monte Carlo. |
 | 7 — Physics Validation | `10` | **COMPLETE (v3.1 fixes applied)** | Tank ambient heat loss active (`UA_TANK_W_K=2.0`). Re-run for updated Spearman ρ. |
 | 8 — Rec Cards | `09` | **COMPLETE** | Aggregates Phases 4–7 into `recommendation_cards.md`. |
@@ -80,6 +80,9 @@ All five critical bugs from the v3.0 audit are fixed in source code. See `20_IMP
 
 ## Still Open
 See `22_FINAL_READINESS_REPORT.md`: PCM database expansion, external cluster validation, elevation proxy, monsoon precipitation download, full Level-B GMM.
+
+## Plot Documentation
+See `23_PLOTS_GUIDE.md` for the interpretation and exact location of plots produced by the raw QA, preprocessing, climate-signature, clustering, comprehensive, Objective 1, and comparison scripts.
 
 ## Literature Support
 | Pipeline Component | Key Reference | Source File |

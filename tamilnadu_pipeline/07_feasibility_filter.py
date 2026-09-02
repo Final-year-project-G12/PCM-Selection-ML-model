@@ -23,7 +23,7 @@ Filters applied (all eight from Table 12 now implemented):
   6. Corrosion veto        : exclude "check_manually"-class PCMs in any
                             cluster whose HSI is above the 75th percentile
                             ACROSS ALL CLUSTERS. Currently a near-no-op —
-                            your 25-row database is almost entirely organic
+                            your database is almost entirely organic
                             (nothing flagged "check_manually" except one
                             inorganic hydrate) — becomes load-bearing once
                             you add real salt hydrates or extend to Assam.
@@ -62,7 +62,7 @@ warnings.filterwarnings("ignore")
 import numpy as np
 import pandas as pd
 
-from config import PROCESSED_DIR
+from config import PROCESSED_DIR, latent_heat_floor_kj_kg
 
 PCM_FILE = PROCESSED_DIR / "pcm" / "pcm_database_tamilnadu.csv"
 PROFILE_FILE = PROCESSED_DIR / "clustering" / "cluster_profiles_tamilnadu.csv"
@@ -84,7 +84,8 @@ def filter_cluster(pcm_db, tm_target, l_required, cluster_hsi, hsi_p75_global, w
     df = pcm_db.copy()
     df["pass_melting_window"] = df["Tm_C"].between(lo, hi)
     df["pass_absolute_band"] = df["Tm_C"].between(ABSOLUTE_TM_MIN, ABSOLUTE_TM_MAX)
-    l_floor = LATENT_HEAT_FRACTION * l_required
+    # Table 12: L >= max(100 kJ/kg, 0.7 × L_required) — both constraints apply.
+    l_floor = latent_heat_floor_kj_kg(l_required, LATENT_HEAT_FRACTION)
     df["pass_latent_heat"] = df["latent_heat_kJ_kg"] >= l_floor
     df["latent_heat_floor_used"] = l_floor
 
@@ -107,7 +108,7 @@ def filter_cluster(pcm_db, tm_target, l_required, cluster_hsi, hsi_p75_global, w
     df["pass_corrosion"] = ~((df["corrosion_class"] == "check_manually") & cluster_is_high_hsi)
 
     # Safety exclusion (Table 12): keyword check against the flammability
-    # field. Your current 25-row database has no candidate flagged this way
+    # field. The current database has no candidate flagged this way
     # (paraffins/fatty acids are "combustible", not "highly flammable" in
     # standard hazard classification) — this is a real filter, just
     # currently a no-op given your data, not a fake one.
@@ -191,7 +192,7 @@ def main():
     n_high = sum(1 for r in all_rows if r["passes_all"].sum() > 25)
     if n_low:
         print(f"  [NOTE] {n_low} cluster(s) still under 5 survivors after max relaxation "
-              f"({MAX_RELAX_STEPS * RELAX_STEP_K:.0f}K) — your database (25 rows) is "
+              f"({MAX_RELAX_STEPS * RELAX_STEP_K:.0f}K) — your database may be "
               f"thin for this; add more candidates in the affected Tm range (06's "
               f"'still outstanding' list) if time allows.")
     if n_high:

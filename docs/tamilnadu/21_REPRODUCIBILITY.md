@@ -1,7 +1,7 @@
 # 21 — Reproducibility Audit
 
-## Checklist for Pipeline Verification (v3.1)
-Run scripts in this chronological order. Steps marked **(v3.1)** were added or corrected in the bug-fix release.
+## Checklist for Pipeline Verification
+Run scripts in this chronological order. The current downstream PCM artifacts have been regenerated after the updated Phase 5 run.
 
 - [ ] **Phase 1**: `python 00a_build_population_grid.py` → 133 points
 - [ ] **Phase 1**: `python 00b_build_suntimes.py` → 1,457,547 rows
@@ -16,11 +16,12 @@ Run scripts in this chronological order. Steps marked **(v3.1)** were added or c
 - [ ] **Phase 3**: `python 04b_climate_signature.py` → **(v3.1)** 300 L/day draw
 - [ ] **Phase 4**: `python 05_cluster_tamilnadu.py` → **(v3.1)** covariance_type=diag
 - [ ] **Phase 4**: `python 11_level_b_seasonal_analysis.py` → **(v3.1)** corrected L_required
-- [ ] **Phase 5**: `python 06_build_pcm_database.py` → 25 PCMs
+- [ ] **Phase 5**: `python 06_build_pcm_database.py` → 62 PCMs (55 manufacturer-derived + 7 literature)
 - [ ] **Phase 5**: `python 07_feasibility_filter.py` → screening
-- [ ] **Phase 6**: `python 08_mcdm_ranking.py` → 5000 MC draws
-- [ ] **Phase 7**: `python 10_physics_validation.py` → **(v3.1)** UA_TANK=2.0 W/K
-- [ ] **Phase 8**: `python 09_recommendation_cards.py` → recommendation cards
+- [x] **Phase 6**: `python 08_mcdm_ranking.py` → 5000 MC draws
+- [x] **Phase 7**: `python 10_physics_validation.py` → UA_TANK=2.0 W/K
+- [x] **Phase 8**: `python 09_recommendation_cards.py` → recommendation cards
+- [x] **Level B**: `python 11_level_b_seasonal_analysis.py` → seasonal Top-3 and summary
 
 ## Environmental Configuration
 - pvlib version: `pvlib >= 0.9`
