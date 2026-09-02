@@ -27,11 +27,12 @@ This script:
    MICE-PMM only covers your 18 manufacturer rows, it can't invent new
    PCM families.
 
-STILL SHORT OF THE 40-60 ROW TARGET (unchanged from before)
+STILL SHORT OF THE 55-63°C GAP (optional expansion)
 --------------------------------------------------------------
-~25 rows total. To close the 55-63C gap: Rubitherm RT58/RT60/RT62HC,
-PLUSS OM55/OM65, and a properly-sourced salt hydrate (sodium acetate
-trihydrate ~58C) with a real latent-heat citation — none fabricated here.
+~62 rows total (55 manufacturer MICE+RF+PMM + 7 Singh2025 literature).
+The 40–60 row target from the plan is now met. Optional additions for
+55–63°C coverage: Rubitherm RT58/RT60/RT62HC, PLUSS OM55/OM65, and a
+properly-sourced salt hydrate (~58°C) with a real latent-heat citation.
 
 INPUT  : PCM_Properties_cleaned_mice_pmm_detailed.csv
          (edit INPUT_CSV below to wherever you extracted it)
@@ -69,7 +70,7 @@ def load_manufacturer_rows(csv_path):
 
     out = pd.DataFrame()
     out["name"] = df["product"]
-    out["family"] = np.where(df["is_rt_line"] == 1, "Rubitherm RT", "PLUSS savE")
+    out["family"] = df["manufacturer"] if "manufacturer" in df.columns else np.where(df.get("is_rt_line", 0) == 1, "Rubitherm RT", "PLUSS savE")
     out["pcm_type"] = df["pcm_type"]
     out["Tm_C"] = df["Tm_melting"]
     out["Tm_freezing_C"] = df["Tm_freezing"]
@@ -81,12 +82,15 @@ def load_manufacturer_rows(csv_path):
     # prefer real per-phase average over the imputed-constant TC_both
     out["TC_W_mK"] = (df["TC_liquid"] + df["TC_solid"]) / 2.0
     out["cycles_tested"] = df["cycles_tested"]
-    out["cycles_tested_status"] = df["cycles_tested_status"]
+    out["cycles_tested_status"] = df.get("cycles_tested_status", "manufacturer_reported")
     out["flammable"] = df["flammability"]
     out["supercooling_K"] = out["Tm_C"] - out["Tm_freezing_C"]
 
     imputed_cols = [c + "_imputed" for c in IMPUTABLE_PROPS if c + "_imputed" in df.columns]
-    out["n_properties_imputed"] = df[imputed_cols].sum(axis=1)
+    if imputed_cols:
+        out["n_properties_imputed"] = df[imputed_cols].sum(axis=1)
+    else:
+        out["n_properties_imputed"] = 0
     out["any_property_imputed"] = out["n_properties_imputed"] > 0
     out["source"] = "manufacturer_datasheet_MICE_RF_PMM_completed"
     return out

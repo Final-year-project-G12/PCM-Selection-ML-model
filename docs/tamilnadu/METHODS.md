@@ -474,7 +474,7 @@ HAC (Ward linkage) builds a dendrogram and does not require specifying K in adva
 
 ### Method Chosen: **Random Forest PMM-like Imputation for Missing Manufacturer Properties**
 
-Builds a 25-PCM database (18 from Rubitherm/Pluss manufacturer datasheets + 7 from peer-reviewed literature). Missing properties (density, specific heat, thermal conductivity) for manufacturer PCMs are imputed using a 3-donor Predictive Mean Matching (PMM)-like blend trained with Random Forest regressors on the available complete rows.
+Builds the current 62-PCM database (55 manufacturer-derived records from the MICE+RF+PMM detailed input + 7 from peer-reviewed literature). Manufacturer property gaps are completed by the upstream MICE+RF+PMM workflow and carried into this database with imputation flags and provenance. Literature rows retain genuinely unreported density, specific heat, conductivity, and cycling values as missing rather than inventing them.
 
 **Why RF imputation chosen:**
 
@@ -485,14 +485,14 @@ Builds a 25-PCM database (18 from Rubitherm/Pluss manufacturer datasheets + 7 fr
 Filling missing properties with column means would destroy the correlation between density and thermal conductivity that exists across PCM families (paraffins have lower density and conductivity than fatty acids, which have lower density and conductivity than salt hydrates). Mean imputation would produce physically implausible combinations. Rejected.
 
 **Alternative 2 rejected: MICE (multivariate chain)**
-MICE is the gold standard for tabular imputation and was used in preprocessing (Phase 2). However, the PCM database has only 18 manufacturer rows, too few for MICE's iterative convergence. Random Forest with the PMM correction provides a stable single-pass imputation for such small databases. Rejected as unstable for n < 30.
+MICE is the gold standard for tabular imputation and is used in the upstream PCM preprocessing workflow together with Random Forest and Predictive Mean Matching. The current database builder consumes that detailed completed file and preserves its per-property imputation flags; it does not impute the seven literature rows because their missing values have no defensible donor pool.
 
 **Literature comparison**
 
 
 | Aspect              | Our pipeline                             | Literature                                                                                               | Verdict                                            |
 | ------------------- | ---------------------------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
-| Database size       | 25 PCMs (18 manufacturer + 7 literature) | **Singh (2025)**: Table 2 lists 200+ cited PCMs; **Martinez (2025)**: Rubitherm industrial measured data | **Gap** — we use auditable subset only             |
+| Database size       | 62 PCMs (55 manufacturer-derived + 7 literature) | **Singh (2025)**: Table 2 lists 200+ cited PCMs; **Martinez (2025)**: Rubitherm industrial measured data | **Auditable expanded subset; further material families remain optional** |
 | Property imputation | RF + PMM-like 3-donor blend              | **Liu (2025)**: ANN/XGBoost predict Tm, L with R²≈0.99; **Eldokaishi (2022)**: ANN for SWH               | **Conservative** — we impute gaps, not invent PCMs |
 | Tm band             | 42–70°C SWH-specific                     | **Singh (2025)**: **40–70°C** optimal organic PCM band                                                   | **Aligned**                                        |
 

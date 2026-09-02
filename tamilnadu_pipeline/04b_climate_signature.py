@@ -1,5 +1,5 @@
 """
-04b_climate_signature.py  (v3.0 — Tier 1 + Tier 2 merged; v3.1 PCM design-basis corrected 2026-08-31)
+04b_climate_signature.py  (v3.0 — Tier 1 + Tier 2 merged)
 ============================================================
 PHASE 3 — CLIMATE SIGNATURE CONSTRUCTION (Objective 1 plan v3.0, Section 6)
 
@@ -21,22 +21,6 @@ to within X%" is a good sentence to be able to write).
 
 monsoon_index remains proxy-only (see 02b's docstring: NASA POWER precip
 was never downloaded) — say so plainly if you cite it.
-
-PCM DESIGN-BASIS CORRECTION (v3.1, 2026-08-31, OPTION A IMPLEMENTED)
---------------------------------------------------------------------
-L_required was computed as if PCM latent heat alone must supply 100% of the
-Avargani et al. (2021) 300 L night-discharge benchmark, yielding ceiling
-values (400–550 kJ/kg) that zero out all single-material PCM candidates.
-Audit of Avargani's paper revealed: their system delivers 300 L via INTEGRATED
-collector + PCM tank + sensible-heat tank, not PCM latent alone. Literature
-on combined sensible-latent SWH reports PCM contributing 40–78% of total
-delivery (Zhao 2022: 50%; Huang 2020: ~70%; Abdelsalam 2020: 50% volume;
-Koželj 2021: 15% volume → 70% storage gain). IMPLEMENTED OPTION A: redefine
-  L_required = (SHARE_PCM * Q_night) / m_PCM
-with SHARE_PCM = 0.5 (literature-anchored central estimate, range 0.4–0.7).
-This is a one-line code change that converts "zero candidates" to "majority
-survive," with explicit citations. See CLAUDE.md §3.1 for full rationale and
-OPTION B (Phase 5 MCDM ranking guidance).
 
 INPUT  : data/preprocessed/tamilnadu_cleaned_physical.csv   (04's Phase-2 output)
          data/processed/tier2_signature_tamilnadu.csv       (02b's output)
@@ -67,7 +51,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-from config import PREPROCESSED_DIR, PROCESSED_DIR
+from config import PREPROCESSED_DIR, PROCESSED_DIR, SHARE_PCM
 
 SIGNATURE_DIR = PROCESSED_DIR / "signatures"
 SIGNATURE_DIR.mkdir(parents=True, exist_ok=True)
@@ -97,16 +81,6 @@ DRAW_MASS_KG    = DRAW_VOLUME_L * 1.0  # kg (density of water ≈ 1 kg/L)
 DRAW_HOURS      = 7.0                  # overnight storage window (hours)
 CP_WATER        = 4.186               # kJ/(kg·K)
 ASSUMED_PCM_MASS_KG = 50.0
-
-# PCM's fractional contribution to total night-time thermal delivery in a
-# combined PCM-tank (sensible + latent) system. EXPLICIT HEURISTIC informed
-# by reported PCM energy/volume contribution fractions of 15–78% across
-# combined sensible-latent systems (Zhao 2022, Huang 2020, Abdelsalam 2020,
-# Koželj 2021), not a first-principles derivation. Avargani et al. (2021)
-# themselves deliver their 300 L benchmark via integrated system architecture
-# (collector + PCM tank + sensible-heat tank), not PCM latent heat alone.
-# Central estimate 0.5, range 0.4–0.7. Replaces the prior all-latent assumption.
-SHARE_PCM = 0.5
 
 KT_CLOUDY_THRESHOLD = 0.35
 
@@ -271,24 +245,18 @@ print("\n[3/6] Derived PCM-facing quantities (Tm_target, L_required) ...")
 sig["Tm_target_C"] = TM_TARGET_C
 sig["T_mains_est_C"] = sig["Ta_mean"] - 2.0
 
-# L_required = PCM's fractional share of total thermal energy to heat
-# DRAW_MASS_KG of water from mains to T_DELIVERY_C, divided by assumed PCM mass.
-# Avargani et al. (2021) deliver this via combined PCM-tank architecture;
-# literature (Zhao 2022, Huang 2020, Abdelsalam 2020) reports PCM contributing
-# 40–78% of total delivery. Central estimate 0.5, with remainder from tank
-# sensible heat and overlapping daytime charging.  Units:
-#   DRAW_MASS_KG [kg] × CP_WATER [kJ/(kg·K)] × ΔT [K] → kJ total
-#   × SHARE_PCM [0.5, literature-anchored]
-#   ÷ ASSUMED_PCM_MASS_KG [kg] → kJ/kg  (specific latent heat requirement)
+# L_required = PCM-specific latent heat target (kJ/kg PCM).
+# OPTION A (2026-08-31): SHARE_PCM = 0.5 — PCM supplies ~50% of overnight
+# delivery; tank sensible heat + concurrent charging supply the remainder
+# (Zhao 2022; Huang 2020; Abdelsalam 2020; Koželj 2021). See 07_PHASE_5_AUDIT.md.
 q_total_kJ = DRAW_MASS_KG * CP_WATER * (T_DELIVERY_C - sig["T_mains_est_C"])
-q_pcm_kJ = SHARE_PCM * q_total_kJ
-sig["L_required_kJ_per_kg"] = q_pcm_kJ / ASSUMED_PCM_MASS_KG
+sig["L_required_kJ_per_kg"] = (q_total_kJ * SHARE_PCM) / ASSUMED_PCM_MASS_KG
 print(f"  Tm_target: constant {TM_TARGET_C:.0f} C across all points")
 print(f"  Draw volume: {DRAW_VOLUME_L:.0f} L ({DRAW_MASS_KG:.0f} kg), "
-      f"delivery at {T_DELIVERY_C:.0f} C, PCM mass {ASSUMED_PCM_MASS_KG:.0f} kg")
+      f"delivery at {T_DELIVERY_C:.0f} C, PCM mass {ASSUMED_PCM_MASS_KG:.0f} kg, "
+      f"SHARE_PCM={SHARE_PCM}")
 print(f"  L_required range: {sig['L_required_kJ_per_kg'].min():.0f} - "
-      f"{sig['L_required_kJ_per_kg'].max():.0f} kJ/kg "
-      f"(PCM {SHARE_PCM*100:.0f}% of total, with tank sensible heat + concurrent charging)")
+      f"{sig['L_required_kJ_per_kg'].max():.0f} kJ/kg")
 
 # ═══════════════════════════════════════════════════════════
 print("\n[4/6] Interaction terms ...")

@@ -28,10 +28,11 @@ Rank the surviving PCM candidates in each cluster using four independent multi-c
    - **Monte Carlo**: 5,000 Dirichlet weight draws + Gaussian property perturbations (Tm ±1K, latent heat ±5%, conductivity ±10%). Calculates Top-3 inclusion probability and Top-1 retention.
 
 ## Results
-- Ranks the 7 survivors for each cluster.
-- **Identical Rankings Across Clusters**:
-  Since all clusters had the same 7 survivors and very similar weights (due to similar `L_required` and GHI indices), the ranked candidates are almost identical. `RT54HC` or `RT55` are ranked high across all regimes.
-- MC stability indicates high confidence for the top candidates.
+- Ranks the current feasibility survivors for each cluster. The generated `mcdm_topk_by_cluster.csv` contains the Top-3 for each of the five clusters (15 rows total).
+- The current climate-relative latent-heat criterion is `latent_heat / L_required`, so the score retains cluster-specific demand information rather than treating raw latent heat as equally useful everywhere.
+- Do not describe the ranking as seven survivors per cluster; the feasibility file contains all 62 audited candidates per cluster and the number passing all filters varies by cluster.
+- Monte Carlo stability reports run-specific Top-3 inclusion and Top-1 retention probabilities; quote values from `monte_carlo_stability.csv` for the particular run being reported.
+- In the current run, `n-Octacosane (C28)` is the consensus rank-1 PCM in all five clusters. This is a statewide consensus result; it does not imply that all alternatives have equal stability or physical performance.
 
 ## Status
 **COMPLETE**

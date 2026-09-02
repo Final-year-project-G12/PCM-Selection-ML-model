@@ -1,6 +1,6 @@
 # 20 — Implementation Issues and Troubleshooting
 
-All five critical issues identified in the v3.0 audit have been **corrected in code (v3.1)**. Processed outputs under `data/processed/` still reflect pre-fix runs until the pipeline is re-executed from `02_combine_tamilnadu.py` onward.
+All five critical issues identified in the v3.0 audit have been **corrected in code**. The current processed PCM artifacts reflect the updated database and fractional-share sizing model; regenerate the full downstream chain whenever upstream climate data or PCM inputs change.
 
 ### 1. Deaccumulation Bug (Phase 2 / Step 2) — **CORRECTED**
 - **Was**: `deaccumulate()` in `02_combine_tamilnadu.py` applied `diff()` between consecutive downloaded hours. CDS point downloads already return hourly fluxes, so diffing corrupted GHI (noon r ≈ 0.40 vs NASA POWER).

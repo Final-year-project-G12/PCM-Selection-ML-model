@@ -24,6 +24,8 @@ import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+
+
 import folium
 
 from config import PROCESSED_DIR
@@ -57,8 +59,15 @@ print(f"  Points: {len(assign)}  |  Clusters: {n_clusters}")
 # ═══════════════════════════════════════════════════════════
 print("\n[A] Cluster map (Folium, hover for full membership probability vector) ...")
 
-fmap = folium.Map(location=[assign["lat"].mean(), assign["lon"].mean()],
-                   zoom_start=7, tiles="CartoDB positron")
+'''fmap = folium.Map(location=[assign["lat"].mean(), assign["lon"].mean()],
+                   zoom_start=7, tiles="CartoDB positron")'''
+
+fmap = folium.Map(
+    location=[assign["lat"].mean(), assign["lon"].mean()],
+    zoom_start=7,
+    tiles="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+    attr='&copy; OpenStreetMap contributors &copy; CARTO'
+)
 prob_cols = [c for c in assign.columns if c.startswith("prob_cluster")]
 
 for r in assign.itertuples():

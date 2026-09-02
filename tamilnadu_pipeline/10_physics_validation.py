@@ -142,7 +142,7 @@ DRAW_HOURS_LOCAL = [7, 19]
 DRAW_MASS_KG = 75.0
 T_DELIVERY_C = 50.0
 
-MAX_PCMS_PER_CLUSTER = 20      # safety cap, not expected to bind given ~25-row database
+MAX_PCMS_PER_CLUSTER = 20      # safety cap, not expected to bind given ~62-row database
 BENCHMARK_SF_LOW, BENCHMARK_SF_HIGH = 0.54, 0.84   # plan v3.0 Table 16
 
 

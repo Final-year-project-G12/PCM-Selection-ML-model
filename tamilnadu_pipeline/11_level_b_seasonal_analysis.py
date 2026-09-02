@@ -49,7 +49,7 @@ warnings.filterwarnings("ignore")
 import numpy as np
 import pandas as pd
 
-from config import PREPROCESSED_DIR, PROCESSED_DIR
+from config import PREPROCESSED_DIR, PROCESSED_DIR, SHARE_PCM, latent_heat_floor_kj_kg
 
 PHYSICAL_FILE = PREPROCESSED_DIR / "tamilnadu_cleaned_physical.csv"
 ASSIGN_FILE = PROCESSED_DIR / "clustering" / "cluster_assignments_tamilnadu.csv"
@@ -94,8 +94,9 @@ def topsis(matrix, weights):
 def rank_seasonal(pcm_db, tm_target, l_required, weights):
     df = pcm_db.copy()
     lo, hi = tm_target - WINDOW_LOWER_OFFSET, tm_target + WINDOW_UPPER_OFFSET
+    l_floor = latent_heat_floor_kj_kg(l_required, LATENT_HEAT_FRACTION)
     survivors = df[df["Tm_C"].between(lo, hi) & df["Tm_C"].between(ABSOLUTE_TM_MIN, ABSOLUTE_TM_MAX) &
-                    (df["latent_heat_kJ_kg"] >= LATENT_HEAT_FRACTION * l_required)].copy()
+                    (df["latent_heat_kJ_kg"] >= l_floor)].copy()
     if len(survivors) < 2:
         return None
 
@@ -162,7 +163,7 @@ def main():
             ta_mean_season = season_rows["era5_T_amb"].mean()
             t_mains_season = ta_mean_season - 2.0
             q_total_kj = DRAW_MASS_KG * CP_WATER * (T_DELIVERY_C - t_mains_season)
-            l_required_season = q_total_kj / ASSUMED_PCM_MASS_KG
+            l_required_season = (q_total_kj * SHARE_PCM) / ASSUMED_PCM_MASS_KG
 
             ranked = rank_seasonal(pcm_db, tm_target, l_required_season, weights)
             if ranked is None:

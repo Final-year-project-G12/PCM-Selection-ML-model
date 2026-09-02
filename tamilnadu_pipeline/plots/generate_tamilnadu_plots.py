@@ -112,7 +112,14 @@ def p03():
         for cid,g in df.groupby("cluster_id"):
             lo=g["window_lo"].dropna(); hi=g["window_hi"].dropna()
             if len(lo) and len(hi): ax.axvspan(lo.iloc[0],hi.iloc[0],alpha=0.07,color=PAL[int(cid)%len(PAL)])
-    ax.axhline(100,color="gray",ls=":",alpha=0.7,label="Latent heat floor 100 kJ/kg")
+    if "latent_heat_floor_used" in df.columns:
+        for cid,g in df.groupby("cluster_id"):
+            floor=g["latent_heat_floor_used"].dropna()
+            if len(floor):
+                ax.axhline(floor.iloc[0],color=PAL[int(cid)%len(PAL)],ls=":",alpha=0.55,lw=1.2,
+                           label=f"C{cid} L floor ({floor.iloc[0]:.0f} kJ/kg)" if int(cid)==0 else None)
+    else:
+        ax.axhline(100,color="gray",ls=":",alpha=0.7,label="Latent heat floor 100 kJ/kg")
     ax.set(title="Tamil Nadu PCM - Melting Point vs Latent Heat (Feasible Survivors)",xlabel="Melting Temp (C)",ylabel="Latent Heat (kJ/kg)")
     ax.legend(title="Regime",fontsize=9); ax.grid(alpha=0.25); plt.tight_layout(); sfig("03_melting_point_vs_latent_heat.png")
     fig_px=px.scatter(df,x="Tm_C",y="latent_heat_kJ_kg",color=df["cluster_id"].astype(str),
@@ -120,7 +127,16 @@ def p03():
                       title="Tamil Nadu - Melting Point vs Latent Heat",template="plotly_white",
                       labels={"Tm_C":"Melting Temp (C)","latent_heat_kJ_kg":"Latent Heat (kJ/kg)","color":"Cluster"},
                       color_discrete_sequence=px.colors.qualitative.Set1)
-    fig_px.update_traces(marker=dict(size=9,opacity=0.85)); fig_px.add_hline(y=100,line_dash="dot",line_color="gray",annotation_text="Latent heat floor")
+    fig_px.update_traces(marker=dict(size=9,opacity=0.85))
+    if "latent_heat_floor_used" in df.columns:
+        for cid,g in df.groupby("cluster_id"):
+            floor=g["latent_heat_floor_used"].dropna()
+            if len(floor):
+                fig_px.add_hline(y=floor.iloc[0],line_dash="dot",
+                                 line_color=PAL[int(cid)%len(PAL)],
+                                 annotation_text=f"C{cid} floor {floor.iloc[0]:.0f} kJ/kg")
+    else:
+        fig_px.add_hline(y=100,line_dash="dot",line_color="gray",annotation_text="Latent heat floor")
     shtml(fig_px,"03_melting_point_vs_latent_heat_interactive.html")
 
 # ---- Plot 4: Feasible Candidates Highlighted ----
