@@ -60,12 +60,15 @@ if bic is not None and "k" in bic.columns:
 # 2. PCA Projection
 print("[2/5] PCA Projection")
 if sig is not None and clu is not None:
-    if "point_id" in sig.columns and "point_id" in clu.columns:
-        mg = sig.merge(clu[["point_id", "cluster_id"]], on="point_id", how="inner")
+    clu_clean = clu.copy()
+    if "cluster_id" not in clu_clean.columns and "cluster" in clu_clean.columns:
+        clu_clean["cluster_id"] = clu_clean["cluster"]
+    if "point_id" in sig.columns and "point_id" in clu_clean.columns:
+        mg = sig.merge(clu_clean[["point_id", "cluster_id"]], on="point_id", how="inner")
     else:
-        min_len = min(len(sig), len(clu))
+        min_len = min(len(sig), len(clu_clean))
         mg = sig.iloc[:min_len].copy()
-        mg["cluster_id"] = clu["cluster_id"].iloc[:min_len].values
+        mg["cluster_id"] = clu_clean["cluster_id"].iloc[:min_len].values
 
     num_cols = mg.select_dtypes(include=[np.number]).drop(columns=["cluster_id"], errors="ignore").columns
     if len(num_cols) >= 2:
@@ -82,28 +85,41 @@ if sig is not None and clu is not None:
 
 # 3. Geographic Map
 print("[3/5] Geographic Cluster Map")
-if clu is not None and {"lat", "lon", "cluster_id"}.issubset(clu.columns):
-    fig, ax = plt.subplots(figsize=(10, 7))
-    for cid in sorted(clu["cluster_id"].unique()):
-        sub = clu[clu["cluster_id"] == cid]
-        ax.scatter(sub["lon"], sub["lat"], color=PAL[int(cid) % len(PAL)], s=70, alpha=0.85, label=f"Cluster {cid}")
-    ax.set(xlabel="Longitude E", ylabel="Latitude N", title="Verify Clustering 04: Geographic Cluster Map (Assam)")
-    ax.legend(); ax.grid(alpha=0.3); sfig("04_geographic_map.png")
+if clu is not None:
+    clu_map = clu.copy()
+    if "cluster_id" not in clu_map.columns and "cluster" in clu_map.columns:
+        clu_map["cluster_id"] = clu_map["cluster"]
+    if not {"lat", "lon"}.issubset(clu_map.columns):
+        pop_file = os.path.join(BASE, "data", "processed", "population_grid_points.csv")
+        if os.path.exists(pop_file):
+            pop = pd.read_csv(pop_file)
+            clu_map = clu_map.merge(pop[["point_id", "lat", "lon"]], on="point_id")
+
+    if {"lat", "lon", "cluster_id"}.issubset(clu_map.columns):
+        fig, ax = plt.subplots(figsize=(10, 7))
+        for cid in sorted(clu_map["cluster_id"].unique()):
+            sub = clu_map[clu_map["cluster_id"] == cid]
+            ax.scatter(sub["lon"], sub["lat"], color=PAL[int(cid) % len(PAL)], s=70, alpha=0.85, label=f"Cluster {cid}")
+        ax.set(xlabel="Longitude E", ylabel="Latitude N", title="Verify Clustering 04: Geographic Cluster Map (Assam)")
+        ax.legend(); ax.grid(alpha=0.3); sfig("04_geographic_map.png")
 
 # 4. Cluster Profile Comparison
 print("[4/5] Cluster Profiles Bar Chart")
-if prof is not None and "cluster_id" in prof.columns:
-    cols = [c for c in prof.columns if c not in ["cluster_id", "count"]]
+if prof is not None and ("cluster_id" in prof.columns or "cluster" in prof.columns):
+    prof_clean = prof.copy()
+    c_col = "cluster_id" if "cluster_id" in prof_clean.columns else "cluster"
+    cols = [c for c in prof_clean.columns if c not in ["cluster_id", "cluster", "count", "n_points", "pct_points", "total_population"]]
     if cols:
         fig, ax = plt.subplots(figsize=(10, 6))
-        prof.set_index("cluster_id")[cols[:5]].plot(kind="bar", ax=ax, colormap="tab10")
+        prof_clean.set_index(c_col)[cols[:5]].plot(kind="bar", ax=ax, colormap="tab10")
         ax.set(title="Verify Clustering 05: Mean Climate Features by Cluster (Assam)", ylabel="Normalized Feature Value", xlabel="Cluster ID")
         ax.grid(alpha=0.3, axis="y"); plt.tight_layout(); sfig("05_cluster_profiles.png")
 
 # 5. Cluster Sizes
 print("[5/5] Cluster Sizes")
-if clu is not None and "cluster_id" in clu.columns:
-    sizes = clu["cluster_id"].value_counts().sort_index()
+if clu is not None:
+    c_col = "cluster_id" if "cluster_id" in clu.columns else "cluster"
+    sizes = clu[c_col].value_counts().sort_index()
     fig, ax = plt.subplots(figsize=(7, 4.5))
     ax.bar(sizes.index.astype(str), sizes.values, color=[PAL[int(c) % len(PAL)] for c in sizes.index], edgecolor="white")
     ax.set(title="Verify Clustering 06: Point Distribution per Cluster (Assam)", xlabel="Cluster ID", ylabel="Number of Grid Points")

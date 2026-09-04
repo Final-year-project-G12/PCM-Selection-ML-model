@@ -1,118 +1,68 @@
-# 08 — Phase 6 Audit: MCDM Ranking Engine
+# 08 — Phase 6 Audit: Feasibility Filtering Engine
 
-**Script**: `08_mcdm_ranking.py`
+**Script**: `07_feasibility_filter.py`
 
-**Status**: COMPLETE
+**Status**: GOVERNED (Authoritative Final)
 
-## Method stack
+---
 
-All four MCDM methods from plan §9 are implemented:
+## Objective & Methodological Distinction
 
-| Method | Score type | Range |
-|---|---|---|
-| TOPSIS | Closeness coefficient C_i | [0, 1] (higher = better) |
-| GRA | Grey relational grade | [0, 1] (higher = better) |
-| PROMETHEE II | Net outranking flow φ | [−1, +1] (higher = better) |
-| VIKOR | Compromise index Q_i | [0, 1] (lower = better — correct sign) |
+Phase 6 screens candidate phase-change materials against 7 multi-physics, safety, and operational constraints. To preserve scientific integrity, this audit explicitly distinguishes between two separate pipeline versions:
+1. **Final Locked $K=3$ Feasibility Governance** (Audited 58-PCM database under final $K=3$ climate forcing).
+2. **Historical Pre-Audit $K=4$ Feasibility Survivors** (Preliminary 25-PCM screening under historical $K=4$ forcing, which provided the 8 candidates evaluated in Phase 9 physics validation).
 
-### Criteria (all benefit after transformation)
+---
 
-| Criterion | Derivation | Physical rationale |
-|---|---|---|
-| `f_Tm` | Gaussian fitness: exp(−(Tm − 44)² / 2×4²) | Melting point proximity to target (σ=4K) |
-| `latent_heat_margin_ratio` | L / L_required | Climate-relative latent heat (avoids constant winner when Tm_target is uniform) |
-| `rho_H_MJ_m3` | Volumetric latent heat (MJ/m³) | Tank size implication |
-| `TC_W_mK` | Thermal conductivity (W/m·K) | Charge/discharge rate |
-| `cycles_confidence` | log-scaled cycling stability | Long-term durability |
+## 1. Final Locked $K=3$ Feasibility Governance
 
-**Latent heat margin ratio**: Because Tm_target = 44°C is **uniform across all Assam clusters**,
-raw latent heat alone provides zero cluster-specific information — the same 6 or 8 PCMs would
-receive identical L scores in every cluster. Using L / L_required makes the criterion
-**climate-relative**: a PCM that exceeds the Assam-regime's specific energy demand earns more
-credit. This is the correct formulation and is documented in `08_mcdm_ranking.py`.
+### Screening Setup
+- **Candidate Pool**: Audited 58-row production database (`pcm_database_final.csv`).
+- **Climate Forcing**: Final locked $K=3$ climate regimes (Medoids: `ASP_0012`, `ASP_0092`, `ASP_0028`).
+- **Target Melting Temperature**: $T_m^{\text{target}} = 44.0^\circ\text{C}$ ($T_{\text{del}} = 50.0^\circ\text{C}, \Delta T_{\text{approach}} = 6.0\text{ K}$).
+- **Target Latent Heat Demand**: Regime-specific $L_{\text{required}}$ based on ambient temperature baselines ($232–252\text{ kJ/kg}$).
 
-### Weighting: entropy + AHP blend
+### Constraint Architecture (7 Vetoes)
+1. **Melting Window**: $T_m \in [T_m^{\text{target}} - 6, T_m^{\text{target}} + 8] = [38.0, 52.0]^\circ\text{C}$.
+2. **Absolute SWH Band**: $T_m \in [42.0, 70.0]^\circ\text{C}$.
+3. **Latent Heat Capacity Floor**: $L \ge 1.0 \times L_{\text{required}}$ (strict unrelaxed floor).
+4. **Thermal Cycling Durability**: Tested $\ge 300$ cycles without degradation.
+5. **Corrosion Veto**: Prohibition of inorganic salt hydrates in high-humidity regimes ($HSI > \text{global } p_{75}$).
+6. **Supercooling Limit**: Supercooling $\Delta T_{\text{sub}} \le 8.0\text{ K}$.
+7. **Chemical & Fire Safety**: Elimination of toxic, explosive, or highly flammable materials.
 
-- **Entropy weights**: Shannon entropy from the normalised decision matrix (objective)
-- **AHP weights**: Framework doc's Table 13 priors (subjective; no pairwise elicitation performed —
-  same status as Rajasthan: `AHP_PAIRWISE_MATRIX = None`)
-- **Blended weight**: `ENTROPY_AHP_LAMBDA = 0.5` (equal blend)
+### Governance Findings
+- **Zero Automatic Relaxation**: Unlike early prototypes that relaxed temperature bands or latent heat thresholds when candidate counts dropped, final governance strictly prohibits automatic relaxation.
+- **Confirmed Feasible Candidates**:
+  $$n_{\text{confirmed}} = [0, 0, 0]$$
+  Zero PCMs in the 58-row database met all 7 strict criteria simultaneously without relaxation across all three regimes.
+- **Conditional Candidate**: Exactly **one candidate** qualified under conditional status:
+  - **`n-Tetracosane (C24)`** ($T_m = 52.0^\circ\text{C}$, $L = 255.0\text{ kJ/kg}$) in **Cluster 0**.
+  - In Cluster 0 ($L_{\text{required}} = 252.0\text{ kJ/kg}$), `n-Tetracosane` satisfies $L \ge L_{\text{required}}$ and touches the upper boundary of the melting window ($52.0^\circ\text{C}$). It is classified strictly as a **Conditional candidate**, not a confirmed or MCDM-ranked survivor.
+  *(Crucial Note: `n-Tetracosane` belongs exclusively to the final 58-row database screening; it was NOT part of the historical 8-PCM survivor set).*
 
-### Consensus layer
+---
 
-- **Borda count** (primary): rank sum across 4 methods
-- **Copeland pairwise** (cross-check): pairwise dominance matrix
-- **Kendall's W** per cluster: inter-method concordance
+## 2. Historical Pre-Audit $K=4$ Feasibility Survivors
 
-### Monte Carlo (5,000 draws)
+During preliminary research, feasibility filtering was applied to the initial 25-row prototype database (`pcm_database_assam.csv`) under exploratory 4-cluster forcing. With latent-heat threshold relaxation ($\kappa = 0.7$), an 8-PCM candidate set survived.
 
-- `N_MONTE_CARLO_DRAWS = 5000` — **matches the plan spec §9.6 exactly** (Rajasthan used 1,000
-  as a documented deviation; Assam corrects this)
-- Per-draw: Dirichlet weight perturbation (concentration=30) + Gaussian property noise
-  (Tm ±1K, L ±5%, TC ±10%, rhoH ±8%)
-- Outputs: Top-3 inclusion probability per PCM per cluster
+### Authoritative Historical 8-PCM Survivor Set
+These exact 8 materials formed the candidate universe evaluated independently by the Phase 9 dynamic physics simulation:
 
-## Results (from `mcdm_topk_assam.csv`)
-
-### Cluster 0 (24 pts, hill/transition, L_required ~249 kJ/kg)
-
-| Rank | PCM | Family | Tm (°C) | L (kJ/kg) | Kendall's W |
+| # | Candidate Material | Material Family | $T_m$ (°C) | Latent Heat ($L$, kJ/kg) | Historical Screening Role |
 |---|---|---|---|---|---|
-| 1 | **RT44HC** | Rubitherm RT | 43.0 | 250 | **0.807 (strong)** |
-| 2 | RT45HC | Rubitherm RT | 47.0 | 230 | |
-| 3 | C22H46 (docosane-class paraffin) | Paraffin | 44.5 | 249 | |
+| 1 | **Myristic-Palmitic eutectic (58/42)** | Binary Organic Eutectic | 42.6 | 169.7 | Historical survivor |
+| 2 | **RT44HC** | Rubitherm Paraffin | 43.0 | 250.0 | Historical survivor (#1 MCDM rank) |
+| 3 | **savE® OM42** | PLUSS Bio-based Organic | 44.0 | 199.0 | Historical survivor |
+| 4 | **C22H46 (docosane-class paraffin)** | Pure Alkane Paraffin | 44.5 | 249.0 | Historical survivor |
+| 5 | **savE® OM46** | PLUSS Bio-based Organic | 47.0 | 177.0 | Historical survivor |
+| 6 | **RT45HC** | Rubitherm Paraffin | 47.0 | 230.0 | Historical survivor |
+| 7 | **savE® OM50** | PLUSS Bio-based Organic | 50.0 | 189.0 | Historical survivor |
+| 8 | **savE® OM48** | PLUSS Bio-based Organic | 51.0 | 165.0 | Historical survivor |
 
-MC inclusion probability: RT44HC 96.2%, RT45HC 62.2%, C22H46 39.3%
-
-### Cluster 1 (52 pts, Brahmaputra valley, L_required ~244 kJ/kg)
-
-| Rank | PCM | Family | Tm (°C) | L (kJ/kg) | Kendall's W |
-|---|---|---|---|---|---|
-| 1 | **RT44HC** | Rubitherm RT | 43.0 | 250 | **0.807 (strong)** |
-| 2 | RT45HC | Rubitherm RT | 47.0 | 230 | |
-| 3 | C22H46 (docosane-class paraffin) | Paraffin | 44.5 | 249 | |
-
-MC inclusion probability: RT44HC 96.2%, RT45HC 62.2%, C22H46 39.3%
-
-### Cluster 2 (11 pts, Barak valley/south, L_required ~232 kJ/kg)
-
-| Rank | PCM | Family | Tm (°C) | L (kJ/kg) | Kendall's W |
-|---|---|---|---|---|---|
-| 1 | **RT44HC** | Rubitherm RT | 43.0 | 250 | **0.845 (strong)** |
-| 2 | RT45HC | Rubitherm RT | 47.0 | 230 | |
-| 3 | C22H46 (docosane-class paraffin) | Paraffin | 44.5 | 249 | |
-
-MC inclusion probability: RT44HC 95.2%, RT45HC 67.7%, C22H46 26.5%
-
-### Cluster 3 (41 pts, western plains/char, L_required ~233 kJ/kg)
-
-| Rank | PCM | Family | Tm (°C) | L (kJ/kg) | Kendall's W |
-|---|---|---|---|---|---|
-| 1 | **RT44HC** | Rubitherm RT | 43.0 | 250 | **0.845 (strong)** |
-| 2 | RT45HC | Rubitherm RT | 47.0 | 230 | |
-| 3 | C22H46 (docosane-class paraffin) | Paraffin | 44.5 | 249 | |
-
-MC inclusion probability: RT44HC 95.2%, RT45HC 67.7%, C22H46 26.5%
-
-## Key observation: identical #1 across all clusters
-
-RT44HC is the unanimous #1 candidate across all 4 Assam clusters. This is expected given the
-uniform Tm_target = 44°C: RT44HC at Tm=43°C has the best Gaussian fitness (1K from target) plus
-the highest latent heat in the survivor pool (250 kJ/kg). The identical top-3 ranking in clusters
-0/1 and the identical ranking in clusters 2/3 reflects the similar L_required values and the same
-corrosion-veto-driven survivor pool.
-
-This uniformity is not a bug — it is the correct mathematical outcome given:
-1. Uniform Tm_target = 44°C → same f_Tm for all clusters
-2. Similar L_required (232–249 kJ/kg) across clusters → similar margin ratios
-3. Small database (25 rows, 6–8 survivors per cluster after veto)
-
-## Known issues
-
-1. **AHP not elicited**: AHP_PAIRWISE_MATRIX = None. Framework doc's Table 13 priors used unmodified.
-
-2. **Literature PCM property gaps**: Criterion contributions for C22H46 and other Singh2025 rows
-   are incomplete due to NaN thermal conductivity/density (see Phase 5 audit).
-
-3. **All results are provisional**: Tagged as provisional pending PCM database expansion (25 → 40–60
-   rows). The uniform top-3 result is likely to change when more candidates with Tm ≈ 44°C are added.
+### Negative Disclosures (Integrity Mandates)
+- **NO "RT47"**: `RT47` ($T_m=46.0^\circ\text{C}$, $L=160\text{ kJ/kg}$) failed the latent heat floor and was eliminated; it is **not** a historical survivor.
+- **NO n-Tetracosane**: `n-Tetracosane (C24)` was introduced in the 58-row database and was **not** part of this historical 8-PCM set.
+- **Terminology**: When referencing these materials in downstream validation, they must be designated:
+  *"Phase 6-screened historical candidate evaluated independently under final Phase 3 $K=3$ climate forcing."*

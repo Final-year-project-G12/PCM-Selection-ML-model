@@ -1,112 +1,64 @@
-# 09 — Phase 7 & 8 Audit: Physics Validation & Recommendation Cards
+# 09 — Phase 7 & 8 Audit: MCDM Ranking Engine & Monte Carlo Uncertainty
 
-## Phase 7 — Physics-Based Validation (`10_physics_validation.py`)
+**Scripts**: `08_mcdm_ranking.py`, `09_recommendation_cards.py`
 
-**Status**: COMPLETE — genuine NEGATIVE result
-
-### Model: Grey-box lumped-enthalpy tank
-
-Matches plan v3.0 §10 primary choice (Python grey-box lumped-enthalpy model). Two coupled lumped
-nodes: tank water (Tw) and PCM (Tp or melt fraction f during isothermal plateau at Tm). Driven
-hour-by-hour for a full real year of the cluster's medoid point's actual daily climate data.
-
-**Solver**: Backward Euler (implicit), the same as Rajasthan's Phase 7. Derived from Barqawi (2025)
-ODE structure.
-
-### Stated assumptions (from `10_physics_validation.py` docstring)
-
-| Parameter | Value |
-|---|---|
-| Tank water mass | 150 kg |
-| Collector-tank coil area | 2.5 m² |
-| Water-coil HTC | 1500 W/m²·K |
-| Collector efficiency | 0.70 |
-| PCM volume | 0.035 m³ |
-| PCM-water HTC | 800 W/m²·K |
-| PCM surface area | 3.5 m² |
-| Draws | 2/day, 75 kg each, 07:00 and 19:00 local |
-| Target delivery temperature | 50°C |
-| Ambient temp profile | Daily sinusoid from real Ta_min_true/Ta_max_true; peak 14:00, trough 05:00 local |
-
-### Calibration check
-
-Annual solar fraction is expected to fall in the **54–84% published range** (plan v3.0 Table 16).
-The simulation uses each cluster's medoid point's real 10-year daily GHI/temperature data.
-
-### Results (from `physics_validation_spearman_assam.csv` and `recommendation_cards_assam.md`)
-
-| Cluster | n_candidates | Spearman rho | p-value | Interpretation |
-|---|---|---|---|---|
-| 0 | 6 | **0.257** | 0.623 | Weak agreement |
-| 1 | 6 | **0.257** | 0.623 | Weak agreement |
-| 2 | 8 | **0.286** | 0.493 | Weak agreement |
-| 3 | 8 | **0.167** | 0.693 | Weak agreement |
-
-**Mean Spearman rho = 0.242** (stated in recommendation cards header).
-
-All four clusters return **weak agreement** (rho < 0.4). The MCDM ranking is NOT confirmed by
-physics simulation for any Assam cluster.
-
-### Interpretation
-
-This is the same pattern as Rajasthan's Phase 7 (all clusters negative). For Assam the likely
-causes are identical:
-1. **Undersized PCM pool**: n=6 or n=8 candidates — too small for Spearman rho to be meaningful
-   (minimum recommended ~10–15 pairs for rho to have statistical power)
-2. **Uniform Tm_target**: All clusters use 44°C → the same PCMs appear in all clusters → the MCDM
-   ranking differences between clusters are small → Spearman rho is computed on very similar rank
-   vectors, dominated by noise in the physics simulation
-3. **Solar fraction ceiling effect**: Multiple PCMs achieve 80–85% solar fraction (near the top of
-   the calibration band), compressing rank differences in the simulated output
-
-The negative result is **real, correctly computed, and honestly reported** — not a code error.
-
-### Solar fraction benchmark check
-
-Most simulated solar fractions fall **above** the 54–84% published benchmark band (>84%):
-- Cluster 1: RT44HC 82.1%, C22H46 82.9%, savE® OM42 82.6%, RT45HC 51.7%
-- Cluster 2: RT44HC 84.8%, C22H46 85.3%, savE® OM42 85.1%, RT45HC 52.1%
-
-RT45HC consistently achieves ~51–52% (within the lower band), while RT44HC and C22H46 exceed the
-upper 84% limit. This suggests the model may overestimate performance for the high-latent-heat
-candidates in Assam's moderate-solar climate, or that the benchmark band (from dry-climate SWH
-literature) is not directly applicable to humid-monsoon conditions.
+**Status**: GOVERNED (Authoritative Final)
 
 ---
 
-## Phase 8 — Recommendation Cards (`09_recommendation_cards.py`)
+## Methodological Distinction: Final Governance vs. Historical Benchmark
 
-**Status**: COMPLETE
+Phases 7 and 8 constitute the multi-criteria decision making (MCDM) ranking and stochastic uncertainty propagation layer. 
 
-### What it produces
+In strict adherence to project governance, this audit distinguishes:
+1. **Final Locked $K=3$ Governance** (Audited pipeline status under final $K=3$ climate forcing and 58-row database).
+2. **Historical Pre-Audit $K=4$ Benchmark** (Historical exploratory ranking and 5,000-draw Monte Carlo simulation).
 
-`recommendation_cards_assam.md` — one card per cluster, including:
-- Cluster profile summary (n_points, medoid, climate signature snippet)
-- Derived targets (Tm_target, L_required)
-- Phase 5 screening summary
-- Top-3 PCM table with all 4 method scores + MC inclusion probability
-- Kendall's W
-- **Analytical Criterion Contributions** (percentage breakdown per criterion per PCM)
-- Phase 7 simulation results table
-- Spearman rho with interpretation
+---
 
-### Criterion Contributions — Assam addition
+## 1. Final Locked $K=3$ Governance
 
-This is an explicit explainability requirement from the plan doc (Table 18) that the Tamil Nadu
-Phase 8 script missed. Assam's `09_recommendation_cards.py` adds it via min-max normalisation
-of the criteria space:
+### Phase 7: MCDM Status — NOT PERFORMED
+Under the authoritative Phase 6 feasibility screening of the 58-row PCM database without arbitrary relaxation:
+$$n_{\text{confirmed}} = [0, 0, 0]$$
+- Because no PCM met all 7 strict physical, durability, and corrosion constraints simultaneously across the three regimes, the formal multi-criteria ranking engine was **`NOT PERFORMED`**.
+- The solitary conditional candidate, `n-Tetracosane (C24)` in Cluster 0, is reported transparently as a conditional candidate and was **not** processed through MCDM scoring.
+- **Critical Policy**: No material in the final $K=3$ pipeline is designated as an "MCDM Winner."
 
-For RT44HC in Clusters 0/1:
-- Tm_Fitness: ~36%, Latent_Heat: ~30%, Vol_Heat: ~24%, Conductivity: ~10%
+### Phase 8: Monte Carlo Status — SKIPPED
+In accordance with `data/processed/pcm/monte_carlo_stability_assam.csv` and `final_outputs/tables/table08_monte_carlo_stability_k3.csv`:
+- **Execution Parameter**: $n_{\text{draws}} = 0$
+- **Governance Status**: **`SKIPPED`** across all three regimes (Cluster 0, 1, 2).
+- **Authoritative Skip Reason**: *"Monte Carlo stability analysis skipped due to insufficient eligible candidates ($n < 2$)."*
 
-For Cluster 2/3 (wider survivor pool):
-- RT44HC: Tm_Fitness: ~35%, Latent_Heat: ~30%, Vol_Heat: ~26%, Conductivity: ~9%
+---
 
-The C22H46 (docosane paraffin) criterion contributions are incomplete due to NaN thermal
-conductivity in the source data.
+## 2. Historical Pre-Audit $K=4$ MCDM & Monte Carlo Benchmark
 
-### Cross-phase consistency check
+During preliminary research, the multi-method MCDM framework and 5,000-draw Monte Carlo uncertainty engine were executed against the historical 8-PCM survivor set under exploratory 4-cluster forcing. These outputs are preserved in `final_outputs/tables/table07_historical_mcdm_rankings_k4.csv` as a historical reference benchmark.
 
-The script verifies cluster IDs are consistent across all input files before writing.
-(No separate `provenance_lib.py` as in Rajasthan — consistency is checked inline in the
-recommendation cards script itself.)
+### Method Stack & Consensus Layer
+The historical engine implemented four independent multi-criteria methods:
+- **TOPSIS**: Relative closeness coefficient $C_i \in [0, 1]$ (benefit).
+- **Grey Relational Analysis (GRA)**: Grey relational grade $\gamma_i \in [0, 1]$ (benefit).
+- **PROMETHEE II**: Net outranking flow $\Phi \in [-1, +1]$ (benefit).
+- **VIKOR**: Compromise ranking index $Q_i \in [0, 1]$ (cost metric; lower is better).
+- **Consensus**: Borda count rank sum (primary), Copeland pairwise dominance (secondary), and Kendall's coefficient of concordance ($W$).
+
+### MCDM Criteria Stack
+1. `f_Tm`: Gaussian temperature fitness $\exp\left(-\frac{(T_m - 44.0)^2}{2 \times 4.0^2}\right)$, scoring proximity to target.
+2. `latent_heat_margin_ratio`: Climate-relative latent heat ($L / L_{\text{required}}$).
+3. `rho_H_MJ_m3`: Volumetric latent storage density (MJ/m³).
+4. `TC_W_mK`: Mean thermal conductivity ($W/\text{m}\cdot\text{K}$).
+5. `cycles_confidence`: Durability confidence score based on thermal cycling data.
+
+### Weighting & Historical 5,000-Draw Monte Carlo
+- Blended weighting: 50% objective Shannon entropy + 50% subjective AHP priors.
+- **Executed Monte Carlo Simulation**: Exactly **5,000 Dirichlet-perturbed stochastic draws** were executed on this historical $K=4$ set, perturbing criteria weights (Dirichlet $\alpha=30$) and material properties ($T_m \pm 1\text{ K}$, $L \pm 5\%$, $k \pm 10\%$, $\rho H \pm 8\%$).
+
+### Historical $K=4$ Results Summary
+- **Unanimous #1 Rank**: `RT44HC` ($T_m = 43.0^\circ\text{C}$, $L = 250\text{ kJ/kg}$) achieved the top Borda rank across all 4 historical clusters, driven by its high Gaussian fitness at $44.0^\circ\text{C}$ and superior latent heat.
+- **Concordance**: High inter-method concordance (Kendall's $W = 0.807$ to $0.845$).
+- **Monte Carlo Retention**: `RT44HC` exhibited a 95.2% to 96.2% Top-1 retention probability.
+
+*Thesis Context*: As established in Phase 10, this historical MCDM prioritization of `RT44HC` was subsequently refuted by independent dynamic physics validation, establishing that MCDM proximity scoring does not reflect operational solar fraction.

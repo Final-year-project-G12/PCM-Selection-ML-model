@@ -35,7 +35,7 @@ sig = pd.read_csv(SIG_CSV) if os.path.exists(SIG_CSV) else None
 if sig is not None:
     # 1. Distribution of Key Climate Signature Features
     print("[1/4] Climate distribution histograms")
-    cols = [c for c in ["GHI_mean", "GHI_max", "Ta_mean_proxy", "Ta_max_proxy", "RH_mean_proxy", "Ws_mean_proxy"] if c in sig.columns]
+    cols = [c for c in ["GHI_mean", "Ta_mean", "DTR", "RH_mean", "wind_mean", "kt_mean"] if c in sig.columns]
     if cols:
         fig, axes = plt.subplots(2, 3, figsize=(14, 8))
         axes = axes.flatten()

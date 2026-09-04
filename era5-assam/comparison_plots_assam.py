@@ -29,12 +29,14 @@ FEAS     = os.path.join(BASE, "data", "processed", "pcm", "feasibility_survivors
 PCM_DB   = os.path.join(BASE, "data", "processed", "pcm", "pcm_database_assam.csv")
 TOPK     = os.path.join(BASE, "data", "processed", "pcm", "mcdm_topk_assam.csv")
 MC_CSV   = os.path.join(BASE, "data", "processed", "pcm", "monte_carlo_stability_assam.csv")
-PHYS     = os.path.join(BASE, "data", "processed", "pcm", "physics_validation_results_assam.csv")
+PHYS     = os.path.join(BASE, "data", "processed", "pcm", "physics_validation_assam.csv")
+CMP_PHYS = os.path.join(BASE, "data", "processed", "pcm", "mcdm_vs_physics_comparison.csv")
 CPROF    = os.path.join(BASE, "data", "processed", "clustering", "cluster_profiles_assam.csv")
 OUT      = os.path.join(BASE, "data", "plots", "comparison")
 os.makedirs(OUT, exist_ok=True)
 
 PAL = ["#e6194b", "#3cb44b", "#4363d8", "#f58231", "#911eb4", "#42d4f4", "#f032e6", "#bfef45"]
+MEDOID_MAP = {0: "ASP_0012", 1: "ASP_0092", 2: "ASP_0028"}
 
 def load(p, label=""):
     if not os.path.exists(p):
@@ -63,6 +65,10 @@ def ensure_ranks(df):
 print("[1/8] Cluster GHI profiles from signature")
 sig = load(SIG_CSV, "signature")
 clu = load(CLUSTERS, "clusters")
+if clu is not None and "cluster_id" not in clu.columns and "cluster" in clu.columns:
+    clu["cluster_id"] = clu["cluster"]
+VALID_CLUSTERS = sorted(clu["cluster_id"].unique()) if clu is not None else [0, 1, 2]
+
 if sig is not None and clu is not None:
     merge_col = "point_id" if "point_id" in sig.columns and "point_id" in clu.columns else None
     if merge_col:
@@ -77,7 +83,8 @@ if sig is not None and clu is not None:
         ghi_col = "GHI_mean" if "GHI_mean" in mg.columns else ([c for c in mg.columns if "GHI" in c.upper()] or [None])[0]
         if ghi_col:
             fig, ax = plt.subplots(figsize=(9, 5))
-            for cid, g in mg.groupby("cluster_id"):
+            for cid in sorted(mg["cluster_id"].unique()):
+                g = mg[mg["cluster_id"] == cid]
                 ax.bar(str(cid), g[ghi_col].mean(), color=PAL[int(cid) % len(PAL)], edgecolor="white", lw=1, alpha=0.9, label=f"Cluster {cid}")
                 ax.errorbar(str(cid), g[ghi_col].mean(), yerr=g[ghi_col].std(), fmt="none", color="black", capsize=5, lw=1.5)
             ax.set(xlabel="Cluster", ylabel=f"{ghi_col} (mean +/- std)", title="Comparison 1: Mean GHI by Climate Regime (Assam)")
@@ -98,7 +105,7 @@ if sig is not None and clu is not None:
 
     feas = load(FEAS, "feasibility")
     if mg2 is not None and feas is not None:
-        t_col = "Ta_mean_proxy" if "Ta_mean_proxy" in mg2.columns else ([c for c in mg2.columns if "T_" in c or "temp" in c.lower()] or [None])[0]
+        t_col = "Ta_mean" if "Ta_mean" in mg2.columns else ("Ta_mean_proxy" if "Ta_mean_proxy" in mg2.columns else ([c for c in mg2.columns if "T_" in c or "temp" in c.lower()] or [None])[0])
         tm_col = "Tm_target_C" if "Tm_target_C" in feas.columns else ([c for c in feas.columns if "target" in c.lower() or "Tm" in c] or [None])[0]
         if t_col and tm_col:
             clust_T = mg2.groupby("cluster_id")[t_col].mean()
@@ -119,6 +126,8 @@ if sig is not None and clu is not None:
 print("[3/8] MCDM method comparison: top 5 per cluster")
 topk = load(TOPK, "topk")
 if topk is not None:
+    if "cluster_id" in topk.columns:
+        topk = topk[topk["cluster_id"].isin(VALID_CLUSTERS)]
     topk = ensure_ranks(topk)
     methods = ["topsis_rank", "gra_rank", "promethee_rank", "vikor_rank", "consensus_rank"]
     methods = [m for m in methods if m in topk.columns]
@@ -134,31 +143,57 @@ if topk is not None:
                     ax.bar(x + mi * w, sub[m].values, width=w, label=m.replace("_rank", "").upper(), color=sns.color_palette("Set2", len(methods))[mi], edgecolor="white")
             ax.set_xticks(x + (len(methods) - 1) * w / 2)
             ax.set_xticklabels(sub[name_col].tolist() if name_col in sub.columns else sub.index.astype(str), rotation=20, ha="right", fontsize=9)
-            ax.set(title=f"Cluster {cid} - Top 5 PCM Ranks by Method", ylabel="Rank (lower=better)")
+            med = MEDOID_MAP.get(int(cid), f"C{cid}")
+            ax.set(title=f"Cluster {cid} ({med}) - Historical K=4 Top 5 Ranks (Phase 10 Reference)", ylabel="Rank (lower=better)")
             ax.legend(fontsize=8); ax.grid(alpha=0.25, axis="y")
-        plt.suptitle("Comparison 3: MCDM Methods Side-by-Side (Assam)", fontsize=13, fontweight="bold")
+        plt.suptitle("Comparison 3: Historical K=4 MCDM Methods (Pre-Audit Reference for Phase 10)\n[Note: Current K=3 MCDM NOT PERFORMED (n_confirmed=[0,0,0]). Historical K=4 ranks shown for Phase 10 comparison.]", fontsize=11, fontweight="bold")
         plt.tight_layout(); sfig("03_comparison_mcdm_methods.png")
+
+# Marker mapping per cluster: Cluster 0 -> circle, Cluster 1 -> square, Cluster 2 -> triangle
+MARKERS = {0: 'o', 1: 's', 2: '^'}
 
 # ── Comparison 4: Monte Carlo Top3-Prob vs Consensus Rank ────────────────
 print("[4/8] Monte Carlo stability vs consensus rank")
 mc = load(MC_CSV, "monte_carlo")
-if mc is not None and topk is not None and "top3_inclusion_probability" in mc.columns:
+if mc is not None and "cluster_id" in mc.columns:
+    mc = mc[mc["cluster_id"].isin(VALID_CLUSTERS)]
+if mc is not None and "product_name" in mc.columns and "name" not in mc.columns:
+    mc = mc.rename(columns={"product_name": "name"})
+if mc is not None and topk is not None and "top3_inclusion_probability" in mc.columns and mc["top3_inclusion_probability"].notna().any():
     name_col = "name" if "name" in topk.columns else "PCM_Name"
+    mc[name_col] = mc[name_col].astype(str)
+    topk[name_col] = topk[name_col].astype(str)
     mg4 = mc.merge(topk[["cluster_id", name_col, "consensus_rank"]].drop_duplicates(subset=["cluster_id", name_col]), on=["cluster_id", name_col], how="inner").dropna(subset=["consensus_rank"])
-    fig, ax = plt.subplots(figsize=(10, 7))
-    scale = 100 if mg4["top3_inclusion_probability"].max() <= 1.0 else 1
-    for cid, g in mg4.groupby("cluster_id"):
-        ax.scatter(g["consensus_rank"], g["top3_inclusion_probability"] * scale, color=PAL[int(cid) % len(PAL)], s=80, alpha=0.8, edgecolors="white", lw=0.5, label=f"Cluster {cid}")
-        for _, row in g.iterrows():
-            ax.annotate(str(row[name_col]), (row["consensus_rank"], row["top3_inclusion_probability"] * scale), fontsize=6, alpha=0.7)
-    ax.set(xlabel="Consensus Rank", ylabel="Top-3 Inclusion Probability (%)", title="Comparison 4: Monte Carlo Stability vs MCDM Consensus Rank (Assam)")
-    ax.legend(fontsize=9); ax.grid(alpha=0.25); sfig("04_comparison_mc_vs_rank.png")
+    if not mg4.empty:
+        fig, ax = plt.subplots(figsize=(10, 7))
+        scale = 100 if mg4["top3_inclusion_probability"].max() <= 1.0 else 1
+        for cid, g in mg4.groupby("cluster_id"):
+            m = MARKERS.get(int(cid) % len(MARKERS), 'o')
+            ax.scatter(g["consensus_rank"], g["top3_inclusion_probability"] * scale, color=PAL[int(cid) % len(PAL)], marker=m, s=100, alpha=0.85, edgecolors="black", lw=0.6, label=f"Cluster {cid}")
+            for _, row in g.iterrows():
+                ax.annotate(str(row[name_col]), (row["consensus_rank"], row["top3_inclusion_probability"] * scale), fontsize=6, alpha=0.7)
+        ax.set(xlabel="Historical Consensus Rank (Pre-Audit)", ylabel="Top-3 Inclusion Probability (%)",
+               title="Comparison 4: Historical K=4 Monte Carlo Stability (Pre-Audit Reference)\n[Note: Current K=3 Monte Carlo SKIPPED. Historical pre-audit data shown for Phase 10 audit.]")
+        ax.legend(fontsize=9); ax.grid(alpha=0.25); sfig("04_comparison_mc_vs_rank.png")
+    elif topk is not None and "top3_inclusion_probability" in topk.columns:
+        fig, ax = plt.subplots(figsize=(10, 7))
+        scale = 100 if topk["top3_inclusion_probability"].max() <= 1.0 else 1
+        for cid, g in topk.groupby("cluster_id"):
+            m = MARKERS.get(int(cid) % len(MARKERS), 'o')
+            ax.scatter(g["consensus_rank"], g["top3_inclusion_probability"] * scale, color=PAL[int(cid) % len(PAL)], marker=m, s=100, alpha=0.85, edgecolors="black", lw=0.6, label=f"Cluster {cid}")
+        ax.set(xlabel="Historical Consensus Rank (Pre-Audit)", ylabel="Top-3 Prob (%)",
+               title="Comparison 4: Historical K=4 Monte Carlo Stability (Pre-Audit Reference)\n[Note: Current K=3 Monte Carlo SKIPPED. Historical pre-audit data shown for Phase 10 audit.]")
+        ax.legend(fontsize=9); ax.grid(alpha=0.25); sfig("04_comparison_mc_vs_rank.png")
+    else:
+        print("  skip MC comparison: no active Monte Carlo draws")
 elif topk is not None and "top3_inclusion_probability" in topk.columns:
     fig, ax = plt.subplots(figsize=(10, 7))
     scale = 100 if topk["top3_inclusion_probability"].max() <= 1.0 else 1
     for cid, g in topk.groupby("cluster_id"):
-        ax.scatter(g["consensus_rank"], g["top3_inclusion_probability"] * scale, color=PAL[int(cid) % len(PAL)], s=80, alpha=0.8, label=f"Cluster {cid}")
-    ax.set(xlabel="Consensus Rank", ylabel="Top-3 Prob (%)", title="Comparison 4: Monte Carlo Stability vs Consensus Rank (Assam)")
+        m = MARKERS.get(int(cid) % len(MARKERS), 'o')
+        ax.scatter(g["consensus_rank"], g["top3_inclusion_probability"] * scale, color=PAL[int(cid) % len(PAL)], marker=m, s=100, alpha=0.85, edgecolors="black", lw=0.6, label=f"Cluster {cid}")
+    ax.set(xlabel="Historical Consensus Rank (Pre-Audit)", ylabel="Top-3 Prob (%)",
+           title="Comparison 4: Historical K=4 Monte Carlo Stability (Pre-Audit Reference)\n[Note: Current K=3 Monte Carlo SKIPPED. Historical pre-audit data shown for Phase 10 audit.]")
     ax.legend(fontsize=9); ax.grid(alpha=0.25); sfig("04_comparison_mc_vs_rank.png")
 
 # ── Comparison 5: Latent Heat Distribution - Feasible vs All ─────────────
@@ -171,24 +206,108 @@ if feas is not None and "latent_heat_kJ_kg" in feas.columns:
         ax.hist(db["latent_heat_kJ_kg"].dropna(), bins=40, alpha=0.5, color="gray", label=f"All candidates (n={len(db)})", density=True)
     ax.hist(feas["latent_heat_kJ_kg"].dropna(), bins=30, alpha=0.8, color="#3b7dd8", label=f"Feasible survivors (n={len(feas)})", density=True)
     ax.axvline(feas["latent_heat_kJ_kg"].median(), color="#3b7dd8", ls="--", lw=2, label=f"Feasible median: {feas['latent_heat_kJ_kg'].median():.0f} kJ/kg")
-    ax.set(xlabel="Latent Heat (kJ/kg)", ylabel="Density", title="Comparison 5: Latent Heat Distribution - All vs Feasible Survivors (Assam)")
+    ax.set(xlabel="Latent Heat (kJ/kg)", ylabel="Density", title="Comparison 5: Latent Heat Distribution - All vs Historical Screened Candidates (Assam)")
     ax.legend(fontsize=9); ax.grid(alpha=0.25); sfig("05_comparison_latent_heat_distribution.png")
 
-# ── Comparison 6: Physics Validation - Hours Target Met vs MCDM Rank ────
+# ── Comparison 6: Physics Validation - Solar Fraction & Hours Target Met vs MCDM Rank ────
 print("[6/8] Physics validation vs MCDM rank")
 phys = load(PHYS, "physics_val")
-if phys is not None and topk is not None and ("hours_target_met_per_year" in phys.columns or "hours_target_met" in phys.columns):
-    h_col = "hours_target_met_per_year" if "hours_target_met_per_year" in phys.columns else "hours_target_met"
-    name_col = "name" if "name" in topk.columns and "name" in phys.columns else ("PCM_Name" if "PCM_Name" in phys.columns else None)
-    if name_col:
-        mg6 = topk.merge(phys[["cluster_id", name_col, h_col]].drop_duplicates(subset=["cluster_id", name_col]), on=["cluster_id", name_col], how="inner")
-        if "consensus_rank" in mg6.columns and not mg6.empty:
-            fig, ax = plt.subplots(figsize=(9, 6))
-            for cid, g in mg6.groupby("cluster_id"):
-                v = g[["consensus_rank", h_col]].notna().all(axis=1)
-                ax.scatter(g.loc[v, "consensus_rank"], g.loc[v, h_col], color=PAL[int(cid) % len(PAL)], s=80, alpha=0.8, label=f"Cluster {cid}")
-            ax.set(xlabel="Consensus Rank", ylabel=f"{h_col}", title="Comparison 6: Physics Validation vs MCDM Ranking (Assam)")
-            ax.legend(fontsize=9); ax.grid(alpha=0.25); sfig("06_comparison_physics_vs_rank.png")
+cmp_phys = load(CMP_PHYS, "mcdm_vs_physics")
+
+if phys is not None:
+    if "cluster_id" in phys.columns:
+        phys = phys[phys["cluster_id"].isin(VALID_CLUSTERS)]
+    
+    h_col = "hours_Tw_ge_50C_per_year" if "hours_Tw_ge_50C_per_year" in phys.columns else ("hours_target_met_per_year" if "hours_target_met_per_year" in phys.columns else "hours_target_met")
+    sf_col = "solar_fraction" if "solar_fraction" in phys.columns else ("annual_solar_fraction" if "annual_solar_fraction" in phys.columns else None)
+    name_col = "pcm_name" if "pcm_name" in phys.columns else ("name" if "name" in phys.columns else "PCM_Name")
+
+    if cmp_phys is not None and "historical_mcdm_rank" in cmp_phys.columns:
+        cmp_name = "pcm_name" if "pcm_name" in cmp_phys.columns else "name"
+        mg6 = phys.merge(
+            cmp_phys[["cluster_id", cmp_name, "historical_mcdm_rank"]].drop_duplicates(),
+            left_on=["cluster_id", name_col],
+            right_on=["cluster_id", cmp_name],
+            how="inner"
+        )
+        mg6["consensus_rank"] = mg6["historical_mcdm_rank"]
+    elif topk is not None:
+        topk_name = "name" if "name" in topk.columns else "PCM_Name"
+        cols_to_merge = ["cluster_id", topk_name, "consensus_rank"]
+        mg6 = phys.merge(
+            topk[cols_to_merge].drop_duplicates(subset=["cluster_id", topk_name]),
+            left_on=["cluster_id", name_col],
+            right_on=["cluster_id", topk_name],
+            how="inner"
+        )
+    else:
+        mg6 = None
+
+    if mg6 is not None and "consensus_rank" in mg6.columns and not mg6.empty:
+        mg6 = mg6[mg6["cluster_id"].isin(VALID_CLUSTERS)]
+        
+        fig, axes = plt.subplots(1, 2 if sf_col else 1, figsize=(14 if sf_col else 9, 6))
+        ax1 = axes[0] if sf_col else axes
+        for cid in sorted(mg6["cluster_id"].unique()):
+            g = mg6[mg6["cluster_id"] == cid]
+            m = MARKERS.get(int(cid), 'o')
+            med = MEDOID_MAP.get(int(cid), f"C{cid}")
+            lbl = f"Cluster {cid} ({med})"
+            v = g[["consensus_rank", h_col]].notna().all(axis=1)
+            ax1.scatter(g.loc[v, "consensus_rank"], g.loc[v, h_col],
+                        color=PAL[int(cid) % len(PAL)], marker=m, s=110, alpha=0.85,
+                        edgecolors="black", lw=0.7, label=lbl)
+            
+        ax1.set_xticks(sorted(mg6["consensus_rank"].unique()))
+        ax1.set(xlabel="Historical MCDM Consensus Rank (1 = Best)",
+                ylabel="Hours Target Met per Year (Tw >= 50C)",
+                title="Physics Validation: Hours Target Met vs Historical MCDM Rank")
+        ax1.legend(fontsize=9, loc="upper left")
+        ax1.grid(alpha=0.25)
+        
+        # Annotate key materials for physical interpretability
+        rank1_row = mg6[mg6["consensus_rank"] == 1]
+        rank8_row = mg6[mg6["consensus_rank"] == mg6["consensus_rank"].max()]
+        if not rank1_row.empty:
+            r1_name = str(rank1_row.iloc[0][name_col]).split()[0]
+            ax1.annotate(f"{r1_name} (Hist MCDM #1)", (1, rank1_row[h_col].mean()),
+                         textcoords="offset points", xytext=(0, 10), ha="center", fontsize=8, fontweight="bold")
+        if not rank8_row.empty:
+            max_r = int(rank8_row["consensus_rank"].iloc[0])
+            ax1.annotate(f"savE OM48 (Hist MCDM #{max_r})", (max_r, rank8_row[h_col].mean()),
+                         textcoords="offset points", xytext=(0, -15), ha="center", fontsize=8, fontweight="bold")
+        
+        if sf_col:
+            ax2 = axes[1]
+            scale = 100 if mg6[sf_col].max() <= 1.0 else 1
+            for cid in sorted(mg6["cluster_id"].unique()):
+                g = mg6[mg6["cluster_id"] == cid]
+                m = MARKERS.get(int(cid), 'o')
+                med = MEDOID_MAP.get(int(cid), f"C{cid}")
+                lbl = f"Cluster {cid} ({med})"
+                v = g[["consensus_rank", sf_col]].notna().all(axis=1)
+                ax2.scatter(g.loc[v, "consensus_rank"], g.loc[v, sf_col] * scale,
+                            color=PAL[int(cid) % len(PAL)], marker=m, s=110, alpha=0.85,
+                            edgecolors="black", lw=0.7, label=lbl)
+            ax2.set_xticks(sorted(mg6["consensus_rank"].unique()))
+            ax2.set(xlabel="Historical MCDM Consensus Rank (1 = Best)",
+                    ylabel="Annual Solar Thermal Fraction (%)",
+                    title="Physics Validation: Solar Fraction (%) vs Historical MCDM Rank")
+            ax2.legend(fontsize=9, loc="upper left")
+            ax2.grid(alpha=0.25)
+            
+            if not rank1_row.empty:
+                r1_name = str(rank1_row.iloc[0][name_col]).split()[0]
+                ax2.annotate(f"{r1_name} (Hist MCDM #1)", (1, rank1_row[sf_col].mean() * scale),
+                             textcoords="offset points", xytext=(0, -15), ha="center", fontsize=8, fontweight="bold")
+            if not rank8_row.empty:
+                max_r = int(rank8_row["consensus_rank"].iloc[0])
+                ax2.annotate(f"savE OM48 (Hist MCDM #{max_r})", (max_r, rank8_row[sf_col].mean() * scale),
+                             textcoords="offset points", xytext=(0, 10), ha="center", fontsize=8, fontweight="bold")
+        
+        plt.suptitle("Comparison 6: Final K=3 Physics Validation vs Historical K=4 MCDM Ranking (Phase 10 Audit)", fontsize=12, fontweight="bold")
+        plt.tight_layout()
+        sfig("06_comparison_physics_vs_rank.png")
 
 # ── Comparison 7: Cross-Cluster Top PCM Key Properties ───────────────────
 print("[7/8] Cross-cluster summary: top PCM properties")
@@ -205,7 +324,7 @@ if topk is not None and "consensus_rank" in topk.columns:
             for j, (_, row) in enumerate(top1.iterrows()):
                 if pd.notna(row.get(p)) and name_col in top1.columns:
                     axes[i].text(j, row[p] * 1.01, str(row.get(name_col, ""))[:10], ha="center", fontsize=7, rotation=25)
-        plt.suptitle("Comparison 7: Top PCM Properties per Cluster (Assam) - Rank #1", fontsize=13, fontweight="bold")
+        plt.suptitle("Comparison 7: Historical K=4 MCDM Rank #1 Candidate Properties (Phase 10 Reference)\n[Note: RT44HC was historical MCDM #1; Phase 10 proved it physically inferior (#8 delivery). Not a K=3 recommendation.]", fontsize=10, fontweight="bold")
         plt.tight_layout(); sfig("07_comparison_cross_cluster_top_pcm.png")
 
 # ── Comparison 8: Weight Sensitivity ─────────────────────────────────────
@@ -219,13 +338,15 @@ if topk is not None:
         results = []
         for w1 in [0.3, 0.5, 0.7]:
             w2 = 1 - w1
-            for cid, g in topk.groupby("cluster_id"):
+            for cid in topk.groupby("cluster_id"):
+                cid_val = cid[0]
+                g = cid[1]
                 v = g[[c1, c2]].notna().all(axis=1)
                 if v.sum() > 0:
                     comb = w1 * g.loc[v, c1] / max(1, g.loc[v, c1].max()) + w2 * g.loc[v, c2] / max(1, g.loc[v, c2].max())
                     rk = comb.rank(ascending=False, method="min")
                     for idx2 in g.loc[v].index:
-                        results.append({"w1": w1, "Cluster": cid, "Name": g.loc[idx2, name_col] if name_col in g.columns else str(idx2), "ComboRank": rk.loc[idx2]})
+                        results.append({"w1": w1, "Cluster": cid_val, "Name": g.loc[idx2, name_col] if name_col in g.columns else str(idx2), "ComboRank": rk.loc[idx2]})
         rdf = pd.DataFrame(results)
         if not rdf.empty:
             fig, ax = plt.subplots(figsize=(12, 6))
@@ -235,7 +356,8 @@ if topk is not None:
                 if not sub.empty:
                     ax.plot(sub["w1"], sub["ComboRank"], "-o", label=str(nm)[:20], lw=1.5, ms=6)
             ax.set(xlabel=f"Weight on {c1.replace('_score','').replace('_grade','').upper()} (remainder on {c2.replace('_score','').replace('_grade','').upper()})",
-                   ylabel="Combined Rank", title="Comparison 8: Rank Sensitivity to Weight Perturbation (Assam)")
+                   ylabel="Historical Combined Rank",
+                   title="Comparison 8: Historical K=4 MCDM Rank Sensitivity to Weight Perturbation (Pre-Audit Reference)\n[Note: Current K=3 MCDM NOT PERFORMED. Historical pre-audit sensitivity shown for Phase 10.]")
             ax.invert_yaxis(); ax.legend(fontsize=8, loc="upper right"); ax.grid(alpha=0.25); sfig("08_comparison_rank_sensitivity.png")
 
 print("\nAll comparison plots saved to:", OUT)

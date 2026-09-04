@@ -1,53 +1,36 @@
-# 21 — Research Gap Mapping (Assam)
+# 18 — Research Gap Mapping & Novelty Positions (Assam)
 
-## Important disambiguation (see also `01_PROJECT_CONTEXT.md`)
+## Novelty Positioning vs. Broader Research Gaps
 
-Two distinct novelty/gap systems exist in this project:
+Two distinct taxonomies operate within this project:
+- **N1–N6** (Objective 1 Framework Plan §3, Table 3): The specific scientific novelties claimed for this data-driven climate-signature, clustering, screening, and validation pipeline.
+- **RG1–RG5**: Literature research gaps for the **broader multi-objective project** (hardware prototypes, real-time DRL control, grid-demand matching).
 
-- **N1–N6** (framework doc §3, Table 3): Objective 1's own novelty positioning for the
-  climate-signature/clustering/MCDM/validation pipeline.
-- **RG1–RG5** (`prompt for extraction.txt` literature-summary template): Research gaps for the
-  **broader, multi-objective project** (DRL control, hardware prototype, demand alignment, etc.).
-  RG1–RG5 do not appear in the framework doc itself.
+---
 
-## Phase → N (novelty claim) mapping for Assam
+## Phase → N (Novelty Claim) Mapping Across All 11 Phases
 
-| Phase | Primary N-claim(s) | How Assam implements it |
+| Phase | Primary Novelty Claim | Implementation Reality in Assam |
 |---|---|---|
-| 1 — Data Collection | N6 | 128 population-weighted points, 87.5% coverage, sun-event-aligned sampling |
-| 2 — Preprocessing & Validation | (supports all) | ERA5 `accum_to_flux()` fix (inherited from Rajasthan); 4-season classification with IMD-standard Monsoon=Jun–Sep. Gap: no formal ERA5-POWER agreement analysis — N-claims' downstream trustworthiness is partially deferred |
-| 3 — Climate Signature | N2, N3 | Two-tier 18-index signature; Tm_target=44°C in the corrected 42–70°C SWH band (not 18–28°C comfort band) |
-| 4 — Regime Clustering | N1 | GMM k=4 with BIC/silhouette justification; 500-bootstrap ARI=0.716 reported honestly; **external classification not yet wired** — N1's "discovered, not hand-picked" claim rests on internal statistical measures only for Assam |
-| 5 — Feasibility Filtering | N3 (partial) | Enforces 42–70°C band; corrosion veto **actively differentiates Assam from Rajasthan** (HSI > p75 triggers veto in humid clusters) — this is N3's strongest Assam-specific contribution |
-| 6 — MCDM Ranking | N4 | Four-method consensus + 5,000-draw MC (matches plan spec); Kendall's W = 0.807–0.845 (strong agreement across all clusters); unanimous RT44HC #1 reflects uniform Tm_target, not a methodology failure |
-| 7 — Physics Validation | N5 | Independently tested MCDM ranking against physics simulation — **genuine NEGATIVE result** (rho ≤ 0.286 all clusters). N5's correct framing: "the ranking WAS physics-tested, honestly, with a negative result attributable to the undersized PCM database (6–8 candidates per cluster is insufficient for Spearman rho to be meaningful)" |
-| 8 — Recommendation Cards | (packaging) | All N1–N5 evidence packaged per cluster, including Phase 7 negative result and caveats; Criterion Contributions added (plan requirement that TN missed) |
+| **1 — Spatial Grid** | **N6: Population-Weighted Sampling** | Exactly **129 population-weighted grid points** (`ASP_0001`–`ASP_0129`), achieving **87.8% population coverage** aligned to ERA5's native 0.25° grid. |
+| **2 — Preprocessing & Cross-Source Validation** | **Cross-Source Reanalysis Rigor** | Full 10-year ERA5 and NASA POWER cross-validation (`03b_agreement_analysis_assam.py`); **1.1% GHI MBE** confirms the **`BACKBONE`** decision. Exactly **467,367 daily rows** processed. |
+| **2.5 — Quality Control** | **Non-Destructive QC** | IsolationForest multivariate outlier detection across 129 parquet files; outliers are flagged but never deleted. |
+| **3 — Climate Regime Clustering** | **N1: Discovered Climate Regimes** | Final locked **$K=3$ GMM (full covariance)** on 5 core physical features (`GHI_mean`, `Ta_mean`, `DTR`, `RH_mean`, `wind_mean`). Unambiguous global BIC minimum at $K=3$ ($\text{BIC} = 1574.94$), bootstrap ARI = $0.6289$. |
+| **4 — SWH Design Specification** | **Engineering Target Derivation** | Standard 100 L/day demand, 50 kg PCM, 100 kg water, $T_m^{\text{target}} = 44.0^\circ\text{C}$ ($T_{\text{del}} = 50.0^\circ\text{C}, \Delta T = 6.0\text{ K}$). |
+| **5 — Curated PCM Database** | **N3: Audited 42–70°C PCM Band** | Curated **58-row production database** (`pcm_database_final.csv`) with strict provenance (`source_type`, `value_status`) and strict dual-phase $C_p$ averaging (zero silent single-phase fallback). |
+| **6 — Feasibility Filtering** | **N3: Multi-Constraint Screening** | Strict 7-constraint filtering without automatic relaxation. Final $K=3$ governance: $n_{\text{confirmed}} = [0, 0, 0]$, 1 conditional candidate (`n-Tetracosane C24`, $T_m=52.0^\circ\text{C}$ in Cluster 0). Historical $K=4$ survivor set: 8 PCMs. |
+| **7 — MCDM Ranking Engine** | **N4: Multi-Method Consensus** | Final $K=3$ governance: **`NOT PERFORMED`** ($n_{\text{confirmed}}=0$). Historical pre-audit $K=4$ ranking evaluated TOPSIS, GRA, PROMETHEE II, VIKOR, Borda, and Copeland. |
+| **8 — Monte Carlo Analysis** | **Stochastic Uncertainty Modeling** | Final $K=3$ governance: **`SKIPPED`** ($n_{\text{draws}}=0$). Historical pre-audit $K=4$ benchmark executed 5,000 Dirichlet-perturbed draws. |
+| **9 — Sub-Hourly Physics Validation** | **N5: Multi-Year Physics Testing** | Full **10-year dynamic simulation** at $\Delta t = 300\text{ s} / 150\text{ s}$ across 8 historical PCMs and 3 final medoids (24 runs). 4-state path-dependent enthalpy model with supercooling hysteresis; First-Law cumulative error $= 0.0000\%$. |
+| **10 — Validation Comparison** | **N5: Decision Theory vs. Physics** | Dual-level comparison: Delivery-rank Spearman $\rho = -0.52$ to $-0.64$, Top-1 agreement $= 0.0\%$, Top-3 overlap $= 0.0\%$. Scientific verdict: **`NOT PHYSICALLY SUPPORTED`**, demonstrating that Gaussian target proximity fails to predict transient solar fraction under strict delivery cutoffs ($50^\circ\text{C}$). |
+| **11 — Final Outputs Consolidation** | **Reproducibility & Traceability** | Master manifest (`final_output_manifest.csv`, 31 entries), 10 thesis tables, 10 thesis figures, and automated master test suite (`final_project_verification.py`, 100% pass rate). |
 
-## Phase → RG (broader project research gap) mapping
+---
 
-| Phase | Related RG | Nature of contribution |
-|---|---|---|
-| 1–2 (Data Collection, Validation) | RG5 | Validated climate data Assam provides as input to predictive-optimization-under-uncertainty components |
-| 3–4 (Signature, Clustering) | RG5 | Population-weighted regime discovery — a climatic-uncertainty-aware framing directly relevant to RG5 |
-| 5–6 (Feasibility, MCDM) | RG5 | 5,000-draw Monte Carlo uncertainty propagation over PCM properties/weights |
-| 7 (Physics Validation) | RG4 (indirect) | Grey-box simulation is not real-world experiment, but is Objective 1's step toward RG4's experimental-validation direction |
-| 8 (Recommendation Cards) | RG2, RG3 (feeding, not addressing) | Per-regime PCM recommendation is the input a hardware-prototype objective (RG2) and demand-alignment objective (RG3) would consume |
-| — | RG1 | Not addressed by Objective 1 — real-time adaptive control is explicitly out of scope |
+## Broader Research Gap Mapping (RG1–RG5)
 
-## Assam-specific novelty contribution not in other states
-
-Assam adds one concrete N4/N5-adjacent contribution not present in Rajasthan or Tamil Nadu:
-
-**Criterion Contributions (Analytical Decomposition)**: The `09_recommendation_cards.py` Assam
-script implements percentage-breakdown of criteria contribution per PCM (min-max normalised
-weighted-score decomposition). This directly satisfies the framework doc's Table 18 explainability
-mandate that the Tamil Nadu Phase 8 implementation missed. This is a genuine methodology improvement
-made during Assam's implementation that will need to be backported to Tamil Nadu's Phase 8.
-
-## What this mapping does NOT claim
-
-- That Objective 1 "solves" RG1–RG4 — it does not; only RG5 is directly addressed
-- That the Phase 7 negative result is a methodology failure — it is an honest finding, correctly
-  attributed to database size rather than MCDM design
-- That the k=4 clustering result is externally validated — it is not; Köppen-Geiger is not wired
-  in for Assam
+- **RG1 (Real-Time Control)**: Explicitly out of scope for Objective 1.
+- **RG2 (Hardware Prototype)**: Out of scope for Objective 1; provides the validated thermal modeling basis for future experimental work.
+- **RG3 (Demand Alignment)**: Addressed through 100 L/day morning (50 L) and evening (50 L) domestic tapping schedules.
+- **RG4 (Experimental Validation)**: Sub-hourly 10-year physics simulation bridges empirical gaps prior to hardware builds.
+- **RG5 (Predictive Optimization Under Uncertainty)**: Directly advanced via the 10-year multi-regime reanalysis pipeline, provenance-aware property database, and multi-criteria comparison.

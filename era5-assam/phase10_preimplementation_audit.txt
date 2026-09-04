@@ -1,0 +1,253 @@
+================================================================================
+  PHASE 10 — PRE-IMPLEMENTATION AUDIT REPORT
+  MCDM Ranking vs. Physics Performance Evaluation
+================================================================================
+Date: 2026-09-04
+Repository: Assam SWH PCM Selection & Physics Validation Pipeline
+
+--------------------------------------------------------------------------------
+1. MCDM PIPELINE VERSION
+--------------------------------------------------------------------------------
+The project contains TWO distinct MCDM pipeline versions on disk:
+
+A. HISTORICAL PRE-AUDIT PIPELINE (08_mcdm_ranking.py):
+   - Input: feasibility_survivors_assam.csv (from 07_feasibility_filter.py under K=4).
+   - Cluster Version: K = 4 (Cluster IDs: 0, 1, 2, 3).
+   - Status: STALE / HISTORICAL ARTIFACT.
+   - Criteria: 5 criteria (f_Tm Gaussian sigma=4K, latent_heat_margin_ratio,
+     rho_H_MJ_m3, TC_W_mK, cycles_confidence).
+   - Methods: 4 ranking algorithms (TOPSIS, GRA zeta=0.5, PROMETHEE II q=0.10/p=0.30,
+     VIKOR v=0.5) + Borda count consensus + Copeland pairwise cross-check +
+     5,000-draw Monte Carlo stability.
+   - Outputs generated:
+     * data/processed/pcm/mcdm_full_scores_assam.csv (28 rows across 4 clusters)
+     * data/processed/pcm/mcdm_topk_assam.csv (12 rows, Top-3 per cluster)
+     * data/processed/pcm/monte_carlo_stability_assam.csv
+
+B. CURRENT VERIFIED GOVERNANCE PIPELINE (08_mcdm_ranking_final.py):
+   - Input: pcm_database_final.csv (58 PCMs), cluster_profiles_assam.csv (K=3).
+   - Cluster Version: K = 3 (Cluster IDs: 0, 1, 2).
+   - Governance Rule: Requires n_confirmed >= 2 for matrix algorithms.
+   - Status: CURRENT LOCKED PIPELINE (verified by verify_phase7.py).
+   - Result: Confirmed Feasible count n_confirmed = [0, 0, 0].
+     Formal MCDM ranking was NOT PERFORMED for any cluster.
+   - Outputs generated:
+     * data/processed/pcm/mcdm_cluster_eligibility_summary.csv (3 rows, all NOT PERFORMED)
+     * data/processed/pcm/mcdm_rankings_by_cluster.csv (1 row: n-Tetracosane C24, NOT PERFORMED)
+     * data/preprocessed/mcdm_ranking_report.txt
+
+--------------------------------------------------------------------------------
+2. PHYSICS PIPELINE VERSION
+--------------------------------------------------------------------------------
+- Script: 10_physics_validation.py (verified by verify_phase9.py).
+- Status: CURRENT LOCKED AND VERIFIED PIPELINE.
+- Cluster Version: Final Phase 3 K = 3 GMM clustering (Cluster IDs: 0, 1, 2).
+- True Medoids (derived programmatically from 5 GMM standardized features):
+  * Cluster 0 Medoid: ASP_0012 (lat 26.625, lon 92.875)
+  * Cluster 1 Medoid: ASP_0092 (lat 26.125, lon 91.625)
+  * Cluster 2 Medoid: ASP_0028 (lat 24.875, lon 92.875)
+- Climate Forcing: 10-year chronological sub-hourly ERA5 forcing (2016-2025,
+  87,672 hours) reconstructed via duration-overlap allocation (SSRD conservation
+  error = 0.000000%).
+- Simulation Timestep: dt = 300 s (benchmark dt = 150 s).
+- Candidate Universe: Exactly 8 PCMs from Phase 6 feasibility survivors.
+- Output: data/processed/pcm/physics_validation_assam.csv (24 rows = 8 PCMs x 3 clusters).
+- Key Available Physics Metrics:
+  * morning_delivery_success_rate (0.0% for all PCMs)
+  * evening_delivery_success_rate (1.2% to 30.4%)
+  * overall_delivery_success_rate (0.6% to 15.2%)
+  * solar_fraction (49.7% to 53.1%)
+  * complete_pcm_cycles_per_year (1.9 to 22.3 cyc/yr)
+  * hours_Tw_ge_50C_per_year (40.2 to 216.5 h/yr)
+  * max_step_residual_J (0.000000 J)
+  * cum_rel_energy_error_pct (0.000000%)
+
+--------------------------------------------------------------------------------
+3. MCDM CANDIDATE UNIVERSE
+--------------------------------------------------------------------------------
+A. In Current K=3 Final Pipeline (08_mcdm_ranking_final.py):
+   - Confirmed Feasible: ZERO candidates.
+   - Conditionally Feasible: 1 candidate (n-Tetracosane C24, Cluster 0 only).
+   - Formally Ranked PCMs: ZERO.
+
+B. In Historical K=4 Stale Pipeline (mcdm_full_scores_assam.csv):
+   - Clusters 0 & 1 (6 candidates ranked):
+     1. RT44HC
+     2. RT45HC
+     3. C22H46 (docosane-class paraffin)
+     4. savE OM50
+     5. savE OM42
+     6. savE OM46
+   - Clusters 2 & 3 (8 candidates ranked):
+     1. RT44HC
+     2. RT45HC
+     3. C22H46 (docosane-class paraffin)
+     4. savE OM50
+     5. savE OM42
+     6. Myristic-Palmitic eutectic (58/42)
+     7. savE OM46
+     8. savE OM48
+
+--------------------------------------------------------------------------------
+4. PHYSICS CANDIDATE UNIVERSE
+--------------------------------------------------------------------------------
+The 8 PCMs simulated in Phase 9 (physics_validation_assam.csv) are:
+  1. Myristic-Palmitic eutectic (58/42)  (Tm = 42.6 °C)
+  2. RT44HC                              (Tm = 43.0 °C)
+  3. savE OM42                          (Tm = 44.0 °C)
+  4. C22H46 (docosane-class paraffin)    (Tm = 44.5 °C)
+  5. savE OM46                          (Tm = 47.0 °C)
+  6. RT45HC                              (Tm = 47.0 °C)
+  7. savE OM50                          (Tm = 50.0 °C)
+  8. savE OM48                          (Tm = 51.0 °C)
+
+Overlap: The 8 Phase 9 PCMs are an EXACT 1:1 MATCH with the 8 PCMs ranked in
+historical K=4 Clusters 2 & 3, and a superset (8 vs 6) of Clusters 0 & 1.
+n-Tetracosane (C24, Tm=52°C) is absent from the 8 Phase 9 candidates.
+
+--------------------------------------------------------------------------------
+5. MCDM CLUSTER STRUCTURE
+--------------------------------------------------------------------------------
+- Historical: K = 4 clusters (0, 1, 2, 3), derived from an earlier GMM run.
+  Each cluster had distinct L_required values (248.9, 244.3, 232.3, 232.6 kJ/kg).
+- Current: K = 3 clusters (0, 1, 2), derived from final Phase 3 GMM.
+  L_required values: Cluster 0 = 252.1 kJ/kg, Cluster 1 = 258.7 kJ/kg,
+  Cluster 2 = 279.7 kJ/kg.
+
+--------------------------------------------------------------------------------
+6. PHYSICS CLUSTER STRUCTURE
+--------------------------------------------------------------------------------
+- K = 3 clusters (0, 1, 2), locked Phase 3 GMM model.
+- Evaluated at medoid points ASP_0012, ASP_0092, ASP_0028.
+- 10-year hourly weather forcing profile specific to each of the 3 medoids.
+
+--------------------------------------------------------------------------------
+7. K=4 VS K=3 COMPATIBILITY ASSESSMENT
+--------------------------------------------------------------------------------
+VERDICT: DIRECT CLUSTER-TO-CLUSTER CORRESPONDENCE IS METHODOLOGICALLY INVALID.
+
+Detailed rationale:
+1. Spatial Partition Disparity: When moving from K=4 to K=3 in GMM clustering,
+   the cluster boundaries and point memberships were completely re-partitioned.
+   Cluster 0 in K=4 is NOT geographically or climatologically identical to
+   Cluster 0 in K=3.
+2. Medoid Shift: The medoids of K=3 (ASP_0012, ASP_0092, ASP_0028) do not map
+   1-to-1 to K=4 medoids.
+3. Threshold Divergence: L_required in K=3 reflects the updated 3-cluster
+   insolation/ambient regimes, differing from K=4 thresholds.
+4. Scientific Integrity: Mapping K=4 Cluster i directly to K=3 Cluster i would
+   be an arbitrary index artifact without physical or statistical basis.
+
+--------------------------------------------------------------------------------
+8. CURRENT K=3 MCDM AVAILABILITY
+--------------------------------------------------------------------------------
+VERDICT: NO VALID FORMAL MCDM RANKINGS EXIST IN THE FINAL K=3 PIPELINE.
+
+Evidence:
+- mcdm_cluster_eligibility_summary.csv:
+  * Cluster 0: confirmed_feasible_count = 0, mcdm_ranking_status = NOT PERFORMED
+  * Cluster 1: confirmed_feasible_count = 0, mcdm_ranking_status = NOT PERFORMED
+  * Cluster 2: confirmed_feasible_count = 0, mcdm_ranking_status = NOT PERFORMED
+- verify_phase7.py explicitly tests and asserts:
+  assert counts == [0, 0, 0] and statuses == ["NOT PERFORMED", "NOT PERFORMED", "NOT PERFORMED"]
+- Under strict project governance, zero PCMs satisfied all 6 feasibility criteria
+  simultaneously due to missing/imputed cycling or flammability test data.
+
+--------------------------------------------------------------------------------
+9. POSSIBLE COMPARISON STRATEGIES
+--------------------------------------------------------------------------------
+Option A: Direct Cluster-Wise MCDM vs. Physics Comparison
+  - Premise: Compare K=4 MCDM Cluster i against K=3 Physics Cluster i.
+  - Validity: INVALID. Mathematically and scientifically unsound due to cluster
+    mismatch and re-partitioning.
+
+Option B: PCM-Level Comparison (Independent of Cluster ID)
+  - Premise: Historical K=4 MCDM produced an invariant candidate ranking:
+      #1 RT44HC, #2 RT45HC, #3 C22H46, #4 savE OM50, #5 savE OM42,
+      #6 Myristic-Palmitic eutectic, #7 savE OM46, #8 savE OM48.
+    Compare this static MCDM ranking against the 10-year physics performance
+    metrics of the same 8 PCMs.
+  - Validity: METHODOLOGICALLY SOUND as a historical cross-validation, PROVIDED
+    it is explicitly documented as comparing the historical pre-audit MCDM model
+    against the verified dynamic physics model.
+
+Option C: Historical K=4 Comparison Only
+  - Premise: Restrict comparison strictly to historical artifacts and label it
+    as an investigation of why the pre-audit MCDM failed to predict physics.
+  - Validity: VALID and honest.
+
+Option D: No Comparison Possible
+  - Premise: Because current K=3 MCDM was NOT PERFORMED, conclude that no
+    official MCDM-vs-physics comparison can be made under the current pipeline.
+  - Validity: STRICTLY ACCURATE regarding the official K=3 pipeline, but omits
+    the valuable scientific finding from testing the historical MCDM ranking.
+
+--------------------------------------------------------------------------------
+10. RECOMMENDED SCIENTIFICALLY VALID PHASE 10 STRATEGY
+--------------------------------------------------------------------------------
+RECOMMENDATION: DUAL-LEVEL TRANSPARENT SCIENTIFIC ASSESSMENT (Option D + Option B/C)
+
+Phase 10 should implement a two-part scientific finding:
+
+PART 1 — OFFICIAL PIPELINE STATUS (Option D):
+- Explicitly declare that under the finalized, verified Phase 7 governance
+  (08_mcdm_ranking_final.py / verify_phase7.py), n_confirmed = [0, 0, 0] and
+  formal MCDM ranking was NOT PERFORMED for all three K=3 Assam clusters.
+- Therefore, there is NO official K=3 MCDM ranking to validate or refute.
+  This is the primary governance finding.
+
+PART 2 — HISTORICAL PRE-AUDIT MCDM VS. PHYSICS VALIDATION (Option B/C):
+- Perform an independent retrospective validation of the historical 8-PCM
+  MCDM ranking (from mcdm_full_scores_assam.csv) against the Phase 9 10-year
+  physics metrics (from physics_validation_assam.csv).
+- Research Question: "Did the multi-criteria ranking (AHP + TOPSIS/GRA/PROMETHEE/
+  VIKOR/Borda) accurately predict dynamic annual solar fraction and delivery rate?"
+- Empirical Finding (preliminary audit calculations):
+  * Historical MCDM Rank 1: RT44HC (Tm = 43.0 °C).
+    Dynamic Physics: Overall Delivery = 1.2% - 3.8%, Solar Fraction = 49.7% - 52.7%.
+  * Historical MCDM Rank 8: savE OM48 (Tm = 51.0 °C).
+    Dynamic Physics: Overall Delivery = 9.0% - 15.2%, Solar Fraction = 50.3% - 53.1%.
+  * Rank Agreement Spearman Rho:
+    - vs. Solar Fraction: rho = -0.43 to -0.55 (NEGATIVE agreement).
+    - vs. Delivery Rate : rho = -0.52 to -0.64 (NEGATIVE agreement).
+- Scientific Conclusion:
+  The MCDM ranking is NOT PHYSICALLY SUPPORTED by the independent physics model.
+  * Why? The static MCDM used a Gaussian fitness centered at 44 °C, penalizing
+    PCMs near 50 °C. However, the physical SWH delivery threshold requires water
+    at T >= 50 °C. PCMs melting at 43-44 °C cannot deliver latent heat at 50 °C,
+    whereas savE OM48 (Tm=51 °C) discharges directly at the required delivery
+    temperature.
+  * This negative correlation is a critical, publishable scientific finding:
+    static MCDM target weighting without dynamic load integration can select
+    sub-optimal thermal storage candidates.
+
+--------------------------------------------------------------------------------
+11. EXACT FILES AND COLUMNS FOR PHASE 10 IMPLEMENTATION
+--------------------------------------------------------------------------------
+Inputs:
+1. Current Phase 7 Governance:
+   - File: data/processed/pcm/mcdm_cluster_eligibility_summary.csv
+   - Columns: cluster_id, confirmed_feasible_count, mcdm_ranking_status, reason_for_no_ranking
+2. Historical Phase 7 MCDM Scores:
+   - File: data/processed/pcm/mcdm_full_scores_assam.csv
+   - Columns: cluster_id, name, consensus_rank, topsis_rank, gra_rank,
+     promethee_rank, vikor_rank, borda_score, copeland_rank
+3. Phase 9 Physics Validation:
+   - File: data/processed/pcm/physics_validation_assam.csv
+   - Columns: cluster_id, medoid_point_id, pcm_name, melting_temp_degC,
+     morning_delivery_success_rate, evening_delivery_success_rate,
+     overall_delivery_success_rate, solar_fraction, complete_pcm_cycles_per_year,
+     hours_Tw_ge_50C_per_year, candidate_status_label, validation_status
+
+Outputs to generate in Phase 10:
+1. data/processed/pcm/mcdm_vs_physics_comparison_assam.csv
+2. data/preprocessed/phase10_comparison_report.txt
+3. verify_phase10.py (Automated verification script)
+
+================================================================================
+VERDICT:
+PHASE 10 IMPLEMENTATION: APPROVED (SUBJECT TO DUAL-LEVEL STRATEGY ABOVE)
+================================================================================
+The comparison can proceed without modifying any upstream code or outputs,
+honestly documenting the K=3 unranked status while evaluating the historical
+MCDM rankings against physics to answer the research question transparently.

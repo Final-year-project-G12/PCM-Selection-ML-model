@@ -10,18 +10,10 @@ All outputs are saved automatically under `era5-assam/data/plots/`:
 
 ```
 era5-assam/data/plots/
-├── assam_objective1/                     # Objective 1 figures & interactive HTML cards
+├── assam_objective1/                     # Objective 1 climate figures & interactive HTML cards
 │   ├── 01_raw_vs_preprocessed_radiation.png
 │   ├── 02_climate_regime_map.png
-│   ├── 02_climate_regime_map_interactive.html
-│   ├── 02_climate_regime_map_folium.html
-│   ├── 03_melting_point_vs_latent_heat.png
-│   ├── 05_pcm_survivors_per_cluster.png
-│   ├── 07_bump_chart_ranks.png
-│   ├── 08_method_rank_correlation_heatmap.png
-│   ├── 10_rank_reversal_violin_bar.png
-│   ├── 11_agreement_plot.png
-│   └── 13_recommended_pcm_summary.png
+│   └── 02_climate_regime_map_folium.html
 ├── comparison/                           # Cross-pipeline comparison charts
 │   ├── 01_comparison_cluster_ghi.png
 │   ├── 02_comparison_temp_vs_tm_target.png
@@ -30,14 +22,18 @@ era5-assam/data/plots/
 │   ├── 05_comparison_latent_heat_distribution.png
 │   ├── 06_comparison_physics_vs_rank.png
 │   ├── 07_comparison_cross_cluster_top_pcm.png
-│   └── 08_comparison_rank_sensitivity.png
+│   ├── 08_comparison_rank_sensitivity.png
+│   └── 09_physics_diurnal_thermal_cycle.png
 ├── verify_preprocessing/                 # Verification 01: Preprocessing QA
 │   ├── 01_climate_distributions.png
 │   ├── 02_data_completeness.png
+│   ├── 03_population_grid_map.png
+│   ├── 05_era5_vs_nasa_power_agreement.png
 │   ├── 06_correlation_analysis.png
 │   └── 07_preprocessing_summary.png
 ├── verify_clustering/                    # Verification 02: GMM & Zoning QA
 │   ├── 01_elbow_curves.png
+│   ├── 02_pca_scree_variance.png
 │   ├── 03_pca_projection.png
 │   ├── 04_geographic_map.png
 │   ├── 05_cluster_profiles.png
@@ -66,19 +62,22 @@ Run all scripts from the workspace root or from `era5-assam/`:
 # 1. Generate Objective 1 plots and interactive Folium maps
 python era5-assam/generate_assam_plots.py
 
-# 2. Generate 8 cross-pipeline comparison charts
+# 2. Generate 9 cross-pipeline comparison charts
 python era5-assam/comparison_plots_assam.py
 
-# 3. Preprocessing Verification Suite
+# 3. Generate cross-regional parity diagrams (NASA agreement, population grid, PCA scree, diurnal physics)
+python era5-assam/generate_missing_assam_diagrams.py
+
+# 4. Preprocessing Verification Suite
 python era5-assam/verify_01_preprocessing_assam.py
 
-# 4. Clustering & Zoning Verification Suite
+# 5. Clustering & Zoning Verification Suite
 python era5-assam/verify_02_clustering_assam.py
 
-# 5. Feasibility Filter Verification Suite
+# 6. Feasibility Filter Verification Suite
 python era5-assam/verify_03_feasibility_assam.py
 
-# 6. MCDM Ranking & Monte Carlo Verification Suite
+# 7. MCDM Ranking & Monte Carlo Verification Suite
 python era5-assam/verify_04_ranking_assam.py
 ```
 

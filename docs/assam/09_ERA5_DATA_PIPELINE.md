@@ -52,7 +52,7 @@ practice** — but this should be verified by opening a sample `.nc` file and in
 ## Default elevation: 100m for Assam
 
 Unlike Rajasthan (which ran `00c_attach_elevation.py` to attach per-point ERA5 geopotential
-elevation), Assam uses `DEFAULT_ALT_M = 100` (Assam valley/plains baseline) for all 128 points.
+elevation), Assam uses `DEFAULT_ALT_M = 100` (Assam valley/plains baseline) for all 129 points.
 This is documented in `02_combine_assam.py`. The 100m default is appropriate for the Brahmaputra
 plains (where most of the population lives) but underestimates elevation for Karbi Anglong and
 Dima Hasao hill districts (actual elevation 300–900m+). This affects atmospheric pressure

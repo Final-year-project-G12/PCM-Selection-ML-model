@@ -20,4 +20,4 @@ Because this error is well below the 10% threshold, the automated decision logic
 ## Impact on Preprocessing
 When `04_preprocess_assam.py` runs, it dynamically reads the `bias_decision_assam.txt` file. Because the decision is `BACKBONE`, the script correctly **bypasses** the empirical quantile mapping step, allowing the raw, structurally correct ERA5 data to flow into the downstream clustering phases unmodified.
 
-This proves mathematically that the ERA5 solar radiation data for Assam is highly reliable as-is, and no synthetic bias correction was necessary.
+The agreement analysis indicates strong empirical consistency between ERA5 and NASA POWER for Assam, with an MBE of 1.1%, well below the 10% decision threshold. This supports the BACKBONE decision to retain the structurally corrected ERA5 data without applying empirical quantile mapping. This cross-source agreement should not be interpreted as proof against independent ground-truth measurements.

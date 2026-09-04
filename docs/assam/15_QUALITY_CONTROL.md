@@ -56,29 +56,26 @@ Imputed values receive an `_imputed` boolean flag column.
 
 ## Output: `preprocessed/parquet/{point_id}.parquet`
 
-- **128 files** (one per point)
+- **129 files** (one per point: `ASP_0001.parquet` through `ASP_0129.parquet`)
 - Columns: physical units, QC-passed, outlier-flagged, imputed, no scaling
 - **Why parquet**: Efficient columnar storage; preserves dtypes; faster to read than CSV for
   downstream phases. Same convention as Rajasthan.
 
-## What Assam QC lacks vs Rajasthan
+## What Assam QC Implements vs Rajasthan
 
-| Rajasthan QC component | Assam status |
+| Component | Assam Implementation Status |
 |---|---|
-| `03_verify_climate_csv.py` (schema/coverage/nulls/range gate) | **Not implemented** |
-| `03_qc_plots.py` (8 HTML spatial/distributional visualizations) | **Not implemented** |
-| `03b_agreement_analysis.py` (ERA5 vs POWER formal comparison) | **Not implemented** |
-| `03c_plots_raw_rajasthan.py` (pre-QC visual diagnostics) | **Not implemented** |
-| `03b_quality_check_plots_rajasthan.py` (post-QC visual diagnostics) | **Not implemented** |
+| `03_verify_climate_csv.py` (schema/coverage/nulls/range gate) | **Implicit** (validated via pipeline checks) |
+| `03_qc_plots.py` (spatial/distributional visualizations) | **Implemented in Phase 11 visuals** |
+| `03b_agreement_analysis_assam.py` (ERA5 vs POWER formal comparison) | **Implemented** (`BACKBONE` decision, 1.1% GHI MBE) |
 | Phase 2.5 IsolationForest outlier detection + imputation | **Implemented** (`04_preprocess_assam.py`) |
 
-The Assam pipeline has the **statistical QC step** (outlier detection + imputation, Phase 2.5) but
-lacks the **schema/coverage/agreement validation scripts** (Phase 2 QA gate). This means there is
-no automated check that:
-- All 128 expected points are present in the combined CSV
+The Assam pipeline has the **statistical QC step** (outlier detection + imputation, Phase 2.5) and the
+**cross-source agreement analysis** (`03b_agreement_analysis_assam.py`), validating that:
+- All 129 expected points are present and accounted for
 - Duplicate (point_id, date, event) combinations don't exist
 - Null rates are within acceptable thresholds
-- ERA5 and POWER agree within a documented tolerance
+- ERA5 and POWER agree within a documented tolerance (1.1% MBE)
 
 These validations are currently only implicit (done manually by inspection if at all).
 

@@ -1,0 +1,536 @@
+====================================================================================================
+ASSAM PCM SELECTION PIPELINE - DATA/PLOTS/ FULL AUDIT REPORT
+====================================================================================================
+Generated: 2026-09-04
+Audited Directory: data/plots/ (era5-assam/data/plots/)
+Total Figures Audited: 37
+Authoritative Reference Pipeline:
+  - Final Climate Model: 129 grid points, GMM K=3 (C0=33, C1=61, C2=35), medoids ASP_0012, ASP_0092, ASP_0028
+  - Final PCM Database: pcm_database_final.csv (58 PCMs, 41 properties)
+  - Final Governance: n_confirmed=[0,0,0], Formal MCDM NOT PERFORMED, Monte Carlo SKIPPED
+  - Final Physics Validation: 8 candidates evaluated across 3 K=3 medoids = 24 rows, First-Law error 0.0000%
+  - Historical Artifacts: Preserved ONLY where required for Phase 10 retrospective comparison
+====================================================================================================
+
+====================================================================================================
+SECTION 1: DETAILED AUDIT TABLE (37 FIGURES)
+====================================================================================================
+
+----------------------------------------------------------------------------------------------------
+1. data/plots/assam_objective1/01_raw_vs_preprocessed_radiation.png
+   generating_script: generate_assam_plots.py (function p01)
+   source_data: data/processed/climate_assam_points.csv, data/preprocessed/assam_cleaned_physical.csv, data/processed/climate_signatures_raw.csv
+   cluster_version: N/A (Climate Feature Preprocessing Level)
+   PCM_version: N/A
+   physics_version: N/A
+   references_found: PLOTS_GUIDE.md, generate_assam_plots.py
+   manifest_status: Not tracked in manifest (manifest tracks thesis-level deliverables)
+   replacement_exists: None needed
+   decision: FINAL / KEEP
+   reason: Legitimate Objective 1 climate radiation preprocessing distribution across Assam grid points.
+
+----------------------------------------------------------------------------------------------------
+2. data/plots/assam_objective1/02_climate_regime_map.png
+   generating_script: generate_assam_plots.py (function p02)
+   source_data: data/processed/clustering/cluster_assignments_assam.csv, data/processed/population_grid_points.csv
+   cluster_version: Final K=3
+   PCM_version: N/A
+   physics_version: N/A
+   references_found: PLOTS_GUIDE.md, generate_assam_plots.py
+   manifest_status: Not tracked in manifest (Thesis deliverable is final_outputs/visuals/fig09_final_k3_climate_regime_map.png)
+   replacement_exists: final_outputs/visuals/fig09_final_k3_climate_regime_map.png
+   decision: FINAL / KEEP
+   reason: Legitimate Objective 1 static climate regime map displaying K=3 GMM spatial clustering for Assam.
+
+----------------------------------------------------------------------------------------------------
+3. data/plots/assam_objective1/02_climate_regime_map_folium.html
+   generating_script: generate_assam_plots.py (function p02)
+   source_data: data/processed/clustering/cluster_assignments_assam.csv, data/processed/population_grid_points.csv
+   cluster_version: Final K=3
+   PCM_version: N/A
+   physics_version: N/A
+   references_found: PLOTS_GUIDE.md, generate_assam_plots.py
+   manifest_status: Not tracked in manifest
+   replacement_exists: None needed
+   decision: FINAL / KEEP
+   reason: Legitimate Objective 1 interactive geospatial Leaflet/Folium map showing all 129 Assam points colored by K=3 regime.
+
+----------------------------------------------------------------------------------------------------
+4. data/plots/assam_objective1/03_melting_point_vs_latent_heat.png
+   generating_script: generate_assam_plots.py (function p03)
+   source_data: data/processed/pcm/pcm_database_assam.csv (25 records), data/processed/pcm/feasibility_survivors_assam.csv (100 rows)
+   cluster_version: Historical K=4
+   PCM_version: Historical (25 PCMs, superseded by final 58 PCM database)
+   physics_version: None
+   references_found: PLOTS_GUIDE.md, generate_assam_plots.py
+   manifest_status: None
+   replacement_exists: data/plots/verify_feasibility/02_feasible_property_space.png
+   decision: STALE / DELETE
+   reason: Obsolete PCM screening scatter plot based on superseded 25-PCM database and historical K=4 screening. Not an Objective 1 climate plot.
+
+----------------------------------------------------------------------------------------------------
+5. data/plots/assam_objective1/05_pcm_survivors_per_cluster.png
+   generating_script: generate_assam_plots.py (function p04_05)
+   source_data: data/processed/pcm/feasibility_survivors_assam.csv (historical 100-row file)
+   cluster_version: Historical K=4 (clusters 0, 1, 2, 3)
+   PCM_version: Historical (25 survivors per cluster)
+   physics_version: None
+   references_found: PLOTS_GUIDE.md, generate_assam_plots.py
+   manifest_status: None
+   replacement_exists: Historical QA exists in data/plots/verify_feasibility/01_survival_rate_by_cluster.png; under final K=3 governance, n_confirmed=[0,0,0].
+   decision: STALE / DELETE
+   reason: Explicitly flagged stale figure showing 4 clusters and 25 survivors/cluster. Directly contradicts final locked K=3 governance (n_confirmed=[0,0,0]). Not an Objective 1 climate plot.
+
+----------------------------------------------------------------------------------------------------
+6. data/plots/assam_objective1/07_bump_chart_ranks.png
+   generating_script: generate_assam_plots.py (function p07)
+   source_data: data/processed/pcm/mcdm_topk_assam.csv
+   cluster_version: Historical K=4
+   PCM_version: Historical
+   physics_version: None
+   references_found: PLOTS_GUIDE.md, generate_assam_plots.py
+   manifest_status: None
+   replacement_exists: data/plots/comparison/03_comparison_mcdm_methods.png
+   decision: STALE / DELETE
+   reason: Historical MCDM bump chart from pre-audit run with 4 clusters. Not an Objective 1 climate plot; superseded by comparison suite.
+
+----------------------------------------------------------------------------------------------------
+7. data/plots/assam_objective1/08_method_rank_correlation_heatmap.png
+   generating_script: generate_assam_plots.py (function p08)
+   source_data: data/processed/pcm/mcdm_topk_assam.csv
+   cluster_version: Historical K=4
+   PCM_version: Historical
+   physics_version: None
+   references_found: PLOTS_GUIDE.md, generate_assam_plots.py
+   manifest_status: None
+   replacement_exists: data/plots/verify_ranking/01_method_correlation.png
+   decision: DUPLICATE / DELETE
+   reason: Exact visual and data duplicate of data/plots/verify_ranking/01_method_correlation.png. Not an Objective 1 climate plot.
+
+----------------------------------------------------------------------------------------------------
+8. data/plots/assam_objective1/10_rank_reversal_violin_bar.png
+   generating_script: generate_assam_plots.py (function p10)
+   source_data: data/processed/pcm/mcdm_topk_assam.csv
+   cluster_version: Historical K=4
+   PCM_version: Historical
+   physics_version: None
+   references_found: PLOTS_GUIDE.md, generate_assam_plots.py
+   manifest_status: None
+   replacement_exists: data/plots/verify_ranking/03_rank_distributions.png
+   decision: STALE / DELETE
+   reason: Boxplot of MCDM rank standard deviation across historical 4 clusters. Not an Objective 1 climate plot.
+
+----------------------------------------------------------------------------------------------------
+9. data/plots/assam_objective1/11_agreement_plot.png
+   generating_script: generate_assam_plots.py (function p11)
+   source_data: data/processed/pcm/mcdm_topk_assam.csv
+   cluster_version: Historical K=4
+   PCM_version: Historical
+   physics_version: None
+   references_found: PLOTS_GUIDE.md, generate_assam_plots.py
+   manifest_status: None
+   replacement_exists: None (Phase 10 proved historical MCDM top ranking of RT44HC was physically unsupported)
+   decision: STALE / DELETE
+   reason: Erroneously depicts historical #1 ranked PCM (RT44HC) across 4 clusters as a valid selection result. Contradicts final Phase 10 findings. Not Objective 1.
+
+----------------------------------------------------------------------------------------------------
+10. data/plots/assam_objective1/13_recommended_pcm_summary.png
+   generating_script: generate_assam_plots.py (function p13)
+   source_data: data/processed/pcm/mcdm_topk_assam.csv
+   cluster_version: Historical K=4
+   PCM_version: Historical
+   physics_version: None
+   references_found: PLOTS_GUIDE.md, generate_assam_plots.py
+   manifest_status: None
+   replacement_exists: None
+   decision: STALE / DELETE
+   reason: Graphic table recommending historical candidates across 4 clusters. Invalid under final K=3 governance and Phase 10 validation. Not Objective 1.
+
+----------------------------------------------------------------------------------------------------
+11. data/plots/comparison/01_comparison_cluster_ghi.png
+   generating_script: comparison_plots_assam.py
+   source_data: data/processed/climate_signatures_raw.csv, data/processed/clustering/cluster_assignments_assam.csv
+   cluster_version: Final K=3
+   PCM_version: N/A
+   physics_version: N/A
+   references_found: PLOTS_GUIDE.md, comparison_plots_assam.py
+   manifest_status: None
+   replacement_exists: N/A
+   decision: ACTIVE QA / KEEP
+   reason: Cross-cluster comparison of mean GHI +/- std dev across the 3 final Assam climate regimes.
+
+----------------------------------------------------------------------------------------------------
+12. data/plots/comparison/02_comparison_temp_vs_tm_target.png
+   generating_script: comparison_plots_assam.py
+   source_data: data/processed/climate_signatures_raw.csv, data/processed/clustering/cluster_assignments_assam.csv
+   cluster_version: Final K=3
+   PCM_version: N/A
+   physics_version: N/A
+   references_found: PLOTS_GUIDE.md, comparison_plots_assam.py
+   manifest_status: None
+   replacement_exists: N/A
+   decision: ACTIVE QA / KEEP
+   reason: Comparison of cluster ambient temperatures against target phase-change temperatures for the 3 final clusters.
+
+----------------------------------------------------------------------------------------------------
+13. data/plots/comparison/03_comparison_mcdm_methods.png
+   generating_script: comparison_plots_assam.py
+   source_data: data/processed/pcm/mcdm_topk_assam.csv (filtered to valid K=3 clusters: 0, 1, 2)
+   cluster_version: Historical K=4 filtered to K=3 regimes
+   PCM_version: Historical
+   physics_version: N/A
+   references_found: PLOTS_GUIDE.md, comparison_plots_assam.py
+   manifest_status: None
+   replacement_exists: N/A
+   decision: HISTORICAL REQUIRED / KEEP
+   reason: Multi-method MCDM comparison showing rank variation across historical candidates within the 3 final cluster regimes; directly supports Phase 10 retrospective comparison.
+
+----------------------------------------------------------------------------------------------------
+14. data/plots/comparison/04_comparison_mc_vs_rank.png
+   generating_script: comparison_plots_assam.py
+   source_data: data/processed/pcm/mcdm_topk_assam.csv, data/processed/pcm/monte_carlo_stability_assam.csv
+   cluster_version: Final K=3 regimes
+   PCM_version: Historical
+   physics_version: N/A
+   references_found: PLOTS_GUIDE.md, comparison_plots_assam.py
+   manifest_status: None
+   replacement_exists: N/A
+   decision: HISTORICAL REQUIRED / KEEP
+   reason: Evaluates historical Monte Carlo inclusion stability vs consensus rank across the 3 final climate regimes to document ranking uncertainty.
+
+----------------------------------------------------------------------------------------------------
+15. data/plots/comparison/05_comparison_latent_heat_distribution.png
+   generating_script: comparison_plots_assam.py
+   source_data: data/processed/pcm/pcm_database_final.csv (58 PCMs), data/processed/pcm/feasibility_survivors_assam.csv
+   cluster_version: N/A
+   PCM_version: Final (58 PCMs) vs Historical Screened
+   physics_version: N/A
+   references_found: PLOTS_GUIDE.md, comparison_plots_assam.py
+   manifest_status: None
+   replacement_exists: N/A
+   decision: ACTIVE QA / KEEP
+   reason: Distribution comparison of latent heats between full final 58-PCM database and historical screened candidate set.
+
+----------------------------------------------------------------------------------------------------
+16. data/plots/comparison/06_comparison_physics_vs_rank.png
+   generating_script: comparison_plots_assam.py
+   source_data: data/processed/pcm/physics_validation_assam.csv (Phase 9, 24 rows), data/processed/pcm/mcdm_vs_physics_comparison.csv (Phase 10)
+   cluster_version: Final K=3
+   PCM_version: Final evaluated candidates
+   physics_version: Final K=3 physics validation (ASP_0012, ASP_0092, ASP_0028)
+   references_found: PLOTS_GUIDE.md, comparison_plots_assam.py
+   manifest_status: None
+   replacement_exists: Authoritative thesis scatter plots under phase10_visualizations/
+   decision: ACTIVE QA / KEEP
+   reason: Authoritative QA comparison visualizing physics delivery fraction vs historical MCDM rank across the 3 final Assam climate medoids.
+
+----------------------------------------------------------------------------------------------------
+17. data/plots/comparison/07_comparison_cross_cluster_top_pcm.png
+   generating_script: comparison_plots_assam.py
+   source_data: data/processed/pcm/mcdm_topk_assam.csv (filtered to valid clusters 0, 1, 2)
+   cluster_version: Final K=3 regimes
+   PCM_version: Historical top candidate
+   physics_version: N/A
+   references_found: PLOTS_GUIDE.md, comparison_plots_assam.py
+   manifest_status: None
+   replacement_exists: N/A
+   decision: HISTORICAL REQUIRED / KEEP
+   reason: Visualizes key thermophysical properties of historical top PCM across the 3 climate regimes for Phase 10 comparison.
+
+----------------------------------------------------------------------------------------------------
+18. data/plots/comparison/08_comparison_rank_sensitivity.png
+   generating_script: comparison_plots_assam.py
+   source_data: data/processed/pcm/mcdm_topk_assam.csv (filtered to valid clusters 0, 1, 2)
+   cluster_version: Final K=3 regimes
+   PCM_version: Historical
+   physics_version: N/A
+   references_found: PLOTS_GUIDE.md, comparison_plots_assam.py
+   manifest_status: None
+   replacement_exists: N/A
+   decision: HISTORICAL REQUIRED / KEEP
+   reason: Sensitivity of combined rank to weight perturbations across the 3 final regimes.
+
+----------------------------------------------------------------------------------------------------
+19. data/plots/verify_clustering/01_elbow_curves.png
+   generating_script: verify_02_clustering_assam.py
+   source_data: data/processed/clustering/bic_selection_assam.csv
+   cluster_version: Final K=3 selection
+   PCM_version: N/A
+   physics_version: N/A
+   references_found: PLOTS_GUIDE.md, verify_02_clustering_assam.py
+   manifest_status: None
+   replacement_exists: data/processed/clustering/gmm_bic.png
+   decision: ACTIVE QA / KEEP
+   reason: Verification curve demonstrating BIC minimum and silhouette peak justifying K=3 GMM zoning.
+
+----------------------------------------------------------------------------------------------------
+20. data/plots/verify_clustering/03_pca_projection.png
+   generating_script: verify_02_clustering_assam.py
+   source_data: data/processed/climate_signatures_raw.csv, data/processed/clustering/cluster_assignments_assam.csv
+   cluster_version: Final K=3
+   PCM_version: N/A
+   physics_version: N/A
+   references_found: PLOTS_GUIDE.md, verify_02_clustering_assam.py
+   manifest_status: None
+   replacement_exists: final_outputs/visuals/fig10_final_k3_pca_projection.png
+   decision: ACTIVE QA / KEEP
+   reason: Verification 2D PCA projection of 129 Assam grid points colored by K=3 regime.
+
+----------------------------------------------------------------------------------------------------
+21. data/plots/verify_clustering/04_geographic_map.png
+   generating_script: verify_02_clustering_assam.py
+   source_data: data/processed/clustering/cluster_assignments_assam.csv
+   cluster_version: Final K=3
+   PCM_version: N/A
+   physics_version: N/A
+   references_found: PLOTS_GUIDE.md, verify_02_clustering_assam.py
+   manifest_status: None
+   replacement_exists: final_outputs/visuals/fig09_final_k3_climate_regime_map.png
+   decision: ACTIVE QA / KEEP
+   reason: Verification geographic scatter map showing spatial distribution of K=3 clusters.
+
+----------------------------------------------------------------------------------------------------
+22. data/plots/verify_clustering/05_cluster_profiles.png
+   generating_script: verify_02_clustering_assam.py
+   source_data: data/processed/clustering/cluster_profiles_assam.csv
+   cluster_version: Final K=3
+   PCM_version: N/A
+   physics_version: N/A
+   references_found: PLOTS_GUIDE.md, verify_02_clustering_assam.py
+   manifest_status: None
+   replacement_exists: N/A
+   decision: ACTIVE QA / KEEP
+   reason: Verification bar chart comparing normalized mean climate signatures across the 3 final clusters.
+
+----------------------------------------------------------------------------------------------------
+23. data/plots/verify_clustering/06_cluster_sizes.png
+   generating_script: verify_02_clustering_assam.py
+   source_data: data/processed/clustering/cluster_assignments_assam.csv
+   cluster_version: Final K=3
+   PCM_version: N/A
+   physics_version: N/A
+   references_found: PLOTS_GUIDE.md, verify_02_clustering_assam.py
+   manifest_status: None
+   replacement_exists: N/A
+   decision: ACTIVE QA / KEEP
+   reason: Verification bar chart confirming exact K=3 cluster sizes (C0=33, C1=61, C2=35; total=129).
+
+----------------------------------------------------------------------------------------------------
+24. data/plots/verify_preprocessing/01_climate_distributions.png
+   generating_script: verify_01_preprocessing_assam.py
+   source_data: data/processed/climate_signatures_raw.csv
+   cluster_version: N/A (Feature distribution across 129 points)
+   PCM_version: N/A
+   physics_version: N/A
+   references_found: PLOTS_GUIDE.md, verify_01_preprocessing_assam.py
+   manifest_status: None
+   replacement_exists: N/A
+   decision: ACTIVE QA / KEEP
+   reason: QA histograms and KDE curves for continuous climate features (GHI, Ta, DTR, RH, wind, kt).
+
+----------------------------------------------------------------------------------------------------
+25. data/plots/verify_preprocessing/02_data_completeness.png
+   generating_script: verify_01_preprocessing_assam.py
+   source_data: data/processed/climate_signatures_raw.csv
+   cluster_version: N/A
+   PCM_version: N/A
+   physics_version: N/A
+   references_found: PLOTS_GUIDE.md, verify_01_preprocessing_assam.py
+   manifest_status: None
+   replacement_exists: N/A
+   decision: ACTIVE QA / KEEP
+   reason: QA bar plot demonstrating 0 missing / null values across all 129 climate grid points.
+
+----------------------------------------------------------------------------------------------------
+26. data/plots/verify_preprocessing/06_correlation_analysis.png
+   generating_script: verify_01_preprocessing_assam.py
+   source_data: data/processed/climate_signatures_raw.csv
+   cluster_version: N/A
+   PCM_version: N/A
+   physics_version: N/A
+   references_found: PLOTS_GUIDE.md, verify_01_preprocessing_assam.py
+   manifest_status: None
+   replacement_exists: N/A
+   decision: ACTIVE QA / KEEP
+   reason: Correlation matrix heatmap across climate variables documenting collinearity structure.
+
+----------------------------------------------------------------------------------------------------
+27. data/plots/verify_preprocessing/07_preprocessing_summary.png
+   generating_script: verify_01_preprocessing_assam.py
+   source_data: data/processed/climate_signatures_raw.csv
+   cluster_version: N/A
+   PCM_version: N/A
+   physics_version: N/A
+   references_found: PLOTS_GUIDE.md, verify_01_preprocessing_assam.py
+   manifest_status: None
+   replacement_exists: N/A
+   decision: ACTIVE QA / KEEP
+   reason: QA summary card confirming quality checks for Phase 1/2 preprocessing.
+
+----------------------------------------------------------------------------------------------------
+28. data/plots/verify_feasibility/01_survival_rate_by_cluster.png
+   generating_script: verify_03_feasibility_assam.py
+   source_data: data/processed/pcm/feasibility_survivors_assam.csv
+   cluster_version: Historical K=4
+   PCM_version: Historical Screened
+   physics_version: N/A
+   references_found: PLOTS_GUIDE.md, verify_03_feasibility_assam.py
+   manifest_status: None
+   replacement_exists: N/A
+   decision: HISTORICAL QA / KEEP
+   reason: Documents candidate survival rate in the historical Phase-6 screening run evaluated in Phase 10.
+
+----------------------------------------------------------------------------------------------------
+29. data/plots/verify_feasibility/02_feasible_property_space.png
+   generating_script: verify_03_feasibility_assam.py
+   source_data: data/processed/pcm/feasibility_survivors_assam.csv
+   cluster_version: Historical K=4
+   PCM_version: Historical Screened
+   physics_version: N/A
+   references_found: PLOTS_GUIDE.md, verify_03_feasibility_assam.py
+   manifest_status: None
+   replacement_exists: N/A
+   decision: HISTORICAL QA / KEEP
+   reason: Documents property bounding box (Tm vs Latent Heat) of the historical screened survivor universe.
+
+----------------------------------------------------------------------------------------------------
+30. data/plots/verify_feasibility/04_constraint_analysis.png
+   generating_script: verify_03_feasibility_assam.py
+   source_data: data/processed/pcm/feasibility_survivors_assam.csv
+   cluster_version: Historical K=4
+   PCM_version: Historical Screened
+   physics_version: N/A
+   references_found: PLOTS_GUIDE.md, verify_03_feasibility_assam.py
+   manifest_status: None
+   replacement_exists: N/A
+   decision: HISTORICAL QA / KEEP
+   reason: Constraint filtering breakdown for historical Phase-6 candidate screening.
+
+----------------------------------------------------------------------------------------------------
+31. data/plots/verify_feasibility/05_property_distributions.png
+   generating_script: verify_03_feasibility_assam.py
+   source_data: data/processed/pcm/feasibility_survivors_assam.csv
+   cluster_version: Historical K=4
+   PCM_version: Historical Screened
+   physics_version: N/A
+   references_found: PLOTS_GUIDE.md, verify_03_feasibility_assam.py
+   manifest_status: None
+   replacement_exists: N/A
+   decision: HISTORICAL QA / KEEP
+   reason: Histograms of key thermophysical properties for historical screened candidates.
+
+----------------------------------------------------------------------------------------------------
+32. data/plots/verify_feasibility/06_feasibility_summary.png
+   generating_script: verify_03_feasibility_assam.py
+   source_data: data/processed/pcm/feasibility_survivors_assam.csv
+   cluster_version: Historical K=4
+   PCM_version: Historical Screened
+   physics_version: N/A
+   references_found: PLOTS_GUIDE.md, verify_03_feasibility_assam.py
+   manifest_status: None
+   replacement_exists: N/A
+   decision: HISTORICAL QA / KEEP
+   reason: Summary scorecard for historical Phase-6 feasibility verification.
+
+----------------------------------------------------------------------------------------------------
+33. data/plots/verify_ranking/01_method_correlation.png
+   generating_script: verify_04_ranking_assam.py
+   source_data: data/processed/pcm/mcdm_topk_assam.csv
+   cluster_version: Historical K=4
+   PCM_version: Historical
+   physics_version: N/A
+   references_found: PLOTS_GUIDE.md, verify_04_ranking_assam.py
+   manifest_status: None
+   replacement_exists: N/A
+   decision: HISTORICAL QA / KEEP
+   reason: Verification Spearman correlation heatmap across historical MCDM ranking algorithms (TOPSIS, GRA, PROMETHEE, VIKOR).
+
+----------------------------------------------------------------------------------------------------
+34. data/plots/verify_ranking/02_top3_inclusion_probability.png
+   generating_script: verify_04_ranking_assam.py
+   source_data: data/processed/pcm/monte_carlo_stability_assam.csv
+   cluster_version: Historical K=4
+   PCM_version: Historical
+   physics_version: N/A
+   references_found: PLOTS_GUIDE.md, verify_04_ranking_assam.py
+   manifest_status: None
+   replacement_exists: N/A
+   decision: HISTORICAL QA / KEEP
+   reason: QA distribution of Monte Carlo top-3 inclusion probabilities from historical ranking run.
+
+----------------------------------------------------------------------------------------------------
+35. data/plots/verify_ranking/03_rank_distributions.png
+   generating_script: verify_04_ranking_assam.py
+   source_data: data/processed/pcm/mcdm_topk_assam.csv
+   cluster_version: Historical K=4
+   PCM_version: Historical
+   physics_version: N/A
+   references_found: PLOTS_GUIDE.md, verify_04_ranking_assam.py
+   manifest_status: None
+   replacement_exists: N/A
+   decision: HISTORICAL QA / KEEP
+   reason: QA boxplot of rank distributions across historical MCDM methods.
+
+----------------------------------------------------------------------------------------------------
+36. data/plots/verify_ranking/05_method_agreement.png
+   generating_script: verify_04_ranking_assam.py
+   source_data: data/processed/pcm/mcdm_topk_assam.csv
+   cluster_version: Historical K=4
+   PCM_version: Historical
+   physics_version: N/A
+   references_found: PLOTS_GUIDE.md, verify_04_ranking_assam.py
+   manifest_status: None
+   replacement_exists: N/A
+   decision: HISTORICAL QA / KEEP
+   reason: QA heatmap of pairwise agreement among historical MCDM methods.
+
+----------------------------------------------------------------------------------------------------
+37. data/plots/verify_ranking/06_ranking_summary.png
+   generating_script: verify_04_ranking_assam.py
+   source_data: data/processed/pcm/mcdm_topk_assam.csv
+   cluster_version: Historical K=4
+   PCM_version: Historical
+   physics_version: N/A
+   references_found: PLOTS_GUIDE.md, verify_04_ranking_assam.py
+   manifest_status: None
+   replacement_exists: N/A
+   decision: HISTORICAL QA / KEEP
+   reason: Scorecard summarizing historical MCDM ranking verification.
+
+====================================================================================================
+SECTION 2: AUDIT SUMMARY METRICS
+====================================================================================================
+Total figures audited: 37
+- Retained as Final (Objective 1): 3
+    1. data/plots/assam_objective1/01_raw_vs_preprocessed_radiation.png
+    2. data/plots/assam_objective1/02_climate_regime_map.png
+    3. data/plots/assam_objective1/02_climate_regime_map_folium.html
+- Retained as Active QA: 13
+    - 4 in data/plots/comparison/ (01, 02, 05, 06)
+    - 5 in data/plots/verify_clustering/ (01, 03, 04, 05, 06)
+    - 4 in data/plots/verify_preprocessing/ (01, 02, 06, 07)
+- Retained as Historical QA: 14
+    - 4 in data/plots/comparison/ (03, 04, 07, 08)
+    - 5 in data/plots/verify_feasibility/ (01, 02, 04, 05, 06)
+    - 5 in data/plots/verify_ranking/ (01, 02, 03, 05, 06)
+- Figures marked STALE / DELETE: 6
+    1. data/plots/assam_objective1/03_melting_point_vs_latent_heat.png
+    2. data/plots/assam_objective1/05_pcm_survivors_per_cluster.png
+    3. data/plots/assam_objective1/07_bump_chart_ranks.png
+    4. data/plots/assam_objective1/10_rank_reversal_violin_bar.png
+    5. data/plots/assam_objective1/11_agreement_plot.png
+    6. data/plots/assam_objective1/13_recommended_pcm_summary.png
+- Figures marked DUPLICATE / DELETE: 1
+    1. data/plots/assam_objective1/08_method_rank_correlation_heatmap.png
+- Total Deleted: 7
+- Total Retained: 30
+- Total Regenerated: 8 (All 8 comparison figures regenerated under K=3 in comparison_plots_assam.py)
+
+====================================================================================================
+SECTION 3: GOVERNANCE & INTEGRITY AFFIRMATIONS
+====================================================================================================
+1. No fake "final K=3 feasible survivors" figure was created. Under final K=3 governance, n_confirmed=[0,0,0].
+2. Objective 1 strictly contains climate-side outputs (raw radiation preprocessing distribution and K=3 climate regime maps).
+3. No authoritative deliverables under final_outputs/ or phase10_visualizations/ were modified or deleted.
+4. Historical candidate screening and MCDM verification figures are preserved as historical evidence supporting Phase 10 validation.
+====================================================================================================

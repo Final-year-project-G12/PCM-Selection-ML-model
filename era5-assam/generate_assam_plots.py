@@ -103,7 +103,15 @@ def p01():
 def p02():
     print("[2/13] Climate-Regime Map")
     df = load(CLUSTERS, "clusters")
-    if df is None or not {"lat", "lon", "cluster_id"}.issubset(df.columns): return
+    if df is None: return
+    if "cluster_id" not in df.columns and "cluster" in df.columns:
+        df["cluster_id"] = df["cluster"]
+    if not {"lat", "lon"}.issubset(df.columns):
+        pop_file = os.path.join(BASE, "data", "processed", "population_grid_points.csv")
+        if os.path.exists(pop_file):
+            pop = pd.read_csv(pop_file)
+            df = df.merge(pop[["point_id", "lat", "lon"]], on="point_id")
+    if not {"lat", "lon", "cluster_id"}.issubset(df.columns): return
     nc = df["cluster_id"].nunique()
     cmap = plt.get_cmap("tab10")
     fig, ax = plt.subplots(figsize=(11, 8))
@@ -251,16 +259,9 @@ def p13():
 
 def main():
     print(f"=== Generating Assam Objective 1 Plots -> {OUT} ===")
-    p01()
-    p02()
-    p03()
-    p04_05()
-    p07()
-    p08()
-    p10()
-    p11()
-    p13()
-    print("=== All Objective 1 Assam plots complete! ===")
+    p01()  # Raw vs Preprocessed Radiation distribution across Assam points
+    p02()  # Climate-Regime Map (K=3 GMM clusters per grid point + Folium interactive map)
+    print("=== Objective 1 Assam plots complete! ===")
 
 if __name__ == "__main__":
     main()

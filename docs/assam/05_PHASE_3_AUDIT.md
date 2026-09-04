@@ -2,113 +2,66 @@
 
 ## Phase 2.5 — Quality Control (`04_preprocess_assam.py`)
 
-**Status**: COMPLETE
+**Status**: COMPLETE (Authoritative Final)
 
-### What it does
-Reads `climate_assam_points.csv`, applies per-point QC, and writes one parquet file per point
-to `preprocessed/parquet/{point_id}.parquet`.
+### Processing & Bounds Checking
+Reads `climate_assam_points.csv` and applies physical bounds verification and outlier flagging across all **129 spatial coordinates**, outputting individual parquet partitions to `data/processed/preprocessed/parquet/{point_id}.parquet`.
 
-### Physical bounds checking (Table 9 of plan doc)
+| Parameter | Lower Bound | Upper Bound | Enforcement Policy |
+|---|---|---|---|
+| `era5_GHI` | 0 W/m² | 1400 W/m² | Out-of-bounds flagged; physically valid extremes retained |
+| `era5_T_amb` | -30 °C | 55 °C | Bounds verification |
+| `era5_RHum` | 0 % | 100 % | Bounds verification |
+| `era5_T_dew` | -30 °C | 40 °C | Bounds verification |
+| `era5_W_spd` | 0 m/s | 50 m/s | Bounds verification |
+| `era5_P_atm` | 850 hPa | 1060 hPa | Bounds verification |
+| `era5_cloud_cover` | 0.0 | 1.0 | Fractional cloud cover |
+| `era5_precipitation` | 0 mm | 200 mm | Precipitation bounds |
 
-| Variable | Lower | Upper |
-|---|---|---|
-| `era5_GHI` | 0 | 1400 W/m² |
-| `era5_T_amb` | -30 | 55 °C |
-| `era5_RHum` | 0 | 100 % |
-| `era5_T_dew` | -30 | 40 °C |
-| `era5_W_spd` | 0 | 50 m/s |
-| `era5_P_atm` | 850 | 1060 hPa |
-| `era5_cloud_cover` | 0 | 1 |
-| `era5_precipitation` | 0 | 200 mm |
-
-Out-of-bounds values are flagged but not deleted (they receive a flag column).
-
-### Outlier detection
-- **Algorithm**: IsolationForest (scikit-learn) — an ensemble tree-based method suitable for
-  multivariate outlier detection without assuming Gaussianity, appropriate for Assam's heavy-tailed
-  monsoon distributions
-- **Contrast with Rajasthan**: Rajasthan used Hampel filter (univariate, per-column) and later
-  corrected it by excluding GHI/CSI. Assam uses IsolationForest multivariate, which avoids
-  that specific failure mode.
-- **Policy**: Outliers are **flagged but never deleted** — the flag column is carried through to
-  downstream phases but does not remove any row.
-
-### Missing data imputation
-- Applied after flagging; imputed values receive an `_imputed` boolean flag column
-- Strategy: forward-fill / interpolation within point (specific method in script)
-
-### Output: `preprocessed/parquet/{point_id}.parquet`
-- One file per point, 128 files total
-- Physical units, QC-passed, outlier-flagged, imputed, no scaling applied
-
-### Known differences from Rajasthan QC
-
-Rajasthan's Phase 2.5 had three sequential corrections (Hampel filter over-corrected GHI/CSI,
-fixed by excluding those columns). Assam's IsolationForest approach sidesteps that specific issue,
-but does not produce the same set of QC plots (no `qc_clean_*.html`, no `qc_raw_*.html` equivalents
-documented).
+### Multivariate Outlier Detection (IsolationForest)
+- **Algorithm**: scikit-learn `IsolationForest` applied to detect multivariate anomalies without assuming Gaussian normality, well-suited to Assam's heavy-tailed monsoon extremes.
+- **Strict Retention Policy**: Outliers are **flagged but never deleted** (`is_outlier` boolean flag carried forward to preserve energy totals).
+- **Output Files**: Exactly **129 parquet files** (`ASP_0001.parquet` through `ASP_0129.parquet`).
 
 ---
 
 ## Phase 3 — Climate Signature Construction (`04b_climate_signature.py`)
 
-**Status**: COMPLETE
+**Status**: COMPLETE (Authoritative Final)
 
-### Inputs
-- `preprocessed/parquet/{point_id}.parquet` (per-point event data)
-- `daily_aggregates_assam.csv` (Tier 2 daily integrals from `02b`)
-- `tier2_signature_assam.csv` (aggregated Tier 2 per site from `02b`)
-- `population_grid_points.csv` (lat, lon, elevation proxy)
+### Four Climate Representations
 
-### Outputs
-- `climate_signatures_raw.csv` — 128 rows × 18 indices (physical units)
-- `climate_signatures_matrix.csv` — PCA-reduced + standardised, ready for clustering
-- `pca_loadings.csv` — PCA component loadings for thesis methodology section
-- `preprocessed/climate_signature_report.txt` — diagnostic summary
+To maintain scientific traceability, the pipeline distinguishes four distinct stages of climate representation:
 
-### 18-index signature design
+1. **Raw Physical Climate Signature (`climate_signatures_raw.csv`)**:
+   - Exactly **129 rows × 18 physical indices** in dimensional units (°C, kWh/m²/day, %, mm).
+   - Structured into:
+     - *Thermodynamic block (7 indices)*: `Ta_mean`, `Ta_p95`, `Ta_p05`, `HDD18`, `CDD24`, `RH_mean`, `elev_proxy`.
+     - *Solar block (4 indices)*: `GHI_daily_kWh`, `kt_mean`, `SAI`, `CCI`.
+     - *Variability / Climate character (5 indices)*: `DTR`, `cloudy_frac`, `monsoon_index`, `HSI`, `precipitation_annual`.
+     - *Derived targets (2 indices, not clustered)*: `Tm_target` (44.0°C), `L_required`.
 
-The plan doc requires every index to answer "which PCM property does this constrain, and by what
-physical mechanism?" — all 18 satisfy this:
+2. **Standardized Clustering Matrix (`climate_signatures_matrix.csv`)**:
+   - Standardized (zero mean, unit variance) across all 129 points.
+   - Normalization is applied strictly **after** temporal aggregation, avoiding aggregation bias.
 
-**Thermodynamic block (7 indices → PCA applied):**
-`Ta_mean`, `Ta_p95`, `Ta_p05`, `HDD18`, `CDD24`, `RH_mean`, `elev_proxy`
+3. **PCA Representation (`pca_loadings.csv`)**:
+   - Principal Component Analysis applied strictly to the 7-feature thermodynamic block to diagnose latent covariance without collapsing the solar radiation signal.
 
-PCA is applied **only** to this correlated block. The solar and variability indices are kept out
-of PCA to preserve interpretability of the dominant signal for PCM selection (solar resource).
+4. **Final GMM Input Representation (5 Core Physical Features)**:
+   - Auditing revealed that fitting a full-covariance Gaussian Mixture Model on 18–19 dimensions with $N=129$ points resulted in severe over-parameterization ($D(D+1)/2 = 190$ covariance parameters per cluster).
+   - To ensure statistical power and cluster stability, the final locked GMM clustering in Phase 3 uses **5 core physical features**:
+     - `GHI_mean` (Solar resource)
+     - `Ta_mean` (Thermal baseline)
+     - `DTR` (Diurnal thermal range)
+     - `RH_mean` (Monsoon moisture proxy)
+     - `wind_mean` (Convective boundary layer cooling)
+   - This 5-feature representation produced an unambiguous global BIC minimum at **$K=3$** ($\text{BIC} = 1574.94$), with bootstrap ARI = $0.6289$.
 
-**Solar block (4 indices → no PCA):**
-`GHI_daily_kWh`, `kt_mean`, `SAI`, `CCI`
+---
 
-**Variability / climate character (5 indices → no PCA):**
-`DTR`, `cloudy_frac`, `monsoon_index`, `HSI`, `precipitation_annual`
+## System Target Derivations
 
-**Derived targets (2 per site → not in clustering matrix):**
-`Tm_target`, `L_required`
-
-### Key design decisions
-
-**Tm_target = 44°C (uniform across all clusters):**
-- Derivation: T_delivery = 50°C (Indian domestic standard), ΔT_approach = 6°C → Tm_target = 44°C
-- This is uniform for all 128 Assam sites (same as plan §8 for Indian domestic SWH)
-- Unlike Rajasthan, there is no per-cluster capping or `Tm_target_capped_C` correction —
-  44°C is already well within the 42–70°C feasibility band
-
-**Tsoil_mean ≈ Ta_mean:**
-- Soil temperature not downloaded for Assam
-- Standard fallback: shallow soil temperature ≈ annual mean surface temperature
-- Explicitly stated in `04b_climate_signature.py` docstring; user-approved
-
-**Normalisation timing:**
-Applied to the final clustering matrix (zero mean, unit variance across the 128 points), NOT to
-the hourly data. This avoids Plan §5.2 Trap 1 (normalising before aggregation).
-
-### Known issues
-
-1. **No separate QC-before vs QC-after comparison**: Rajasthan had `before_phase_3` folder checks.
-   Assam proceeds directly from preprocessed parquets to signature construction.
-
-2. **L_required_kJ_per_kg basis**: Uses `T_mains_est_C = Ta_mean − 2.0` (same unsourced offset
-   as Rajasthan). This drives `L_required` per site, which determines the feasibility filter's
-   latent-heat floor. The −2.0 K offset has no cited source and is a documented caveat inherited
-   across all four states.
+- **Uniform Melting Target**: $T_m^{\text{target}} = 44.0^\circ\text{C}$ across all 129 sites, based on $T_{\text{delivery}} = 50.0^\circ\text{C}$ (Indian domestic SWH standard) and heat exchanger approach $\Delta T = 6.0\text{ K}$.
+- **Soil Temperature Fallback**: In the absence of recorded shallow ground temperatures, $T_{\text{soil,mean}} \approx T_{a,\text{mean}}$ is documented and applied.
+- **Mains Temperature Approximation**: $T_{\text{mains,est}} = T_{a,\text{mean}} - 2.0\text{ K}$, determining the site-specific thermal charging deficit and $L_{\text{required}}$.

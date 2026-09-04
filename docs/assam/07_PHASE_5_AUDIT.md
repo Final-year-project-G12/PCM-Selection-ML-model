@@ -1,102 +1,59 @@
-# 07 — Phase 5 Audit: Feasibility Filtering
+# 07 — Phase 5 Audit: Curated PCM Property Database
 
-**Scripts**: `06_build_pcm_database.py`, `07_feasibility_filter.py`
+**Script**: `06_build_pcm_database.py`
 
-**Status**: COMPLETE
+**Status**: COMPLETE (Authoritative Final)
 
-## PCM database build (`06_build_pcm_database.py`)
+---
 
-### Sources
-- **Manufacturer base**: MICE+RF+PMM cleaned dataset (`PCM_Properties_cleaned_mice_pmm_detailed.csv`)
-  — 18 rows (Rubitherm RT + PLUSS savE product lines)
-- **Literature additions**: 7 rows from Singh2025 Table 2 (fatty acids, eutectics, bio-based
-  paraffins in the 42–70°C band)
-- **Total**: **25 rows** in `pcm_database_assam.csv`
+## Final Curated PCM Database (`pcm_database_final.csv`)
 
-### 25-row PCM database (Tm range relevant to Assam's 44°C target)
+Phase 5 establishes the authoritative material property repository for latent thermal energy storage (LTES). While initial exploratory runs utilized an early 25-row prototype (`pcm_database_assam.csv`), the production repository was expanded, deduplicated, and audited into **`pcm_database_final.csv`**.
 
-| Name | Family | Tm (°C) | Latent heat (kJ/kg) |
-|---|---|---|---|
-| savE® HS36 | PLUSS savE | 35.0 | 163 |
-| savE® OM35 | PLUSS savE | 35.0 | 171 |
-| RT35 | Rubitherm RT | 35.0 | 160 |
-| savE® OM37 | PLUSS savE | 38.0 | 186 |
-| RT38 | Rubitherm RT | 38.0 | 170 |
-| savE® OM39 | PLUSS savE | 39.0 | 229 |
-| RT42 | Rubitherm RT | 41.0 | 165 |
-| Myristic-Palmitic eutectic (58/42) | Eutectic | 42.6 | 169.7 |
-| **RT44HC** | Rubitherm RT | **43.0** | **250** |
-| savE® OM42 | PLUSS savE | 44.0 | 199 |
-| C22H46 (docosane-class paraffin) | Paraffin | 44.5 | 249 |
-| RT47 | Rubitherm RT | 46.0 | 160 |
-| savE® OM46 | PLUSS savE | 47.0 | 177 |
-| **RT45HC** | Rubitherm RT | **47.0** | **230** |
-| RT50 | Rubitherm RT | 49.0 | 160 |
-| savE® OM50 | PLUSS savE | 50.0 | 189 |
-| savE® OM48 | PLUSS savE | 51.0 | 165 |
-| Palmitic-Stearic eutectic (64.2/35.8) | Eutectic | 52.3 | 181.7 |
-| Myristic acid | Fatty acid | 53.0 | 190 |
-| RT54HC | Rubitherm RT | 54.0 | 200 |
-| RT55 | Rubitherm RT | 55.0 | 170 |
-| Palmitic acid | Fatty acid | 63.0 | 185.4 |
-| RT64HC | Rubitherm RT | 64.0 | 250 |
-| Paraffin wax (generic) | Paraffin | 64.0 | 173.6 |
-| C30H62 (triacontane-class paraffin) | Paraffin | 65.5 | 252 |
+### Database Architecture & Verification
+- **Total Records**: **58 deduplicated PCM records**
+- **Property Columns**: **41 properties** capturing thermodynamic, chemical, kinetic, safety, and physical behavior
+- **Material Families**:
+  - *Organic Paraffins*: Commercial Rubitherm RT series, pure alkanes ($C_{20}–C_{30}$)
+  - *Bio-based Organics*: PLUSS savE OM series, fatty acids (myristic, palmitic, stearic)
+  - *Eutectic Mixtures*: Binary organic eutectics (e.g. Myristic-Palmitic 58/42)
+  - *Inorganic Salt Hydrates & Eutectics*: High-density hydrated salts (subject to corrosion screening)
 
-Database still at 25 rows vs. the 40–60-row target — same gap as Rajasthan.
+---
 
-## Feasibility filter (`07_feasibility_filter.py`)
+## Strict Provenance & Uncertainty Framework
 
-### 7 constraints applied
+To eliminate scientific ambiguity, every numerical entry in `pcm_database_final.csv` carries strict origin tracking across two dedicated provenance dimensions:
 
-| # | Constraint | Parameters |
+1. **Source Attribution (`source_type`)**:
+   - `Manufacturer_Datasheet`: Directly transcribed from certified technical datasheets (Rubitherm GmbH, PLUSS Advanced Technologies).
+   - `Literature_Primary`: Peer-reviewed experimental studies (e.g., Singh et al. 2025).
+   - `Imputed_Model`: Statistically imputed thermodynamic values.
+
+2. **Data Integrity Status (`value_status`)**:
+   - **`Reported`**: Experimentally measured and manufacturer-verified parameter.
+   - **`Imputed`**: Derived via validated MICE-RF-PMM predictive imputation (only for non-critical secondary properties).
+   - **`Missing`**: Explicitly unpopulated when neither measured nor imputable without violating physical laws.
+
+---
+
+## Specific Heat Capacity ($C_p$) Policy
+
+A critical audit finding across early PCM databases was the "silent fallback" bug, where missing liquid-phase heat capacity ($C_{p,\text{liquid}}$) caused code to silently substitute solid-phase capacity ($C_{p,\text{solid}}$) as the average.
+
+Under `pcm_database_final.csv`:
+- **Strict Dual-Phase Requirement**:
+  $$C_{p,\text{avg}} = \frac{C_{p,\text{solid}} + C_{p,\text{liquid}}}{2}$$
+- **Zero Fallback Policy**: If either phase-specific capacity is missing, $C_{p,\text{avg}}$ remains **uncomputed (`NaN`)** rather than falling back to a single phase. Downstream models handle this missingness explicitly without biasing energy calculations.
+
+---
+
+## Comparison: Final Database vs. Historical Prototype
+
+| Feature | Historical Prototype (`pcm_database_assam.csv`) | Final Production Database (`pcm_database_final.csv`) |
 |---|---|---|
-| 1 | Melting window | Tm ∈ [Tm_target − 6, Tm_target + 8] = [38, 52]°C; auto-relaxed +2K/step if <5 survive |
-| 2 | Absolute band | Tm ∈ [42, 70]°C |
-| 3 | Latent heat floor | L ≥ 0.7 × L_required (κ=0.7); relaxed per-cluster if needed |
-| 4 | Cycling stability | ≥ 300 cycles if known; retained with flag if unknown |
-| 5 | Corrosion veto | Exclude inorganic PCMs in clusters where HSI > global p75 |
-| 6 | Supercooling veto | Exclude supercooling > 8K (known values only) |
-| 7 | Safety keyword veto | Exclude "highly flammable", "extremely flammable", "toxic" |
-
-### Assam-specific: Corrosion veto is load-bearing
-
-Assam's climate is characterised by high humidity and a dominant monsoon signal. The **Humidity-Solar
-Interaction (HSI) index** exceeds the global p75 threshold in at least the humid valley clusters.
-This triggers the corrosion veto (Constraint 5), which excludes inorganic PCMs (salt hydrates,
-eutectic salts) from those clusters. This is a **real differentiation** between Assam and Rajasthan:
-in Rajasthan's dry climate, the corrosion veto was present but did not activate for most clusters.
-
-### Survivors per cluster (from `feasibility_survivors_assam.csv`)
-
-| Cluster | n_candidates (after κ-relaxation) |
-|---|---|
-| 0 | **6** |
-| 1 | **6** |
-| 2 | **8** |
-| 3 | **8** |
-
-Clusters 0 and 1 (northern/valley regimes with higher HSI-driven corrosion veto) have fewer survivors
-(6 each), while Clusters 2 and 3 (Barak/western plains with moderately lower HSI) have 8.
-
-### Latent-heat floor finding
-
-With Tm_target = 44°C uniform and L_required ≈ 232–249 kJ/kg per cluster, the nominal κ=0.7 floor
-(L ≥ 0.7 × L_required ≈ 162–174 kJ/kg) is satisfiable by several candidates (RT44HC at 250,
-C22H46 at 249, RT45HC at 230, savE® OM42 at 199, etc.). Unlike Rajasthan (where L_required was
-~610–643 kJ/kg creating a structural zero-survivor problem), **Assam's L_required is in a
-reachable range** — the feasibility filter produces real survivors without exhausting all relax steps.
-
-### Known issues
-
-1. **κ-relaxation policy not settled**: Auto-relaxation (+2K/step, up to 4 steps) is applied if
-   <5 candidates survive. This is an ad hoc pass, not a documented permanent policy.
-
-2. **PCM database still undersized**: 25 rows vs. 40–60-row target. The corrosion veto + latent-heat
-   floor combination means the effective pool is small (6–8 per cluster). Phase 6 MCDM and Phase 7
-   physics results are both provisional pending database expansion.
-
-3. **Literature PCM property gaps**: The 7 Singh2025 additions (fatty acids, eutectics, paraffins)
-   have incomplete property coverage — thermal conductivity, density, specific heat are often not
-   reported in the source data. These are carried forward with NaN values and affect criterion
-   contribution calculations in Phase 6.
+| **Row Count** | 25 rows (preliminary exploration) | **58 deduplicated rows** (authoritative repository) |
+| **Column Count** | 24 columns | **41 columns** |
+| **Provenance Tracking** | Ad-hoc source string | Cell-level `source_type` and `value_status` tracking |
+| **$C_p$ Averaging** | Occasional silent single-phase fallback | **Strict dual-phase requirement (zero silent fallback)** |
+| **Pipeline Role** | **Historical artifact**; fed preliminary $K=4$ run | **Final locked database**; evaluated in final $K=3$ governance |

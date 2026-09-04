@@ -61,24 +61,27 @@ if topk is not None:
         sns.heatmap(corr, annot=True, fmt=".2f", cmap="YlGnBu", ax=ax,
                     xticklabels=[r.replace("_rank", "").upper() for r in ranks],
                     yticklabels=[r.replace("_rank", "").upper() for r in ranks])
-        ax.set_title("Verify Ranking 01: Inter-Method Spearman Correlation (Assam)", fontsize=11)
+        ax.set_title("Verify Ranking 01: Inter-Method Spearman Correlation\n[Historical K=4 Pre-Audit Reference; Phase 10 Baseline]", fontsize=10)
         plt.tight_layout(); sfig("01_method_correlation.png")
 
 # 2. Top-3 Inclusion Probability
 print("[2/5] Top-3 Inclusion Probability Distribution")
-if mc is not None and "top3_inclusion_probability" in mc.columns:
-    fig, ax = plt.subplots(figsize=(8, 5))
-    scale = 100 if mc["top3_inclusion_probability"].max() <= 1.0 else 1
-    sns.histplot(mc["top3_inclusion_probability"] * scale, bins=20, kde=True, color="#911eb4", ax=ax)
-    ax.set(title="Verify Ranking 02: Top-3 Inclusion Probability (%)", xlabel="Top-3 Probability (%)", ylabel="Count")
+mc_df = mc if (mc is not None and "top3_inclusion_probability" in mc.columns) else (topk if (topk is not None and "top3_inclusion_probability" in topk.columns) else None)
+if mc_df is not None and "top3_inclusion_probability" in mc_df.columns:
+    fig, ax = plt.subplots(figsize=(8.5, 5))
+    scale = 100 if mc_df["top3_inclusion_probability"].max() <= 1.0 else 1
+    sns.histplot(mc_df["top3_inclusion_probability"] * scale, bins=20, kde=True, color="#911eb4", ax=ax)
+    ax.set(title="Verify Ranking 02: Historical Top-3 Inclusion Probability (%)\n[Pre-Audit MC Reference; Final K=3 Monte Carlo SKIPPED]",
+           xlabel="Historical Top-3 Probability (%)", ylabel="Count")
     ax.grid(alpha=0.3); sfig("02_top3_inclusion_probability.png")
 
 # 3. Rank Variance across Clusters
 print("[3/5] Rank Variance across Clusters")
 if topk is not None and "consensus_rank" in topk.columns:
-    fig, ax = plt.subplots(figsize=(8, 5))
+    fig, ax = plt.subplots(figsize=(8.5, 5))
     sns.boxplot(data=topk, x="cluster_id", y="consensus_rank", palette="Set2", ax=ax)
-    ax.set(title="Verify Ranking 03: Consensus Rank Spread per Cluster (Assam)", xlabel="Cluster ID", ylabel="Consensus Rank")
+    ax.set(title="Verify Ranking 03: Historical Consensus Rank Spread per Cluster\n[Pre-Audit K=4 Reference; Evaluated against Final Physics in Phase 10]",
+           xlabel="Historical Cluster ID", ylabel="Historical Consensus Rank")
     ax.grid(alpha=0.3, axis="y"); sfig("03_rank_distributions.png")
 
 # 4. Method Agreement Plot
@@ -91,24 +94,25 @@ if topk is not None:
             name_col = "name" if "name" in top1.columns else "PCM_Name"
             labels = top1[name_col].astype(str) if name_col in top1.columns else top1.index.astype(str)
             mat = top1[ranks].values
-            fig, ax = plt.subplots(figsize=(8, 4))
+            fig, ax = plt.subplots(figsize=(8.5, 4.5))
             sns.heatmap(mat, annot=True, fmt="d", cmap="Blues_r", ax=ax, yticklabels=labels, xticklabels=[r.replace("_rank", "").upper() for r in ranks])
-            ax.set_title("Verify Ranking 05: Method Agreement on Top-1 Candidates (Assam)")
+            ax.set_title("Verify Ranking 05: Method Agreement on Top-1 Candidates\n[Historical Pre-Audit K=4 Reference; Refuted by Final Physics in Phase 10]", fontsize=9.5)
             plt.tight_layout(); sfig("05_method_agreement.png")
 
 # 5. Ranking Summary Text Card
 print("[5/5] Ranking Summary Text Card")
-fig, ax = plt.subplots(figsize=(8, 4))
+fig, ax = plt.subplots(figsize=(8.5, 4.5))
 ax.axis("off")
 summary_text = (
-    f"ASSAM MCDM RANKING & STABILITY SUMMARY\n"
-    f"---------------------------------------\n"
-    f"Total Ranked PCM Rows  : {len(topk) if topk is not None else 'N/A'}\n"
-    f"Evaluated MCDM Methods : TOPSIS, GRA, PROMETHEE, VIKOR, Consensus Borda\n"
-    f"Monte Carlo Iterations : 1,000 runs\n"
-    f"Status                 : PASS (Robust Consensus & Sensitivity verified)\n"
+    "HISTORICAL K=4 MCDM & MONTE CARLO QA (PRE-AUDIT ARTIFACT)\n"
+    "---------------------------------------------------------\n"
+    f"Historical Ranked Rows   : {len(topk) if topk is not None else 'N/A'} (Top-3 x 4 clusters)\n"
+    "Historical MCDM Methods  : TOPSIS, GRA, PROMETHEE, VIKOR, Consensus Borda\n"
+    "Historical Monte Carlo   : 1,000 draws (Pre-audit historical run)\n"
+    "Final K=3 Governance     : MCDM NOT PERFORMED, MC SKIPPED (n_confirmed=[0,0,0])\n"
+    "Preservation Purpose     : Retrospective baseline for Phase 10 physics audit\n"
 )
-ax.text(0.1, 0.5, summary_text, fontsize=12, family="monospace", va="center")
+ax.text(0.05, 0.5, summary_text, fontsize=10.5, family="monospace", va="center")
 sfig("06_ranking_summary.png")
 
 print(f"Verify 04 complete! Outputs saved in: {OUT}")

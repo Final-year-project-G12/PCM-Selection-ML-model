@@ -12,7 +12,7 @@ at presentation time.
 
 `pvlib.location.Location.get_sun_rise_set_transit(dates, method="spa")` — Reda & Andreas (2004)
 Solar Position Algorithm, explicitly pinned in `00b_build_suntimes.py`. This provides the three
-"events" at which ERA5 is downloaded, ensuring sun-geometry-aligned samples across all 128 points,
+"events" at which ERA5 is downloaded, ensuring sun-geometry-aligned samples across all 129 points,
 all seasons, all 10 years.
 
 ## Cross-midnight UTC handling
@@ -26,7 +26,7 @@ near the UTC midnight boundary.
 ## Leap years and date range
 
 2016-01-01 through 2025-12-31 inclusive — 3653 days (10×365 + 3 leap-year days: 2016, 2020, 2024).
-Expected `suntimes.csv` rows: 128 × 3653 × 3 = ~1,402,752.
+Expected `suntimes.csv` rows: 129 × 3653 × 3 = 1,413,711.
 
 ## Nearest-in-time matching
 

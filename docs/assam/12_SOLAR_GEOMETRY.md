@@ -35,7 +35,7 @@ interaction in the monsoon (Jun–Sep). The default Linke-turbidity climatology 
 Assam's actual seasonal aerosol pattern accurately. This affects `GHI_clearsky` and therefore
 `CSI` (clearness index). A one-sentence caveat in the methodology write-up is appropriate.
 
-## Altitude: 100m fixed for all 128 points
+## Altitude: 100m fixed for all 129 points
 
 `alt_m = DEFAULT_ALT_M = 100` for all Assam points (no per-point elevation from ERA5 geopotential).
 Passed into both `pvlib.location.Location(altitude=alt_m)` (feeds Ineichen model) and written
