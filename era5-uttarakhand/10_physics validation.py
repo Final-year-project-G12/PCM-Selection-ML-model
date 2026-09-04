@@ -81,21 +81,34 @@ INPUT  : data/processed/daily_aggregates_uttarakhand.csv   (02b's output)
          data/processed/suntimes.csv                       (00b's output)
          data/processed/clustering/cluster_assignments_uttarakhand.csv
          data/processed/pcm/mcdm_full_scores_by_cluster.csv
+           (confirmed to exist, ~145 rows = 5 clusters x 29 survivors)
 
-         ** UNCONFIRMED DEPENDENCY — READ BEFORE RUNNING **
-         This script was adapted from a version of the pipeline whose
-         08_mcdm_ranking.py writes a "full scores" CSV (one row per
-         (cluster_id, surviving PCM), not just the top-k). Your Uttarakhand
-         08_mcdm_ranking.py's exact output filenames were never directly
-         confirmed to include this file in this conversation — only
-         mcdm_topk_by_cluster.csv was. Before running this script, check
-         whether data/processed/pcm/mcdm_full_scores_by_cluster.csv
-         actually exists. If it doesn't, either (a) modify your
-         08_mcdm_ranking.py to also write the full per-cluster score
-         table (every survivor, not just top-3), or (b) point SCORES_FILE
-         below at mcdm_topk_by_cluster.csv instead — the top-3-only
-         version still runs, it just validates fewer candidates per
-         cluster than the full set.
+         IMPORTANT CONTEXT this file's rows will carry into this script:
+         your Phase 5/6 audit found that all 5 clusters return the SAME
+         29 feasibility survivors and the SAME #1 consensus PCM (RT60),
+         because Tm_target is held constant at 57C across every cluster
+         by design. That means every cluster's candidate list going into
+         this script is identical — any differentiation between clusters
+         this script finds has to come purely from each cluster's own
+         GHI/temperature driving data, not from different PCMs being
+         simulated. That is exactly the role this phase is meant to play
+         per your own 08_mcdm_ranking.py's diagnostic note: "differentiation
+         would need to show up in Phase 7 physics simulation (solar
+         fraction per regime), not in the candidate list itself." This
+         script is not a formality here — it is the last remaining place
+         your project's core "different regimes need different PCMs"
+         claim can still be demonstrated.
+
+         Also worth carrying into how you interpret this script's Spearman
+         rho: your audited TOPSIS-vs-GRA correlation is rho = -0.930 —
+         i.e. the two methods actively DISAGREE, not just weakly agree.
+         The consensus_rank this script validates against is a Borda
+         compromise between two opposed rankings, not a well-agreed-upon
+         signal. A weak Spearman rho here (physics vs. consensus) could
+         mean the physics doesn't support the ranking — or it could mean
+         the ranking itself was never well-defined to begin with. Report
+         both possibilities; don't assume the physics model is at fault
+         if rho comes out low.
 
 OUTPUT : data/processed/pcm/physics_validation_results.csv
            one row per (cluster_id, pcm_name): simulated annual solar
@@ -137,12 +150,15 @@ H_P_WM2K = 800.0
 A_P_M2 = 3.5
 DEFAULT_PCM_DENSITY_KG_M3 = 800.0
 DEFAULT_CP_JKGK = 2000.0
-# Your confirmed pcm_database_uttarakhand.csv (06's output) carries no
-# density or Cp columns at all — every simulated candidate here will use
-# these two generic defaults for those two properties, not a per-PCM
-# measured value. State this plainly if you cite physics-validation
-# numbers: the melting temperature and latent heat driving each
-# simulation are real per-candidate values; density/Cp are not.
+# Your pcm_database_uttarakhand.csv DOES carry density_* / Cp_* columns
+# (confirmed by direct inspection, not just a truncated terminal preview —
+# an earlier version of this comment incorrectly said otherwise). These
+# defaults are a genuine per-row fallback only, used via .get() below
+# whenever a specific candidate's density/Cp is NaN — likely the
+# literature-added rows (which your earlier terminal output showed
+# without TC_W_mK either), not the full database. Worth a quick check of
+# how many of your 55 candidates actually hit this fallback before citing
+# results, since the manufacturer-sourced rows should mostly have real values.
 
 # ─── Ambient tank heat-loss term (BUG FIX v3.1, kept — this is a real
 # physics fix, not state-specific) ────────────────────────────────────
@@ -169,10 +185,16 @@ DRAW_HOURS_LOCAL = [7, 19]
 DRAW_MASS_KG = 75.0
 T_DELIVERY_C = 50.0
 
-MAX_PCMS_PER_CLUSTER = 20      # safety cap; your confirmed database has 25
-                                # total candidates (18 in the 42-70C
-                                # absolute band per your 06 run), so this
-                                # is not expected to bind
+MAX_PCMS_PER_CLUSTER = 20      # safety cap. Your audited database has 55
+                                # total candidates, but every cluster's
+                                # feasibility survivor count is 29
+                                # (identical across all 5 clusters — see
+                                # the docstring note above on why). 20 < 29,
+                                # so THIS CAP DOES BIND for you, unlike
+                                # what an earlier version of this comment
+                                # assumed. Raise this to >=29 if you want
+                                # every survivor simulated rather than just
+                                # the top 20 by consensus_rank.
 BENCHMARK_SF_LOW, BENCHMARK_SF_HIGH = 0.54, 0.84   # plan v3.0 Table 16
 
 # Fallback ambient temperature used only if a hour's Tamb array is somehow
@@ -198,18 +220,18 @@ def _require_columns(df, cols, file_label):
 
 def pick_medoid_point(assign_df, cluster_id):
     sub = assign_df[assign_df["cluster_id"] == cluster_id]
-    # UNCONFIRMED COLUMN NAME: this assumes cluster_assignments_uttarakhand.csv
-    # has a column literally named max_membership_prob. This was never
-    # directly confirmed in this conversation for your file. If this
-    # raises a KeyError, print sub.columns.tolist() and update the name
-    # below to match what 05_cluster_uttarakhand.py actually wrote.
-    if "max_membership_prob" not in sub.columns:
-        print(f"\n  ERROR: 'max_membership_prob' not found in "
-              f"cluster_assignments_uttarakhand.csv. Columns present: "
-              f"{list(sub.columns)}")
-        print("  Update pick_medoid_point() to use the correct column name "
-              "for this cluster's highest-confidence point.")
-        raise SystemExit(1)
+    # NOTE: your soft-membership audit found max_membership_prob has
+    # collapsed to 1.000 for every point (i.e. the GMM is behaving like a
+    # hard clustering in practice, not a genuinely soft/probabilistic
+    # one). That means idxmax() below is very likely just picking the
+    # FIRST point in this cluster whenever there's a tie at 1.000 —
+    # effectively arbitrary, not a real "most representative point"
+    # selection. This is a different medoid definition than
+    # 09_recommendation_cards.py uses (nearest to the cluster's lat/lon
+    # centroid) — the two scripts may not agree on which point represents
+    # a given cluster. Worth deciding which definition you actually want
+    # and using it consistently in both places before citing "the medoid
+    # point" in your writeup.
     return sub.loc[sub["max_membership_prob"].idxmax(), "point_id"]
 
 
@@ -383,11 +405,6 @@ def main():
     for f in (DAILY_FILE, SUNTIMES_FILE, ASSIGN_FILE, SCORES_FILE):
         if not f.exists():
             print(f"\n  ERROR: {f} not found.")
-            if f == SCORES_FILE:
-                print("  This is the unconfirmed dependency flagged at the top of this "
-                      "script's docstring — check whether 08_mcdm_ranking.py actually "
-                      "writes mcdm_full_scores_by_cluster.csv, or point SCORES_FILE at "
-                      "mcdm_topk_by_cluster.csv instead.")
             return
 
     daily_all = pd.read_csv(DAILY_FILE, parse_dates=["date"])
