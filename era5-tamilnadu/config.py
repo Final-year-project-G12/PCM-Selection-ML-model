@@ -118,3 +118,19 @@ def get_cdsapi_client():
 
     url, key = load_cds_credentials()
     return cdsapi.Client(url=url, key=key)
+
+
+# PCM sizing shared across Phase 3 (04b), Phase 5 (07), and Level B (11).
+# SHARE_PCM: literature-anchored fraction of overnight delivery supplied by PCM
+# latent heat (remainder from tank sensible heat + concurrent charging).
+# See docs/era5_tamilnadu/07_PHASE_5_AUDIT.md (OPTION A, 2026-08-31).
+SHARE_PCM = 0.5
+LATENT_HEAT_FRACTION = 0.7
+LATENT_HEAT_ABSOLUTE_MIN_KJ_KG = 100.0
+
+
+def latent_heat_floor_kj_kg(l_required_kj_per_kg,
+                            fraction=LATENT_HEAT_FRACTION,
+                            absolute_min=LATENT_HEAT_ABSOLUTE_MIN_KJ_KG):
+    """Table 12: L >= max(100 kJ/kg, 0.7 × L_required)."""
+    return max(absolute_min, fraction * l_required_kj_per_kg)

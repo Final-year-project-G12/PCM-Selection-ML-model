@@ -24,7 +24,7 @@ This script:
    picks rest partly on MICE-PMM-estimated values vs. pure manufacturer
    datasheet numbers.
 4. Appends the same 7 literature PCMs as before (Singh2025 Table 2) —
-   MICE-PMM only covers your 18 manufacturer rows, it can't invent new
+    MICE-PMM only covers your 55 manufacturer rows, it can't invent new
    PCM families.
 
 STILL SHORT OF THE 55-63°C GAP (optional expansion)

@@ -56,7 +56,7 @@ print(f"  Points: {len(sig)}")
 print("\n[A] Multi-layer Folium map (toggle indices in the layer control) ...")
 
 fmap = folium.Map(location=[sig["lat"].mean(), sig["lon"].mean()],
-                   zoom_start=7, tiles="CartoDB positron")
+                   zoom_start=7, tiles="OpenStreetMap")
 
 layers_added = 0
 for col in MAP_LAYERS:
