@@ -103,6 +103,20 @@ era5-rajasthan/data/processed/*.csv
 era5-rajasthan/data/preprocessed/
 era5-rajasthan/data/plots/
 
+# ── Tamil Nadu pipeline (folder renamed from era5-tamilnadu-pipeline/) ──
+# The era5-tamilnadu-pipeline/ rules above did not follow the rename, so
+# these mirror them under the current folder name.
+
+# Raw NASA POWER JSON (1331 files), WorldPop GeoTIFF, boundary files (~2.6 GB)
+tamilnadu_pipeline/data/raw/
+
+# Large intermediate CSV (80 MB)
+tamilnadu_pipeline/data/processed/suntimes.csv
+
+# Interactive plot exports over GitHub's 100 MB limit (regenerate locally)
+tamilnadu_pipeline/data/plots/post_preprocess_interactive/B_distributions_post.html
+era5-tamilnadu-pipeline/data/plots/post_preprocess_interactive/B_distributions_post.html
+
 # ── Global safety catches ──────────────────────────────────────────────
 # Block accidental commit of large binary / model artifacts
 *.joblib
