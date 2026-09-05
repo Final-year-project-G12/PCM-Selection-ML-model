@@ -24,13 +24,24 @@ era5-assam/data/plots/
 │   ├── 07_comparison_cross_cluster_top_pcm.png
 │   ├── 08_comparison_rank_sensitivity.png
 │   └── 09_physics_diurnal_thermal_cycle.png
+├── raw/                                  # Raw Data QA & Cross-Source (ERA5 vs NASA POWER)
+│   ├── B_event_profile.png               # Diurnal sun-event profile (Sunrise, Noon, Sunset)
+│   ├── C_era5_vs_power.png               # 5-panel multi-variable scatter (GHI, T2M, RH, etc.)
+│   ├── C_era5_vs_power_stats.csv         # Detailed MBE, RMSE, r error statistics
+│   ├── E_seasonal_boxplots.png           # Seasonal GHI & temperature distributions
+│   └── F_multiyear_trend.png             # 10-year decadal calibration trend (2016-2025)
 ├── verify_preprocessing/                 # Verification 01: Preprocessing QA
 │   ├── 01_climate_distributions.png
 │   ├── 02_data_completeness.png
 │   ├── 03_population_grid_map.png
 │   ├── 05_era5_vs_nasa_power_agreement.png
 │   ├── 06_correlation_analysis.png
-│   └── 07_preprocessing_summary.png
+│   ├── 07_preprocessing_summary.png
+│   ├── 08_era5_vs_nasa_power_multivariable_scatter.png
+│   ├── 09_era5_vs_nasa_power_seasonal_scatter.png
+│   ├── 10_event_profile_era5_vs_power.png
+│   ├── 11_seasonal_boxplots_era5_vs_power.png
+│   └── 12_multiyear_trend_era5_vs_power.png
 ├── verify_clustering/                    # Verification 02: GMM & Zoning QA
 │   ├── 01_elbow_curves.png
 │   ├── 02_pca_scree_variance.png
@@ -65,19 +76,22 @@ python era5-assam/generate_assam_plots.py
 # 2. Generate 9 cross-pipeline comparison charts
 python era5-assam/comparison_plots_assam.py
 
-# 3. Generate cross-regional parity diagrams (NASA agreement, population grid, PCA scree, diurnal physics)
+# 3. Generate cross-source ERA5 vs NASA POWER comparison plots & interactive dashboard
+python era5-assam/generate_era5_nasa_comparison_plots.py
+
+# 4. Generate regional parity diagrams (NASA agreement, population grid, PCA scree, diurnal physics)
 python era5-assam/generate_missing_assam_diagrams.py
 
-# 4. Preprocessing Verification Suite
+# 5. Preprocessing Verification Suite
 python era5-assam/verify_01_preprocessing_assam.py
 
-# 5. Clustering & Zoning Verification Suite
+# 6. Clustering & Zoning Verification Suite
 python era5-assam/verify_02_clustering_assam.py
 
-# 6. Feasibility Filter Verification Suite
+# 7. Feasibility Filter Verification Suite
 python era5-assam/verify_03_feasibility_assam.py
 
-# 7. MCDM Ranking & Monte Carlo Verification Suite
+# 8. MCDM Ranking & Monte Carlo Verification Suite
 python era5-assam/verify_04_ranking_assam.py
 ```
 

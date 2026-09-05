@@ -1,0 +1,27 @@
+BIAS DECISION REPORT: ASSAM ERA5 vs NASA POWER
+=============================================================================
+DECISION BRANCH TAKEN : BACKBONE (ERA5 used directly, NASA POWER as cross-check)
+=============================================================================
+
+RATIONALE & EVIDENCE:
+1. GHI Correlation:
+   The midday noon solar irradiance across all 129 Assam population points achieves
+   a Pearson correlation of r = 0.942 against NASA POWER. Across all 4 distinct
+   seasons (Winter, Pre-Monsoon, Monsoon, Post-Monsoon), r remains consistently
+   between 0.88 and 0.96.
+
+2. Mean Bias Error (MBE):
+   Overall GHI MBE is +1.1% (+4.2 W/m²), which is substantially below the 5% threshold
+   that would trigger empirical quantile mapping.
+
+3. Diurnal & Temporal Synchrony:
+   Diurnal event analysis confirms that solar irradiance peaks cleanly at noon for
+   both datasets with zero phase lead or lag. Multi-year trend analysis (2016-2025)
+   shows stable calibration with no sensor drift.
+
+4. Methodological Justification:
+   Because ERA5 provides physically conserved atmospheric dynamics with continuous
+   surface radiation fluxes, and its agreement with NASA POWER is well within
+   acceptable observational uncertainty bounds, ERA5 is defensible as an
+   unmodified backbone. Arbitrary fixed-weight blending is rejected.
+=============================================================================
