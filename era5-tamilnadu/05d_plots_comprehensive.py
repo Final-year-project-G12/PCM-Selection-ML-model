@@ -111,7 +111,7 @@ print("\n[A] Folium interactive maps ...")
 
 # ── A0. All points overview, clustered ──────────────────────
 print("  A0. All points overview map ...")
-m0 = folium.Map(location=TN_CENTER, zoom_start=7, tiles="CartoDB positron")
+m0 = folium.Map(location=TN_CENTER, zoom_start=7, tiles="OpenStreetMap")
 cluster = MarkerCluster(name=f"All {len(point_summary)} points").add_to(m0)
 for _, row in point_summary.iterrows():
     popup_html = (
@@ -142,7 +142,7 @@ save_and_report(m0, PLOT_DIR / "maps" / "A0_all_points_overview.html", "A0")
 
 # ── A1. GHI mean map + heatmap overlay ──────────────────────
 print("  A1. GHI mean spatial map ...")
-m1 = folium.Map(location=TN_CENTER, zoom_start=7, tiles="CartoDB positron")
+m1 = folium.Map(location=TN_CENTER, zoom_start=7, tiles="OpenStreetMap")
 ghi_min, ghi_max = point_summary["GHI_noon_mean"].min(), point_summary["GHI_noon_mean"].max()
 colormap_ghi = cm.LinearColormap(
     ["#2d6a4f", "#52b788", "#d9ed92", "#f9c74f", "#f3722c"],
@@ -166,7 +166,7 @@ save_and_report(m1, PLOT_DIR / "maps" / "A1_GHI_mean_map.html", "A1")
 
 # ── A2. Population weight map ────────────────────────────────
 print("  A2. Population-weight map ...")
-m2 = folium.Map(location=TN_CENTER, zoom_start=7, tiles="CartoDB dark_matter")
+m2 = folium.Map(location=TN_CENTER, zoom_start=7, tiles="OpenStreetMap")
 pop_min, pop_max = point_summary["population"].min(), point_summary["population"].max()
 colormap_pop = cm.LinearColormap(
     ["#023e8a", "#0096c7", "#ade8f4", "#f9c74f", "#f3722c"],
@@ -186,7 +186,7 @@ save_and_report(m2, PLOT_DIR / "maps" / "A2_population_map.html", "A2")
 
 # ── A3. India context map ────────────────────────────────────
 print("  A3. All points on India context map ...")
-m3 = folium.Map(location=[22.5, 78.9], zoom_start=5, tiles="CartoDB positron")
+m3 = folium.Map(location=[22.5, 78.9], zoom_start=5, tiles="OpenStreetMap")
 for _, row in point_summary.iterrows():
     folium.CircleMarker(
         location=[row["lat"], row["lon"]], radius=4,

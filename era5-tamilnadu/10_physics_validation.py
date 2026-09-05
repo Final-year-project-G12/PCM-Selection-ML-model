@@ -138,6 +138,21 @@ DEFAULT_CP_JKGK = 2000.0
 # Reported as a stated assumption per the framework plan.
 UA_TANK_W_K = 2.0   # W/K  tank-to-ambient conductance (stated assumption)
 
+# ─── Night/idle collector-coupling isolation (BUG FIX) ───────────────────
+# The base model couples the tank to the collector via a*(Tc-Tw) every hour,
+# day and night alike. At night Tc collapses to Tamb (isolar=0), so an
+# un-isolated coupling lets the tank drain heat back out through the idle
+# collector loop at essentially the same rate it charges during the day —
+# physically wrong (real installations use a check valve or a
+# controller-gated pump specifically to prevent this) and, on top of the
+# separate UA_TANK ambient-loss term above, double-counts overnight losses.
+# This is the same bug class documented and fixed in the Rajasthan pipeline
+# ("Barqawi's bidirectional a·(Tc−Tw) term let the tank drain heat through
+# an idle collector overnight nearly as fast as it charged during the day").
+# Fix: gate the collector-coupling coefficient to a small fraction of its
+# daytime value whenever the collector is colder than the tank (Tc < Tw).
+NIGHT_ISOLATION_FRACTION = 0.05
+
 DRAW_HOURS_LOCAL = [7, 19]
 DRAW_MASS_KG = 75.0
 T_DELIVERY_C = 50.0
@@ -258,19 +273,35 @@ def simulate_pcm_swh_year(Tc, T_mains, hour_of_day, pcm_row, tamb_arr=None, dt=3
         # unconditional stability (treats loss as linear in Tw at step end).
         loss_coeff = UA_TANK_W_K * dt / (M_W_KG * C_W_JKGK)   # dimensionless
 
+        # Night/idle isolation (see NIGHT_ISOLATION_FRACTION docstring above):
+        # only the collector-tank coupling is gated, not the PCM-tank coupling
+        # b (an internal storage exchange, not an external loop with a valve).
+        a_eff = a if tc >= Tw else a * NIGHT_ISOLATION_FRACTION
+
         if phase == 1:
             c = 1.0 / tau_ps
-            denom1 = 1 + dt * a + dt * b + loss_coeff
-            Tw_new = ((Tw + dt * a * tc + loss_coeff * tamb) * (1 + dt * c)
-                      + dt * b * (Tp + dt * c * Tw)) / \
+            denom1 = 1 + dt * a_eff + dt * b + loss_coeff
+            # Closed-form backward-Euler solve of the coupled 2x2 implicit system:
+            #   Tw_new*denom1 = Tw + dt*a*tc + loss_coeff*tamb + dt*b*Tp_new
+            #   Tp_new*(1+dt*c) = Tp + dt*c*Tw_new
+            # Substituting the second into the first and solving for Tw_new gives
+            # a numerator of dt*b*Tp (the OLD Tp only) — NOT dt*b*(Tp + dt*c*Tw),
+            # which was a spurious extra term (the same bug class documented in
+            # the Rajasthan pipeline's physics_lib.py: "a wrong closed-form
+            # backward-Euler solve... caused unbounded temperature blow-up").
+            # Verified: with typical parameters this spurious term pushed Tw_new
+            # above the driving collector temperature Tc in a single step, which
+            # is thermodynamically impossible for this passive linear coupling.
+            Tw_new = ((Tw + dt * a_eff * tc + loss_coeff * tamb) * (1 + dt * c)
+                      + dt * b * Tp) / \
                      (denom1 * (1 + dt * c) - dt * b * dt * c)
             Tp_new = (Tp + dt * c * Tw_new) / (1 + dt * c)
             Tw, Tp = Tw_new, Tp_new
             if Tp >= Tm:
                 phase, Tp, Qp = 2, Tm, 0.0
         elif phase == 2:
-            denom = 1 + dt * a + dt * b + loss_coeff
-            Tw_new = (Tw + dt * a * tc + dt * b * Tm + loss_coeff * tamb) / denom
+            denom = 1 + dt * a_eff + dt * b + loss_coeff
+            Tw_new = (Tw + dt * a_eff * tc + dt * b * Tm + loss_coeff * tamb) / denom
             dQ = H_P_WM2K * A_P_M2 * max(0.0, Tw_new - Tm) * dt
             Qp += dQ
             Tw = Tw_new
@@ -280,9 +311,10 @@ def simulate_pcm_swh_year(Tc, T_mains, hour_of_day, pcm_row, tamb_arr=None, dt=3
                 was_liquid_this_day = True
         else:  # phase 3
             c = 1.0 / tau_pl
-            denom1 = 1 + dt * a + dt * b + loss_coeff
-            Tw_new = ((Tw + dt * a * tc + loss_coeff * tamb) * (1 + dt * c)
-                      + dt * b * (Tp + dt * c * Tw)) / \
+            denom1 = 1 + dt * a_eff + dt * b + loss_coeff
+            # Same closed-form fix as phase 1 above (numerator uses old Tp only).
+            Tw_new = ((Tw + dt * a_eff * tc + loss_coeff * tamb) * (1 + dt * c)
+                      + dt * b * Tp) / \
                      (denom1 * (1 + dt * c) - dt * b * dt * c)
             Tp_new = (Tp + dt * c * Tw_new) / (1 + dt * c)
             Tw, Tp = Tw_new, Tp_new

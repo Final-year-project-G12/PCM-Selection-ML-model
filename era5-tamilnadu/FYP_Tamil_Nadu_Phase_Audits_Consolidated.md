@@ -2,9 +2,9 @@
 
 #### **Tamil Nadu ERA5 → PCM Selection Pipeline** 
 
-# Consolidated Phase 1–8 Audit Documentation 
+# Consolidated Phase 1–8 Audit Documentation (v3.2) 
 
-Source-preserving compilation of the uploaded Tamil Nadu audit files. The contents are reproduced from the supplied files without silently reconciling, correcting, or replacing their claims. 
+Source-preserving compilation of the Tamil Nadu audit files, verified and updated against the pipeline's actual current code and on-disk outputs (this pass, v3.2). Two Phase 7 physics-solver bugs were found and fixed during this verification (see the Phase 7/8 section and the new addendum at the end of this document); everything else was checked against the live scripts and confirmed to match what is claimed below, with corrections applied inline wherever a claimed number had gone stale relative to the current run (notably the Phase 4 cluster point counts). Nothing is silently reconciled — every correction made in this pass is called out explicitly, either inline or in the addendum. 
 
 ## **Included Source Files** 
 
@@ -508,9 +508,11 @@ Group the 133 population points into distinct climatic regimes using GMM cluster
 
 - v3.1 fix: `covariance_type="diag"` (was `"full"`, which overfit 133×27 features). 
 
-- Pre-fix profiles (will change after re-run with corrected GHI features): 
+- Current (post-fix, current on-disk `cluster_profiles_tamilnadu.csv`) profiles: 
 
-- Cluster 0: 12 pts; Cluster 1: 43 pts; Cluster 2: 39 pts; Cluster 3: 22 pts; Cluster 4: 17 pts. 
+- Cluster 0: 8 pts (pop. 12.66M); Cluster 1: 42 pts (pop. 19.81M); Cluster 2: 39 pts (pop. 18.06M); Cluster 3: 22 pts (pop. 10.25M); Cluster 4: 22 pts (pop. 10.45M). Total 133 points, matching Phase 1. 
+
+- **Open item, verified during this audit (not fixed):** BIC decreases monotonically from k=2 to k=10 with no interior minimum (same pathology documented in the Rajasthan pipeline), so BIC alone cannot select k. `05_cluster_tamilnadu.py` does not compute a bootstrap-ARI stability pass to break ties the way Rajasthan's three-tier k-selection rule does. Within the accepted 0.15–0.40 silhouette band, k=6 (silhouette 0.305) and k=9 (0.312) both score higher than the hard-coded K_FINAL=5 (0.262). This is flagged, not changed, here: re-clustering at a different k would change every downstream phase's headline recommendations (D6) and is a decision for the project owner, not something to silently redo mid-audit. See `20_IMPLEMENTATION_ISSUES.md` issue #8. 
 
 ### **Level B: Seasonal Sensitivity (v3.1 corrected)** 
 
@@ -703,21 +705,25 @@ The Tamil Nadu pipeline has fully implemented both phases.
 
 55. v3.1 fix: Ambient tank heat loss `UA_TANK_W_K = 2.0 W/K` added to prevent artificially high solar fractions and enable PCM cycling. 
 
-56. Current validation outcome: 
+56. **v3.2 finding (this audit): the v3.1 fix above did not actually work.** Two independent algebra/structure bugs in the backward-Euler solver — a spurious term in the closed-form `Tw_new` solve, and no isolation of the collector-tank coupling at night — were silently reproducing the exact pre-v3.1 failure signature even with `UA_TANK_W_K` active. Both are the same bug classes already documented and fixed in the Rajasthan pipeline's `physics_lib.py`. Both are now fixed here too; see `20_IMPLEMENTATION_ISSUES.md` issues #6–#7 for the full derivation, a numerical proof (buggy formula gives `Tw_new=69.2°C` from a 45°C collector with no other heat source — thermodynamically impossible; corrected formula gives 44.5°C), and the before/after evidence. 
 
-- Spearman ρ by cluster is approximately -0.471 to 0.094, with mean -0.151. This is weak agreement and does not validate the MCDM ordering. 
+57. Current validation outcome (post v3.2 fix, current on-disk artifacts): 
 
-- Solar fractions are approximately 85.3-99.6%; 0% of simulations fall within the published 54-84% benchmark band. 
+- Spearman ρ by cluster: 0 = **-0.016**, 1 = **+0.717** (partial agreement, p=0.030), 2 = **+0.355**, 3 = **-0.171**, 4 = **0.000**. Mean **+0.177** across clusters (was mean -0.151 pre-fix). Still weak/mixed overall — an honestly-reportable finding per Table 17 of the framework plan, not evidence the fix is wrong. 
 
-- Complete cycles/year remain 0-1, so the tank assumptions require diagnosis before treating the simulated performance as calibrated. 
+- Solar fractions now span approximately 30.5%–80.1% (was pinned at 85.3-99.6%); 41% of simulations fall within the published 54-84% benchmark band (was 0%). 
 
-### **Corrected Root Causes (v3.1)** 
+- Complete cycles/year now range 3–260 (was 0-1), consistent with real annual PCM freeze-melt cycling. The remaining band gap is a tank/collector calibration question (stated, literature-anchored parameters not empirically fit to Tamil Nadu deployments) — not a further solver bug. 
 
-|Cause|Fix|
-|---|---|
-|Disabled latent-heat constraint|300 L/daydraw → realistic L_required|
-|Missingtank heat loss|UA_TANK_W_K = 2.0 W/K<br>|
-|GHI feature contamination|accum_to_fux +quantile mapping|
+### **Corrected Root Causes (v3.1 + v3.2)** 
+
+|Cause|Fix|Version|
+|---|---|---|
+|Disabled latent-heat constraint|300 L/day draw → realistic L_required|v3.1|
+|Missing tank heat loss|UA_TANK_W_K = 2.0 W/K (ineffective until v3.2)|v3.1|
+|GHI feature contamination|accum_to_flux + quantile mapping|v3.1|
+|Spurious term in backward-Euler `Tw_new` closed form|Numerator corrected to use old `Tp` only|v3.2|
+|No night/idle collector-coupling isolation|`NIGHT_ISOLATION_FRACTION = 0.05` gates coupling when Tc < Tw|v3.2|
 
 
 
@@ -748,6 +754,38 @@ COMPLETE for the current generated artifacts. Re-run 10 → 09 whenever the PCM 
 ||informed models|Ghodusinejad2026SolarIrradianc<br>eForecasting_summary.md`|
 |Recommendation cards|Odoi & Yorke (2025) AI SWH|`sources/|
 ||review|OdoiYorke2025AI_SWH_Review_s<br>ummary.md`|
+
+## **11. Addendum — v3.2 Verification Pass (this audit)**
+
+This addendum documents a full re-verification of the Tamil Nadu pipeline against its own documentation and against the Rajasthan pipeline's already-published, already-fixed bug history, performed by reading the live scripts and current on-disk data rather than trusting the prior documentation's claims at face value. It follows the same standard the rest of this project holds itself to: self-corrections are reported as findings, not smoothed over.
+
+### What was checked and confirmed correct (no change needed)
+- **Deaccumulation** (`02_combine_tamilnadu.py`): `accum_to_flux()` is a stateless `.clip(lower=0)`, not a diff — matches the corrected Rajasthan convention.
+- **Quantile mapping** (`04_preprocess_tamilnadu.py` Step 2b): per-season empirical quantile mapping of daytime `era5_GHI` onto NASA POWER is implemented and produces `ghi_quantile_mapping_report.csv`.
+- **L_required derivation** (`config.py`, `04b_climate_signature.py`): `SHARE_PCM = 0.5`, `Tm_target = 57.0°C`, draw sizing `Q = 300 kg × 4.186 × (50 − T_mains)`, `L_required = SHARE_PCM × Q / 50 kg` — matches the Rajasthan-corrected (2026-08-31) methodology exactly. Current cluster values: 301.4, 321.6, 302.2, 304.1, 326.0 kJ/kg for clusters 0–4.
+- **GMM covariance**: `covariance_type="diag"` in `05_cluster_tamilnadu.py`, correctly justified for 133 samples × 27+ standardized features.
+- **VIKOR sign** (`08_mcdm_ranking.py`): `Q = v·(S−S*)/(Sw−S*) + (1−v)·(R−R*)/(Rw−R*)` — the corrected form; does **not** have the sign-inversion bug the Rajasthan audit found and fixed in its own MCDM script.
+- **PCM database**: 62 rows (55 manufacturer-derived + 7 literature), same composition and row count as the shared Rajasthan/Tamil Nadu `PCM_data` source; the nested `PCM_data/PCM_data/` path-extraction quirk documented in the Rajasthan audit is present here too but already worked around (a copy of the detailed CSV exists at the path `06_build_pcm_database.py` actually reads).
+- **Feasibility survivor counts and cluster targets**: verified directly against `feasibility_survivors_by_cluster.csv` and `cluster_profiles_tamilnadu.csv` — 15/9/13/13/9 survivors and 301–326 kJ/kg L_required, matching the claims in Sections 7–8 above.
+- **MCDM Top-1 finding**: `n-Octacosane (C28)` is confirmed as the current consensus rank-1 PCM in all five clusters (verified against the live `mcdm_topk_by_cluster.csv`; unaffected by the Phase 7 fix below since Phase 6 does not depend on Phase 7).
+
+### What was found and fixed (v3.2)
+Two bugs in `10_physics_validation.py`'s backward-Euler solver — both the *same bug classes* already documented and fixed in the Rajasthan pipeline's `physics_lib.py`, independently reintroduced here:
+1. **Closed-form solve error**: the pre-melt/post-melt `Tw_new` numerator carried a spurious `dt·c·Tw` term inside the PCM-coupling factor. Verified numerically: with the script's own default parameters this pushed `Tw_new` to 69.2°C from a 45°C collector with no other heat source (impossible); the corrected formula gives 44.5°C.
+2. **Missing night/idle isolation**: the collector-tank coupling was applied identically day and night, letting the tank drain heat back out through the idle collector loop at nearly the daytime charging rate, on top of the separate ambient-loss term.
+
+Together, these bugs meant the v3.1 "add ambient tank heat loss" fix had never actually taken effect — every simulated PCM was still landing at 85–100% solar fraction with 0–1 cycles/year (0% in the published 54–84% benchmark band), identical to the pre-v3.1 failure signature. Both are now fixed (see `20_IMPLEMENTATION_ISSUES.md` #6–#7 for the full derivation). After the fix: solar fractions span 30.5–80.1%, 41% of runs land in the benchmark band (was 0%), complete cycles/year range 3–260 (was 0–1), and mean Spearman ρ across clusters moved from −0.151 to **+0.177**. Both `10_physics_validation.py` and `09_recommendation_cards.py` have already been re-run; the on-disk `physics_validation_results.csv`, `physics_validation_spearman.csv`, and `recommendation_cards.md` reflect the fix.
+
+### What remains open (verified gaps, not fixed this round — each is a scope/judgment decision, not a silent defect)
+1. **K_FINAL=5 is hand-set, not selected by a bootstrap-ARI tie-break.** k=6 (silhouette 0.305) and k=9 (0.312) both score higher than k=5 (0.262) within the accepted band; BIC alone cannot decide (monotonically decreasing, same pathology as Rajasthan). Re-clustering at a different k would change every downstream phase's headline recommendation and is left for the project owner to decide.
+2. **No cross-phase provenance/fingerprint hard-fail** between Phases 4→5→6→7→8, unlike Rajasthan's `provenance_lib.py`. No evidence this has caused an actual mismatch in the current artifacts, but it is a real reproducibility gap for future re-runs.
+3. **MCDM criteria reduced to 5 of the framework doc's 8** (`cost`, `corrosion`, `supercooling` dropped entirely rather than carried as near-zero-weight criteria). Deliberate and documented, but means Rajasthan's own "supercooling dominates the entropy weight and the physics model can't simulate it" finding cannot recur here in the same form.
+4. **`LATENT_HEAT_ABSOLUTE_MIN_KJ_KG = 100`** in `config.py` is a Tamil-Nadu-only addition beyond Table 12's literal `L ≥ 0.7 × L_required` rule. Currently a no-op (0.7×L_required ≈ 211–228 kJ/kg already exceeds it) but should be named as a deviation if Table 12 is quoted verbatim in the write-up.
+5. **Residual Phase 7 calibration**: 59% of simulations still fall outside the 54–84% benchmark band. The solver is now structurally correct; the gap is in the stated, literature-anchored (not empirically fit) tank/collector parameters (`M_W_KG`, `A_C_M2`, `COLLECTOR_EFF`, draw schedule).
+6. Previously-documented open items unchanged by this pass: PCM database further expansion, external Köppen/NBC cluster validation, flat elevation proxy, `monsoon_index` proxy-only status, and the heuristic (not literal) 5th-percentile charging-feasibility filter — see `22_FINAL_READINESS_REPORT.md`.
+
+### Verdict
+**Structurally correct as of v3.2.** All five v3.0 bugs are genuinely fixed (not just documented as fixed), the two Phase 7 solver bugs found in this pass are fixed and re-run, and the physics-validation output now behaves like an honest, if partially uncalibrated, physical model rather than one masking a bug. The open items above are real but are scope/calibration questions for the project owner, not defects to be silently patched.
 
 
 

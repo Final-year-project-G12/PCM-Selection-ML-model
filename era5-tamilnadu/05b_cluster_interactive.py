@@ -60,13 +60,12 @@ print(f"  Points: {len(assign)}  |  Clusters: {n_clusters}")
 print("\n[A] Cluster map (Folium, hover for full membership probability vector) ...")
 
 '''fmap = folium.Map(location=[assign["lat"].mean(), assign["lon"].mean()],
-                   zoom_start=7, tiles="CartoDB positron")'''
+                   zoom_start=7, tiles="OpenStreetMap")'''
 
 fmap = folium.Map(
     location=[assign["lat"].mean(), assign["lon"].mean()],
     zoom_start=7,
-    tiles="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
-    attr='&copy; OpenStreetMap contributors &copy; CARTO'
+    tiles="OpenStreetMap",
 )
 prob_cols = [c for c in assign.columns if c.startswith("prob_cluster")]
 

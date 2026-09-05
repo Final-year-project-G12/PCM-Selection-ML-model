@@ -59,7 +59,7 @@ point_meta = df.groupby("point_id").agg(
 ).reset_index()
 
 fmap = folium.Map(location=[point_meta["lat"].mean(), point_meta["lon"].mean()],
-                   zoom_start=7, tiles="CartoDB positron")
+                   zoom_start=7, tiles="OpenStreetMap")
 colormap = cm.LinearColormap(
     colors=["#440154", "#3b528b", "#21918c", "#5ec962", "#fde725"],
     vmin=point_meta["population"].min(), vmax=point_meta["population"].max(),

@@ -90,7 +90,7 @@ def p02():
                       color_discrete_sequence=px.colors.qualitative.Set1)
     fig_px.update_traces(marker=dict(size=8,opacity=0.8)); fig_px.update_layout(height=600)
     shtml(fig_px,"02_climate_regime_map_interactive.html")
-    m=folium.Map(location=[df["lat"].mean(),df["lon"].mean()],zoom_start=7,tiles="CartoDB positron")
+    m=folium.Map(location=[df["lat"].mean(),df["lon"].mean()],zoom_start=7,tiles="OpenStreetMap")
     mc=MarkerCluster().add_to(m)
     cf=["red","green","blue","purple","orange","darkred","lightred","beige"]
     for _,r in df.iterrows():

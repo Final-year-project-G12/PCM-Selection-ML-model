@@ -6,6 +6,80 @@ file. "Was" = what the earlier version did; "Now" = what changed.
 
 ---
 
+## v3.2 Bug Fixes (Phase 7 physics solver — critical correctness)
+
+Found during a cross-check of the Tamil Nadu pipeline against the
+Rajasthan pipeline's documented, already-fixed bug history. Both bugs
+below are the *same bug classes* Rajasthan's `physics_lib.py` audit
+already names and fixes — this pipeline had independently reintroduced
+them. v3.1 fixed the "no ambient loss" symptom, but the tank still
+never actually cooled overnight because of these two solver bugs, so
+Phase 7's output was still stuck at the pre-v3.1 failure signature
+(85–100% solar fraction, 0–1 cycles/year, 0% in the 54–84% benchmark
+band) even after v3.1 shipped.
+
+### `10_physics_validation.py` — backward-Euler closed-form solve bug
+- **Was**: `Tw_new` in the pre-melt (phase 1) and post-melt (phase 3)
+  sensible branches was solved with numerator
+  `(Tw + dt*a*tc + loss_coeff*tamb)*(1+dt*c) + dt*b*(Tp + dt*c*Tw)` —
+  the trailing `dt*c*Tw` inside the PCM-coupling term is spurious; it
+  does not appear when the 2×2 implicit system is solved algebraically
+  (the correct numerator uses the *old* `Tp` alone: `dt*b*Tp`). This is
+  the identical bug class the Rajasthan audit documents as "a wrong
+  closed-form backward-Euler solve... caused unbounded temperature
+  blow-up." Verified numerically with the script's own default
+  parameters: the buggy formula pushed `Tw_new` to 69.2°C in a single
+  step from a 45°C collector with no other heat source — thermodynamically
+  impossible for this passive linear coupling. The corrected formula
+  gives 44.5°C for the same inputs.
+- **Fix applied**: numerator corrected to use `dt*b*Tp` (old `Tp` only)
+  in both the phase-1 and phase-3 branches.
+- **Observed effect**: every simulated PCM before this fix landed at
+  85–100% annual solar fraction (0% within the 54–84% benchmark band,
+  0–1 complete cycles/year) — the same "tank never actually discharges"
+  signature the v3.1 ambient-loss fix was supposed to prevent. After
+  this fix alone (before the night-isolation fix below), 10% of runs
+  fell in-band.
+
+### `10_physics_validation.py` — missing night/idle collector-coupling isolation
+- **Was**: the collector-tank coupling coefficient `a` was applied
+  identically day and night. At night the collector temperature `Tc`
+  collapses to ambient (`isolar = 0`), so an un-isolated `a*(Tc-Tw)`
+  term drains the tank back out through the idle collector loop at
+  essentially the same rate it charges during the day — on top of the
+  separate `UA_TANK_W_K` ambient-loss term, double-counting overnight
+  losses. This is the second bug class from the same Rajasthan audit
+  ("Barqawi's bidirectional a·(Tc−Tw) term let the tank drain heat
+  through an idle collector overnight nearly as fast as it charged
+  during the day").
+- **Fix applied**: added `NIGHT_ISOLATION_FRACTION = 0.05`; the
+  collector-coupling coefficient is gated to 5% of its daytime value
+  whenever `Tc < Tw` (collector colder than tank), matching Rajasthan's
+  fix exactly. Only the collector coupling is gated — the PCM-tank
+  coupling `b` is an internal exchange, not a valved external loop, and
+  is left untouched.
+- **Observed effect (both fixes together)**: solar fractions now spread
+  physically across roughly 20–80% (not pinned at 85–100%), complete
+  cycles/year moved from 0–1 to tens/hundreds (physically plausible PCM
+  freeze-melt cycling), and 41% of simulations now fall within the
+  54–84% benchmark band (up from 0%). Mean Spearman ρ across clusters
+  moved from **-0.151** to **+0.177** — still a weak-agreement, honestly
+  reportable finding (not a data-fabrication target), but no longer an
+  artifact of a broken solver. **Re-run required**: `10_physics_validation.py`
+  → `09_recommendation_cards.py` (both already re-run to produce the
+  current on-disk artifacts as of this fix).
+- Remaining gap, explicitly not fixed here (a parameter-calibration
+  question, not a bug): 59% of simulations still fall outside the
+  54–84% band, split between above and below it depending on cluster —
+  the tank/collector parameters (`M_W_KG`, `A_C_M2`, `COLLECTOR_EFF`,
+  draw schedule) are stated literature-anchored assumptions, not
+  empirically fit to this pipeline's own points, and calibrating them
+  further would need real deployment data or a decision to match
+  Rajasthan's own calibrated values — do not further hand-tune them
+  just to force more runs into the benchmark band.
+
+---
+
 ## v3.1 Bug Fixes (August 2026 — critical correctness)
 
 ### `02_combine_tamilnadu.py`
@@ -167,6 +241,50 @@ so in your methodology.
    Uttarakhand's 200m-7000m range.
 4. **`monsoon_index` stays proxy-only** — NASA POWER precipitation was
    never downloaded (see `02b`'s docstring). Unchanged, documented.
+5. **K_FINAL=5 is hand-set, not selected by the Rajasthan-style tiered
+   rule.** `05_cluster_tamilnadu.py` reports BIC/silhouette/Davies-Bouldin/
+   Calinski-Harabasz for k=2..10 but does not compute bootstrap-ARI
+   stability, so there is no data-driven tie-break when several k values
+   sit in the accepted silhouette band. In the current run, k=6
+   (silhouette 0.305) and k=9 (0.312) both score higher than the
+   hard-coded k=5 (0.262) within that band. This is flagged, not
+   changed, here — re-clustering at a different k would cascade through
+   every downstream phase (feasibility, MCDM, physics, cards) and change
+   the headline per-regime recommendations, which is a scientific
+   decision for the project owner, not something to silently redo.
+   Add a bootstrap-ARI pass (resample the 133 points with replacement,
+   refit GMM, compare via Adjusted Rand Index against the full-data
+   labels, repeat ~50x) if you want the same rigor Rajasthan's audit
+   applied before finalizing k.
+6. **No cross-phase provenance/fingerprint check.** Rajasthan's pipeline
+   hard-fails (`SystemExit`) if Phase 6/7/8's input `cluster_profiles`
+   doesn't match what's currently on disk, because sklearn's
+   `GaussianMixture` cluster-index order is not guaranteed stable across
+   separate re-runs. The Tamil Nadu scripts have no equivalent check —
+   low risk today (nothing here indicates it has actually caused a
+   mismatch), but a real gap if `05_cluster_tamilnadu.py` is ever re-run
+   with different data/parameters without also re-running 07→10 in the
+   same pass.
+7. **MCDM criteria set is reduced to 5, not the framework doc's 8.**
+   `08_mcdm_ranking.py` ranks only on Tm-fitness, latent heat (climate-
+   relative), volumetric latent heat, thermal conductivity, and cycling
+   confidence — `cost`, `corrosion`, and `supercooling` are dropped
+   entirely rather than carried as always-near-zero-weight criteria the
+   way Rajasthan does. This is a documented, deliberate scope reduction
+   (the database has no real cost data and only one corrosion-relevant
+   candidate), not an error, but it also means Rajasthan's dominant
+   "supercooling drives 48–64% of the entropy weight and the physics
+   model can't simulate it" finding cannot recur here — a different,
+   narrower set of caveats applies to this pipeline's MCDM/physics
+   disagreement instead.
+8. **Absolute latent-heat floor (`LATENT_HEAT_ABSOLUTE_MIN_KJ_KG = 100`)
+   is a Tamil-Nadu-only addition beyond the framework doc's Table 12**,
+   which specifies only the relative `L ≥ 0.7 × L_required` rule. Given
+   `L_required` is ~301–326 kJ/kg here, `0.7 × L_required` (≈211–228
+   kJ/kg) already exceeds the 100 kJ/kg absolute floor, so this addition
+   is currently a no-op — but it should be named explicitly as a
+   deviation from the literal spec if the write-up quotes Table 12
+   verbatim.
 
 ---
 

@@ -5,6 +5,7 @@ Run the whole PLOTSV2 plot set for Rajasthan, in pipeline order.
     python run_all_plots_v2.py objective1 # just the 13 objective-1 plots
     python run_all_plots_v2.py verify     # just the four verification suites
     python run_all_plots_v2.py phases     # just the phase-1 / phase-3 figures
+    python run_all_plots_v2.py comparison # just the 8 cross-step comparison plots
     python run_all_plots_v2.py plots      # just re-assemble PLOTSV2/Plots/
 
 Each script is run as its own process so one failure does not take the rest
@@ -27,6 +28,7 @@ PHASES = [
     ("Phase 1 - data collection",   "phase1_data_collection_rajasthan.py"),
     ("Phase 3 - climate signature", "phase3_climate_signature_rajasthan.py"),
 ]
+COMPARISON = [("8 cross-step comparison plots", "comparison_plots_rajasthan.py")]
 ASSEMBLE = [("Curated Plots/ folder", "build_plots_folder_rajasthan.py")]
 
 def run(label, script):
@@ -42,14 +44,15 @@ def run(label, script):
 if __name__ == "__main__":
     which = sys.argv[1].lower() if len(sys.argv) > 1 else "all"
     jobs = {
-        "all":        OBJECTIVE1 + VERIFY + PHASES + ASSEMBLE,
+        "all":        OBJECTIVE1 + VERIFY + PHASES + COMPARISON + ASSEMBLE,
         "objective1": OBJECTIVE1,
         "verify":     VERIFY,
         "phases":     PHASES,
+        "comparison": COMPARISON,
         "plots":      ASSEMBLE,
     }.get(which)
     if jobs is None:
-        print(f"Unknown selection '{which}'. Use: all | objective1 | verify | phases | plots")
+        print(f"Unknown selection '{which}'. Use: all | objective1 | verify | phases | comparison | plots")
         raise SystemExit(2)
 
     results = [(label, run(label, script)) for label, script in jobs]

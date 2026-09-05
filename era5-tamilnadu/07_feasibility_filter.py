@@ -9,7 +9,7 @@ a PCM with an unreachable melting point but great latent heat can still
 score well in TOPSIS and be physically useless. Filtering first prevents
 that (plan v3.0 Section 8, opening paragraph).
 
-Filters applied (all eight from Table 12 now implemented):
+Filters applied (seven executable filters from Table 12):
   1. Melting window     : Tm in [Tm_target-5, Tm_target+8] C
   2. Absolute band       : Tm in [42, 70] C regardless of cluster
   3. Latent heat floor   : L >= 0.7 x L_required for that cluster
@@ -27,7 +27,7 @@ Filters applied (all eight from Table 12 now implemented):
                             (nothing flagged "check_manually" except one
                             inorganic hydrate) — becomes load-bearing once
                             you add real salt hydrates or extend to Assam.
-  7. Safety exclusion      : keyword veto against the flammability field
+    7. Safety exclusion      : keyword veto against the flammability field
                             ("highly/extremely flammable", "toxic"). Also
                             currently a no-op given your data — paraffins/
                             fatty acids are "combustible", not "highly
@@ -43,14 +43,16 @@ Filters applied (all eight from Table 12 now implemented):
 If a cluster keeps fewer than 5 candidates, the melting window is
 automatically relaxed by 2K and retried (per Section 8's stated rule). If
 a cluster keeps more than 25, that's reported but not narrowed further —
-Phase 6's ranking is what should separate them.
+Phase 6's ranking is what should separate them. Charging feasibility is
+not applied here; `07b_charging_feasibility.py` is a separate heuristic
+step and physics validation remains the stronger downstream check.
 
 INPUT  : data/processed/pcm/pcm_database_tamilnadu.csv        (06's output)
          data/processed/clustering/cluster_profiles_tamilnadu.csv (05's output)
 OUTPUT : data/processed/pcm/feasibility_survivors_by_cluster.csv
-           one row per (cluster_id, pcm_name) that survived, with the
-           per-filter pass/fail detail kept alongside for your methodology
-           section's survivor-count table.
+           one row per (cluster_id, pcm_name) audited. The file contains
+           all database candidates plus per-filter pass/fail detail; use
+           `passes_all == True` to obtain the actual survivors.
 
 HOW TO RUN:
   python 07_feasibility_filter.py
