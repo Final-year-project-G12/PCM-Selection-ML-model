@@ -12,17 +12,19 @@ Group the 133 population points into distinct climatic regimes using GMM cluster
 - Pre-fix profiles (will change after re-run with corrected GHI features):
   - Cluster 0: 12 pts; Cluster 1: 43 pts; Cluster 2: 39 pts; Cluster 3: 22 pts; Cluster 4: 17 pts.
 
-## Level B: Seasonal Sensitivity (v3.1 corrected)
-- Recomputes `L_required_season` per season using 300 L/day draw (matching `04b`).
+## Level B: Seasonal Sensitivity (`11_level_b_seasonal_analysis.py`)
+- Recomputes `L_required_season` per season using the 300 L/day draw and `SHARE_PCM` (imported from `config.py`, matching `04b`).
 - Single-method TOPSIS re-rank per (cluster, season); reports #1 PCM flips.
 - NE monsoon out-of-phase cycle provides physical basis for seasonal variation.
+- **Execution order**: although grouped with Phase 4, `11` runs **after Phase 6** — it reads `08_mcdm_ranking.py`'s `mcdm_full_scores_by_cluster.csv` (annual entropy+AHP weights) and `06`'s PCM database, so it cannot run alongside `05`. `run_all_tamilnadu.py` sequences it last (non-blocking).
+- **Completed-run result** (`data/processed/processed/pcm/level_b_seasonal_*`): **4 of 20** (cluster, season) combinations flip the #1 PCM — `savE® OM55` replaces `n-Octacosane (C28)` in Summer and Monsoon for clusters 2 and 3.
 
 ## Corrected Finding (v3.1 — GMM Overfitting)
 - **Was**: `covariance_type="full"` → 1890 covariance parameters on 133 samples → membership saturation.
 - **Fixed**: `covariance_type="diag"` in `05_cluster_tamilnadu.py`.
 
 ## Status
-**COMPLETE (v3.1 fixes applied — re-run `05` and `11` after Phase 3 re-run)**
+**Level A (`05`, `05b`) COMPLETE (v3.1 fixes applied).** Level B (`11`) analysis complete (`data/processed/processed/pcm/level_b_seasonal_*`) — clean re-run PENDING: `11` imports `SHARE_PCM` / `latent_heat_floor_kj_kg`, which were missing from `config.py` until 2026-09-07 (`20_IMPLEMENTATION_ISSUES.md` §6). Re-run `05` and `11` after the Phase 3 re-run.
 
 ## Literature Support
 | Component | Reference | Source |

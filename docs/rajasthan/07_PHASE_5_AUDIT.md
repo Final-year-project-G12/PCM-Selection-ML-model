@@ -1,20 +1,20 @@
 # 07 — Phase 5 Audit: Feasibility Filtering (+ PCM Property Database)
 
-Scripts: `PCM_data/01_preprocess.py` (shared database imputation), `07_feasibility_filter_rajasthan.py`.
+Scripts: `PCM_data/01_preprocess.py` (shared database imputation), `07_feasibility_filter.py`.
 
-## A note on file provenance in this folder
+## A note on PCM-database provenance
 
-`until phase 4/` contains ~15 files whose **filenames do not match their content** — independently
-confirmed via byte-level magic-number checks (three files named `*.csv` are actually PNG images;
-files named like Python scripts are markdown, etc.), consistent with the project's own README in
-that folder documenting the same problem and attributing it to browser download auto-suffixing. This
-audit used the **correctly-named canonical copies** in `PCM-Selection-ML-model/PCM_data/`, which is
-also what the live Rajasthan pipeline actually imports from (traced directly via
-`07_feasibility_filter_rajasthan.py` line 146:
-`PCM_MANUFACTURER_CSV = BASE_DIR.parent / "PCM_data" / "data" / "PCM_Properties_cleaned_mice_pmm_detailed.csv"`).
-The `until phase 4/06_build_pcm_database.py`-labeled script is a **Tamil-Nadu-scoped, vestigial**
-component — Rajasthan's feasibility filter does not call it at all; it re-implements its own
-manufacturer-row loading inline. See `21_REPRODUCIBILITY.md` for the file-mislabeling hazard itself.
+The live Rajasthan feasibility filter reads the shared PCM property database from
+`PCM-Selection-ML-model/PCM_data/`, traced directly via `07_feasibility_filter.py`:
+`PCM_MANUFACTURER_CSV = BASE_DIR.parent / "PCM_data" / "data" / "PCM_Properties_cleaned_mice_pmm_detailed.csv"`.
+Rajasthan's filter does **not** call any `06_build_pcm_database.py`-style database-builder script
+(those exist only in the Tamil Nadu / Assam / Uttarakhand trees) — it re-implements its own
+manufacturer-row loading inline.
+
+*(Historical note: an earlier draft of this audit referred to an `until phase 4/` staging folder
+containing ~15 files whose filenames did not match their content — browser-download auto-suffixing
+artifacts. That folder is no longer present in the repository; the file-mislabeling hazard it
+illustrated is summarised in `12_FINAL_READINESS_REPORT.md`, "Reproducibility risks".)*
 
 ## Purpose
 
@@ -61,7 +61,7 @@ which does not appear in the new dense file) — so the corrosion-veto constrain
 remains structurally inert regardless of the expansion.
 
 **What happened in the 2026-08-14 re-run**: `PCM_Properties_cleaned_mice_pmm_detailed.csv` was
-regenerated and both `07_feasibility_filter_rajasthan.py` and `08_mcdm_ranking_rajasthan.py` (Phase 6)
+regenerated and both `07_feasibility_filter.py` and `08_mcdm_ranking.py` (Phase 6)
 were successfully re-run end-to-end against the expanded database. **Two real, previously-undocumented
 bugs were found and fixed to make this possible** — see the new section immediately below — before any
 of the results in this file could be regenerated.
@@ -70,8 +70,8 @@ of the results in this file could be regenerated.
 
 1. **Path-nesting mismatch, `PCM_data/` vs `PCM_data/PCM_data/`.** `01_preprocess.py` (and its `data/`
    output folder) live inside a doubly-nested `PCM_data/PCM_data/` directory on disk — almost
-   certainly the same class of zip-extraction artifact this project's docs already flag for the
-   `until phase 4/` folder (see the file-provenance note above). `07_feasibility_filter_rajasthan.py`'s
+   certainly a zip-extraction artifact of the same kind noted in "A note on PCM-database provenance"
+   above. `07_feasibility_filter.py`'s
    `PCM_MANUFACTURER_CSV` path (`BASE_DIR.parent / "PCM_data" / "data" / ...`), and its own inline
    comment ("matching where `PCM_data/` actually sits alongside `era5-rajasthan/`"), both assume the
    *non*-nested layout (`PCM_data/data/...`, `01_preprocess.py` directly in `PCM_data/`). This means
@@ -83,8 +83,8 @@ of the results in this file could be regenerated.
    regenerated detailed CSV is copied to the `PCM_data/data/` path the consuming scripts read from,
    rather than restructuring the folder tree.
 2. **`is_rt_line` column removed by the new `01_preprocess.py`, still referenced by both
-   `07_feasibility_filter_rajasthan.py`'s `load_manufacturer_rows()` and
-   `08_mcdm_ranking_rajasthan.py`'s `load_rich_pcm_properties()`.** The updated preprocessing script
+   `07_feasibility_filter.py`'s `load_manufacturer_rows()` and
+   `08_mcdm_ranking.py`'s `load_rich_pcm_properties()`.** The updated preprocessing script
    (rewritten for the 55-row, 6-manufacturer database) deliberately keeps the full `pcm_type` text
    instead of collapsing it to a binary Rubitherm/Pluss product-line flag (its own docstring: "Unlike
    the earlier script, [Type] is used as-is... preserving that extra chemical-family signal"). Neither
@@ -136,7 +136,7 @@ another Rubitherm row. The hoped-for "adding RT60/RT62HC might have independentl
 did not pan out; it was a reasonable hypothesis that this re-run disproves with data rather than
 resolves in the database's favor.
 
-## `07_feasibility_filter_rajasthan.py` — all 8 constraints, exact as implemented
+## `07_feasibility_filter.py` — all 8 constraints, exact as implemented
 
 | # | Constraint | Exact rule | Behavior |
 |---|---|---|---|
@@ -149,13 +149,19 @@ resolves in the database's favor.
 | 7 | Corrosion veto (new) | bare salt hydrate + cluster `HSI_sunrise` > 75th percentile, unless encapsulated | pass / not_applicable / excluded_bare_high_hsi / excluded_unverified_encapsulation |
 | 8 | Safety exclusion (new) | toxic/flammable field | **flag-only in practice** — never actually excludes, since the source field is an unqualified yes/no, not a severity grade |
 
-## The headline finding, re-verified 2026-08-14: still 0 survivors at nominal thresholds
+## The 2026-08-14 headline finding: 0 survivors at nominal thresholds — SUPERSEDED
 
-Re-confirmed directly from the regenerated `feasibility_survivors_rajasthan.csv` (186 rows = 3
-clusters × 62 candidates): **every single row still has `survives_all = False`** at the fixed κ=0.7
-latent-heat floor. This is not a bug and the expansion does not change it — it remains the predicted,
-self-flagged consequence of Phase 3's corrected `L_required` derivation (626/608/640 kJ/kg ceiling for
-clusters 0/1/2 respectively) against the *expanded* database's own best-case candidate. **The
+> **Superseded by the 2026-08-31 L_required methodology correction (see "✅ VALIDATED" section
+> above).** Under the corrected combined sensible+latent basis (`SHARE_PCM=0.5`), `L_required`
+> dropped to ~304–320 kJ/kg and the κ=0.7 primary run now returns 4 / 7 / 5 survivors per cluster,
+> not zero. The narrative in this section describes the *pre-correction* (all-latent) 2026-08-14
+> state and is retained only for the audit trail.
+
+Re-confirmed at the time directly from the then-regenerated `feasibility_survivors_rajasthan.csv`
+(186 rows = 3 clusters × 62 candidates): **every single row had `survives_all = False`** at the fixed
+κ=0.7 latent-heat floor. Under the *pre-correction* all-latent `L_required` derivation (626/608/640
+kJ/kg ceiling for clusters 0/1/2 respectively) this was the predicted, self-flagged consequence,
+against the *expanded* database's own best-case candidate. **The
 best-case candidate improved but the gap is still enormous**: the single highest latent-heat value in
 the 62-candidate pool is now `RT70HC` at **260 kJ/kg** (Tm=70°C), up from the pre-expansion best of
 ~252 kJ/kg (`C30H62`, a literature row) — runners-up are Stearic acid (259), n-Hexacosane (256),
@@ -164,11 +170,16 @@ clusters' ceilings) still exceeds even this improved best case by more than 1.6�
 expansion added real breadth and depth but did not — and structurally could not have been expected to
 — close a gap this large; Phase 3's own docstring prediction holds exactly as before.
 
-### The companion κ-calibration pass — re-run 2026-08-14, materially better result
+### The companion κ-calibration pass — 2026-08-14 result (pre-correction; see "✅ VALIDATED" above for current)
+
+> The κ=0.2 / 0.3 / 0.2 calibrations in the table below are the **pre-correction** (2026-08-14)
+> values. After the 2026-08-31 `L_required` correction the calibrated κ reset to 0.5 / 0.6 / 0.5 and
+> the calibrated survivor pool to 9 / 14 / 16 (n=39) — see the "✅ VALIDATED (2026-08-31 re-run
+> complete)" table at the top of this file. This subsection is kept for the audit trail.
 
 `calibrate_kappa_for_cluster()` steps κ down from 0.7 to 0.0 in 0.1 increments (at the primary run's
-already-relaxed melting window), targeting 8–20 survivors per cluster. **New result, all three
-clusters now healthy:**
+already-relaxed melting window), targeting 8–20 survivors per cluster. **2026-08-14 result, all three
+clusters healthy:**
 
 | Cluster | Old (pre-expansion) | New (55-row database) | Status |
 |---|---|---|---|
@@ -198,8 +209,8 @@ states of `cluster_profiles_rajasthan.csv` (different runs of `05_cluster_rajast
 them to disagree cluster-by-cluster on which PCMs belonged to which `cluster_id` despite matching in
 total row count. Phase 6 now reads this stamp and hard-fails (`SystemExit`, not a warning) if it
 doesn't match the `cluster_profiles_rajasthan.csv` currently on disk — see `provenance_lib.py` and
-`19_PHASE_7_ONWARD.md` for the full incident writeup, and `06_PHASE_4_AUDIT.md` for the companion fix
-(canonical cluster relabeling) in the script that actually produces the labels.
+`09_PHASE_7_AUDIT.md` ("Completion Report") for the full incident writeup, and `06_PHASE_4_AUDIT.md`
+for the companion fix (canonical cluster relabeling) in the script that actually produces the labels.
 
 ## Corrosion veto — structurally inert on this run's data
 
@@ -242,9 +253,19 @@ fingerprint stamp described above before trusting it.
 
 ## Problems / risks
 
-- **⚠️ CRITICAL (2026-08-31):** Phase 3's L_required was corrected to use SHARE_PCM=0.5 (literature-anchored fractional share) instead of all-latent assumption. This halves L_required from ~608–626 kJ/kg to ~304–313 kJ/kg. **All Phase 5/6/7/8 outputs from the 2026-08-14 run are now stale** and must be regenerated. When Phase 5 re-runs against the updated signatures, expect κ to reset much higher (0.5–0.7 range, NOT 0.2–0.3), validating the corrected methodology. See "CRITICAL UPDATE" section above and CLAUDE.md §3.1 for full details.
+- **⚠️ 2026-08-31 L_required methodology correction — Phase 5 re-run COMPLETE.** Phase 3's
+  `L_required` was corrected to use `SHARE_PCM=0.5` (literature-anchored fractional share) instead of
+  the all-latent assumption, halving it from ~608–626 kJ/kg to ~304–320 kJ/kg. Phase 5 has since been
+  re-run against the updated signatures (fingerprint `2554_3_*`): κ reset to 0.5 / 0.6 / 0.5 (in the
+  predicted 0.5–0.7 range) and the κ=0.7 primary run now returns 4 / 7 / 5 survivors. The current
+  numbers are in the "✅ VALIDATED (2026-08-31 re-run complete)" table at the top of this file; the
+  2026-08-14 sections below are the superseded pre-correction state. **Phases 6/7/8 re-run status is
+  tracked in `08_PHASE_6_AUDIT.md`, `09_PHASE_7_AUDIT.md`, and `10_PHASE_8_AUDIT.md`.** See CLAUDE.md
+  §3.1 for full methodology detail.
 
-- **The database-size gap is closed (18/25 → 55 rows, inside the 40–60 target).** The κ=0.2–0.3 calibrations documented below (from 2026-08-14 run) are now superseded and should not be cited until Phase 5 is re-run with corrected L_required values.
+- **The database-size gap is closed (18/25 → 55 rows, inside the 40–60 target).** The κ=0.2–0.3
+  calibrations in the 2026-08-14 sections below are pre-correction and superseded by the
+  0.5 / 0.6 / 0.5 values in the "✅ VALIDATED" table above.
 - Constraint 8 (safety) never excludes anything in practice given current data sparsity — flagged
   correctly by the code itself, but worth stating plainly in a write-up rather than implying safety
   screening is currently doing real work.
@@ -252,7 +273,7 @@ fingerprint stamp described above before trusting it.
   "unless encapsulated" branch is untestable until that field is populated.
 - Two blocking bugs (path-nesting, missing `is_rt_line` column) had to be fixed before this re-run
   could execute at all — see the dedicated section above. Both are now fixed in
-  `07_feasibility_filter_rajasthan.py` and `08_mcdm_ranking_rajasthan.py`; the underlying
+  `07_feasibility_filter.py` and `08_mcdm_ranking.py`; the underlying
   `PCM_data/PCM_data/` nested-folder layout on disk was left as-is (fixed via a non-destructive file
   copy instead), so a future contributor regenerating the detailed CSV from scratch must remember to
   copy it from `PCM_data/PCM_data/data/` to `PCM_data/data/` (or fix the path properly) before
@@ -260,13 +281,11 @@ fingerprint stamp described above before trusting it.
 
 ## Status
 
-**COMPLETE as implemented, PCM database prerequisite COMPLETE (55 rows, inside the 40–60 target), AND
-Phase 5 has now been re-run against it (2026-08-14).** The 0-survivors-at-κ=0.7 result persists (as
-predicted) but the κ-calibrated companion pass now produces a healthy, non-undersized survivor pool in
-every cluster (39 total, vs. 20 before), including the previously-blocked Cluster 0. **This file's
-numbers are current.** **Update, 2026-08-14 (later same day): Phase 7's physics validation and Phase
-8's recommendation cards have both now also been re-run against this candidate pool** — the negative
-Spearman-rho validation result persists (all 3 clusters still ≤0.4, though two of three moved less
-negative and Cluster 1 flipped sign) — see `19_PHASE_7_ONWARD.md` and `08_PHASE_6_AUDIT.md` for the
-full current numbers. Every phase from 5 through 8 is now current as of 2026-08-14; nothing in this
-chain is pending re-run.
+**COMPLETE as implemented. PCM database prerequisite COMPLETE (55 rows, inside the 40–60 target).
+Phase 5 re-run against the 2026-08-31 corrected `L_required` is COMPLETE** — the current result is the
+"✅ VALIDATED (2026-08-31 re-run complete)" table at the top of this file: κ=0.7 primary run returns
+4 / 7 / 5 survivors, κ-calibration (0.5 / 0.6 / 0.5) yields 9 / 14 / 16 (n=39). The 2026-08-14
+sections in the body are the superseded pre-correction (all-latent, 0-survivors-at-κ=0.7) state,
+retained for the audit trail. Downstream Phase 6/7/8 re-run status and the physics-validation result
+are tracked in `08_PHASE_6_AUDIT.md`, `09_PHASE_7_AUDIT.md`, and `10_PHASE_8_AUDIT.md` — each of
+those still carries its own staleness banner for the 2026-08-31 correction.

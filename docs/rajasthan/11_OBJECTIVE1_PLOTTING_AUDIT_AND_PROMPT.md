@@ -5,7 +5,7 @@
 ⚠️ **As of 2026-08-31, Phase 3's `L_required` methodology was corrected (SHARE_PCM=0.5), and this
 cascades through Phases 5–9.** Every plot below that touches feasibility survivors, MCDM rankings,
 physics validation, or recommendation cards is either (a) not yet regenerated against the corrected
-numbers, or (b) will be, once Phases 5–9 are re-run. The prompt in §6 builds this staleness check in
+numbers, or (b) will be, once Phases 5–9 are re-run. The prompt in §5 builds this staleness check in
 directly (via `provenance_lib.py`'s fingerprinting, already used by Phases 6/7/9) so every affected
 plot is watermarked rather than silently presented as final. Plots 2 (regime map) and anything
 upstream of Phase 4 are unaffected by this correction.
@@ -157,7 +157,7 @@ absorption near Tm), and overnight discharge.
 
 **Note — this one needs a small code change, not just a plotting script.** Per the Phase 7/8 audits,
 the simulator currently persists only aggregate metrics (annual solar fraction, hours-in-band, cycle
-counts) — no hourly Tw/Tp/melt-fraction time series is saved to disk anywhere. The prompt in §6 asks
+counts) — no hourly Tw/Tp/melt-fraction time series is saved to disk anywhere. The prompt in §5 asks
 Claude Code to add an optional `save_timeseries=True` hook to the existing simulation call (not
 rewrite the physics), for one representative day per cluster medoid.
 
@@ -250,7 +250,7 @@ re-run against the corrected signatures, DO NOT block — generate the plots any
 is currently on disk, but stamp every affected figure with a visible "STALE — pending Phase 5–9
 re-run (2026-08-31 L_required correction)" watermark/annotation, and print a one-line console
 warning per script. Re-running Phases 5–9 first (`python run_all_rajasthan.py --from
-07_feasibility_filter_rajasthan.py`) is preferred if time allows, but the plotting code itself must
+07_feasibility_filter.py`) is preferred if time allows, but the plotting code itself must
 work either way.
 
 Build the following as SEPARATE scripts, one per plot or tightly-related plot group (do not merge
@@ -289,7 +289,7 @@ PART A — the 13 requested plots
 3. Melting point vs. latent heat scatter, feasible candidates highlighted
    → outputs/objective1_plots_rajasthan/03_feasibility/pcm_feasibility_scatter.png
    - Read the full PCM candidate pool (PCM_Properties_cleaned_mice_pmm_detailed.csv +
-     literature_rows(), or however 07_feasibility_filter_rajasthan.py assembles its candidate set —
+     literature_rows(), or however 07_feasibility_filter.py assembles its candidate set —
      import and call its own loader function rather than re-implementing it) and
      feasibility_survivors_rajasthan_kappa_calibrated.csv. Scatter Tm (x) vs. latent_heat (y), all
      candidates in light grey, survivors colored by cluster_id, non-survivors left grey. Draw a
@@ -419,3 +419,53 @@ h. phase8_penalty_k0_vs_k3/ — grouped bar, Spearman rho per cluster at k=0.0 v
 Before writing any script in Part B, list the exact column names you find in each source CSV (or
 confirm a file's absence) so the schema is verified rather than assumed.
 ```
+
+---
+
+## 6. What was actually built — `era5-rajasthan/PLOTSV2/` — audit stub
+
+Sections 1–5 above are the *plan/prompt*. The plotting work that now exists on disk lives in
+`era5-rajasthan/PLOTSV2/` (with rendered output under `era5-rajasthan/results/objective1_plots_rajasthan/`
+and `era5-rajasthan/outputs/`), not in the `outputs/objective1_plots_rajasthan/` tree §4 proposed.
+None of these scripts are in `run_all_rajasthan.py`'s core chain; several are listed in its
+`--with-optional` group. All are read-only with respect to pipeline data. This stub inventories them;
+it does not re-audit every figure.
+
+**Orchestrators / builders**
+
+- `run_all_plots_v2.py` — runs the PLOTSV2 batch end-to-end.
+- `generate_rajasthan_plots.py`, `build_plots_folder_rajasthan.py` — assemble the delivery folder.
+- `fix_unicode_issues.py` — one-off utility to strip/replace non-ASCII in generated artifacts.
+
+**Per-phase plot builders**
+
+- `phase1_data_collection_rajasthan.py` — Phase 1 data-collection plots (port of the raw-data plot
+  script used in the other states' pipelines).
+- `phase3_climate_signature_rajasthan.py` — Phase 3 climate-signature plots.
+- `09_mcdm_vs_physics_agreement.py` — Phase 7 agreement plot (MCDM consensus rank vs. simulated
+  solar fraction), i.e. Part A item 9 above.
+
+**Comparison plots (Part B of the plan)**
+
+- `comparison_plots_rajasthan.py` — general before/after comparison batch.
+- `comparison_phase3_tmcap_old_vs_new.py` — `Tm_target_capped_C` worst-month basis vs. the
+  retained-for-audit `Tm_target_capped_C_p05day` (plan item Part B/c).
+- `comparison_phase5_lrequired_before_after.py` — feasibility survivor counts, pre- vs.
+  post-`L_required` correction (plan item Part B/e).
+
+**Verification scripts** (print PASS/WARN against the audit-documented results)
+
+- `verify_01_preprocessing_rajasthan.py`, `verify_02_clustering_rajasthan.py`,
+  `verify_03_feasibility_rajasthan.py`, `verify_04_ranking_rajasthan.py`.
+
+**`PLOTSV2/interactive_plots/`** — Plotly + Folium interactive variants:
+
+- `00e_interactive_population_plotly.py`, `00f_interactive_population_folium.py` — Phase 1 sampling grid.
+- `03b_interactive_raw_qa.py`, `03e_interactive_raw_plotly.py`, `03f_interactive_raw_folium.py` —
+  Phase 2 raw-data QA (siblings of the top-level `03d_interactive_raw_qa.py`, see
+  `04_PHASE_2_AUDIT.md` §B.12).
+- `04e_interactive_preprocessed_plotly.py`, `04f_interactive_preprocessed_folium.py` — post-
+  preprocessing QC on `04_preprocess_rajasthan.py`'s `rajasthan_cleaned_physical.csv`.
+
+**Status:** implemented and runnable; the same 2026-08-31 `L_required` staleness banner (§0) applies
+to every PLOTSV2 figure that reads a Phase 5+ output.

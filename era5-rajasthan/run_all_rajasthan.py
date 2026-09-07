@@ -138,6 +138,15 @@ OPTIONAL_SCRIPTS = [
     "03b_coverage_viz_rajasthan.py",
     "03c_plots_raw_rajasthan.py",
     "03b_quality_check_plots_rajasthan.py",
+    # Tamil-Nadu plot-script ports (Group A) — output to PLOTSV2/<subfolder>/.
+    # 05f_explore_interactive.py is excluded here: it is a Streamlit app, run
+    # with `streamlit run 05f_explore_interactive.py`, not plain `python`.
+    "03d_interactive_raw_qa.py",
+    "04d_postprocess_plots.py",
+    "04e_interactive_postprocess_qc.py",
+    "04f_signature_interactive.py",
+    "05e_cluster_interactive.py",
+    "05g_plots_comprehensive.py",
     "03b_validate_quality_fix_rajasthan.py",   # last: re-runs 04 internally
 ]
 

@@ -1,4 +1,4 @@
-# 22 — Final Readiness Report
+# 12 — Final Readiness Report
 
 ## Current implementation status
 
@@ -17,7 +17,7 @@ The blocking item has moved from "expand the database" to "regenerate
 `PCM_Properties_cleaned_mice_pmm_detailed.csv` (currently missing from disk) and re-run Phases 5–8" —
 see "Prerequisites for a FINAL (non-provisional) result" and "Recommended next implementation" below.
 
-⚠️ **CRITICAL UPDATE (2026-08-31): L_required Methodology Correction** — Phase 3's L_required methodology was corrected 2026-08-31, halving L_required values (600–650 kJ/kg → 300–325 kJ/kg) and cascading through Phases 5–8. **All results documented in this report (κ calibrations, Spearman rho values, recommendations) are now STALE.** Phases 5–8 must be re-run against updated signatures. This supersedes the "regenerate preprocessing output and re-run" item above; the NEWER prerequisite is "re-run Phases 3 (climate signature only), 4, 5–8 in sequence." See CLAUDE.md §3.1 and `04_climate_signature_rajasthan.py` docstring for full methodology detail.
+⚠️ **CRITICAL UPDATE (2026-08-31): L_required Methodology Correction** — Phase 3's L_required methodology was corrected 2026-08-31, halving L_required values (600–650 kJ/kg → 300–325 kJ/kg) and cascading through Phases 5–8. **All results documented in this report (κ calibrations, Spearman rho values, recommendations) are now STALE.** Phases 5–8 must be re-run against updated signatures. This supersedes the "regenerate preprocessing output and re-run" item above; the NEWER prerequisite is "re-run Phases 3 (climate signature only), 4, 5–8 in sequence." See CLAUDE.md §3.1 and `04b_climate_signature.py` docstring for full methodology detail.
 
 ## Completed phases
 
@@ -91,8 +91,8 @@ aggregation with its own independent cross-phase consistency re-verification.
 
 All bugs found during development were **fixed before being relied upon** — seven are now on record
 (deaccumulation, GMM covariance, VIKOR sign, entropy weight, GMM cluster-index instability, the
-Phase 7 closed-form-solve bug, the Phase 7 phase-transition energy-accounting bug) — see
-`20_IMPLEMENTATION_ISSUES.md` for the full list. No unfixed critical bug is currently known in the
+Phase 7 closed-form-solve bug, the Phase 7 phase-transition energy-accounting bug) — see `00_MASTER_OVERVIEW.md` ("Current known
+issues") for the full list. No unfixed critical bug is currently known in the
 code. The "zero survivors" outcome (Phase 5) and the negative Spearman rho (Phase 7) are not bugs —
 both are correct, self-predicted-or-honestly-reported consequences of a genuinely under-populated
 PCM database, and treating them as data-completeness/database-size findings rather than code defects
@@ -100,7 +100,7 @@ is the accurate framing.
 
 ## Non-critical issues
 
-See `20_IMPLEMENTATION_ISSUES.md` items 18–35 — monsoon-month mismatch, `avg_sdirswrf` unit
+See `00_MASTER_OVERVIEW.md` ("Current known issues") — monsoon-month mismatch, `avg_sdirswrf` unit
 ambiguity, dangling citation, stale edge-case comment, missing matched-timestamp columns, a dead QC
 bound, an unpinned pvlib call, duplicate cluster descriptions, Phase 7's near-0% PCM-vs-plain-tank
 comparator and un-attempted TRNSYS cross-check (both diagnosed and reported honestly, not defects),
@@ -119,9 +119,11 @@ explicitly, with a stated justification, before Phase 6's output is presented as
 ## Reproducibility risks
 
 No pinned dependency versions (`requirements.txt` absent), no explicit ERA5 product-version/pull-date
-manifest, one unpinned `pvlib` solar-position method call, and the `until phase 4/` folder's
-file-content mislabeling (real, but does not affect the live pipeline's own reproducibility since it
-doesn't read from that folder). See `21_REPRODUCIBILITY.md` for the full checklist and fixes.
+manifest, one unpinned `pvlib` solar-position method call, and a doubly-nested `PCM_data/PCM_data/`
+folder layout on disk that the PCM-database consuming scripts do not expect (worked around by a
+non-destructive file copy — see `07_PHASE_5_AUDIT.md`, "Two blocking bugs"). The
+resumability/provenance mechanisms are summarised in `00_MASTER_OVERVIEW.md` ("Current architecture"
+→ Resumability, and known issue 11).
 
 ## Missing validation
 
@@ -138,12 +140,12 @@ validated (partially — Köppen only).
 No dedicated methodology citations currently in `references.bib`/`.claude/references.md` for: SPA
 (Reda & Andreas 2004), Ineichen clear-sky (Ineichen & Perez 2002), pvlib (Holmgren et al. 2018),
 TOPSIS/PROMETHEE/VIKOR/GRA originating papers, MICE imputation (van Buuren & Groothuis-Oudshoorn
-2011), or quantile mapping (e.g. Cannon et al. 2015) — see `17_LITERATURE_MAPPING.md` for the full
+2011), or quantile mapping (e.g. Cannon et al. 2015) — see `13_LITERATURE_MAPPING.md` for the full
 gap list and recommended additions. The PCM-domain literature base (`Sources/`, 21 papers) is strong
 and well-matched to the project's PCM-selection claims specifically. **Phase 7's own citations are
 now real and verified this session**: Barqawi (2025, DOI-verified) for the lumped-enthalpy ODE
 structure, Bony & Citherlet (2007, independently confirmed) for the model-class justification — both
-added to `17_LITERATURE_MAPPING.md`.
+added to `13_LITERATURE_MAPPING.md`.
 
 ## What can already be used in the thesis
 
@@ -190,7 +192,7 @@ resource. (4) NBC/ECBC external validation, if time permits.
 All 8 phases exist and run end-to-end. The PCM database expansion is finished (55 rows). In order:
 regenerate `PCM_Properties_cleaned_mice_pmm_detailed.csv` (`python PCM_data/PCM_data/01_preprocess.py`
 — currently missing from disk) → re-run `07 → 08 → 09 → 10` (`python run_all_rajasthan.py --from
-07_feasibility_filter_rajasthan.py`) against the expanded database → see whether the negative Phase 7
+07_feasibility_filter.py`) against the expanded database → see whether the negative Phase 7
 rho persists → decide and document the feasibility-constraint policy → (optional) wire in NBC/ECBC
 external validation for Phase 4.
 

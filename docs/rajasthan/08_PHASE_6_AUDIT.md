@@ -1,6 +1,6 @@
 # 08 — Phase 6 Audit: Multi-Criteria Ranking Engine
 
-Script: `08_mcdm_ranking_rajasthan.py` (984 lines). **Updated 2026-08-11 — Phases 7 and 8
+Script: `08_mcdm_ranking.py` (984 lines). **Updated 2026-08-11 — Phases 7 and 8
 (`09_physics_validation_rajasthan.py`, `10_recommendation_cards_rajasthan.py`) are now also
 implemented and run; this script is no longer the implementation frontier. It now also stamps a
 cross-phase provenance fingerprint and hard-fails if its input doesn't match — see the new section
@@ -145,7 +145,7 @@ comparator (framework doc §13.1 names this as the project's own regression-test
 3 decimal places after refactoring, per `phases.md` PROMPT 5's stated verification requirement).
 TOPSIS/PROMETHEE/VIKOR/GRA/CoCoSo are standard, well-established MCDM methods; no dedicated MCDM
 methodology paper (e.g., for VIKOR's original formulation) was found cross-referenced in
-`references.bib`/`.claude/references.md` during this audit — see `17_LITERATURE_MAPPING.md` for the
+`references.bib`/`.claude/references.md` during this audit — see `13_LITERATURE_MAPPING.md` for the
 full gap analysis.
 
 ## Validation
@@ -167,8 +167,9 @@ compares it against the `upstream_cluster_profile_fingerprint` stamp embedded in
 file — `assert_fingerprint_match()` raises `SystemExit` (not a warning) on any mismatch. This exists
 because Phase 7 caught Phase 5's and Phase 6's outputs disagreeing cluster-by-cluster on which PCMs
 belonged to which `cluster_id`, traced to Phase 4's GMM cluster labels not being stable across
-separate re-runs (see `06_PHASE_4_AUDIT.md`'s second documented bug and `19_PHASE_7_ONWARD.md`'s full
-incident writeup). This script's own output (`mcdm_rankings_rajasthan.csv`) is now stamped with the
+separate re-runs (see `06_PHASE_4_AUDIT.md`'s second documented bug and `09_PHASE_7_AUDIT.md`'s
+"Completion Report" for the full incident writeup). This script's own output
+(`mcdm_rankings_rajasthan.csv`) is now stamped with the
 same fingerprint, which Phase 7 and Phase 8 each verify in turn.
 
 ## Dependencies
@@ -182,15 +183,14 @@ the per-criterion contribution decomposition against its own already-saved weigh
 
 ## Problems / risks
 
-- **Resolved 2026-08-14**: Phase 6 has now been re-run against the expanded 55-row database (see
-  above) — the `pcm_database_status` tag on every output row now reads `"COMPLETE — 55-row
-  manufacturer database..."` rather than `"PROVISIONAL — ~25-row..."`. The ranking still runs on a
-  κ-relaxed rather than nominal-threshold survivor pool (that policy question remains genuinely
-  open, see `19_PHASE_7_ONWARD.md`), and its output has not yet been re-validated by a Phase 7
-  re-run — so "provisional pending physics validation" still applies, just not "provisional pending
-  database expansion" any more.
-- **`cost` and `c
-orrosion` are effectively structural placeholders**, not measured criteria — a
+- **Database expansion (2026-08-14)**: Phase 6 was re-run against the expanded 55-row database — the
+  `pcm_database_status` tag on every output row moved from `"PROVISIONAL — ~25-row..."` to
+  `"COMPLETE — 55-row manufacturer database..."`. The ranking still runs on a κ-relaxed rather than
+  nominal-threshold survivor pool (that policy question remains genuinely open, see
+  `09_PHASE_7_AUDIT.md`). **Superseding note:** the 2026-08-31 `L_required` methodology correction
+  (top banner) changes the Phase 5 survivor set fed to this script, so the 2026-08-14 ranking numbers
+  are pre-correction; re-run status for this script post-2026-08-31 is not established here.
+- **`cost` and `corrosion` are effectively structural placeholders**, not measured criteria — a
   reader could reasonably ask why 12% of the total AHP weight budget (6%+6%) rides on data that
   doesn't exist yet for `cost` and is a binary type-proxy for `corrosion`.
 - **AHP is not actually AHP-elicited** — flag this precisely in any write-up; the current weights are
@@ -209,13 +209,14 @@ against the expanded 55-row database** — 39 survivors across 3 clusters (up fr
 undersized, Kendall's W 0.388/0.635/0.634 (Clusters 1–2 now "moderate," Cluster 0 still ambiguous but
 no longer explainable by small sample size). Two bugs blocking this re-run (`is_rt_line` column
 removed by the rewritten preprocessing script; a `PCM_data/PCM_data/` path mismatch) were found and
-fixed — see `07_PHASE_5_AUDIT.md`. **Update, 2026-08-14 (later same day): Phase 7 has now ALSO been
-re-run against this fresh ranking** (`09_physics_validation_rajasthan.py`) — the negative validation
-result persists (Spearman rho = -0.385/+0.125/-0.097 across the 3 clusters, mean -0.119, all still in
-the ≤0.4 "genuine negative" band vs. the pre-expansion -0.900/-0.096/-0.198) — so the larger database
-did **not** resolve the MCDM-vs-physics disagreement; if anything Cluster 0's now-healthy sample size
+fixed — see `07_PHASE_5_AUDIT.md`. **Update, 2026-08-14 (later same day): Phase 7 was also re-run
+against that ranking** (`09_physics_validation_rajasthan.py`) — the negative validation result
+persisted (Spearman rho = -0.385/+0.125/-0.097 across the 3 clusters, mean -0.119, all in the ≤0.4
+"genuine negative" band vs. the pre-expansion -0.900/-0.096/-0.198) — so the larger database did
+**not** resolve the MCDM-vs-physics disagreement; if anything Cluster 0's now-healthy sample size
 (n=9, no longer undersized) makes its persistently-low Kendall's W a more concerning finding, not a
-less concerning one. Phase 8 (`10_recommendation_cards_rajasthan.py`) has also been re-run and
-produced new Top-1 picks (RT50 / savE® OM50 / savE® OM50) — see `19_PHASE_7_ONWARD.md` for the full
-current-state writeup. Every phase in this chain (5 through 8) is now current as of 2026-08-14; no
-further re-run is pending.
+less concerning one. Phase 8 (`10_recommendation_cards_rajasthan.py`) was also re-run and produced
+Top-1 picks RT50 / savE® OM50 / savE® OM50 — see `09_PHASE_7_AUDIT.md` and `10_PHASE_8_AUDIT.md` for
+the writeup. **All of the numbers in this "Update, 2026-08-14" paragraph predate the 2026-08-31
+`L_required` correction (top banner) and are superseded by it; the post-correction re-run status for
+Phases 6–8 is tracked in each phase's own audit, not asserted here.**

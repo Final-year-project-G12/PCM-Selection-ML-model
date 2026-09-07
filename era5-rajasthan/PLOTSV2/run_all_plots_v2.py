@@ -28,7 +28,12 @@ PHASES = [
     ("Phase 1 - data collection",   "phase1_data_collection_rajasthan.py"),
     ("Phase 3 - climate signature", "phase3_climate_signature_rajasthan.py"),
 ]
-COMPARISON = [("8 cross-step comparison plots", "comparison_plots_rajasthan.py")]
+COMPARISON = [
+    ("8 cross-step comparison plots",  "comparison_plots_rajasthan.py"),
+    ("MCDM vs physics agreement",      "09_mcdm_vs_physics_agreement.py"),
+    ("Phase 3 - Tm_cap old vs new",    "comparison_phase3_tmcap_old_vs_new.py"),
+    ("Phase 5 - L_required before/after", "comparison_phase5_lrequired_before_after.py"),
+]
 ASSEMBLE = [("Curated Plots/ folder", "build_plots_folder_rajasthan.py")]
 
 def run(label, script):

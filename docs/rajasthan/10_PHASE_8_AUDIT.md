@@ -1,6 +1,10 @@
 # 10 — Phase 8 Audit: Supercooling Penalty Sensitivity Analysis
 
-Script: `08_phase8_supercooling_sweep.py` (310 lines). **Completed 2026-09-01.** Phase 8 directly tests Phase 7's finding that supercooling dominates MCDM weights (48–64%) yet cannot be simulated in the base model. Implementation of supercooling penalty in `physics_lib.py`, sensitivity sweep k ∈ [0.0, 0.1, 0.2, 0.3].
+Scripts: `08_phase8_supercooling_sweep.py` (310 lines), the supercooling penalty implementation in
+`physics_lib.py`, and two read-only diagnostic helpers `check_supercooling_data.py` /
+`check_supercooling_K.py` (audit stub at the end of this file). **Completed 2026-09-01.** Phase 8
+directly tests Phase 7's finding that supercooling dominates MCDM weights (48–64%) yet cannot be
+simulated in the base model. Sensitivity sweep k ∈ [0.0, 0.1, 0.2, 0.3].
 
 ## Purpose
 
@@ -10,7 +14,7 @@ Phase 7 identified negative or near-zero Spearman ρ (−0.385, +0.125, −0.097
 
 **Initial attempt (August 31)**: Phase 8 used `Tm_nucleation` (from PCM database column "Tm_nucleation") to compute supercooling offset: `ΔT = Tm_freezing − Tm_nucleation`. **Result**: All 18 survivors had ΔT = 0.0 K (uniformly zero). Penalty was mathematically inert; no effect on rankings across any k.
 
-**Root cause identified (September 1)**: Phase 6 MCDM criterion "supercooling" does NOT use `Tm_freezing − Tm_nucleation`. It uses **`supercooling_K = Tm_C − Tm_freezing_C`**, sourced from Phase 5 feasibility filter (`07_feasibility_filter_rajasthan.py`, line 199). This field has **real variance**: mean=1.27 K, std=1.29 K, min=−0.50 K, max=3.50 K across survivors.
+**Root cause identified (September 1)**: Phase 6 MCDM criterion "supercooling" does NOT use `Tm_freezing − Tm_nucleation`. It uses **`supercooling_K = Tm_C − Tm_freezing_C`**, sourced from Phase 5 feasibility filter (`07_feasibility_filter.py`, line 199). This field has **real variance**: mean=1.27 K, std=1.29 K, min=−0.50 K, max=3.50 K across survivors.
 
 **Corrected implementation**: Phase 8 re-wired penalty to use `supercooling_K` (actual MCDM field). Sweep re-run September 1; results below are from this corrected run.
 
@@ -213,6 +217,23 @@ Collect real discharge curves for surviving PCM candidates (literature or lab):
 - **Explicit field sourcing**: Comments cite "Phase 5 feasibility filter" for supercooling_K, showing awareness of data provenance
 - **Calibration re-check**: Medoid solar fractions re-computed at each k to ensure penalty doesn't destabilize
 - **Transparent reporting**: All four k values tested and reported; no cherry-picking; both improvements and degradations documented
+
+## Diagnostic helpers (`check_supercooling_data.py`, `check_supercooling_K.py`) — audit stub
+
+Two short read-only scripts used while diagnosing the "Critical Correction: Field Identification"
+issue above. Neither writes any file or is part of any pipeline chain:
+
+- **`check_supercooling_K.py`** — loads `feasibility_survivors_rajasthan_kappa_calibrated.csv`,
+  filters to `survives_all` rows, de-dupes on `pcm_id`, and prints `supercooling_K` per candidate
+  plus its mean / std / min / max. This is the script that established `supercooling_K` (i.e.
+  `Tm_C − Tm_freezing_C`) has real variance across survivors, confirming it — not the all-zero
+  `Tm_freezing − Tm_nucleation` — is the field Phase 6's "supercooling" criterion actually uses.
+- **`check_supercooling_data.py`** — same survivor set, merged against the PCM manufacturer table
+  (`PCM_data/data/PCM_Properties_cleaned_mice_pmm_detailed.csv`) to inspect nucleation temperatures
+  alongside `Tm_C` for the surviving candidates.
+
+Both hardcode absolute `d:/Final Year Project/...` paths, so they are throwaway diagnostics rather
+than reusable tooling.
 
 ## Relationship to Thesis Write-Up
 

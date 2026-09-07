@@ -1,6 +1,7 @@
 # 06 — Phase 4 Audit: Climate Regime Clustering
 
-Script: `05_cluster_rajasthan.py`.
+Scripts: `05_cluster_rajasthan.py`; `05e_cluster_interactive.py`, `05f_explore_interactive.py`,
+`05g_plots_comprehensive.py` (visualization / interactive — audit stubs at the end of this file).
 
 ## Purpose
 
@@ -99,8 +100,9 @@ run produced the underlying fit, as long as the underlying point PARTITION is eq
 different re-run (different data or parameters) — that risk is separately covered by a hard-fail
 provenance-fingerprint check (`provenance_lib.py`) now run at every Phase 5→6→7→8 handoff, which
 raises `SystemExit` (not a warning) if a downstream phase's input doesn't match the current on-disk
-`cluster_profiles_rajasthan.csv`. See `19_PHASE_7_ONWARD.md` for the full incident writeup and
-`21_REPRODUCIBILITY.md` for the provenance mechanism.
+`cluster_profiles_rajasthan.csv`. See `09_PHASE_7_AUDIT.md` ("Completion Report" and "Code Quality &
+Documented Design Decisions") for the full incident writeup, and `provenance_lib.py`'s own module
+docstring for the provenance mechanism.
 
 ## ✅ VALIDATED (2026-08-31 re-run complete)
 
@@ -134,8 +136,9 @@ classification (peaking ~0.3 at k=6 in a 4-state design), and a 2026 thermal-com
 study independently reporting mean silhouette 0.235 — both citations appear in the code comments
 with enough specificity to be traceable, though full BibTeX entries for both were not located in
 `references.bib`/`references.md` during this audit and should be added before formal citation.
-Beck et al. (2018) is the correctly-named, DOI-verified citation for the (not-yet-wired) Köppen
-validation.
+Beck et al. (2018) is the correctly-named, DOI-verified citation for the Köppen-Geiger external
+validation, which is now wired in for real (1-km raster, per-point lookup — see "External
+validation" above; ARI=0.19, NMI=0.32 vs. the GMM clusters).
 
 ## Validation
 
@@ -165,7 +168,7 @@ constraint is evaluated per cluster using `Tm_target_C`, `Tm_target_capped_C`,
 ## Problems / risks
 
 - Level B's k-scan metric table is not persisted to disk — reproducibility gap (see
-  `21_REPRODUCIBILITY.md`).
+  `00_MASTER_OVERVIEW.md`, "Current architecture" → Resumability).
 - `bootstrap_ari_stability()` silently drops any bootstrap resample whose GMM fit raises an
   exception (`except Exception: continue`), which could quietly reduce the effective resample count
   below 50 without this being visible anywhere in the output table.
@@ -190,4 +193,24 @@ across re-runs) and Köppen-Geiger external validation now wired in (NBC/ECBC st
 internal clustering result (k=3) is statistically well-supported and now partially externally
 corroborated; the cluster-index-instability fix and its accompanying provenance hard-fail check are
 what make the downstream Phase 5→6→7→8 chain trustworthy across separate re-runs — see
-`19_PHASE_7_ONWARD.md` for the real incident this was caught from.
+`09_PHASE_7_AUDIT.md` ("Completion Report") for the real incident this was caught from.
+
+## Visualization / interactive scripts — audit stubs
+
+None are in `run_all_rajasthan.py`'s core chain; all are read-only.
+
+- **`05e_cluster_interactive.py`** — interactive (Folium + Plotly) explorer for
+  `05_cluster_rajasthan.py`'s Level-A output (the 1:1 port of Tamil Nadu's `05b_cluster_interactive.py`):
+  a cluster map with hoverable soft GMM membership probabilities (which the static PNG discards), an
+  interactive cluster-profile comparison, and the K-selection curves. Reads
+  `cluster_assignments_rajasthan_levelA.csv`, `cluster_profiles_rajasthan.csv`,
+  `bic_selection_rajasthan.csv`; writes `PLOTSV2/clustering_interactive/*.html`.
+- **`05f_explore_interactive.py`** — a Streamlit app (run with `streamlit run 05f_explore_interactive.py`,
+  not plain `python`; the 1:1 port of Tamil Nadu's `05c_explore_interactive.py`). One row per
+  `(point_id, date, event)`; every time-series chart plots three traces (sunrise/noon/sunset) against
+  date. Deliberately excluded from `run_all_rajasthan.py`'s optional list for that reason.
+- **`05g_plots_comprehensive.py`** — a comprehensive static-visualization batch (the 1:1 port of
+  Tamil Nadu's `05d_plots_comprehensive.py`). Reads the processed backbone
+  (`rajasthan_cleaned_physical.csv` from `04_preprocess_rajasthan.py`) by default — flip `USE_PROCESSED`
+  to `False` for raw-data plots — with a `usecols` filter (the file is large). Map centre taken from
+  the data; the second monsoon band relabelled "retreat / post-monsoon" for Rajasthan.
