@@ -22,6 +22,7 @@ CLUSTERS     = os.path.join(BASE,"data","processed","clustering","cluster_assign
 PCM_DB       = os.path.join(BASE,"data","processed","pcm","pcm_database_uttarakhand.csv")
 FEASIBILITY  = os.path.join(BASE,"data","processed","pcm","feasibility_survivors_by_cluster.csv")
 TOPK         = os.path.join(BASE,"data","processed","pcm","mcdm_topk_by_cluster.csv")
+FULL_SCORES  = os.path.join(BASE,"data","processed","pcm","mcdm_full_scores_by_cluster.csv")
 MC_STABILITY = os.path.join(BASE,"data","processed","pcm","monte_carlo_stability.csv")
 PHYS_VAL     = os.path.join(BASE,"data","processed","pcm","physics_validation_results.csv")
 OUT          = os.path.join(BASE,"data","plots","uttarakhand_objective1")
@@ -188,13 +189,23 @@ def p06():
 # ---- Plot 7: Bump Chart ----
 def p07():
     print("[7/13] Bump Chart - ranks across methods")
-    df=load(TOPK,"topk")
+    # Reads mcdm_full_scores_by_cluster.csv (every feasibility survivor per
+    # cluster), not just mcdm_topk_by_cluster.csv's Top-3-per-cluster —
+    # otherwise a single global .head(N) sorted by consensus_rank just
+    # groups all clusters' rank-1 rows first, then all rank-2 rows, etc.
+    # (consensus_rank resets to 1/2/3 within EACH cluster), which caps the
+    # chart at whatever few names occupy ranks 1-3 anywhere, regardless of
+    # the requested depth. Falls back to TOPK if the full-scores file is
+    # missing (e.g. mcdm hasn't been re-run since this script was updated).
+    df=load(FULL_SCORES,"full_scores")
+    if df is None: df=load(TOPK,"topk")
     if df is None: return
     df=ensure_ranks(df)
     rank_cols=[c for c in MRANK if c in df.columns]
     if not rank_cols: return
     sc="consensus_rank" if "consensus_rank" in df.columns else rank_cols[0]
-    top=df.sort_values(sc).head(12).copy()
+    per_cluster_depth=5   # top-5 per cluster, not a global head(12)
+    top=df[df[sc]<=per_cluster_depth].sort_values(["cluster_id",sc]).copy()
     rows=[]
     for _,r in top.iterrows():
         for col in rank_cols:
@@ -202,20 +213,60 @@ def p07():
                 rows.append({"Method":col.replace("_rank","").upper(),"Rank":r[col],"Name":r.get("name","?"),"Cluster":str(int(r.get("cluster_id",0)))})
     ld=pd.DataFrame(rows)
     if ld.empty: return
-    fig=px.line(ld,x="Method",y="Rank",color="Name",line_group="Name",markers=True,hover_data=["Cluster"],
-                title="Uttarakhand PCM - Rank Across MCDM Methods (Top 12)",template="plotly_white",
-                color_discrete_sequence=px.colors.qualitative.Light24)
+    mo=[c.replace("_rank","").upper() for c in rank_cols]
+
+    # Same PCM can survive in multiple clusters with a different rank in
+    # each. Grouping/coloring by "Name" alone makes one connected line jump
+    # back and forth between each cluster's rank value at every method —
+    # a tangled clump instead of separate per-cluster stories. Fix: give
+    # every (Name, Cluster) pair its own line ("Series"), keep color keyed
+    # to Name so the same PCM stays recognisable by color across clusters,
+    # and put Cluster in the legend text.
+    ld["Series"]=ld["Name"]+" — C"+ld["Cluster"]
+
+    # ---- Combined chart (all clusters together, lines separated) ----
+    fig=px.line(ld,x="Method",y="Rank",color="Name",line_group="Series",markers=True,
+                hover_data=["Cluster","Name"],
+                title=f"Uttarakhand PCM - Rank Across MCDM Methods, All Clusters (Top {per_cluster_depth} per Cluster)",
+                template="plotly_white",color_discrete_sequence=px.colors.qualitative.Light24)
     fig.update_yaxes(autorange="reversed",title="Rank (1=best)"); fig.update_layout(height=550,legend_title="PCM")
     shtml(fig,"07_bump_chart_ranks.html")
-    mo=[c.replace("_rank","").upper() for c in rank_cols]; cands=ld["Name"].unique()
-    pal=sns.color_palette("tab20",len(cands)); fig_s,ax_s=plt.subplots(figsize=(12,7))
-    for i,cand in enumerate(cands):
-        sub=ld[ld["Name"]==cand]
-        xs=[mo.index(m) for m in sub["Method"] if m in mo]; ys=sub["Rank"].tolist()
-        ax_s.plot(xs,ys,"-o",color=pal[i],label=cand,lw=1.6,markersize=6)
+
+    pal_names=list(ld["Name"].unique()); cmap=dict(zip(pal_names,sns.color_palette("tab20",len(pal_names))))
+    ls_cycle=["-","--","-.",":"]; cid_list=sorted(ld["Cluster"].unique(),key=lambda c:int(c))
+    ls_map={cid:ls_cycle[i%len(ls_cycle)] for i,cid in enumerate(cid_list)}
+    fig_s,ax_s=plt.subplots(figsize=(12,7))
+    for (cand,cid),sub in ld.groupby(["Name","Cluster"]):
+        sub=sub.set_index("Method").reindex(mo).dropna(subset=["Rank"])
+        xs=[mo.index(m) for m in sub.index]; ys=sub["Rank"].tolist()
+        ax_s.plot(xs,ys,marker="o",linestyle=ls_map[cid],color=cmap[cand],label=f"{cand} — C{cid}",lw=1.6,markersize=6)
     ax_s.set_xticks(range(len(mo))); ax_s.set_xticklabels(mo,fontsize=11); ax_s.invert_yaxis()
-    ax_s.set(title="Uttarakhand - PCM Rank Across MCDM Methods (Bump Chart)",ylabel="Rank (1=best)",xlabel="Method")
-    ax_s.legend(fontsize=7,ncol=2,loc="upper right"); ax_s.grid(alpha=0.25); sfig("07_bump_chart_ranks.png")
+    ax_s.set(title="Uttarakhand - PCM Rank Across MCDM Methods, All Clusters (Bump Chart)\n(same PCM = same color; linestyle = cluster)",
+             ylabel="Rank (1=best)",xlabel="Method")
+    ax_s.legend(fontsize=6,ncol=2,loc="upper right"); ax_s.grid(alpha=0.25); sfig("07_bump_chart_ranks.png")
+
+    # ---- One bump chart per cluster, own PNG + HTML ----
+    print("  + per-cluster bump charts:")
+    for cid in cid_list:
+        sub_ld=ld[ld["Cluster"]==cid]
+        if sub_ld.empty: continue
+        fig_c=px.line(sub_ld,x="Method",y="Rank",color="Name",line_group="Name",markers=True,
+                      title=f"Uttarakhand PCM - Rank Across MCDM Methods — Cluster {cid} (Top {per_cluster_depth})",
+                      template="plotly_white",color_discrete_sequence=px.colors.qualitative.Light24)
+        fig_c.update_yaxes(autorange="reversed",title="Rank (1=best)"); fig_c.update_layout(height=500,legend_title="PCM")
+        shtml(fig_c,f"07_bump_chart_ranks_cluster{cid}.html")
+
+        cands_c=sub_ld["Name"].unique(); pal_c=sns.color_palette("tab10",len(cands_c))
+        fig_sc,ax_sc=plt.subplots(figsize=(9,6))
+        for i,cand in enumerate(cands_c):
+            s2=sub_ld[sub_ld["Name"]==cand].set_index("Method").reindex(mo).dropna(subset=["Rank"])
+            xs=[mo.index(m) for m in s2.index]; ys=s2["Rank"].tolist()
+            ax_sc.plot(xs,ys,"-o",color=pal_c[i],label=cand,lw=1.8,markersize=7)
+        ax_sc.set_xticks(range(len(mo))); ax_sc.set_xticklabels(mo,fontsize=11); ax_sc.invert_yaxis()
+        ax_sc.set(title=f"Uttarakhand - PCM Rank Across MCDM Methods — Cluster {cid}",ylabel="Rank (1=best)",xlabel="Method")
+        ax_sc.legend(fontsize=8,loc="upper right"); ax_sc.grid(alpha=0.25)
+        sfig(f"07_bump_chart_ranks_cluster{cid}.png")
+        print(f"    07_bump_chart_ranks_cluster{cid}.png/.html")
 
 # ---- Plot 8: Method Correlation Heatmap ----
 def p08():

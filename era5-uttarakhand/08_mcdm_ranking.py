@@ -1,16 +1,12 @@
 """
 08_mcdm_ranking.py
 =====================
-PHASE 6 — MULTI-CRITERIA RANKING ENGINE, minimum viable version
-(Objective 1 plan v3.0, Section 9)
+PHASE 6 — MULTI-CRITERIA RANKING ENGINE (Objective 1 plan v3.0, Section 9)
 
-This is the "minimum viable MCDM stack" from your 4-day sprint plan:
-TOPSIS + GRA, entropy-weighted per cluster, Borda-aggregated to a Top-3.
-PROMETHEE II / VIKOR / CoCoSo and the 5,000-draw Monte Carlo stability
-check are NOT implemented here — they're real, documented extensions
-(see the docstring at the bottom), add them if time remains, but this
-script alone already gives you a defensible, falsifiable Top-3 per
-cluster, which is the actual headline deliverable of Objective 1.
+Full 4-method stack: TOPSIS, GRA, PROMETHEE II, and VIKOR, entropy+AHP
+weighted per cluster, Borda-aggregated to a Top-3. (Earlier version of
+this script only ran TOPSIS+GRA; PROMETHEE II and VIKOR are added below
+so every method the bump-chart plot expects actually gets computed.)
 
 THE ONE STEP EVERY PCM-MCDM PAPER GETS WRONG (plan v3.0 Section 9.2)
 ------------------------------------------------------------------------
@@ -38,6 +34,17 @@ database doesn't have reliable values for either yet (see 06's docstring
 for what to add). Say this explicitly in your methodology rather than
 silently dropping them.
 
+FOUR RANKING METHODS
+-----------------------
+  TOPSIS       — closeness coefficient, Euclidean ideal/anti-ideal
+  GRA          — grey relational grade vs. the ideal (max) reference
+  PROMETHEE II — net outranking flow; V-shape preference function with
+                 indifference/preference thresholds q=0.10, p=0.30 of the
+                 [0,1] normalized range for every criterion (a documented,
+                 uniform simplification)
+  VIKOR        — compromise ranking Q_i (v=0.5), with the standard
+                 acceptable-advantage / acceptable-stability check flagged
+
 WEIGHTS
 ---------
 Entropy weights computed per cluster from that cluster's own filtered
@@ -47,10 +54,15 @@ AHP-style prior drawn from plan v3.0 Table 13 (renormalised over just the
 a real pairwise AHP matrix, replace AHP_PRIOR below and rerun — until
 then this is an honest placeholder, not a claimed AHP result.
 
+CONSENSUS
+-----------
+Borda count across all 4 methods' ranks.
+
 INPUT  : data/processed/pcm/feasibility_survivors_by_cluster.csv (07's output)
 OUTPUT : data/processed/pcm/mcdm_topk_by_cluster.csv
-           per-cluster Top-3 with individual TOPSIS/GRA ranks, Borda
-           consensus rank, and Kendall's W (2-method agreement) per cluster
+           per-cluster Top-3 with individual TOPSIS/GRA/PROMETHEE/VIKOR
+           ranks, Borda consensus rank, and Kendall's W (4-method
+           agreement) per cluster
          data/processed/pcm/mcdm_full_scores_by_cluster.csv
            every surviving candidate's full score breakdown, not just Top-3
            (keep this — it's what a recommendation card's "criterion
@@ -75,6 +87,8 @@ OUT_FULL = PROCESSED_DIR / "pcm" / "mcdm_full_scores_by_cluster.csv"
 SIGMA_TM = 4.0          # K, plan v3.0 Section 9.2 — justified from HX approach temperature
 ENTROPY_AHP_LAMBDA = 0.5
 GRA_ZETA = 0.5           # distinguishing coefficient, standard value
+PROMETHEE_Q, PROMETHEE_P = 0.10, 0.30    # indifference/preference, fraction of [0,1] range
+VIKOR_V = 0.5
 
 # Renormalised AHP-style prior over the 5 criteria this script actually
 # uses (Tm fitness, latent heat, volumetric latent heat, conductivity,
@@ -135,6 +149,58 @@ def gra(matrix, weights, zeta=GRA_ZETA):
     return grade
 
 
+def promethee_ii(matrix, weights, q=PROMETHEE_Q, p=PROMETHEE_P):
+    """Net outranking flow. matrix/weights same shape convention as
+    topsis()/gra() — 0-1 normalised benefit criteria. V-shape preference
+    function with indifference threshold q and preference threshold p,
+    both expressed as a fraction of the already-[0,1]-normalised range
+    (a documented simplification vs. a physical-units threshold)."""
+    n, k = matrix.shape
+    phi_plus = np.zeros(n)
+    phi_minus = np.zeros(n)
+    for j in range(k):
+        col = matrix[:, j]
+        d = col[:, None] - col[None, :]                     # d[i,k] = x_i - x_k
+        pref = np.clip((np.abs(d) - q) / (p - q + 1e-12), 0, 1)
+        pref = np.where(d > 0, pref, 0.0)                    # only "i preferred to k" direction
+        phi_plus += weights[j] * pref.sum(axis=1)
+        phi_minus += weights[j] * pref.sum(axis=0)
+    denom = max(n - 1, 1)
+    return (phi_plus - phi_minus) / denom
+
+
+def vikor(matrix, weights, v=VIKOR_V):
+    """Compromise ranking. Returns (Q, S, R) — lower Q is better."""
+    f_star = matrix.max(axis=0)
+    f_minus = matrix.min(axis=0)
+    span = np.where((f_star - f_minus) == 0, 1e-12, f_star - f_minus)
+    weighted_gap = weights * (f_star - matrix) / span
+    S = weighted_gap.sum(axis=1)
+    R = weighted_gap.max(axis=1)
+    s_star, s_minus = S.min(), S.max()
+    r_star, r_minus = R.min(), R.max()
+    Q = (v * (S - s_star) / (s_minus - s_star + 1e-12) +
+         (1 - v) * (R - r_star) / (r_minus - r_star + 1e-12))
+    return Q, S, R
+
+
+def vikor_compromise_check(Q, names):
+    """Acceptable-advantage + acceptable-stability conditions, standard
+    VIKOR post-check. Returns (is_valid_single_winner, note)."""
+    order = np.argsort(Q)
+    n = len(Q)
+    if n < 2:
+        return True, "only one candidate"
+    dq = 1.0 / max(n - 1, 1)
+    advantage_ok = (Q[order[1]] - Q[order[0]]) >= dq
+    if not advantage_ok:
+        return False, (f"VIKOR acceptable-advantage FAILS "
+                        f"(Q gap {Q[order[1]]-Q[order[0]]:.4f} < {dq:.4f}) — "
+                        f"report a compromise set {names[order[0]]}/{names[order[1]]}, "
+                        f"not a single VIKOR winner")
+    return True, "single VIKOR winner acceptable"
+
+
 def borda_from_ranks(rank_series_list):
     """rank_series_list: list of pandas Series (index=candidate, values=rank,
     1=best). Returns Borda score (higher=better) and Kendall's W."""
@@ -178,16 +244,26 @@ def rank_cluster(df):
     w_final = ENTROPY_AHP_LAMBDA * w_entropy + (1 - ENTROPY_AHP_LAMBDA) * w_ahp
     w_final = w_final / w_final.sum()
 
-    topsis_score = topsis(M, w_final)
-    gra_grade = gra(M, w_final)
+    df["topsis_score"] = topsis(M, w_final)
+    df["gra_grade"] = gra(M, w_final)
+    df["promethee_flow"] = promethee_ii(M, w_final)
+    vikor_q, vikor_s, vikor_r = vikor(M, w_final)
+    df["vikor_Q"] = vikor_q
+    df["vikor_S"] = vikor_s
+    df["vikor_R"] = vikor_r
 
-    df["topsis_score"] = topsis_score
-    df["gra_grade"] = gra_grade
     df["topsis_rank"] = df["topsis_score"].rank(ascending=False, method="min").astype(int)
     df["gra_rank"] = df["gra_grade"].rank(ascending=False, method="min").astype(int)
+    df["promethee_rank"] = df["promethee_flow"].rank(ascending=False, method="min").astype(int)
+    df["vikor_rank"] = df["vikor_Q"].rank(ascending=True, method="min").astype(int)   # lower Q better
+
+    vikor_valid, vikor_note = vikor_compromise_check(vikor_q, df["name"].values)
+    df["vikor_compromise_note"] = vikor_note
 
     borda, kendall_w = borda_from_ranks([df.set_index("name")["topsis_rank"],
-                                          df.set_index("name")["gra_rank"]])
+                                          df.set_index("name")["gra_rank"],
+                                          df.set_index("name")["promethee_rank"],
+                                          df.set_index("name")["vikor_rank"]])
     df["borda_score"] = df["name"].map(borda)
     df["consensus_rank"] = df["borda_score"].rank(ascending=False, method="min").astype(int)
     df["kendall_w"] = kendall_w
@@ -200,7 +276,7 @@ def rank_cluster(df):
 
 def main():
     print("=" * 68)
-    print("  Phase 6 — MCDM Ranking (TOPSIS + GRA, entropy+AHP weights) — Uttarakhand")
+    print("  Phase 6 — MCDM Ranking (TOPSIS+GRA+PROMETHEE II+VIKOR, entropy+AHP weights) — Uttarakhand")
     print("=" * 68)
 
     if not SURVIVORS_FILE.exists():
@@ -229,9 +305,11 @@ def main():
               f"n_survivors={len(passed)}, Kendall's W={ranked['kendall_w'].iloc[0]:.3f}):")
         for _, row in top3.iterrows():
             print(f"    #{row['consensus_rank']}  {row['name']:35s}  "
-                  f"Tm={row['Tm_C']:.1f}C  TOPSIS={row['topsis_score']:.3f} "
-                  f"(rank {row['topsis_rank']})  GRA={row['gra_grade']:.3f} "
-                  f"(rank {row['gra_rank']})")
+                  f"Tm={row['Tm_C']:.1f}C  TOPSIS={row['topsis_score']:.3f}(r{row['topsis_rank']})  "
+                  f"GRA={row['gra_grade']:.3f}(r{row['gra_rank']})  "
+                  f"PROMETHEE={row['promethee_flow']:+.3f}(r{row['promethee_rank']})  "
+                  f"VIKOR_Q={row['vikor_Q']:.3f}(r{row['vikor_rank']})")
+        print(f"    VIKOR compromise check: {ranked['vikor_compromise_note'].iloc[0]}")
         topk_rows.append(top3)
 
     if not full_rows:
@@ -275,21 +353,19 @@ def main():
     ambiguous = low_w[low_w < 0.6]
     if len(ambiguous):
         print(f"\n  [NOTE] Kendall's W < 0.6 for cluster(s) {list(ambiguous.index)} — "
-              f"TOPSIS and GRA disagree meaningfully there. Per plan v3.0 Section 9.5, "
+              f"the 4 methods disagree meaningfully there. Per plan v3.0 Section 9.5, "
               f"this is a genuine, reportable finding (that regime's PCM choice is "
               f"ambiguous), not a bug to fix — discuss it rather than hide it.")
     print("=" * 68)
-    print("\nWhat's still genuinely optional beyond this (your sprint plan already "
-          "flags these as stretch goals, not required):")
-    print("  - PROMETHEE II as a third ranking method (best-suited to the")
-    print("    target-based Tm criterion natively; ~40 more lines)")
+    print("\nStill genuinely optional beyond this:")
     print("  - 5,000-draw Monte Carlo weight/property perturbation for a")
     print("    Top-3 inclusion-probability confidence figure")
     print("  - A minimal grey-box physics validation run per cluster's Top-1")
-    print("\nWithout those, you already have a defensible, falsifiable Top-3 per")
-    print("cluster — write the recommendation cards from mcdm_topk_by_cluster.csv")
-    print("+ cluster_profiles_uttarakhand.csv (Phase 8) and you have a complete")
-    print("Objective 1.")
+    print("    (see 10_physics_validation.py — already implemented)")
+    print("\nWithout Monte Carlo, you already have a defensible, falsifiable Top-3 per")
+    print("cluster from 4 independent ranking methods — write the recommendation cards")
+    print("from mcdm_topk_by_cluster.csv + cluster_profiles_uttarakhand.csv (Phase 8)")
+    print("and you have a complete Objective 1.")
 
 
 if __name__ == "__main__":

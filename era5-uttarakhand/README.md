@@ -70,6 +70,23 @@ at the bottom.)
 
 ## Run Order
 
+To run the whole core chain (Phase 2 onward) in one command instead of
+typing each line below by hand, use `run_all_uttarakhand.py`:
+
+```bash
+python run_all_uttarakhand.py                 # core pipeline only
+python run_all_uttarakhand.py --with-optional # core + diagnostic/plot scripts
+python run_all_uttarakhand.py --dry-run       # print the resolved order, run nothing
+python run_all_uttarakhand.py --include-setup # ALSO run the raw-data download scripts first
+python run_all_uttarakhand.py --from 05_cluster_uttarakhand.py   # resume from a given stage
+```
+
+It does not run `02_combine_uttarakhand.py`, `05c_explore_interactive.py`
+(a Streamlit app — launch that one yourself), or `05_cluster_regions.py`
+(the multi-state version, on standby for later) — see its own docstring
+for the full explanation. Otherwise it's exactly the same steps as below,
+in the same order, via `subprocess`.
+
 ```bash
 # ── Phase 0/1 — sampling design + raw download ──────────────────────────
 python 00a_build_population_grid.py     # GADM boundary + WorldPop raster -> population_grid_points.csv
@@ -88,11 +105,17 @@ python 02b_build_daily_aggregates.py    # re-reads the FULL NASA POWER hourly ca
 python 03_plots_raw.py                  # static PNG checks (point map, event profile,
                                          # ERA5-vs-POWER agreement, missing data, seasonality, trend)
 python 03b_interactive_raw_qa.py        # same 6 checks, as zoomable/hoverable HTML
+python 03b_agreement_analysis.py        # decides if ERA5 alone is a defensible backbone or needs
+                                         # bias correction vs NASA POWER -> bias_decision_uttarakhand.txt
+streamlit run 03e_interactive_raw_plotly.py   # optional: live Plotly explorer on the raw points
+streamlit run 03f_interactive_raw_folium.py   # optional: live Folium map on the raw points
 
 # STOP AND LOOK at 03's output before continuing. In particular:
 #   - check B: GHI/T_amb should peak at the "noon" event, not sunrise/sunset
 #   - check C: large ERA5-vs-POWER MBE is expected and gets addressed in 04
 #   - check F: no year-over-year step-change (would flag a download/unit bug)
+#   - bias_decision_uttarakhand.txt: read this before trusting 04's output —
+#     it says whether ERA5 needed a bias correction against NASA POWER
 
 # ── Phase 2 — clean, QC, engineer features ───────────────────────────────
 python 04_preprocess_uttarakhand.py     # 13-step QC pipeline: physical bounds, Hampel outliers,
@@ -106,6 +129,9 @@ python 04c_interactive_postprocess_qc.py    # same checks, as zoomable/hoverable
 
 # STOP AND LOOK: check A should show ~0% missing everywhere; check E's seasonal
 # shape should look smooth, not flattened, before trusting this for Phase 3.
+
+streamlit run 04e_interactive_preprocessed_plotly.py  # optional: same Plotly explorer, on cleaned data
+streamlit run 04f_interactive_preprocessed_folium.py  # optional: same Folium map, on cleaned data
 
 # ── Phase 3 — build the per-point climate signature ──────────────────────
 python 04b_climate_signature.py         # merges Tier-1 (sun-event) + Tier-2 (true daily-integral,
@@ -123,6 +149,13 @@ python 05b_cluster_interactive.py       # interactive cluster map (hoverable mem
 # STOP AND LOOK at bic_selection_uttarakhand.csv, choose K_FINAL where silhouette
 # lands in the 0.15-0.40 band, edit K_FINAL at the top of 05, re-run once before
 # treating cluster_profiles_uttarakhand.csv as final input to Phase 5.
+
+python 11_level_b_seasonal_analysis.py  # per existing cluster, recomputes L_required per season
+                                         # (Winter/Summer/Monsoon/Retreat) and re-ranks TOPSIS ->
+                                         # flags whether the Top-3 PCM changes by season
+                                         # (checks whether e.g. the Terai plains near Udham Singh
+                                         # Nagar/Haridwar need a different PCM than the Himalayan
+                                         # belt around Chamoli/Pithoragarh in winter vs monsoon)
 
 # ── Phase 4 — optional extra exploration (either order, not required) ────
 python 05c_explore_interactive.py       # Streamlit app: streamlit run 05c_explore_interactive.py
@@ -142,9 +175,19 @@ python 07_feasibility_filter.py         # hard filters per cluster's Tm_target/L
 python 08_mcdm_ranking.py               # TOPSIS + GRA, entropy/AHP weights, Gaussian Tm fitness,
                                          # Borda consensus -> mcdm_topk_by_cluster.csv (headline table)
 
+# ── Phase 7 — physics-based validation ───────────────────────────────────────
+python 10_physics_validation.py         # grey-box lumped-enthalpy tank model, driven by each
+                                         # cluster's medoid point's REAL daily climate data ->
+                                         # physics_validation_results.csv + Spearman rho vs the
+                                         # MCDM consensus rank. Runs BEFORE 09 (numbering is not
+                                         # run order) since 09 includes 10's solar-fraction output
+                                         # when present.
+
 # ── Phase 8 — final output ─────────────────────────────────────────────────
-python 09_recommendation_cards.py       # aggregates Phases 4/6 into recommendation_cards.md —
+python 09_recommendation_cards.py       # aggregates Phases 4/6/7 into recommendation_cards.md —
                                          # this is your results section
+python 12_mcdm_interactive_plots.py     # optional: builds mcdm_final_results_complete.csv +
+                                         # interactive Plotly/Folium presentation maps, run after 08
 ```
 
 Each Phase 0/1 script is resumable — safe to Ctrl-C and re-run; already-
@@ -292,6 +335,24 @@ instead of static PNGs — nothing in either script writes back to the data.
 
 - Output: `data/plots/raw/*.png` and `data/plots/raw_interactive/*.html`
 
+### `03b_agreement_analysis.py`
+Read-only cross-source validation, run before `04` touches the physical
+values: decides whether ERA5 alone is a defensible backbone for
+preprocessing, or needs bias correction against NASA POWER first. Never
+writes back to `climate_uttarakhand_points.csv`.
+
+- Output: `data/processed/era5_power_agreement_uttarakhand.csv`,
+  `outputs/qc_era5_power_scatter_uttarakhand.html`,
+  `outputs/bias_decision_uttarakhand.txt` (read this before trusting `04`)
+
+### `03e_interactive_raw_plotly.py` / `03f_interactive_raw_folium.py`
+Optional live Streamlit apps for exploring the raw combined-points data —
+a Plotly variable explorer and a Folium point map, respectively. Launch
+with `streamlit run <file>.py`, not plain `python`. `04e_interactive_
+preprocessed_plotly.py` / `04f_interactive_preprocessed_folium.py` are the
+same two apps pointed at the cleaned/preprocessed data instead (they load
+`03e`/`03f` dynamically, so don't rename those two files).
+
 ### `04_preprocess_uttarakhand.py`
 Phase 2 preprocessing and quality control — 13 steps: dataset inspection,
 physical-bounds validation (out-of-range → NaN, not silently clipped),
@@ -411,6 +472,27 @@ second state's Phase 3 output; its output format matches
 `05_cluster_uttarakhand.py`'s exactly, so nothing downstream needs to
 change if/when you do.
 
+### `11_level_b_seasonal_analysis.py`
+"Level B" from the plan — for each EXISTING Level-A cluster (from `05`),
+recomputes the climate-dependent MCDM inputs (`L_required`, same
+`Tm_target`) separately per season (Winter/Summer/Monsoon/Retreat) and
+re-ranks with a single-method TOPSIS using the same weights already
+computed for the annual case, then reports whether the Top-3 PCM changes.
+Not a full independent seasonal GMM re-clustering (that's a bigger
+addition); this is the cheaper "nearly free" version the plan permits as
+a starting point. `L_required_season` is computed with the exact same
+formula as `04b_climate_signature.py`'s annual `L_required`
+(`DRAW_RATE_KG_PER_S` continuous overnight draw over 7 hours, no
+Tamil-Nadu-style `SHARE_PCM` split), just re-evaluated on each season's
+own mean temperature — so annual and seasonal values are on the same
+basis within this pipeline. Worth watching closely for Uttarakhand given
+how much elevation its population points span (~200–2000m, Terai plains
+up to the Himalayan belt) — a seasonal PCM flip is plausible in a way it
+might not be for a flatter state.
+
+- Output: `data/processed/pcm/level_b_seasonal_topk.csv`,
+  `data/processed/pcm/level_b_seasonal_summary.md`
+
 ### `05c_explore_interactive.py`
 A Streamlit app (not a plain script — run with `streamlit run
 05c_explore_interactive.py`, not `python`) for interactively browsing raw
@@ -502,6 +584,22 @@ ambiguous), not hidden.
 
 - Output: `data/processed/pcm/mcdm_topk_by_cluster.csv`
 
+### `10_physics_validation.py`
+Phase 7 — physics-based validation, the step that makes the MCDM ranking
+falsifiable rather than a tautology. A grey-box lumped-enthalpy PCM tank
+model (3-phase: pre-melt sensible, isothermal melting, post-melt
+sensible), solved with backward Euler, driven by each cluster's medoid
+point's REAL daily climate data (from `02b`'s output, not synthetic
+weather) for one representative year. Simulates every feasibility
+survivor per cluster, computes annual solar fraction, checks it against
+the published 54–84% benchmark band, and reports Spearman's rho between
+the MCDM consensus rank and simulated performance per cluster. Numbered
+10 but runs **before** `09` — `09` includes this script's solar-fraction
+output when present.
+
+- Output: `data/processed/pcm/physics_validation_results.csv`,
+  `data/processed/pcm/physics_validation_spearman.csv`
+
 ### `09_recommendation_cards.py`
 Phase 8 — pure aggregation, computes nothing new. Turns Phases 4-6's
 output into one markdown recommendation card per cluster: point count and
@@ -517,6 +615,24 @@ only partially applied — see `07`'s docstring).
   style) when you paste it in, the content is what this script gives you.
 - Reads four files at once and exits early with a clear message if any
   are missing, rather than writing partial output.
+
+### `12_mcdm_interactive_plots.py`
+Optional presentation layer, run after `08_mcdm_ranking.py`. Reads the
+complete MCDM score table and cluster assignments, retains every column
+from `mcdm_full_scores_by_cluster.csv`, and adds cluster representative
+coordinates and population summary for two interactive maps (hover text
+exposes the complete row, not a reduced set of score columns).
+
+- Output: `data/processed/pcm/mcdm_final_results_complete.csv`,
+  `data/plots/mcdm/mcdm_clusters_plotly.html`,
+  `data/plots/mcdm/mcdm_clusters_folium.html`
+
+### `run_all_uttarakhand.py`
+Not a pipeline stage — runs every CORE stage above via `subprocess`, in
+the correct dependency order, in one invocation (stops at the first
+required-stage failure). See "Run Order" at the top of this file, or run
+`python run_all_uttarakhand.py --dry-run` to print the resolved order
+without running anything.
 
 ## Requirements
 
