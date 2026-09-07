@@ -17,8 +17,10 @@ Run after 08_mcdm_ranking.py:
 
 from html import escape
 
+# pyrefly: ignore [missing-import]
 import folium
 import pandas as pd
+# pyrefly: ignore [missing-import]
 import plotly.express as px
 
 from config import PLOTS_DIR, PROCESSED_DIR
