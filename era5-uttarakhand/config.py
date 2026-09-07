@@ -39,6 +39,7 @@ COMBINED_POINTS_FILE = PROCESSED_DIR / "climate_uttarakhand_points.csv"
 
 PREPROCESSED_DIR = DATA_DIR / "preprocessed"
 PLOTS_DIR = DATA_DIR / "plots"
+OUTPUTS_DIR = BASE_DIR / "outputs"
 
 CDSAPI_RC = BASE_DIR / ".cdsapirc"
 
@@ -54,8 +55,25 @@ def ensure_data_dirs():
         PROCESSED_GRID_DIR,
         PREPROCESSED_DIR,
         PLOTS_DIR,
+        OUTPUTS_DIR,
     ):
         directory.mkdir(parents=True, exist_ok=True)
+
+
+# Latent-heat feasibility floor, used by 07_feasibility_filter.py and
+# 11_level_b_seasonal_analysis.py. Independent of how L_required itself is
+# computed (see 04b_climate_signature.py for that) — this just enforces a
+# practical absolute minimum on top of whatever fraction-of-L_required rule
+# a given script applies.
+LATENT_HEAT_FRACTION = 0.7
+LATENT_HEAT_ABSOLUTE_MIN_KJ_KG = 100.0
+
+
+def latent_heat_floor_kj_kg(l_required_kj_per_kg,
+                            fraction=LATENT_HEAT_FRACTION,
+                            absolute_min=LATENT_HEAT_ABSOLUTE_MIN_KJ_KG):
+    """L >= max(100 kJ/kg, 0.7 x L_required)."""
+    return max(absolute_min, fraction * l_required_kj_per_kg)
 
 
 def load_cds_credentials():
@@ -103,6 +121,7 @@ def load_cds_credentials():
 
 
 def get_cdsapi_client():
+    # pyrefly: ignore [missing-import]
     import cdsapi
 
     url, key = load_cds_credentials()

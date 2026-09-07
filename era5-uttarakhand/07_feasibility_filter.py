@@ -52,7 +52,7 @@ warnings.filterwarnings("ignore")
 import numpy as np
 import pandas as pd
 
-from config import PROCESSED_DIR
+from config import PROCESSED_DIR, latent_heat_floor_kj_kg
 
 PCM_FILE = PROCESSED_DIR / "pcm" / "pcm_database_uttarakhand.csv"
 PROFILE_FILE = PROCESSED_DIR / "clustering" / "cluster_profiles_uttarakhand.csv"
@@ -73,7 +73,7 @@ def filter_cluster(pcm_db, tm_target, l_required, window_relax=0.0):
     df = pcm_db.copy()
     df["pass_melting_window"] = df["Tm_C"].between(lo, hi)
     df["pass_absolute_band"] = df["Tm_C"].between(ABSOLUTE_TM_MIN, ABSOLUTE_TM_MAX)
-    l_floor = LATENT_HEAT_FRACTION * l_required
+    l_floor = latent_heat_floor_kj_kg(l_required, LATENT_HEAT_FRACTION)
     df["pass_latent_heat"] = df["latent_heat_kJ_kg"] >= l_floor
     df["latent_heat_floor_used"] = l_floor
 
