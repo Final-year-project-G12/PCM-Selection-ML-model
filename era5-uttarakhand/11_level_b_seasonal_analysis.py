@@ -74,9 +74,12 @@ T_DELIVERY_C = 50.0
 DRAW_RATE_KG_PER_S = 60.0 / 1000 / 60
 CP_WATER = 4.186
 ASSUMED_PCM_MASS_KG = 50.0
-USE_CLIMATE_RELATIVE_LATENT_HEAT = True   # must match 08_mcdm_ranking.py's setting —
-                                            # otherwise the weight_ column lookup below
-                                            # from 08's output silently mismatches.
+USE_CLIMATE_RELATIVE_LATENT_HEAT = False  # must match 08_mcdm_ranking.py's actual
+                                            # criteria — this pipeline ranks on raw
+                                            # latent_heat_kJ_kg, not a margin ratio,
+                                            # so this MUST be False or the weight_
+                                            # column lookup below silently mismatches
+                                            # and falls back to uniform weights.
 LATENT_CRITERION_NAME = ("latent_heat_margin_ratio" if USE_CLIMATE_RELATIVE_LATENT_HEAT
                           else "latent_heat_kJ_kg")
 CRITERIA = ["f_Tm", LATENT_CRITERION_NAME, "rho_H_MJ_m3", "TC_W_mK", "cycles_confidence"]
