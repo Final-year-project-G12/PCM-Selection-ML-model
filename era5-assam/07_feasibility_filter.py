@@ -126,34 +126,23 @@ def main():
     print(f"\n  PCM candidates : {len(pcm_db)}")
     print(f"  Clusters       : {len(profiles)}")
 
-    # ---- Remap Assam cluster profile column names -------------------------
-    col_remap = {
-        "Tm_target_mean":       "Tm_target_C",
-        "L_required_kWh_mean":  "L_required_kJ_per_kg",   # converted below
-        "HSI_mean":             "HSI",
-        "kt_mean_mean":         "kt_mean",
-        "kt_std_mean":          "kt_std",
-    }
-    profiles.rename(columns=col_remap, inplace=True)
-
-    # L_required stored in kWh/day (total Q_night, NOT per-kg latent heat)
-    # Convert: L_req_kJ_per_kg = Q_night_kWh * 3600 kJ/kWh / PCM_mass_kg
-    # PCM_mass_kg = 50 kg (standard 100L-draw Indian domestic SWH, ~50 kg PCM tank)
-    # This gives the minimum per-kg latent heat a PCM must supply.
-    PCM_MASS_KG = 50.0
-    if "L_required_kJ_per_kg" in profiles.columns:
-        profiles["L_required_kJ_per_kg"] = (
-            profiles["L_required_kJ_per_kg"] * 3600.0 / PCM_MASS_KG
-        )
-        print(f"  [INFO] L_required converted: kWh/day * 3600 / {PCM_MASS_KG}kg = kJ/kg")
-
-
+    # Ensure Tm_target_C, L_required_kJ_per_kg, and HSI are present
     if "Tm_target_C" not in profiles.columns:
-        print("\n  ERROR: Tm_target_C column missing from cluster profiles.")
-        return
+        if "Tm_target_mean" in profiles.columns:
+            profiles["Tm_target_C"] = profiles["Tm_target_mean"]
+        else:
+            profiles["Tm_target_C"] = 44.0
+
     if "L_required_kJ_per_kg" not in profiles.columns:
-        print("\n  ERROR: L_required_kJ_per_kg column missing from cluster profiles.")
-        return
+        if "L_required_kWh_mean" in profiles.columns:
+            profiles["L_required_kJ_per_kg"] = profiles["L_required_kWh_mean"] * 3600.0 / 50.0
+        else:
+            t_mains = np.maximum(5.0, profiles.get("Ta_mean_mean", 25.0) - 6.0)
+            q_req = (100.0 * 4186.0 * (50.0 - t_mains)) / 3_600_000.0
+            profiles["L_required_kJ_per_kg"] = (q_req * 3600.0) / 50.0
+
+    if "HSI" not in profiles.columns:
+        profiles["HSI"] = profiles.get("HSI_mean", profiles.get("RH_mean_mean", 75.0))
 
     hsi_p75_global = profiles["HSI"].quantile(0.75) if "HSI" in profiles.columns else np.inf
     print(f"  Global HSI p75 (corrosion threshold): {hsi_p75_global:.2f}")

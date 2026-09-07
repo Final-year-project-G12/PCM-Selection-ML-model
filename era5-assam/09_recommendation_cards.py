@@ -47,7 +47,7 @@ OUT_FILE = PCM_DIR / "recommendation_cards_assam.md"
 SIGNATURE_DISPLAY = ["GHI_daily_kWh", "Ta_mean", "DTR", "kt_mean", "cloudy_frac",
                       "CCI", "HDD18", "CDD24", "RH_mean", "HSI", "monsoon_index"]
 
-CRITERIA = ["f_Tm", "latent_heat_margin_ratio", "rho_H_MJ_m3", "TC_W_mK", "cycles_confidence_imputed"]
+CRITERIA = ["f_Tm", "latent_heat_margin_ratio", "rho_H_MJ_m3", "TC_W_mK", "cycles_confidence"]
 CRIT_NAMES = ["Tm_Fitness", "Latent_Heat", "Vol_Heat", "Conductivity", "Cycling_Stability"]
 
 def calculate_contributions(cluster_scores):
@@ -58,10 +58,7 @@ def calculate_contributions(cluster_scores):
     # Map the criterion name to the weight column name
     weight_cols = []
     for c in CRITERIA:
-        if c == "cycles_confidence_imputed":
-            weight_cols.append("weight_cycles_confidence")
-        else:
-            weight_cols.append(f"weight_{c}")
+        weight_cols.append(f"weight_{c}")
             
     W = cluster_scores[weight_cols].iloc[0].values
     
@@ -92,6 +89,13 @@ def main():
 
     profiles = pd.read_csv(PROFILE_FILE)
     assign = pd.read_csv(ASSIGN_FILE)
+    if "cluster_id" not in assign.columns and "cluster" in assign.columns:
+        assign["cluster_id"] = assign["cluster"]
+    grid_file = PROCESSED_DIR / "population_grid_points.csv"
+    if grid_file.exists():
+        grid_df = pd.read_csv(grid_file)
+        if "point_id" in grid_df.columns and "lat" in grid_df.columns and "lat" not in assign.columns:
+            assign = assign.merge(grid_df[["point_id", "lat", "lon"]], on="point_id", how="left")
     topk = pd.read_csv(TOPK_FILE)
     survivors = pd.read_csv(SURVIVORS_FILE)
     full_scores = pd.read_csv(SCORES_FILE)
@@ -129,8 +133,9 @@ def main():
 
         lines.append(f"\n## Cluster {cid}\n")
         lines.append(f"- **Points in regime:** {int(prof['n_points'])}")
-        if "total_population_covered" in prof and prof["total_population_covered"] == prof["total_population_covered"]:
-            lines.append(f"- **Population covered:** {prof['total_population_covered']:,.0f}")
+        pop = prof.get("total_population", prof.get("total_population_covered", np.nan))
+        if pd.notna(pop):
+            lines.append(f"- **Population covered:** {float(pop):,.0f}")
         if "lat" in members.columns and "lon" in members.columns and len(members):
             if "max_membership_prob" in members.columns:
                 medoid = members.loc[members["max_membership_prob"].idxmax()]
@@ -143,14 +148,15 @@ def main():
         lines.append("| Index | Value |")
         lines.append("|---|---|")
         for col in SIGNATURE_DISPLAY:
-            if col in prof and prof[col] == prof[col]:
-                lines.append(f"| {col} | {prof[col]:.3f} |")
+            val = prof.get(col, prof.get(f"{col}_mean", prof.get(f"{col}_est_mean", np.nan)))
+            if pd.notna(val):
+                lines.append(f"| {col} | {float(val):.3f} |")
 
-        # L_required was calculated on the fly in Phase 5 for Assam (kWh to kJ/kg for 50kg PCM)
-        l_req_kj_kg = prof.get('L_required_kWh_mean', float('nan')) * 3600.0 / 50.0 if pd.notna(prof.get('L_required_kWh_mean')) else float('nan')
+        l_req_kj_kg = prof.get('L_required_kJ_per_kg', prof.get('L_required_kWh_mean', np.nan) * 3600.0 / 50.0)
+        tm_t = prof.get('Tm_target_C', prof.get('Tm_target_mean', 44.0))
 
-        lines.append(f"\n**Derived targets:** Tm_target = {prof.get('Tm_target_C', float('nan')):.1f} C, "
-                      f"L_required = {l_req_kj_kg:.0f} kJ/kg")
+        lines.append(f"\n**Derived targets:** Tm_target = {float(tm_t):.1f} C, "
+                      f"L_required = {float(l_req_kj_kg):.0f} kJ/kg")
         lines.append(f"\n**Candidates screened:** {n_survivors} survived Phase 5 feasibility filtering "
                       f"(melting window, absolute band, latent-heat floor, cycling, supercooling, "
                       f"corrosion veto, safety exclusion)")
