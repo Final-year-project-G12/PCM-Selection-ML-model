@@ -455,42 +455,110 @@ def build_all():
                  os.path.join(dir_p5, "05_property_distributions.png"))
     print("  [COPIED] 05_property_distributions.png")
 
-    # 07_bump_chart_ranks.png & interactive
+    # 07_bump_chart_ranks (Cluster-specific, matching Rajasthan reference)
+    print("  Generating Cluster-specific Bump Charts (07_bump_chart_ranks) ...")
     rank_cols = [c for c in ["topsis_rank", "gra_rank", "promethee_rank", "vikor_rank", "consensus_rank"] if c in full_df.columns]
-    top_cands = full_df.sort_values("consensus_rank").head(12).copy()
-    rows = []
-    for _, r in top_cands.iterrows():
-        for col in rank_cols:
-            if pd.notna(r.get(col)):
-                rows.append({"Method": col.replace("_rank", "").upper(), "Rank": r[col], "Name": r.get("name", "?"), "Cluster": str(int(r.get("cluster_id", 0)))})
-    ld = pd.DataFrame(rows)
-
-    fig_bump_int = px.line(
-        ld, x="Method", y="Rank", color="Name", line_group="Name", markers=True, hover_data=["Cluster"],
-        title="Assam PCM - Rank Across MCDM Methods (Top Candidates)", template="plotly_white",
-        color_discrete_sequence=px.colors.qualitative.Light24
-    )
-    fig_bump_int.update_yaxes(autorange="reversed", title="Rank (1=best)")
-    fig_bump_int.update_layout(height=550, legend_title="PCM")
-    save_html(fig_bump_int, os.path.join(dir_p5, "07_bump_chart_ranks.html"))
-
+    sc = "consensus_rank" if "consensus_rank" in full_df.columns else rank_cols[0]
     mo = [c.replace("_rank", "").upper() for c in rank_cols]
-    cands = ld["Name"].unique()
-    pal_cands = sns.color_palette("tab20", len(cands))
-    fig_bump, ax_b = plt.subplots(figsize=(12, 7))
-    for i, cand in enumerate(cands):
-        sub = ld[ld["Name"] == cand]
-        xs = [mo.index(m) for m in sub["Method"] if m in mo]
-        ys = sub["Rank"].tolist()
-        ax_b.plot(xs, ys, "-o", color=pal_cands[i], label=cand, lw=1.6, markersize=6)
-    ax_b.set_xticks(range(len(mo)))
-    ax_b.set_xticklabels(mo, fontsize=11)
-    ax_b.invert_yaxis()
-    ax_b.set(title="Assam - PCM Rank Across MCDM Methods (Bump Chart)", ylabel="Rank (1=best)", xlabel="Method")
-    ax_b.legend(fontsize=7, ncol=2, loc="upper right")
-    ax_b.grid(alpha=0.25)
-    plt.tight_layout()
-    save_fig(fig_bump, os.path.join(dir_p5, "07_bump_chart_ranks.png"))
+    expected_methods = set(mo)
+
+    raw_obj1_dir = os.path.join(BASE_DIR, "data", "plots", "assam_objective1")
+    os.makedirs(raw_obj1_dir, exist_ok=True)
+
+    first_cluster = True
+    for cid, g in full_df.groupby("cluster_id"):
+        cid = int(cid)
+        g = g.sort_values(sc)
+        c_list = g["name"].tolist()
+
+        # Validation & Logging (Requirement 11)
+        print(f"\n  Cluster {cid}")
+        print(f"    Feasible candidates: {len(g)}")
+        print(f"    Candidates: {c_list}")
+
+        rows = []
+        for _, r in g.iterrows():
+            pcm_name = str(r.get("name", "?")).strip()
+            # Clean display formatting for registered trademark if present
+            pcm_name = pcm_name.replace("savE\ufffd", "savE®").replace("savE?", "savE®")
+            for col in rank_cols:
+                if pd.notna(r.get(col)):
+                    rows.append({
+                        "Method": col.replace("_rank", "").upper(),
+                        "Rank": int(r[col]),
+                        "Name": pcm_name,
+                        "Cluster": cid
+                    })
+        ld = pd.DataFrame(rows)
+        if ld.empty:
+            continue
+
+        # Duplicate check (Requirement 5)
+        dups = ld.duplicated(subset=["Cluster", "Name", "Method"])
+        dup_count = dups.sum()
+        print(f"    Duplicate Cluster+PCM+Method rows: {dup_count}")
+        if dup_count > 0:
+            raise ValueError(f"Found {dup_count} duplicate Cluster+PCM+Method records in Cluster {cid}")
+
+        # Check every PCM has all 5 methods
+        for pcm in ld["Name"].unique():
+            methods_present = set(ld[ld["Name"] == pcm]["Method"])
+            if methods_present != expected_methods:
+                raise ValueError(f"PCM {pcm} in Cluster {cid} missing methods: {expected_methods - methods_present}")
+
+        # Interactive HTML (Plotly)
+        fig_bump_int = px.line(
+            ld, x="Method", y="Rank", color="Name", line_group="Name", markers=True,
+            title=f"Assam PCM - Rank Across MCDM Methods, Cluster {cid} ({len(g)} candidates)",
+            template="plotly_white", color_discrete_sequence=px.colors.qualitative.Light24
+        )
+        fig_bump_int.update_yaxes(autorange="reversed", title="Rank (1=best)")
+        fig_bump_int.update_layout(height=550, legend_title="PCM")
+        save_html(fig_bump_int, os.path.join(dir_p5, f"07_bump_chart_ranks_cluster_{cid}.html"))
+
+        # Static PNG (Matplotlib, matching Rajasthan reference style)
+        cands = ld["Name"].unique()
+        pal_cands = sns.color_palette("tab20", len(cands))
+        fig_bump, ax_b = plt.subplots(figsize=(13, 7))
+        for i, cand in enumerate(cands):
+            sub = ld[ld["Name"] == cand]
+            xs = [mo.index(m) for m in sub["Method"] if m in mo]
+            ys = sub["Rank"].tolist()
+            ax_b.plot(xs, ys, "-o", color=pal_cands[i], label=cand, lw=1.6, markersize=6)
+
+        ax_b.set_xticks(range(len(mo)))
+        ax_b.set_xticklabels(mo, fontsize=11)
+        ax_b.set_yticks(range(1, int(ld["Rank"].max()) + 1))
+        ax_b.invert_yaxis()
+        ax_b.set(
+            title=f"Assam - PCM Rank Across MCDM Methods (Bump Chart)\nCluster {cid} - {len(g)} feasible candidates",
+            ylabel="Rank (1=best)",
+            xlabel="Method"
+        )
+        ax_b.legend(
+            fontsize=8, ncol=1, loc="upper left", bbox_to_anchor=(1.02, 1.0),
+            title="PCM", title_fontsize=9, frameon=False
+        )
+        ax_b.grid(alpha=0.25)
+        plt.tight_layout()
+
+        cluster_png_path = os.path.join(dir_p5, f"07_bump_chart_ranks_cluster_{cid}.png")
+        save_fig(fig_bump, cluster_png_path)
+
+        # Sync to raw objective1 dir as well
+        shutil.copy2(cluster_png_path, os.path.join(raw_obj1_dir, f"07_bump_chart_ranks_cluster_{cid}.png"))
+        shutil.copy2(os.path.join(dir_p5, f"07_bump_chart_ranks_cluster_{cid}.html"),
+                     os.path.join(raw_obj1_dir, f"07_bump_chart_ranks_cluster_{cid}.html"))
+
+        # Save cluster 0 as primary 07_bump_chart_ranks for legacy compatibility
+        if first_cluster:
+            shutil.copy2(cluster_png_path, os.path.join(dir_p5, "07_bump_chart_ranks.png"))
+            shutil.copy2(os.path.join(dir_p5, f"07_bump_chart_ranks_cluster_{cid}.html"),
+                         os.path.join(dir_p5, "07_bump_chart_ranks.html"))
+            shutil.copy2(cluster_png_path, os.path.join(raw_obj1_dir, "07_bump_chart_ranks.png"))
+            shutil.copy2(os.path.join(dir_p5, f"07_bump_chart_ranks_cluster_{cid}.html"),
+                         os.path.join(raw_obj1_dir, "07_bump_chart_ranks.html"))
+            first_cluster = False
 
     # 08_method_rank_correlation_heatmap.png & interactive
     rc = [c for c in ["topsis_rank", "gra_rank", "promethee_rank", "vikor_rank"] if c in full_df.columns]

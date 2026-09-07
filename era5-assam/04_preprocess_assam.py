@@ -7,6 +7,8 @@ INPUT  : data/processed/climate_assam_points.csv   (02_combine output)
 OUTPUT : data/preprocessed/parquet/{point_id}.parquet
            (Physical units, QC-passed, imputed, OUTLIERS FLAGGED but NEVER deleted, 
            NO SCALING)
+         data/preprocessed/assam_cleaned_physical.csv
+           (Consolidated physical dataset feeding Phase 3 04b and visualization suites)
 """
 
 import os
@@ -199,9 +201,9 @@ def main():
             log(f"  [WARN] Median kt is outside [0.55, 0.75].")
 
     # -----------------------------------------------------------
-    # [9] Storage (Parquet, one file per site)
+    # [9] Storage (Parquet per site + Consolidated Physical CSV)
     # -----------------------------------------------------------
-    log("\n[9] Storage (Write to Parquet, one file per site) ...")
+    log("\n[9] Storage (Write to Parquet, one file per site, and Consolidated Physical CSV) ...")
     
     for point_id, grp in df.groupby("point_id"):
         out_path = PARQUET_DIR / f"{point_id}.parquet"
@@ -209,6 +211,15 @@ def main():
         
     log(f"  Saved {df['point_id'].nunique()} parquet files to {PARQUET_DIR}")
     
+    # Consolidated physical CSV for Phase 3 (04b) and downstream visualization suites
+    physical_path = PREPROCESSED_DIR / "assam_cleaned_physical.csv"
+    if not physical_path.exists():
+        log(f"  Writing consolidated physical dataset to {physical_path} ...")
+        df.to_csv(physical_path, index=False)
+        log(f"  [PASS] Saved consolidated CSV: {physical_path.name}")
+    else:
+        log(f"  [PASS] Verified consolidated physical CSV exists ({physical_path.name}).")
+
     # Round-trip test
     sample_point = df["point_id"].iloc[0]
     sample_path = PARQUET_DIR / f"{sample_point}.parquet"

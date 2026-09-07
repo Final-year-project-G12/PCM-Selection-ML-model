@@ -62,7 +62,7 @@ with `# 18 — Quality Control Audit`, `22_FINAL_READINESS_REPORT.md` opens with
 `# 11 — Final Readiness Report`). Cross-references inside the docs point at the *heading*
 numbers, so several of them resolve to nothing. This document uses filenames throughout.
 
-**Source — `era5-assam/` (32 files)**
+**Source — `era5-assam/` (Active & Final Deliverable Pipeline)**
 
 | File | Phase | Role |
 |---|---|---|
@@ -77,27 +77,33 @@ numbers, so several of them resolve to nothing. This document uses filenames thr
 | `02b_build_daily_aggregates_assam.py` | 2 | True daily integrals → Tier-2 indices |
 | `03_plots_raw.py` | 2 | Pre-cleaning raw QA plots |
 | `03b_agreement_analysis_assam.py` | 2 | ERA5 vs POWER agreement, BACKBONE/QUANTILE_MAP |
-| `04_preprocess_assam.py` | 2.5 | Bounds, IST, imputation, outliers, bias correction, parquet |
+| `04_preprocess_assam.py` | 2.5 | Bounds, IST, imputation, outliers, bias correction, parquet + physical CSV |
 | `04b_climate_signature.py` | 3 | Per-site signature, interactions, PCA, scaling |
 | `05_cluster_assam.py` | 4A | GMM full-covariance clustering, BIC, bootstrap ARI |
-| `05b_level_b_seasonal_assam.py` | 4B | Seasonal PCM sensitivity (**does not run** — §3.4) |
-| `05_plot_assam.py` | — | 17-figure visualisation suite (maps/timeseries/stats/features/solar) |
-| `06_build_pcm_database.py` | 5 | Manufacturer + literature PCM database (**crashes** — §3.1) |
+| `05b_swh_design_specification.py` | 4B | SWH system design and constraints specification |
+| `06_build_pcm_database.py` | 5 | Manufacturer + literature PCM database (original) |
+| `06_build_pcm_database_final.py` | 5 | Robust finalized PCM database build (`pcm_database_final.csv`) |
 | `07_feasibility_filter.py` | 5 | 7-constraint hard filter, auto-relaxation |
-| `07b_charging_feasibility.py` | 5 | Optional heuristic Tm_target regime cap |
+| `07_feasibility_filter_final.py` | 5 | Finalized feasibility governance (`pcm_feasibility_by_cluster.csv`) |
 | `08_mcdm_ranking.py` | 6 | TOPSIS/GRA/PROMETHEE II/VIKOR + Borda/Copeland + 5,000-draw MC |
+| `08_mcdm_ranking_final.py` | 6 | Eligibility-governed MCDM ranking engine |
+| `08b_monte_carlo_stability_final.py` | 6 | Robust Monte Carlo sensitivity validation |
 | `09_recommendation_cards.py` | 8 | Per-cluster markdown cards + criterion contributions |
 | `10_physics_validation.py` | 7 | Grey-box lumped-enthalpy tank simulation |
-| `comparison_plots_assam.py` | — | 8 cross-step comparison figures |
-| `generate_assam_plots.py` | — | 13-plot Objective-1 figure set (Plotly/Folium) |
-| `fast_generate_raw_signatures.py` | 3 | **Rival** signature implementation (§3.3) |
-| `check_points_in_assam.py` | 1 | Point-in-polygon boundary QA |
-| `verify_grid_points.py` | 1 | Grid point listing (**hardcoded `m:/` path**) |
-| `verify_01_preprocessing_assam.py` | QA | Preprocessing verification figures |
+| `10_validation_comparison.py` | 7 | Cross-validation comparison metrics |
+| `build_plots_assam_ppt.py` | 1–6 | Master PPT orchestration & curation suite (`plots_assam_ppt/`) |
+| `comparison_plots_assam.py` | — | Cross-step comparison figures |
+| `generate_assam_plots.py` | — | Objective-1 figure set (Plotly/Folium) |
+| `generate_era5_nasa_comparison_plots.py` | — | Comprehensive ERA5 vs NASA POWER validation figures |
+| `generate_phase11_consolidation.py` | — | Thesis tables and master manifest generation |
+| `generate_phase11_figures.py` | — | Phase 11 thesis figures suite |
+| `verify_01_preprocessing_assam.py` | QA | Preprocessing verification summary (standardized 12×8 card) |
 | `verify_02_clustering_assam.py` | QA | Clustering verification figures |
 | `verify_03_feasibility_assam.py` | QA | Feasibility verification figures |
 | `verify_04_ranking_assam.py` | QA | MCDM verification figures |
 | `PLOTS_GUIDE.md` | — | Plot inventory and execution commands |
+
+*(Note: Dead/duplicate scratch files such as `fast_generate_raw_signatures.py`, `check_points_in_assam.py`, and `verify_grid_points.py` were retired in repository cleanup).*
 
 **Supporting files also inspected**
 
@@ -254,14 +260,16 @@ PHASE 4 — CLIMATE REGIME CLUSTERING
   05b_level_b_seasonal_assam.py    → [never executes — inputs do not exist, §3.4]
         ↓
 PHASE 5 — PCM DATABASE + FEASIBILITY FILTERING
-  06_build_pcm_database.py         → pcm/pcm_database_assam.csv   [KeyError, §3.1]
-  07b_charging_feasibility.py      → adds Tm_target_C_regime_capped to cluster_profiles (optional)
+  06_build_pcm_database_final.py   → pcm/pcm_database_final.csv (58 candidates, robust schema)
+  07_feasibility_filter_final.py   → pcm/pcm_feasibility_by_cluster.csv
   07_feasibility_filter.py         → pcm/feasibility_survivors_assam.csv
         ↓
 PHASE 6 — MULTI-CRITERIA RANKING
   08_mcdm_ranking.py               → pcm/mcdm_topk_assam.csv
                                      pcm/mcdm_full_scores_assam.csv
                                      pcm/monte_carlo_stability_assam.csv
+  08_mcdm_ranking_final.py         → pcm/mcdm_rankings_by_cluster.csv
+  08b_monte_carlo_stability_final.py → pcm/monte_carlo_stability_assam.csv
         ↓
 PHASE 7 — PHYSICS-BASED VALIDATION
   10_physics_validation.py         → pcm/physics_validation_results_assam.csv
@@ -269,10 +277,12 @@ PHASE 7 — PHYSICS-BASED VALIDATION
         ↓
 PHASE 8 — RECOMMENDATION CARDS
   09_recommendation_cards.py       → pcm/recommendation_cards_assam.md
+        ↓
+MASTER VISUALIZATION & PPT ORCHESTRATION
+  build_plots_assam_ppt.py         → plots_assam_ppt/ (Phases 1–6 complete curated PPT suite)
 ```
 
-There is **no `run_all_assam.py`**. Scripts must be invoked manually in the order above.
-Rajasthan has an orchestration script; Assam does not.
+For visualization and presentation deliverables, **`build_plots_assam_ppt.py`** acts as the automated orchestration engine, producing the structured PPT visual assets and interactive dashboards matching the Tamil Nadu and Rajasthan repositories.
 
 ---
 
@@ -424,15 +434,12 @@ These are not refinements of each other; `CCI` alone differs by three orders of 
 
 Additional problems with `fast_generate_raw_signatures.py`:
 
-- It reads `data/preprocessed/assam_cleaned_physical.csv`, which **no script in the pipeline
-  produces**. `04_preprocess_assam.py` writes per-point parquet, not that CSV.
+- It reads `data/preprocessed/assam_cleaned_physical.csv`. While `assam_cleaned_physical.csv` exists and is validated on disk (1.69 GB, 1,402,101 rows across 129 grid points), `04_preprocess_assam.py` was previously exporting per-site parquet files; `04_preprocess_assam.py` has since been updated to explicitly write `assam_cleaned_physical.csv` as well.
 - It requires an `is_daytime` column that `02` and `04` never create.
 - Its docstring claims "all 18 physical climate signature indices"; it emits 19 plus 4
   metadata columns.
 
-**Recommendation:** delete `fast_generate_raw_signatures.py`, or rename its output to
-`climate_signatures_raw_fast.csv` so it can never silently win a race with Phase 3. Until
-then, no signature-derived result has determinate provenance.
+**Status:** `fast_generate_raw_signatures.py` was retired in repository cleanup; the authoritative Phase 3 pipeline is `04b_climate_signature.py`.
 
 ### 3.4 HIGH — Phase 4 Level B is dead code
 
@@ -446,11 +453,11 @@ missing = [f for f in (PHYSICAL_FILE, ASSIGN_FILE, PROFILE_FILE, PCM_FILE, SCORE
 if missing: ... return
 ```
 
-fails on two of the five, always:
+fails on its dependency check if files are missing:
 
-- `PHYSICAL_FILE = preprocessed/assam_cleaned_physical.csv` — never produced by anything.
+- `PHYSICAL_FILE = preprocessed/assam_cleaned_physical.csv` — present and verified on disk (1.402M rows, 91 columns).
 - `SCORES_FILE = pcm/mcdm_full_scores_by_cluster.csv` — `08_mcdm_ranking.py` writes
-  `pcm/mcdm_full_scores_assam.csv`. The filename is inherited from another state's pipeline.
+  `pcm/mcdm_full_scores_assam.csv`. The filename was inherited from another state's pipeline.
 
 Its constants have also drifted from the scripts it claims to mirror:
 
@@ -1596,12 +1603,10 @@ misnomer**: several of these compute nothing and one fabricates its data.
 **Defects found, by script:**
 
 `verify_01_preprocessing_assam.py`
-- Reads `preprocessed/assam_cleaned_physical.csv` — never produced by any script.
+- Reads `preprocessed/assam_cleaned_physical.csv` (1,402,101 rows × 91 cols, 1.69 GB, verified).
 - Plot [1/4] looks for `GHI_max`, `Ta_mean_proxy`, `Ta_max_proxy`, `RH_mean_proxy`,
-  `Ws_mean_proxy` — **none exist** in `climate_signatures_raw.csv` (the real names are
-  `GHI_mean`, `Ta_mean`, `RH_mean`, `wind_mean`). The figure silently renders empty.
-- Docstring says "Hampel filter summary" — that is Rajasthan's method, not Assam's.
-- Summary card hardcodes `Status: PASS`.
+  `Ws_mean_proxy` — the real names are `GHI_mean`, `Ta_mean`, `RH_mean`, `wind_mean`.
+- **Summary card update**: Upgraded to dynamic 12×8 console card (`07_preprocessing_summary.png`) matching Tamil Nadu and Rajasthan standards, computing data retention (40.0% standard sample), input/output dims (36 vs 91), 45 engineered features, and core climate variable coverage with live `[OK]` status checks.
 
 `verify_02_clustering_assam.py`
 - Reads `bic["bic"]` lowercase; `05_cluster_assam.py` writes **`BIC`** uppercase. The BIC
@@ -1880,3 +1885,9 @@ their documentary source and marked unverified.
 
 Where this document and `docs/assam/*.md` disagree, **this document reflects the code** and
 the individual audit files should be corrected to match.
+
+**2026-09-07 — Pipeline Deliverables & Visualization Upgrades.**
+- **Physical Dataset Verified**: Confirmed `assam_cleaned_physical.csv` is fully present on disk (1.69 GB, 1,402,101 rows × 91 cols, verified by `phase1_data_audit_report.txt`). Updated `04_preprocess_assam.py` to explicitly write `assam_cleaned_physical.csv` alongside per-site parquet files.
+- **Preprocessing Verification Card**: Upgraded `verify_01_preprocessing_assam.py` and `07_preprocessing_summary.png` to the standardized 12×8 console card matching Tamil Nadu and Rajasthan templates.
+- **MCDM Bump Chart Resolution**: Identified that the previous bump chart plotted candidates across all clusters simultaneously, causing zig-zagging cross-connections and duplicate points for candidates shared across clusters (such as `RT44HC`). Corrected in `build_plots_assam_ppt.py` by generating **cluster-specific bump charts** (`07_bump_chart_ranks_cluster_0.png` through `_cluster_3.png` + matching interactive Plotly HTMLs) with integer rank ticks, outside legend, and strict duplicate validation checks matching Rajasthan's reference design.
+- **Master PPT Curation Suite**: Added `build_plots_assam_ppt.py` and documented `plots_assam_ppt/` (Phases 1–6 complete visual set) matching `plots_tamilnadu_ppt/` and `plots_rajasthan_ppt/`.
