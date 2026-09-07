@@ -394,13 +394,14 @@ def build_all():
     print("\n--- [PHASE 5] 5 PCM Suitability Evaluation (MCDA)/Assam ---")
     pcm_db = pd.read_csv(PCM_DB_CSV)
     feas_df = pd.read_csv(FEAS_CSV)
+    feas_surv = feas_df[feas_df["passes_all"]] if "passes_all" in feas_df.columns else feas_df
     topk_df = ensure_ranks(pd.read_csv(TOPK_CSV))
     full_df = ensure_ranks(pd.read_csv(FULL_MCDM_CSV))
 
     # 03_melting_point_vs_latent_heat.png & interactive
     fig_sc, ax_sc = plt.subplots(figsize=(10, 6))
     ax_sc.scatter(pcm_db["Tm_C"], pcm_db["latent_heat_kJ_kg"], color="gray", alpha=0.5, s=60, label=f"Candidate Universe (n={len(pcm_db)})")
-    for cid, g in feas_df.groupby("cluster_id"):
+    for cid, g in feas_surv.groupby("cluster_id"):
         ax_sc.scatter(g["Tm_C"], g["latent_heat_kJ_kg"], color=PAL[int(cid)%len(PAL)], s=80, alpha=0.85, edgecolors="white", lw=0.5, label=f"Feasible - Cluster {cid}")
     ax_sc.set_xlabel("Melting Temperature Tm (°C)", fontsize=11)
     ax_sc.set_ylabel("Latent Heat of Fusion (kJ/kg)", fontsize=11)
@@ -410,8 +411,8 @@ def build_all():
     save_fig(fig_sc, os.path.join(dir_p5, "03_melting_point_vs_latent_heat.png"))
 
     fig_px_sc = px.scatter(
-        feas_df, x="Tm_C", y="latent_heat_kJ_kg", color=feas_df["cluster_id"].astype(str),
-        hover_data=["name", "TC_W_mK", "density_solid_kg_m3"] if "TC_W_mK" in feas_df.columns else ["name"],
+        feas_surv, x="Tm_C", y="latent_heat_kJ_kg", color=feas_surv["cluster_id"].astype(str),
+        hover_data=["name", "TC_W_mK", "density_solid_kg_m3"] if "TC_W_mK" in feas_surv.columns else ["name"],
         title="Assam - Feasible PCM Candidate Space (Tm vs Latent Heat)",
         labels={"Tm_C": "Melting Temp (°C)", "latent_heat_kJ_kg": "Latent Heat (kJ/kg)", "color": "Cluster"},
         template="plotly_white", color_discrete_sequence=px.colors.qualitative.Set1
@@ -426,12 +427,12 @@ def build_all():
     # 04_feasible_candidates_highlighted.png
     fig_fh, axes_fh = plt.subplots(1, 2, figsize=(16, 7))
     axes_fh[0].scatter(pcm_db["Tm_C"], pcm_db["latent_heat_kJ_kg"], color="#cccccc", s=40, alpha=0.6, label="All candidates", zorder=2)
-    for cid, g in feas_df.groupby("cluster_id"):
+    for cid, g in feas_surv.groupby("cluster_id"):
         axes_fh[0].scatter(g["Tm_C"], g["latent_heat_kJ_kg"], color=PAL[int(cid)%len(PAL)], s=80, alpha=0.9, edgecolors="black", lw=0.5, label=f"Feasible-C{cid}", zorder=3)
     axes_fh[0].set_title("All DB vs Feasible Survivors", fontweight="bold")
     axes_fh[0].set(xlabel="Melting Temp (°C)", ylabel="Latent Heat (kJ/kg)")
     axes_fh[0].legend(fontsize=8); axes_fh[0].grid(alpha=0.25)
-    for cid, g in feas_df.groupby("cluster_id"):
+    for cid, g in feas_surv.groupby("cluster_id"):
         axes_fh[1].scatter(g["Tm_C"], g["latent_heat_kJ_kg"], color=PAL[int(cid)%len(PAL)], s=70, alpha=0.85, edgecolors="white", lw=0.4, label=f"Cluster {cid}")
     axes_fh[1].set(title="Feasible Candidates by Cluster", xlabel="Melting Temp (°C)", ylabel="Latent Heat (kJ/kg)")
     axes_fh[1].legend(fontsize=9); axes_fh[1].grid(alpha=0.25)
@@ -440,7 +441,7 @@ def build_all():
     save_fig(fig_fh, os.path.join(dir_p5, "04_feasible_candidates_highlighted.png"))
 
     # 05_pcm_survivors_per_cluster_interactive.html
-    cnt = feas_df.groupby("cluster_id").size().reset_index(name="n")
+    cnt = feas_surv.groupby("cluster_id").size().reset_index(name="n")
     fig_surv = px.bar(
         cnt, x=cnt["cluster_id"].astype(str), y="n", text="n", color=cnt["cluster_id"].astype(str),
         title="Feasible PCM Candidates per Climate Regime (Assam)", template="plotly_white",
@@ -449,6 +450,20 @@ def build_all():
     )
     fig_surv.update_traces(textposition="outside")
     save_html(fig_surv, os.path.join(dir_p5, "05_pcm_survivors_per_cluster_interactive.html"))
+
+    # 05_pcm_survivors_per_cluster.png (static bar chart)
+    fig_bar, ax_bar = plt.subplots(figsize=(8, 5))
+    bar_colors = [PAL[int(c)%len(PAL)] for c in cnt["cluster_id"]]
+    bars = ax_bar.bar(cnt["cluster_id"].astype(str), cnt["n"], color=bar_colors, edgecolor="white", lw=0.8)
+    ax_bar.set_xlabel("Cluster ID", fontweight="bold")
+    ax_bar.set_ylabel("Feasible PCM Count", fontweight="bold")
+    ax_bar.set_title("Assam - Feasible PCM Candidates per Climate Regime", fontweight="bold", fontsize=12)
+    ax_bar.grid(alpha=0.3, axis="y")
+    for b in bars:
+        h = b.get_height()
+        ax_bar.text(b.get_x() + b.get_width()/2, h + 0.1, str(int(h)), ha="center", fontweight="bold")
+    plt.tight_layout()
+    save_fig(fig_bar, os.path.join(dir_p5, "05_pcm_survivors_per_cluster.png"))
 
     # 05_property_distributions.png
     shutil.copy2(os.path.join(BASE_DIR, "data", "plots", "verify_feasibility", "05_property_distributions.png"),
@@ -588,6 +603,40 @@ def build_all():
         title="Assam - Spearman rho Between MCDM Ranking Methods", template="plotly_white"
     )
     save_html(fig_px_corr, os.path.join(dir_p5, "08_method_rank_correlation_heatmap_interactive.html"))
+
+    # 09_monte_carlo_top3_probability.png & interactive
+    if os.path.exists(MC_CSV):
+        mc_df = pd.read_csv(MC_CSV)
+        if "top3_inclusion_probability" in mc_df.columns:
+            m_top = mc_df.sort_values("top3_inclusion_probability", ascending=False).copy()
+            scale = 100 if m_top["top3_inclusion_probability"].max() <= 1.0 else 1
+            m_top["prob_pct"] = m_top["top3_inclusion_probability"] * scale
+            fig_mc, ax_mc = plt.subplots(figsize=(12, 7))
+            mc_colors = [PAL[int(c)%len(PAL)] for c in m_top["cluster_id"]]
+            y_pos = list(range(len(m_top)))
+            bars_mc = ax_mc.barh(y_pos, m_top["prob_pct"], color=mc_colors, edgecolor="white", lw=0.8)
+            ax_mc.set_yticks(y_pos)
+            ax_mc.set_yticklabels([f"{n} (C{int(c)})" for n, c in zip(m_top["name"], m_top["cluster_id"])], fontsize=9)
+            ax_mc.set_xlabel("Top-3 Inclusion Probability (%)", fontweight="bold")
+            ax_mc.set_title("Assam - Monte Carlo Top-3 Inclusion Probability\n(5,000 draws per cluster)", fontsize=13, fontweight="bold")
+            ax_mc.axvline(80, color="green", ls="--", label="High confidence (80%)")
+            ax_mc.axvline(50, color="orange", ls="--", label="Moderate (50%)")
+            ax_mc.legend(fontsize=9)
+            ax_mc.grid(alpha=0.3, axis="x")
+            for b in bars_mc:
+                w = b.get_width()
+                ax_mc.text(w + 0.5, b.get_y() + b.get_height()/2, f"{w:.1f}%", va="center", fontsize=8)
+            plt.tight_layout()
+            save_fig(fig_mc, os.path.join(dir_p5, "09_monte_carlo_top3_probability.png"))
+
+            fig_px_mc = px.bar(
+                m_top, x="prob_pct", y="name", color=m_top["cluster_id"].astype(str), orientation="h",
+                title="Assam - Monte Carlo Top-3 Inclusion Probability (5,000 draws)", template="plotly_white",
+                labels={"prob_pct": "Top-3 Inclusion Probability (%)", "name": "PCM Candidate", "color": "Cluster"},
+                color_discrete_sequence=px.colors.qualitative.Set1
+            )
+            fig_px_mc.update_layout(height=600)
+            save_html(fig_px_mc, os.path.join(dir_p5, "09_monte_carlo_top3_probability_interactive.html"))
 
     # 10_rank_reversal_violin_bar.png & interactive
     full_df["rank_spread"] = full_df[rc].max(axis=1) - full_df[rc].min(axis=1)
