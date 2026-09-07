@@ -22,8 +22,10 @@ CLUSTERS     = os.path.join(BASE,"data","processed","clustering","cluster_assign
 PCM_DB       = os.path.join(BASE,"data","processed","pcm","pcm_database_tamilnadu.csv")
 FEASIBILITY  = os.path.join(BASE,"data","processed","pcm","feasibility_survivors_by_cluster.csv")
 TOPK         = os.path.join(BASE,"data","processed","pcm","mcdm_topk_by_cluster.csv")
+FULL_SCORES  = os.path.join(BASE,"data","processed","pcm","mcdm_full_scores_by_cluster.csv")
 MC_STABILITY = os.path.join(BASE,"data","processed","pcm","monte_carlo_stability.csv")
 PHYS_VAL     = os.path.join(BASE,"data","processed","pcm","physics_validation_results.csv")
+PHYS_SPEARMAN= os.path.join(BASE,"data","processed","pcm","physics_validation_spearman.csv")
 OUT          = os.path.join(BASE,"data","plots","tamilnadu_objective1")
 os.makedirs(OUT, exist_ok=True)
 
@@ -204,13 +206,29 @@ def p06():
 # ---- Plot 7: Bump Chart ----
 def p07():
     print("[7/13] Bump Chart - ranks across methods")
-    df=load(TOPK,"topk")
+    # BUG FIX: this used to load mcdm_topk_by_cluster.csv (Top-3-PER-CLUSTER
+    # only, 15 rows total for 5 clusters) and take a single global
+    # .head(12) sorted by consensus_rank. Since consensus_rank resets to
+    # 1/2/3 within EACH cluster, that global sort just grouped all 5
+    # rank-1 rows first, then all 5 rank-2 rows, etc. — so 5 of the 12
+    # rows were always the single statewide rank-1 PCM (n-Octacosane C28
+    # in this run) repeated once per cluster, capping the chart at
+    # whatever small number of names happen to occupy ranks 1-3 anywhere
+    # (4, in this run) regardless of the "(Top 12)" label. That undercount
+    # was real, not caused by a plotting error, but the SOURCE was too
+    # narrow to show it: mcdm_full_scores_by_cluster.csv has every
+    # feasibility survivor (9-15 per cluster), not just the top 3. Reading
+    # from there and taking the top-N PER CLUSTER (not a global top-12)
+    # surfaces the actual rank movement further down the list.
+    df=load(FULL_SCORES,"full_scores")
+    if df is None: df=load(TOPK,"topk")   # fallback if full-scores file is missing
     if df is None: return
     df=ensure_ranks(df)
     rank_cols=[c for c in MRANK if c in df.columns]
     if not rank_cols: return
     sc="consensus_rank" if "consensus_rank" in df.columns else rank_cols[0]
-    top=df.sort_values(sc).head(12).copy()
+    per_cluster_depth=5   # top-5 per cluster, not a global head(12)
+    top=df[df[sc]<=per_cluster_depth].sort_values(["cluster_id",sc]).copy()
     rows=[]
     for _,r in top.iterrows():
         for col in rank_cols:
@@ -218,20 +236,62 @@ def p07():
                 rows.append({"Method":col.replace("_rank","").upper(),"Rank":r[col],"Name":r.get("name","?"),"Cluster":str(int(r.get("cluster_id",0)))})
     ld=pd.DataFrame(rows)
     if ld.empty: return
-    fig=px.line(ld,x="Method",y="Rank",color="Name",line_group="Name",markers=True,hover_data=["Cluster"],
-                title="Tamil Nadu PCM - Rank Across MCDM Methods (Top 12)",template="plotly_white",
-                color_discrete_sequence=px.colors.qualitative.Light24)
+    mo=[c.replace("_rank","").upper() for c in rank_cols]
+
+    # BUG FIX: the same PCM (e.g. n-Octacosane C28) survives in multiple
+    # clusters with a DIFFERENT rank in each. Grouping/coloring by "Name"
+    # alone (as before) made one connected line jump back and forth
+    # between each cluster's rank value at every method — visually a
+    # tangled clump, not 5 separate per-cluster stories. Fix: give every
+    # (Name, Cluster) pair its own line ("Series"), keep color keyed to
+    # Name so the same PCM is still recognisable by color across the
+    # clusters it appears in, and put Cluster in the legend text so it's
+    # unambiguous which line belongs to which cluster.
+    ld["Series"]=ld["Name"]+" — C"+ld["Cluster"]
+
+    # ---- Combined chart (all clusters together, now with separated lines) ----
+    fig=px.line(ld,x="Method",y="Rank",color="Name",line_group="Series",markers=True,
+                hover_data=["Cluster","Name"],
+                title=f"Tamil Nadu PCM - Rank Across MCDM Methods, All Clusters (Top {per_cluster_depth} per Cluster)",
+                template="plotly_white",color_discrete_sequence=px.colors.qualitative.Light24)
     fig.update_yaxes(autorange="reversed",title="Rank (1=best)"); fig.update_layout(height=550,legend_title="PCM")
     shtml(fig,"07_bump_chart_ranks.html")
-    mo=[c.replace("_rank","").upper() for c in rank_cols]; cands=ld["Name"].unique()
-    pal=sns.color_palette("tab20",len(cands)); fig_s,ax_s=plt.subplots(figsize=(12,7))
-    for i,cand in enumerate(cands):
-        sub=ld[ld["Name"]==cand]
-        xs=[mo.index(m) for m in sub["Method"] if m in mo]; ys=sub["Rank"].tolist()
-        ax_s.plot(xs,ys,"-o",color=pal[i],label=cand,lw=1.6,markersize=6)
+
+    pal_names=list(ld["Name"].unique()); cmap=dict(zip(pal_names,sns.color_palette("tab20",len(pal_names))))
+    ls_cycle=["-","--","-.",":"]; cid_list=sorted(ld["Cluster"].unique(),key=lambda c:int(c))
+    ls_map={cid:ls_cycle[i%len(ls_cycle)] for i,cid in enumerate(cid_list)}
+    fig_s,ax_s=plt.subplots(figsize=(12,7))
+    for (cand,cid),sub in ld.groupby(["Name","Cluster"]):
+        sub=sub.set_index("Method").reindex(mo).dropna(subset=["Rank"])
+        xs=[mo.index(m) for m in sub.index]; ys=sub["Rank"].tolist()
+        ax_s.plot(xs,ys,marker="o",linestyle=ls_map[cid],color=cmap[cand],label=f"{cand} — C{cid}",lw=1.6,markersize=6)
     ax_s.set_xticks(range(len(mo))); ax_s.set_xticklabels(mo,fontsize=11); ax_s.invert_yaxis()
-    ax_s.set(title="Tamil Nadu - PCM Rank Across MCDM Methods (Bump Chart)",ylabel="Rank (1=best)",xlabel="Method")
-    ax_s.legend(fontsize=7,ncol=2,loc="upper right"); ax_s.grid(alpha=0.25); sfig("07_bump_chart_ranks.png")
+    ax_s.set(title="Tamil Nadu - PCM Rank Across MCDM Methods, All Clusters (Bump Chart)\n(same PCM = same color; linestyle = cluster)",
+             ylabel="Rank (1=best)",xlabel="Method")
+    ax_s.legend(fontsize=6,ncol=2,loc="upper right"); ax_s.grid(alpha=0.25); sfig("07_bump_chart_ranks.png")
+
+    # ---- NEW: one bump chart per cluster ----
+    print("  + per-cluster bump charts:")
+    for cid in cid_list:
+        sub_ld=ld[ld["Cluster"]==cid]
+        if sub_ld.empty: continue
+        fig_c=px.line(sub_ld,x="Method",y="Rank",color="Name",line_group="Name",markers=True,
+                      title=f"Tamil Nadu PCM - Rank Across MCDM Methods — Cluster {cid} (Top {per_cluster_depth})",
+                      template="plotly_white",color_discrete_sequence=px.colors.qualitative.Light24)
+        fig_c.update_yaxes(autorange="reversed",title="Rank (1=best)"); fig_c.update_layout(height=500,legend_title="PCM")
+        shtml(fig_c,f"07_bump_chart_ranks_cluster{cid}.html")
+
+        cands_c=sub_ld["Name"].unique(); pal_c=sns.color_palette("tab10",len(cands_c))
+        fig_sc,ax_sc=plt.subplots(figsize=(9,6))
+        for i,cand in enumerate(cands_c):
+            s2=sub_ld[sub_ld["Name"]==cand].set_index("Method").reindex(mo).dropna(subset=["Rank"])
+            xs=[mo.index(m) for m in s2.index]; ys=s2["Rank"].tolist()
+            ax_sc.plot(xs,ys,"-o",color=pal_c[i],label=cand,lw=1.8,markersize=7)
+        ax_sc.set_xticks(range(len(mo))); ax_sc.set_xticklabels(mo,fontsize=11); ax_sc.invert_yaxis()
+        ax_sc.set(title=f"Tamil Nadu - PCM Rank Across MCDM Methods — Cluster {cid}",ylabel="Rank (1=best)",xlabel="Method")
+        ax_sc.legend(fontsize=8,loc="upper right"); ax_sc.grid(alpha=0.25)
+        sfig(f"07_bump_chart_ranks_cluster{cid}.png")
+        print(f"    07_bump_chart_ranks_cluster{cid}.png/.html")
 
 # ---- Plot 8: Method Correlation Heatmap ----
 def p08():
@@ -335,21 +395,105 @@ def p11():
     else:
         mg=topk.copy(); xc,xl=("topsis_rank","TOPSIS Rank") if "topsis_rank" in topk.columns else ("consensus_rank","Consensus Rank")
     if "consensus_rank" not in mg.columns or xc not in mg.columns: return
+    # BUG FIX: multiple clusters routinely land on the EXACT SAME
+    # (sim_rank, consensus_rank) integer coordinate — in this run, e.g.
+    # clusters {0,2} both sit at (1,1)/(2,2)/(3,3) and clusters {3,4}
+    # overlap at (2,3), because clusters 1&4 (and 2&3) have near-identical
+    # feasibility/MCDM outcomes (see CHANGELOG). Plotting them at their
+    # literal integer coordinates means whichever cluster is drawn LAST
+    # completely hides the others underneath it — the earlier clusters
+    # weren't missing from the data, just invisible under a later marker
+    # of a different color. Add a small deterministic per-cluster offset
+    # (jitter) purely for display so every cluster's marker stays visible;
+    # the true integer ranks are still shown in the hover text / by using
+    # the gridlines, not the jittered position.
+    cids_sorted=sorted(mg["cluster_id"].dropna().unique())
+    n_c=max(len(cids_sorted),1)
+    jitter={cid:(i-(n_c-1)/2)*0.10 for i,cid in enumerate(cids_sorted)}
+    mg["_x_j"]=mg.apply(lambda r: r[xc]+jitter.get(r["cluster_id"],0.0) if pd.notna(r[xc]) else r[xc], axis=1)
+    mg["_y_j"]=mg.apply(lambda r: r["consensus_rank"]+jitter.get(r["cluster_id"],0.0) if pd.notna(r["consensus_rank"]) else r["consensus_rank"], axis=1)
     fig,ax=plt.subplots(figsize=(10,8))
     for cid,g in mg.groupby("cluster_id"):
         v=g[[xc,"consensus_rank"]].notna().all(axis=1)
-        ax.scatter(g.loc[v,xc],g.loc[v,"consensus_rank"],color=PAL[int(cid)%len(PAL)],s=80,alpha=0.8,edgecolors="white",lw=0.5,label=f"Cluster {cid}")
+        ax.scatter(g.loc[v,"_x_j"],g.loc[v,"_y_j"],color=PAL[int(cid)%len(PAL)],s=80,alpha=0.85,edgecolors="white",lw=0.5,label=f"Cluster {cid}")
     mx=max(mg[xc].max(),mg["consensus_rank"].max())
     ax.plot([1,mx],[1,mx],"r--",lw=1.5,label="Perfect agreement")
-    ax.set(xlabel=xl,ylabel="MCDM Consensus Rank",title="Tamil Nadu - Simulated Performance vs MCDM Consensus Rank\n(per Climate Regime)")
+    ax.set(xlabel=xl,ylabel="MCDM Consensus Rank",
+           title="Tamil Nadu - Simulated Performance vs MCDM Consensus Rank\n(per Climate Regime; points jittered slightly to reveal exact overlaps)")
     ax.legend(fontsize=9); ax.grid(alpha=0.25); sfig("11_agreement_plot.png")
-    fig_px=px.scatter(mg,x=xc,y="consensus_rank",color=mg["cluster_id"].astype(str),
-                      hover_data=["name"] if "name" in mg.columns else None,
-                      title=f"Agreement: {xl} vs MCDM Consensus Rank (Tamil Nadu)",template="plotly_white",
-                      labels={xc:xl,"consensus_rank":"Consensus Rank","color":"Cluster"},
+    fig_px=px.scatter(mg,x="_x_j",y="_y_j",color=mg["cluster_id"].astype(str),
+                      hover_data={"name":True,xc:True,"consensus_rank":True,"_x_j":False,"_y_j":False} if "name" in mg.columns else {xc:True,"consensus_rank":True,"_x_j":False,"_y_j":False},
+                      title=f"Agreement: {xl} vs MCDM Consensus Rank (Tamil Nadu)<br><sup>Points jittered slightly so exactly-overlapping clusters both stay visible — hover for true integer ranks</sup>",
+                      template="plotly_white",
+                      labels={"_x_j":xl,"_y_j":"Consensus Rank","color":"Cluster"},
                       color_discrete_sequence=px.colors.qualitative.Set1)
     rng=list(range(1,int(mx)+2)); fig_px.add_trace(go.Scatter(x=rng,y=rng,mode="lines",line=dict(dash="dash",color="red",width=1.5),name="Perfect agreement"))
     fig_px.update_layout(height=600); shtml(fig_px,"11_agreement_plot_interactive.html")
+
+# ---- Plot 11b: Physics Validation vs MCDM, all clusters on one page ----
+def p11b():
+    print("[11b/13] Physics validation vs MCDM - all clusters, one page")
+    phys=load(PHYS_VAL,"phys_val"); rho=load(PHYS_SPEARMAN,"phys_spearman")
+    if phys is None or not {"cluster_id","name","consensus_rank","annual_solar_fraction"}.issubset(phys.columns):
+        print("  skip: physics_validation_results.csv missing required columns"); return
+    rho_map={}
+    if rho is not None and {"cluster_id","spearman_rho"}.issubset(rho.columns):
+        rho_map={int(r["cluster_id"]):r["spearman_rho"] for _,r in rho.iterrows()}
+    band_lo,band_hi=0.54,0.84
+    cids=sorted(phys["cluster_id"].dropna().unique().astype(int))
+    n=len(cids)
+    ncols=3; nrows=int(np.ceil(n/ncols)) if n else 1
+
+    # ---- Interactive: one HTML page, one subplot panel per cluster ----
+    subplot_titles=[f"Cluster {c}" + (f"  (ρ={rho_map[c]:.3f})" if c in rho_map else "") for c in cids]
+    fig=make_subplots(rows=nrows,cols=ncols,subplot_titles=subplot_titles,
+                      shared_yaxes=True,vertical_spacing=0.12,horizontal_spacing=0.06)
+    for i,c in enumerate(cids):
+        r,cc=i//ncols+1,i%ncols+1
+        g=phys[phys["cluster_id"]==c].sort_values("consensus_rank")
+        in_band=g.get("in_benchmark_band_54_84pct",pd.Series(False,index=g.index)).astype(bool)
+        fig.add_shape(type="rect",x0=0.5,x1=g["consensus_rank"].max()+0.5 if len(g) else 1.5,
+                      y0=band_lo,y1=band_hi,fillcolor="green",opacity=0.08,line_width=0,row=r,col=cc)
+        fig.add_trace(go.Scatter(x=g.loc[in_band,"consensus_rank"],y=g.loc[in_band,"annual_solar_fraction"],
+                                 mode="markers",marker=dict(color="#2ca02c",size=10,symbol="circle"),
+                                 name="In 54-84% band",legendgroup="in",showlegend=(i==0),
+                                 text=g.loc[in_band,"name"],hovertemplate="%{text}<br>rank=%{x}<br>SF=%{y:.1%}<extra></extra>"),
+                     row=r,col=cc)
+        fig.add_trace(go.Scatter(x=g.loc[~in_band,"consensus_rank"],y=g.loc[~in_band,"annual_solar_fraction"],
+                                 mode="markers",marker=dict(color="#d62728",size=10,symbol="x"),
+                                 name="Outside band",legendgroup="out",showlegend=(i==0),
+                                 text=g.loc[~in_band,"name"],hovertemplate="%{text}<br>rank=%{x}<br>SF=%{y:.1%}<extra></extra>"),
+                     row=r,col=cc)
+        fig.update_xaxes(title_text="MCDM Consensus Rank",dtick=1,row=r,col=cc)
+        fig.update_yaxes(title_text="Simulated Solar Fraction" if cc==1 else None,tickformat=".0%",row=r,col=cc)
+    fig.update_layout(height=340*nrows+80,width=1150,template="plotly_white",
+                      title_text="Tamil Nadu - Physics-Simulated Solar Fraction vs MCDM Consensus Rank, All Clusters"
+                                  "<br><sup>Shaded band = published 54-84% benchmark range; ρ = per-cluster Spearman correlation "
+                                  "(consensus rank vs simulated solar fraction)</sup>")
+    shtml(fig,"11b_physics_vs_mcdm_all_clusters.html")
+
+    # ---- Static: matching subplot grid, one PNG ----
+    fig_s,axes=plt.subplots(nrows,ncols,figsize=(5*ncols,4.2*nrows),squeeze=False)
+    for i,c in enumerate(cids):
+        ax=axes[i//ncols][i%ncols]
+        g=phys[phys["cluster_id"]==c].sort_values("consensus_rank")
+        in_band=g.get("in_benchmark_band_54_84pct",pd.Series(False,index=g.index)).astype(bool)
+        ax.axhspan(band_lo,band_hi,color="green",alpha=0.08,label="54-84% benchmark" if i==0 else None)
+        ax.scatter(g.loc[in_band,"consensus_rank"],g.loc[in_band,"annual_solar_fraction"],
+                  color="#2ca02c",s=70,marker="o",label="In band" if i==0 else None,edgecolors="white",lw=0.5)
+        ax.scatter(g.loc[~in_band,"consensus_rank"],g.loc[~in_band,"annual_solar_fraction"],
+                  color="#d62728",s=70,marker="x",label="Outside band" if i==0 else None)
+        title=f"Cluster {c}"+(f"  (ρ={rho_map[c]:.3f})" if c in rho_map else "")
+        ax.set_title(title,fontsize=10); ax.set_xlabel("MCDM Consensus Rank")
+        if i%ncols==0: ax.set_ylabel("Simulated Solar Fraction")
+        ax.set_xticks(sorted(g["consensus_rank"].unique())); ax.grid(alpha=0.25)
+        ax.yaxis.set_major_formatter(plt.matplotlib.ticker.PercentFormatter(xmax=1.0))
+    for j in range(n,nrows*ncols):
+        axes[j//ncols][j%ncols].axis("off")
+    handles,labels=axes[0][0].get_legend_handles_labels()
+    fig_s.legend(handles,labels,loc="upper right",fontsize=9)
+    plt.suptitle("Tamil Nadu - Physics-Simulated Solar Fraction vs MCDM Consensus Rank, All Clusters",fontsize=13)
+    plt.tight_layout(rect=[0,0,1,0.96]); sfig("11b_physics_vs_mcdm_all_clusters.png")
 
 # ---- Plot 12: Tank Temperature / Melt Fraction ----
 def p12():
@@ -414,5 +558,5 @@ def p13():
 
 if __name__=="__main__":
     print("="*65); print("Tamil Nadu PCM Pipeline - Objective 1 Plot Generator"); print(f"Output: {OUT}"); print("="*65)
-    p01(); p02(); p03(); p04(); p05(); p06(); p07(); p08(); p09(); p10(); p11(); p12(); p13()
+    p01(); p02(); p03(); p04(); p05(); p06(); p07(); p08(); p09(); p10(); p11(); p11b(); p12(); p13()
     print("\n"+"="*65); print(f"All plots saved to: {OUT}"); print("="*65)

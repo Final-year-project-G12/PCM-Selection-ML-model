@@ -18,6 +18,18 @@ try:
     raw = pd.read_csv(RAW, nrows=500000)
     pre = pd.read_csv(PRE, nrows=200000)
     print(f"  Raw: {raw.shape}  Pre: {pre.shape}")
+    # BUG FIX: raw/pre above are truncated to fixed nrows "for speed" (used
+    # for the distribution/correlation plots, which don't need every row).
+    # Using their truncated lengths to compute a "data retention %" compared
+    # two unrelated, independently-chosen row caps (500k vs 200k = a fake
+    # 40%) rather than actual retention. Count real full-file row counts
+    # separately, cheaply (no column parsing), for that one stat.
+    with open(RAW, encoding="utf-8") as f:
+        raw_n_full = sum(1 for _ in f) - 1
+    with open(PRE, encoding="utf-8") as f:
+        pre_n_full = sum(1 for _ in f) - 1
+    print(f"  Full raw rows: {raw_n_full:,}  Full preprocessed rows: {pre_n_full:,}  "
+          f"(true retention: {100*pre_n_full/raw_n_full:.2f}%)")
 except FileNotFoundError as e:
     print(f"ERROR: {e}"); raise SystemExit(1)
 
@@ -87,7 +99,7 @@ plt.tight_layout(); plt.savefig(os.path.join(OUT,"06_data_quality_metrics.png"),
 
 # 7. Summary text
 fig,ax=plt.subplots(figsize=(12,8))
-txt=f"PREPROCESSING VERIFICATION SUMMARY (Tamil Nadu)\n{'='*60}\nInput records: {len(raw):,}\nOutput records: {len(pre):,}\nData retention: {100*len(pre)/len(raw):.1f}%\nInput dims: {raw.shape[1]}   Output dims: {pre.shape[1]}\nEngineered features: {len(eng)}\n\nData Quality:\n"
+txt=f"PREPROCESSING VERIFICATION SUMMARY (Tamil Nadu)\n{'='*60}\nInput records (full file): {raw_n_full:,}\nOutput records (full file): {pre_n_full:,}\nData retention: {100*pre_n_full/raw_n_full:.1f}%\n(Plots below sample the first {len(raw):,}/{len(pre):,} rows for speed)\nInput dims: {raw.shape[1]}   Output dims: {pre.shape[1]}\nEngineered features: {len(eng)}\n\nData Quality:\n"
 for v in av:
     cov_v=100*(1-pre[v].isna().sum()/len(pre)); ok="OK" if cov_v>95 else ("Fair" if cov_v>90 else "WARN")
     txt+=f"  {v}: {cov_v:.1f}%  [{ok}]\n"

@@ -52,6 +52,19 @@ from config import PROCESSED_DIR
 
 # EDIT THIS PATH to wherever PCM_Properties_cleaned_mice_pmm_detailed.csv
 # actually sits after you unzip PCM_data (2).zip.
+#
+# LOCATION NOTE (verified 2026, during the v3.2 audit): the CDS/zip-style
+# extraction actually produced a doubly-nested PCM_data/PCM_data/data/
+# folder — that nested path (alongside PCM_data/PCM_data/01_preprocess.py,
+# the script that actually GENERATES this file) is the real source of
+# truth. The path below is a flat, non-nested COPY kept in sync with it
+# (same pattern as the Rajasthan pipeline's equivalent fix) so this
+# script doesn't have to reach into the nested folder. Verified
+# byte-identical (md5 cf351cc4...) to
+# PCM_data/PCM_data/data/PCM_Properties_cleaned_mice_pmm_detailed.csv as
+# of this note. If you ever regenerate this file by re-running
+# PCM_data/PCM_data/01_preprocess.py, copy its OUT_DETAILED output here
+# too, or this script will read a stale copy.
 INPUT_CSV = PROCESSED_DIR.parent.parent / "PCM_data" / "data" / "PCM_Properties_cleaned_mice_pmm_detailed.csv"
 
 OUT_DIR = PROCESSED_DIR / "pcm"
