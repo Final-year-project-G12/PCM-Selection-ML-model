@@ -35,7 +35,7 @@ Rank the surviving PCM candidates in each cluster using four independent multi-c
 - In the current run, `n-Octacosane (C28)` is the consensus rank-1 PCM in all five clusters. This is a statewide consensus result; it does not imply that all alternatives have equal stability or physical performance.
 
 ## Status
-**COMPLETE**
+**Analysis COMPLETE (62-PCM run) — clean re-run PENDING.** `08` runs without error (it does not import the symbols that were missing from `config.py`). The completed outputs — `mcdm_topk_by_cluster.csv` (15 rows), `mcdm_full_scores_by_cluster.csv`, `monte_carlo_stability.csv` — are in `data/processed/processed/pcm/`; the canonical `data/processed/pcm/` tree holds the superseded 25-PCM run's `mcdm_topk_by_cluster.csv`. Re-run after the upstream chain to regenerate in place. See `20_IMPLEMENTATION_ISSUES.md` §7.
 
 ## Literature Support
 | Component | Reference | Source |

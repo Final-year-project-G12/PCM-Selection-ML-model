@@ -7,12 +7,14 @@ exactly as if you'd typed `python <script>.py` for each one yourself in
 sequence (no shared Python process, no import side effects between
 stages — each script starts fresh, same as running it manually).
 
-Order and dependencies below are taken directly from this folder's own
-PIPELINE_FILE_GUIDE.md ("Quick what do I run and in what order recap"),
-cross-checked against each script's actual file I/O — not just filename
-numbering (numbering is NOT always run order: `10_physics_validation.py`
-must run before `09_recommendation_cards.py`, since 09 is pure aggregation
-that includes 10's simulated-solar-fraction output when present).
+Order and dependencies below are derived from each script's actual file
+I/O and cross-checked against docs/tamilnadu/00_MASTER_OVERVIEW.md and
+docs/tamilnadu/21_REPRODUCIBILITY.md — not just filename numbering
+(numbering is NOT always run order: `10_physics_validation.py` must run
+before `09_recommendation_cards.py`, since 09 is pure aggregation that
+includes 10's simulated-solar-fraction output when present; and
+`11_level_b_seasonal_analysis.py` runs LAST because it reads 08's
+mcdm_full_scores_by_cluster.csv).
 
 REQUIRED LIBRARIES: none beyond the standard library (subprocess/pathlib/
 argparse/time) — this file itself has no third-party dependencies. Each
@@ -29,22 +31,19 @@ group below):
   anything useful. Launch it yourself, separately, whenever you want the
   live exploration app.
   05_cluster_regions.py
-  — per PIPELINE_FILE_GUIDE.md, this is the original 4-state (TN + RJ +
-  Assam + Uttarakhand) design, "not currently used", and does not
-  currently exist in this folder.
+  — the original 4-state (TN + RJ + Assam + Uttarakhand) design, "not
+  currently used", and does not exist in this folder. The single-state
+  05_cluster_tamilnadu.py replaces it for Objective 1.
 
-KNOWN GAP — read before running the CORE chain unattended:
-  `06_build_pcm_database.py` reads
-  `PCM_data/data/PCM_Properties_cleaned_mice_pmm_detailed.csv` (a sibling
-  of this folder, produced by a separate mini-pipeline,
-  `PCM_data/01_preprocess.py`, which this runner does NOT run — it lives
-  outside era5-tamilnadu-pipeline/ and tamilnadu_pipeline/). As of writing,
-  that exact file does not exist anywhere in this repo (only a
-  differently-named/differently-nested variant does) — so 06 will FAIL
-  with a clear FileNotFoundError-style message until that file is in
-  place. This is a genuine, currently-unresolved data gap, not a bug in
-  this runner; everything through step 05/11 (Phases 1-4) will still
-  succeed independently.
+INPUT DATA — read before running the CORE chain unattended:
+  `06_build_pcm_database.py` reads the shared MICE+RF+PMM PCM properties
+  file `PCM_data/data/PCM_Properties_cleaned_mice_pmm_detailed.csv`,
+  produced by the separate mini-pipeline `PCM_data/PCM_data/01_preprocess.py`
+  which this runner does NOT run. That file is present at the repository
+  root (PCM-Selection-ML-model/PCM_data/data/, 55 manufacturer rows) and
+  06's INPUT_CSV now resolves to it. If it is ever missing, 06 fails with
+  a clear FileNotFoundError; everything through step 05 (Phases 1-4) still
+  succeeds independently.
 
 ORDER AND WHY (CORE stages — required, this runner STOPS at the first
 failure since every later stage reads an earlier stage's output, EXCEPT
@@ -73,36 +72,39 @@ failure since every later stage reads an earlier stage's output, EXCEPT
                                        reading bic_selection_tamilnadu.csv
                                        — this runner just runs whatever
                                        K_FINAL is currently set to)
-  6.  11_level_b_seasonal_analysis.py — Phase 4: seasonal Top-k re-ranking
-                                       within each cluster (documented as
-                                       part of Phase 4's official output
-                                       alongside 05, unlike the purely
-                                       interactive 05b/05c/05d below)
-  7.  06_build_pcm_database.py      — Phase 5: builds the PCM candidate
+  6.  06_build_pcm_database.py      — Phase 5: builds the PCM candidate
                                        database -> pcm_database_
-                                       tamilnadu.csv (see KNOWN GAP above)
-  8.  07b_charging_feasibility.py   — Phase 5, OPTIONAL: adds a regime-
+                                       tamilnadu.csv (55 manufacturer + 7
+                                       literature = 62 rows; INPUT DATA note
+                                       above)
+  7.  07b_charging_feasibility.py   — Phase 5, OPTIONAL: adds a regime-
                                        capped Tm_target column that 07
-                                       prefers if present. Explicitly
-                                       labeled optional in
-                                       PIPELINE_FILE_GUIDE.md, but must
-                                       run BEFORE 07 to take effect, so it
-                                       is sequenced here rather than in
-                                       the after-the-fact OPTIONAL group.
-                                       Its failure does NOT stop the run.
-  9.  07_feasibility_filter.py      — Phase 5: hard-filters the PCM
+                                       prefers if present. Must run BEFORE
+                                       07 to take effect, so it is
+                                       sequenced here rather than in the
+                                       after-the-fact OPTIONAL group. Its
+                                       failure does NOT stop the run.
+  8.  07_feasibility_filter.py      — Phase 5: hard-filters the PCM
                                        database per cluster ->
                                        feasibility_survivors_by_cluster.csv
-  10. 08_mcdm_ranking.py            — Phase 6: TOPSIS/GRA/PROMETHEE II/
+  9.  08_mcdm_ranking.py            — Phase 6: TOPSIS/GRA/PROMETHEE II/
                                        VIKOR + Monte Carlo ->
-                                       mcdm_topk_by_cluster.csv
-  11. 10_physics_validation.py      — Phase 7: grey-box tank simulation ->
+                                       mcdm_topk_by_cluster.csv,
+                                       mcdm_full_scores_by_cluster.csv
+  10. 10_physics_validation.py      — Phase 7: grey-box tank simulation ->
                                        physics_validation_results.csv
                                        (numbered 10 but runs BEFORE 09 —
                                        see module docstring intro)
-  12. 09_recommendation_cards.py    — Phase 8: pure aggregation of
+  11. 09_recommendation_cards.py    — Phase 8: pure aggregation of
                                        everything above -> paste-ready
                                        recommendation_cards.md
+  12. 11_level_b_seasonal_analysis.py — Phase 4 Level B: seasonal Top-k
+                                       re-ranking within each cluster.
+                                       Runs LAST (non-blocking): it reads
+                                       08's mcdm_full_scores_by_cluster.csv
+                                       for the annual weights and 06's PCM
+                                       database, so it cannot run alongside
+                                       05.
 
 SETUP stages (one-time raw-data ACQUISITION — excluded by default: these
 hit external APIs (CDS/ERA5, NASA POWER, WorldPop/GADM), need credentials
@@ -112,8 +114,7 @@ hit external APIs (CDS/ERA5, NASA POWER, WorldPop/GADM), need credentials
   00b_build_suntimes.py         — sunrise/noon/sunset times per point/day
   01_download_era5_tamilnadu.py — ERA5 download (needs suntimes.csv)
   01b_download_nasapower.py     — NASA POWER download
-  00_unzip_accum.py             — fixes any ZIP-disguised .nc files;
-                                   PIPELINE_FILE_GUIDE.md places this
+  00_unzip_accum.py             — fixes any ZIP-disguised .nc files; runs
                                    right before 02_combine, after the
                                    downloads, so it runs last within setup
 
@@ -172,18 +173,24 @@ SETUP_SCRIPTS = [
 # documented as optional but must be sequenced before 07 to take effect
 # (see module docstring). (name, required) pairs, in run order.
 CORE_SCRIPTS = [
-    # ("02_combine_tamilnadu.py", True),
+    ("02_combine_tamilnadu.py", True),
     ("02b_build_daily_aggregates.py", True),
     ("04_preprocess_tamilnadu.py", True),
     ("04b_climate_signature.py", True),
     ("05_cluster_tamilnadu.py", True),
-    ("11_level_b_seasonal_analysis.py", True),
     ("06_build_pcm_database.py", True),
     ("07b_charging_feasibility.py", False),
     ("07_feasibility_filter.py", True),
     ("08_mcdm_ranking.py", True),
     ("10_physics_validation.py", True),
     ("09_recommendation_cards.py", True),
+    # Phase 4 Level B — sequenced LAST because it reads 08's
+    # mcdm_full_scores_by_cluster.csv (annual weights) and 06's PCM
+    # database. Non-blocking: it is a supplementary seasonal-sensitivity
+    # check, and a late failure must not abort the completed core
+    # deliverables (matches CHANGELOG.md's "run last" and
+    # 22_FINAL_READINESS_REPORT.md's "optional seasonal sensitivity").
+    ("11_level_b_seasonal_analysis.py", False),
 ]
 
 # QC/plotting/diagnostic — run after the core chain, continue-on-failure,

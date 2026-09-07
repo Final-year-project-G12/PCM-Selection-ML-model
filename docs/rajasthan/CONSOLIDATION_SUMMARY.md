@@ -1,4 +1,12 @@
-# Documentation Consolidation Summary (2026-09-02)
+# Documentation Consolidation Summary (2026-09-02, updated 2026-09-07)
+
+> **How to read this file:** it is a *changelog*. The Wave 1–3 sections below describe intermediate
+> states — some name files (e.g. `04b_PHASE_2_5_AUDIT.md`, `09_ERA5_DATA_PIPELINE.md`) that were
+> created and then folded away again in a later wave. Only the **"Remaining documentation structure"**
+> tree and the **Wave 4 / Wave 5** notes describe the *current* folder. Every file named as a
+> consolidation *target* (`03_PHASE_1_AUDIT.md`, `04_PHASE_2_AUDIT.md`, `05_PHASE_3_AUDIT.md`,
+> `00_MASTER_OVERVIEW.md`, `13_LITERATURE_MAPPING.md`) exists today; every file named with "formerly"
+> or "✗" has been deleted.
 
 ## What was consolidated
 
@@ -70,7 +78,7 @@ This consolidation reduces documentation fragmentation by embedding conceptual a
 - Critical caveat: quantile-mapped GHI never persisted; Phase 3 reads uncorrected ERA5
 
 **Quality Control (formerly `15_QUALITY_CONTROL.md`)**
-**Moved to:** New file `04b_PHASE_2_5_AUDIT.md` (full Phase 2.5 audit)
+**Moved to:** briefly `04b_PHASE_2_5_AUDIT.md`, then folded into `04_PHASE_2_AUDIT.md` Part B in Wave 4 (its current home)
 - Part 1: Read-only sanity checks via `03_verify_climate_csv.py` (6 checks, schema/coverage/nulls/ranges/cross-source)
 - Part 1b: Visual QC via `03_qc_plots.py` (8 interactive HTML visualizations)
 - Part 2: Actual data cleaning via `03b_quality_check_rajasthan.py` (Hampel filter on T_amb/RHum/W_spd only, **deliberately excluding GHI/CSI** to preserve weather variability)
@@ -120,21 +128,21 @@ These files can be safely deleted; their content is now embedded in the indicate
 
 ## Files still requiring cross-reference updates
 
-**`17_LITERATURE_MAPPING.md`** has been updated with a header note explaining the consolidation and pointing readers to the new locations of temporal/spatial processing justifications and research gap mapping content.
+**`13_LITERATURE_MAPPING.md`** (formerly numbered `17_`) has been updated with a header note explaining the consolidation and pointing readers to the new locations of temporal/spatial processing justifications and research gap mapping content.
 
 ---
 
 ## Remaining documentation structure
 
-The Rajasthan `docs` folder now follows this hierarchy (down to 16 files from original 26):
+The Rajasthan `docs` folder now follows this hierarchy (15 files, down from 26 at the start). Phase 2 and Phase 2.5 share a single audit (`04_PHASE_2_AUDIT.md`); the ERA5 deaccumulation deep-dive, quality-control detail, and literature-mapping notes all live inside existing audits now, not in standalone files:
 
 ```
 00_MASTER_OVERVIEW.md          [Overall pipeline status + N1-N6 novelty & RG1-RG5 research gap mapping]
 │
 ├─ Phase audits (with full embedded justifications & completion reports):
 │  ├─ 03_PHASE_1_AUDIT.md      [+ Spatial & Temporal Processing Justification]
-│  ├─ 04_PHASE_2_AUDIT.md      [+ Temporal Processing, Solar Geometry, Derived Variables, Cross-Source Validation]
-│  ├─ 04b_PHASE_2_5_AUDIT.md   [Quality Control, Hampel filter, imputation, before/after visualization]
+│  ├─ 04_PHASE_2_AUDIT.md      [Phase 2 + Phase 2.5: Temporal Processing, Solar Geometry, Derived Variables,
+│  │                            ERA5 deaccumulation, Cross-Source Validation, Quality Control / Hampel / imputation]
 │  ├─ 05_PHASE_3_AUDIT.md      [+ Climate Signature Feature-to-PCM-Property Mapping]
 │  ├─ 06_PHASE_4_AUDIT.md
 │  ├─ 07_PHASE_5_AUDIT.md
@@ -145,15 +153,16 @@ The Rajasthan `docs` folder now follows this hierarchy (down to 16 files from or
 ├─ Context & reference:
 │  ├─ 01_PROJECT_CONTEXT.md
 │  ├─ 02_DATA_SOURCES_AND_VARIABLES.md
-│  ├─ 09_ERA5_DATA_PIPELINE.md
-│  └─ 17_LITERATURE_MAPPING.md [Updated with consolidation notes]
+│  ├─ 11_OBJECTIVE1_PLOTTING_AUDIT_AND_PROMPT.md [Plotting audit + PLOTSV2 coverage]
+│  └─ 13_LITERATURE_MAPPING.md [Updated with consolidation notes; formerly numbered 17_]
 │
 └─ Post-pipeline documentation:
-   ├─ 20_IMPLEMENTATION_ISSUES.md
-   ├─ 21_REPRODUCIBILITY.md
-   ├─ 22_FINAL_READINESS_REPORT.md
+   ├─ 12_FINAL_READINESS_REPORT.md
    └─ CONSOLIDATION_SUMMARY.md [This file]
 ```
+
+Implementation-issue and reproducibility detail that earlier drafts kept in standalone `20_`/`21_`
+files now lives in `00_MASTER_OVERVIEW.md` ("Current known issues") and `12_FINAL_READINESS_REPORT.md`.
 
 ---
 
@@ -193,7 +202,22 @@ The Rajasthan `docs` folder now follows this hierarchy (down to 16 files from or
 - ✗ `09_ERA5_DATA_PIPELINE.md` (deaccumulation deep-dive, critical bug fix details)
 - ✗ `04b_PHASE_2_5_AUDIT.md` (quality control, Hampel filter, MICE imputation)
 
-**Result:** 14 focused, highly integrated documentation files (down from 26 at start). Single Phase 2 audit now contains:
+**Wave 5 (2026-09-07 — reconciliation with current `era5-rajasthan/` code):**
+- `11_LITERATURE_MAPPING.md` renamed to `13_LITERATURE_MAPPING.md` to clear a duplicate `11_` prefix
+  (the plotting audit keeps `11_`); H1 titles realigned to filenames in `12_` and `13_`.
+- Doc-wide script-name refresh: `04_climate_signature_rajasthan.py` → `04b_climate_signature.py`,
+  `07_feasibility_filter_rajasthan.py` → `07_feasibility_filter.py`,
+  `08_mcdm_ranking_rajasthan.py` → `08_mcdm_ranking.py` (Rajasthan scripts renamed toward the shared
+  cross-state convention).
+- New audit coverage added in-place: `04_preprocess_rajasthan.py` (Phase 2), the per-phase
+  visualization/interactive scripts (`00d`, `03b_coverage_viz`, `03b_qmap_before_after_viz`, `03d`,
+  `04d`, `04e`, `04f`, `05e`, `05f`, `05g`, `check_supercooling_*`), and the `PLOTSV2/` plotting layer
+  (documented in `11_OBJECTIVE1_PLOTTING_AUDIT_AND_PROMPT.md`).
+- Three byte-identical duplicate scripts removed from `era5-rajasthan/`: `10_physics_validation.py`
+  (== `09_physics_validation_rajasthan.py`), `09_recommendation_cards.py`
+  (== `10_recommendation_cards_rajasthan.py`), `03_plots_raw.py` (== `03c_plots_raw_rajasthan.py`).
+
+**Result:** 15 focused, highly integrated documentation files (down from 26 at start). Single Phase 2 audit now contains:
 - Complete preprocessing workflow (02_combine + 02b_daily_aggregates)
 - Cross-source validation (ERA5 vs POWER agreement analysis)
 - ERA5 deaccumulation details (the critical bug fix that enabled downstream analysis)

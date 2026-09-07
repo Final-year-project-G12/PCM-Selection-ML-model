@@ -9,14 +9,18 @@ Scripts covered:
   `03_verify_climate_csv.py`, `03_qc_plots.py`, `03b_agreement_analysis.py`,
   `03c_plots_raw_rajasthan.py` (added 2026-08-11, raw QC plots)
 - **Phase 2.5:** `03b_quality_check_rajasthan.py`, `03b_validate_quality_fix_rajasthan.py`,
-  `03c_plots_raw_rajasthan.py`, `03b_quality_check_plots_rajasthan.md`
+  `03c_plots_raw_rajasthan.py`, `03b_quality_check_plots_rajasthan.py`
+- **Preprocessing (alternate/Tamil-Nadu-aligned path):** `04_preprocess_rajasthan.py` — audit stub in §B.11
+- **Visualization / interactive QC (not in the core chain):** `03b_coverage_viz_rajasthan.py`,
+  `03b_qmap_before_after_viz_rajasthan.py`, `03d_interactive_raw_qa.py`, `04d_postprocess_plots.py`,
+  `04e_interactive_postprocess_qc.py` — audit stubs in §B.12
 
-**Cross-references:** `20_IMPLEMENTATION_ISSUES.md` (items 1 and 7), `00_MASTER_OVERVIEW.md`
-(overall pipeline status). All supporting details now embedded in this file.
+**Cross-references:** `00_MASTER_OVERVIEW.md` ("Current known issues", "Phase 1–8 status at a
+glance"). All supporting details now embedded in this file.
 
 **Critical context (documentation history):** Phase 2.5 was implemented on disk (code exists,
 script runs, outputs produced) but was entirely undocumented in the `docs/rajasthan/` folder until
-2026-08-11, despite Phase 3 (`04_climate_signature_rajasthan.py`) having explicitly read its CLEAN
+2026-08-11, despite Phase 3 (`04b_climate_signature.py`) having explicitly read its CLEAN
 output since that same date. This was the single most factually-wrong gap in the doc set prior to
 consolidation: **Phase 3 does not read Phase 2's raw output directly** (a widespread
 misunderstanding) — it reads Phase 2.5's quality-checked output, `climate_rajasthan_points_clean.csv`.
@@ -31,16 +35,15 @@ Phase 2   — 02_combine_rajasthan.py, 02b_build_daily_aggregates.py,
     ↓  climate_rajasthan_points.csv (RAW, 34 cols)
 Phase 2.5 — 03b_quality_check_rajasthan.py, 03b_validate_quality_fix_rajasthan.py
     ↓  climate_rajasthan_points_clean.csv (CLEANED)
-Phase 3   — 04_climate_signature_rajasthan.py  (reads the CLEAN file)
+Phase 3   — 04b_climate_signature.py  (reads the CLEAN file)
 ```
 
 ---
 
 # PART A — Phase 2: Preprocessing and Cross-Source Validation
 
-**This is the most scientifically consequential phase in the pipeline.** See
-`14_ERA5_POWER_VALIDATION.md` for the full validation story and `09_ERA5_DATA_PIPELINE.md` for the
-deaccumulation deep-dive.
+**This is the most scientifically consequential phase in the pipeline.** See §A.8 (this file) for the
+full cross-source validation story and §A.3 (this file) for the deaccumulation deep-dive.
 
 ## A.1 Purpose
 
@@ -93,7 +96,7 @@ winter). Solar-noon ERA5-vs-POWER: **MBE=10.95 W/m², RMSE=113.8 W/m², Pearson 
 which ERA5 field matched (`msdwswrf`/`fdir`/`msdrswrf`). Only correct if matched field is always a
 mean-rate variant — **not independently verified against actual NetCDF variable names.** This is a
 plausible unit-error risk and should be checked before DNI is presented as fully validated (see
-issues in `20_IMPLEMENTATION_ISSUES.md` item 8).
+§A.7 "Unit-consistency caveat" below and `00_MASTER_OVERVIEW.md` known issue 8).
 
 ### `02_combine_rajasthan.py` — the merge/physics script
 
@@ -102,8 +105,8 @@ issues in `20_IMPLEMENTATION_ISSUES.md` item 8).
 2. Concatenate each point's full hourly series across all years, apply `accum_to_flux()` (stateless
    clip, **no diffing**) to the accumulated fields, apply unit conversions.
 3. Compute solar geometry via `pvlib.location.Location(...).get_solarposition()` and
-   `.get_clearsky(model="ineichen")` — see `12_SOLAR_GEOMETRY.md`.
-4. Derive GHI/DNI/DHI/CSI — see `13_SOLAR_DERIVED_VARIABLES.md`.
+   `.get_clearsky(model="ineichen")` — see §A.6 below.
+4. Derive GHI/DNI/DHI/CSI — see §A.7 below.
 5. For each `(point_id, date, event)` row in `suntimes.csv`, nearest-in-time match against both the
    ERA5 series and the NASA POWER series independently, each rejected if farther than
    `MAX_MATCH_HOURS = 3` from the true event time.
@@ -129,9 +132,8 @@ re-download) and trapezoidally integrates GHI/clear-sky GHI over UTC hour-of-day
 ### `03_verify_climate_csv.py` and `03_qc_plots.py` — QA
 
 Six ordered checks (schema, point coverage, row coverage, null rates, physical-sanity range checks,
-cross-source correlation) — see §B (Part 1: Sanity Checks) below and `15_QUALITY_CONTROL.md` for
-the full threshold table. Eight QC visualizations (spatial folium maps + distributional plotly
-charts) — see the QC section of `15_QUALITY_CONTROL.md`.
+cross-source correlation) — see §B.2 (Part 1: Sanity Checks) below for the full threshold table.
+Eight QC visualizations (spatial folium maps + distributional plotly charts) — see §B.3.
 
 ### `03b_agreement_analysis.py` — the decision engine
 
@@ -139,8 +141,7 @@ Computes MBE/RMSE/Pearson r for GHI, T_amb, RHum, W_spd, stratified by season ×
 total), applies a pre-registered three-branch decision rule at solar noon specifically (BACKBONE /
 QUANTILE_MAP / MANUAL_REVIEW), and — because the actual data landed in QUANTILE_MAP — fits and
 reports (but does not persist back into the dataset) an empirical 100-quantile mapping of ERA5 GHI
-onto the POWER distribution, per season. Full numbers and decision text in
-`14_ERA5_POWER_VALIDATION.md`.
+onto the POWER distribution, per season. Full numbers and decision text in §A.8 below.
 
 ## A.4 Code mapping
 
@@ -217,7 +218,7 @@ clear-sky-free" or "ratio was unstable and suppressed" — not distinguishable f
 
 **GHI (Global Horizontal Irradiance):** `GHI = accum_to_flux(ssrd)/3600`, clipped ≥0. This is the
 pipeline's most consequential derived variable and the one that surfaced the deaccumulation bug (see
-`09_ERA5_DATA_PIPELINE.md`).
+§A.3 above).
 
 **DNI (Direct Normal Irradiance) — two-branch derivation, neither a true decomposition model:**
 
@@ -301,7 +302,7 @@ widely-cited values, consistent with the code's own implicit sourcing; not indep
 against a `sources/` folder entry since this is a meteorological-constants citation, not a
 project-domain paper). The framework doc's own §5.1–5.2 directly prescribes the MBE/RMSE/Pearson-r,
 season×event stratification, and three-branch decision rule as implemented — the code matches the
-spec closely (see `14_ERA5_POWER_VALIDATION.md` for the one-to-one correspondence check).
+spec closely (see §A.8 above for the one-to-one correspondence check).
 
 ## A.11 Validation
 
@@ -323,8 +324,8 @@ Requires Phase 1's complete point/time/NetCDF/JSON set. **Corrected 2026-08-11 �
 documentation stated "Everything from Phase 3 onward reads `climate_rajasthan_points.csv`
 directly," which is now factually wrong.** Phase 2.5 (`03b_quality_check_rajasthan.py`) reads
 `climate_rajasthan_points.csv` and produces `climate_rajasthan_points_clean.csv`; Phase 3
-(`04_climate_signature_rajasthan.py`) reads the CLEAN file, not this phase's raw output directly —
-see §B and `15_QUALITY_CONTROL.md` Part 2. `daily_aggregates_rajasthan_summary.csv` (from `02b`,
+(`04b_climate_signature.py`) reads the CLEAN file, not this phase's raw output directly —
+see Part B below. `daily_aggregates_rajasthan_summary.csv` (from `02b`,
 not touched by the quality-check step) is still read directly by Phase 3. This file
 (`climate_rajasthan_points.csv`) remains the single most-depended-upon RAW output in the pipeline,
 but it is no longer the most-depended-upon FINAL input to Phase 3 — that is now the Phase 2.5 clean
@@ -466,12 +467,72 @@ caught.
 Requires Phase 2's complete output. Phase 3 (Climate Signature) reads this phase's CLEAN output,
 not Phase 2's raw output directly.
 
+## B.11 — `04_preprocess_rajasthan.py` (alternate preprocessing path) — audit stub
+
+**Status: exists on disk (34 KB, last modified 2026-09-02); its wiring into the active chain is not
+established by the current code and should be confirmed before it is cited as authoritative.**
+
+**What it is (from its own docstring):** a "PHASE 2 — PREPROCESSING AND QUALITY CONTROL" script,
+the Rajasthan port of the Tamil Nadu pipeline's `04_preprocess` step. It reads
+`data/processed/climate_rajasthan_points.csv` (`02_combine` output) and writes to a **separate**
+`data/preprocessed/` folder:
+
+- `rajasthan_cleaned_physical.csv` — physical-unit, QC-passed, imputed rows, **not** scaled (its
+  docstring notes that the Phase-3 indices are non-linear functions of physical values, so scaling
+  first would corrupt them — matching plan doc §5.2).
+- `rajasthan_cleaned_scaled.csv` — same rows, MinMax-scaled feature columns, for later ML/DRL use.
+- `scalers.pkl` — per-column `MinMaxScaler`, fit on the first 70 % of chronologically-sorted rows
+  only (no leakage).
+- Supporting reports observed alongside these on disk: `vif_report.csv`, `yeo_johnson_skew.csv`,
+  `correlation_pearson.csv`, `correlation_spearman.csv`, `ghi_quantile_mapping_report.csv`.
+
+**Unresolved consistency point (do not resolve by assumption):** `04_preprocess_rajasthan.py`'s
+docstring says "Phase 3 (04b) reads THIS" (`rajasthan_cleaned_physical.csv`), but
+`04b_climate_signature.py`'s own docstring states it reads
+`data/processed/climate_rajasthan_points_clean.csv` — i.e. `03b_quality_check_rajasthan.py`'s output
+(Part B above), not `04_preprocess_rajasthan.py`'s. `run_all_rajasthan.py`'s core chain runs
+`03b_quality_check_rajasthan.py` → `04b_climate_signature.py` and does **not** list
+`04_preprocess_rajasthan.py`. On current evidence, Part B's `03b_quality_check_rajasthan.py` is the
+Phase-2.5 stage actually feeding Phase 3; `04_preprocess_rajasthan.py` is a parallel /
+Tamil-Nadu-aligned preprocessing implementation whose output feeds the `04d`/`04e`/`05g` QC and
+visualization scripts (see §B.12 and the Phase 3 / Phase 4 audits), not the clustering chain. This
+should be verified against the code and then stated definitively here.
+
+## B.12 — Phase 2 / 2.5 visualization & interactive-QC scripts — audit stubs
+
+None of these are in `run_all_rajasthan.py`'s core chain; all are read-only with respect to their
+inputs and exist for visual sanity-checking.
+
+- **`03b_coverage_viz_rajasthan.py`** — two standalone HTML views built from
+  `03b_agreement_analysis.py`'s inputs/output: `outputs/spatial_coverage_map.html` (folium; grid
+  points coloured by data-completeness % and by mean GHI MBE, ERA5−POWER, with points that would
+  independently fail the BACKBONE/QUANTILE_MAP/MANUAL_REVIEW gate marked) and a temporal companion
+  view. Never writes back to any input.
+- **`03b_qmap_before_after_viz_rajasthan.py`** — re-fits the identical per-season empirical
+  quantile mapping of daytime ERA5 GHI onto NASA POWER (`N_QUANTILES=100`, same functions as
+  `03b_agreement_analysis.py`) and renders a before/after view (`outputs/
+  era5_power_scatter_before_after.html`). Purely diagnostic — like `03b_agreement_analysis.py`
+  itself, it changes nothing about the fact that the mapping is never persisted and Phase 3 consumes
+  uncorrected ERA5 GHI (see Part C).
+- **`03d_interactive_raw_qa.py`** — interactive (Plotly + Folium) raw-data QA, the 1:1 port of the
+  Tamil Nadu pipeline's `03b_interactive_raw_qa.py` (same six checks A–F), reading
+  `climate_rajasthan_points.csv` as zoomable/hoverable HTML. Sits alongside
+  `03c_plots_raw_rajasthan.py` (which covers A–E in Plotly); kept as the structural twin of the
+  Tamil Nadu script for cross-region review. Read-only.
+- **`04d_postprocess_plots.py`** — static-PNG post-preprocessing QA, the port of Tamil Nadu's
+  `04c_postprocess_plots.py`. Runs **after** `04_preprocess_rajasthan.py` on its output
+  (`rajasthan_cleaned_physical.csv`): missing-data heatmap (should be ~all-zero), post-cleaning
+  distribution sanity, etc. — the cleaned-data counterpart to `03c_plots_raw_rajasthan.py`.
+- **`04e_interactive_postprocess_qc.py`** — interactive (Plotly) version of `04d_postprocess_plots.py`
+  (checks A, B, D, E, F), reading `rajasthan_cleaned_physical.csv` with a `usecols` filter (the file
+  is large). Output to `PLOTSV2/post_preprocess_interactive/*.html`.
+
 ---
 
 # PART C — Combined Problems / Risks (both phases)
 
-- **The deaccumulation bug (fixed).** Headline finding of the entire audit — see
-  `09_ERA5_DATA_PIPELINE.md` and `20_IMPLEMENTATION_ISSUES.md` item 1. (Phase 2)
+- **The deaccumulation bug (fixed).** Headline finding of the entire audit — see §A.3 above and
+  `00_MASTER_OVERVIEW.md` known issue 1. (Phase 2)
 
 - **Quantile-mapped GHI is never persisted.** `03b_agreement_analysis.py`'s correction is reported
   (before/after diagnostic table) but not written back into `climate_rajasthan_points.csv`,
@@ -495,7 +556,7 @@ not Phase 2's raw output directly.
   methodology write-up. (Phase 2)
 
 - **Monsoon-month definition mismatch** between `02_combine_rajasthan.py` (Jun–Aug) and
-  `02b_build_daily_aggregates.py` (Jun–Sep) — see `20_IMPLEMENTATION_ISSUES.md` item 7. (Phase 2)
+  `02b_build_daily_aggregates.py` (Jun–Sep) — see `00_MASTER_OVERVIEW.md` known issue 7. (Phase 2)
 
 - **No matched-timestamp columns are ever written** (`era5_matched_time_utc` /
   `power_matched_time_utc`), which structurally disables `03_qc_plots.py`'s rejection-window

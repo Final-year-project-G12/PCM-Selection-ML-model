@@ -51,6 +51,36 @@ OUTPUTS_DIR = BASE_DIR / "outputs"
 CDSAPI_RC = BASE_DIR / ".cdsapirc"
 
 
+# ---------------------------------------------------------------------------
+# PCM sizing constants (Phase 3 / Phase 5)
+# ---------------------------------------------------------------------------
+# Imported by 04b_climate_signature.py, 07_feasibility_filter.py and
+# 11_level_b_seasonal_analysis.py. These live here (not inside each script)
+# so Phase 3, Phase 5 and Level B all size the latent-heat requirement the
+# same way. Values are the ones already documented in this pipeline:
+#   - SHARE_PCM: OPTION A (2026-08-31) combined sensible+latent basis — the
+#     PCM supplies this fraction of overnight delivery, tank sensible heat +
+#     concurrent charging supply the rest (Zhao 2022, Huang 2020,
+#     Abdelsalam 2020, Koželj 2021; literature range 0.4–0.78). Central
+#     estimate 0.5. See CLAUDE.md §3.1 and docs/tamilnadu/07_PHASE_5_AUDIT.md.
+#   - latent_heat_floor_kj_kg(): Table 12 latent-heat floor,
+#     L >= max(100 kJ/kg, fraction × L_required), with fraction κ = 0.7.
+SHARE_PCM = 0.5
+
+
+def latent_heat_floor_kj_kg(l_required, fraction=0.7, absolute_min_kj_kg=100.0):
+    """Table 12 latent-heat floor for PCM feasibility screening.
+
+    Returns ``max(absolute_min_kj_kg, fraction * l_required)`` — both the
+    absolute 100 kJ/kg floor and the climate-relative ``κ · L_required``
+    floor apply, whichever is larger. ``l_required`` may be a scalar or an
+    array-like (elementwise).
+    """
+    import numpy as _np
+
+    return _np.maximum(absolute_min_kj_kg, _np.asarray(fraction, dtype=float) * _np.asarray(l_required, dtype=float))
+
+
 def ensure_data_dirs():
     for directory in (
         RAW_GRID_DIR,

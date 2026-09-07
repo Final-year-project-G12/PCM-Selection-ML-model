@@ -1,7 +1,8 @@
 # 03 — Phase 1 Audit: Data Collection
 
 Scripts: `00a_build_population_grid.py`, `00b_build_suntimes.py`, `00c_attach_elevation.py`,
-`01_download_era5_rajasthan.py`, `01b_download_nasapower.py`, `00_unzip_accum.py`.
+`01_download_era5_rajasthan.py`, `01b_download_nasapower.py`, `00_unzip_accum.py`,
+`00d_population_grid_viz.py` (visualization — audit stub under "Processing").
 
 ## Purpose
 
@@ -60,7 +61,7 @@ clock hours, using a **circular (mod-24) window algorithm** to correctly handle 
 straddle the UTC midnight boundary (documented real case: an eastern point's summer sunrise can land
 at 23:55 UTC of the *previous* calendar date). Two API calls per (year, month): instant variables
 (analysis type) and accumulated variables (forecast type, with each instant hour's immediate
-predecessor also requested — needed for the deaccumulation step, see `09_ERA5_DATA_PIPELINE.md`).
+predecessor also requested — needed for the deaccumulation step, see `04_PHASE_2_AUDIT.md` §A.3).
 10 years × 12 months × 2 var-types = 240 calls.
 
 ### NASA POWER download (`01b_download_nasapower.py`)
@@ -71,6 +72,14 @@ Full hourly year, per point, for the 5 parameters listed in `02_DATA_SOURCES_AND
 CDS API v2 sometimes returns a ZIP archive even when `download_format: unarchived` is requested;
 this detects (`PK` magic bytes) and fixes `*_accum.nc` files in place, scanning both the legacy
 full-grid archive and the new points archive.
+
+### Sampling-grid visualization (`00d_population_grid_viz.py`) — audit stub
+Read-only Plotly renderer for the population-weighted sampling grid: one self-contained
+`outputs/grid_plot.html` (`scatter_mapbox`-style, tokenless carto-darkmatter basemap) with a dropdown
+to switch which metric — `population` / `weight` / `elevation_m` — drives marker size and colour.
+Folium map output was dropped 2026-08-12; a colour-contrast fix the same day moved it off the light
+carto-positron basemap. Produces no data, reads `population_grid_points.csv` only — pure visual
+sanity-check of `00a`/`00c` output. Not in the core chain.
 
 ## Scientific reasoning
 

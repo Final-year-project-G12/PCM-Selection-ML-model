@@ -35,7 +35,7 @@ documentation set is designed to directly support.
 The v3.0 document is explicitly a **correction pass** over v1.0/v2.0, responding to methodology
 review on four points: clustering methodology (§2.1 — commits to GMM as primary, K-Means only as a
 reported comparison baseline, confirmed in `05_cluster_rajasthan.py`), MCDM method (§2.2 — commits to
-a four-method stack, not a single TOPSIS-only ranking, confirmed in `08_mcdm_ranking_rajasthan.py`),
+a four-method stack, not a single TOPSIS-only ranking, confirmed in `08_mcdm_ranking.py`),
 PCM selection criteria (§2.3 — corrects the melting-point band to 42–70°C from an earlier, apparently
 wider or misaligned band), and validation strategy (§2.4 — adds Phase 7 physics-based validation as a
 non-optional step, explicitly framed as "what makes the result publishable, not skippable as future
@@ -70,9 +70,10 @@ purposes:
   RG1–RG5 in its own "Direct Relevance to My Project" section. RG1–RG5 belong to the **broader,
   multi-objective project** (this climate/PCM-selection objective plus the downstream DRL-control and
   hardware-prototype objectives), not to the Objective-1 framework doc's own phase structure.
-- `18_RESEARCH_GAP_MAPPING.md` in this documentation set maps phases against **both** systems
-  explicitly, keeping them separate, because the framework doc itself never states RG1–RG5 and a
-  phase→RG mapping that implies otherwise would misattribute a claim this document doesn't make.
+- `00_MASTER_OVERVIEW.md` ("Research gaps addressed (N1–N6 novelty mapping)") maps phases against
+  **both** systems explicitly, keeping them separate, because the framework doc itself never states
+  RG1–RG5 and a phase→RG mapping that implies otherwise would misattribute a claim this document
+  doesn't make.
 
 ## Phase numbering — authoritative source
 

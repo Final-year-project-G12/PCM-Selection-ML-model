@@ -21,8 +21,8 @@ total_cloud_cover             → tcc      → cloud_cover (0–1, unconverted)
 surface_pressure               → sp       → P_atm (Pa → hPa)
 ```
 
-**Accumulated (forecast, TYPE=FC)** — see `13_SOLAR_DERIVED_VARIABLES.md` for why "accumulated" is
-in scare quotes for this pipeline's actual download:
+**Accumulated (forecast, TYPE=FC)** — see `04_PHASE_2_AUDIT.md` §A.3 and §A.7 for why "accumulated"
+is in scare quotes for this pipeline's actual download:
 ```
 surface_solar_radiation_downwards              → ssrd     → GHI (J/m² per downloaded hour → W/m²)
 mean_surface_direct_short_wave_radiation_flux  → msdwswrf → avg_sdirswrf → DNI (already W/m²)
@@ -44,7 +44,8 @@ WS10M               — 10 m wind speed
 Fill value `-999` is replaced with `NaN` on ingest (`02_combine_rajasthan.py`, blanket, no
 column-specific bound check). **`PRECTOTCORR` (precipitation) was never requested** — confirmed by
 direct code inspection — which is why `monsoon_index` (Tier 2) is always a GHI-fraction proxy in
-this pipeline, never a true precipitation-derived index (see `16_CLIMATE_SIGNATURE.md`).
+this pipeline, never a true precipitation-derived index (see `05_PHASE_3_AUDIT.md`, "Climate
+Signature Feature-to-PCM-Property Mapping").
 
 ## Full variable transformation table
 
@@ -70,9 +71,8 @@ this pipeline, never a true precipitation-derived index (see `16_CLIMATE_SIGNATU
 | Elevation | ERA5 `z` (geopotential) | m²/s² | m | `/9.80665` (standard gravity) | Outlier flag [−420, 8850] m (Dead Sea..Everest), not clipped |
 | ETR (extraterrestrial) | pvlib `get_extra_radiation` | — | W/m² | computed | **computed but never written to output CSV** |
 
-See `13_SOLAR_DERIVED_VARIABLES.md` for the DNI/DHI derivation logic in full, and
-`09_ERA5_DATA_PIPELINE.md` for the deaccumulation story that motivates the "already W/m²" caveat on
-GHI/LW/precip above.
+See `04_PHASE_2_AUDIT.md` §A.7 for the DNI/DHI derivation logic in full, and §A.3 of the same file
+for the deaccumulation story that motivates the "already W/m²" caveat on GHI/LW/precip above.
 
 ## Column-name ambiguity worth flagging
 
@@ -81,7 +81,8 @@ downloaded NetCDF (`next((c for c in df.columns if c in (...)), None)`). These a
 physical quantity** in ERA5's variable catalogue: `fdir` is an accumulated direct-radiation field
 (needs the same J/m²→W/m² treatment as `ssrd`); `msdwswrf`/`msdrswrf` are mean-rate fields (already
 W/m², no conversion needed). The code applies identical treatment (clip only, no `/3600`) regardless
-of which one actually matched — see `20_IMPLEMENTATION_ISSUES.md` item 8 for the audit consequence.
+of which one actually matched — see `04_PHASE_2_AUDIT.md` §A.7 ("Unit-consistency caveat") and
+`00_MASTER_OVERVIEW.md` known issue 8 for the audit consequence.
 
 ## Output variable list (`ERA5_OUTPUT_VARS`, exact, from `02_combine_rajasthan.py`)
 

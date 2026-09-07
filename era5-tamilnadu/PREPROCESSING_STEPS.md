@@ -65,18 +65,18 @@ clusters, not the raw data.
 
 ---
 
-## `05_cluster_regions.py` — Phase 4, Climate Regime Clustering
+## `05_cluster_tamilnadu.py` — Phase 4, Climate Regime Clustering (Tamil Nadu only)
 
-**Not run yet** — needs `climate_signature_{region}.csv` from at least 2
-regions. When it runs: combines all regions' signature matrices, re-standardizes
-across the combined set (04b's z-scores were only within-region), fits a
-**Gaussian Mixture Model** (soft/probabilistic clustering — not K-Means; the
-plan doc explicitly rejects K-Means here because climate is a continuous
-gradient, not hard-boundaried), selects K by BIC with a stated realistic
-silhouette acceptance band of 0.15-0.35 (a very high silhouette here would
-mean the signature collapsed to 1-2 dominant variables, not that regimes are
-unusually crisp). Outputs both hard cluster labels and full soft membership
-probabilities per point, plus population-weighted cluster profiles.
+Clusters the 133 Tamil Nadu signature points on their own — a 4-state joint
+`05_cluster_regions.py` was in the original plan but does not exist in this
+repo, and Objective 1 does not require cross-state regimes. Fits a **Gaussian
+Mixture Model** (soft/probabilistic — not K-Means; the plan rejects K-Means
+because climate is a continuous gradient), `covariance_type="diag"`, K = 2..10,
+selects K by BIC + silhouette (realistic band 0.15–0.40 for a single state),
+`K_FINAL = 5`. K-Means is saved only as a reported comparison baseline.
+Outputs `cluster_assignments_tamilnadu.csv` (hard label + soft membership per
+point) and `cluster_profiles_tamilnadu.csv` (population-weighted per-cluster
+profile with `Tm_target_C`, `L_required_kJ_per_kg`).
 
 ---
 
@@ -87,5 +87,9 @@ probabilities per point, plus population-weighted cluster profiles.
 03_plots_raw.py                -> QA plots, read-only                  (run before 04)
 04_preprocess_tamilnadu.py     -> Phase 2                               (this doc)
 04b_climate_signature.py       -> Phase 3                               (this doc)
-05_cluster_regions.py          -> Phase 4                               (waits on other regions)
+05_cluster_tamilnadu.py        -> Phase 4                               (Tamil Nadu only)
 ```
+
+Phases 5–8 (`06`, `07b`, `07`, `08`, `10`, `09`) and Phase 4 Level B (`11`,
+runs last) continue from here — see `../docs/tamilnadu/21_REPRODUCIBILITY.md`
+or run `python run_all_tamilnadu.py`.

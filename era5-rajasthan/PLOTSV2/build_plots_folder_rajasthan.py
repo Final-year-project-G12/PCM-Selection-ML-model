@@ -1,21 +1,23 @@
 """
 Assemble the curated 6-phase "Plots" folder for Rajasthan.
 
-Mirrors the layout of the project-root `Plots/` folder, which groups the
-paper-facing figures by pipeline phase with one subfolder per state:
+Groups the paper-facing figures by pipeline phase. The local PLOTSV2/Plots/
+tree is flat - figures sit directly in each phase folder (single state, no
+need for a per-state subfolder):
 
     Plots/
-      1 Data collection/                                    Rajasthan/
-      2 Data Preprocessing/                                 Rajasthan/
-      3 Climate Feature Engineering (Climate Signature)/    Rajasthan/
-      4 Climate Region Discovery (Clustering)/              Rajasthan/
-      5 PCM Suitability Evaluation (MCDA)/                  Rajasthan/
-      6 PCM Recommendation and Output/                      Rajasthan/
+      1 Data collection/                                   *.png
+      2 Data Preprocessing/                                *.png
+      3 Climate Feature Engineering (Climate Signature)/   *.png
+      4 Climate Region Discovery (Clustering)/             *.png
+      5 PCM Suitability Evaluation (MCDA)/                 *.png
+      6 PCM Recommendation and Output/                     *.png
 
-Target filenames follow the Uttarakhand folder exactly, so the three states'
-subfolders line up file-for-file.
+The project-root `Plots/` tree (written only with --mirror) keeps its
+one-subfolder-per-state layout (.../<phase>/Rajasthan/), so the states line
+up file-for-file there. Target filenames follow the Uttarakhand folder.
 
-    python build_plots_folder_rajasthan.py            # build PLOTSV2/Plots/
+    python build_plots_folder_rajasthan.py            # build PLOTSV2/Plots/ (flat)
     python build_plots_folder_rajasthan.py --mirror   # also copy into the
                                                       # project-root Plots/ tree
 
@@ -86,13 +88,15 @@ PHASES = [
 ]
 
 
-def build(dest_root, label):
+def build(dest_root, label, flat=False):
     copied, missing = 0, []
     print(f"\n{'=' * 68}\n  Building: {dest_root}\n{'=' * 68}")
     for phase, files in PHASES:
-        dest_dir = os.path.join(dest_root, phase, STATE)
+        # flat: figures sit directly in the phase folder (PLOTSV2/Plots layout).
+        # non-flat: one <state> subfolder per phase (project-root Plots/ layout).
+        dest_dir = os.path.join(dest_root, phase) if flat else os.path.join(dest_root, phase, STATE)
         os.makedirs(dest_dir, exist_ok=True)
-        print(f"\n  {phase}/{STATE}/")
+        print(f"\n  {phase}/" if flat else f"\n  {phase}/{STATE}/")
         for src_rel, target_name in files:
             src = os.path.join(HERE, src_rel.replace("/", os.sep))
             if not os.path.exists(src):
@@ -111,7 +115,7 @@ if __name__ == "__main__":
     mirror = "--mirror" in sys.argv
 
     total_expected = sum(len(f) for _, f in PHASES)
-    copied, missing = build(DEST_ROOT, "PLOTSV2/Plots")
+    copied, missing = build(DEST_ROOT, "PLOTSV2/Plots", flat=True)
 
     if mirror:
         if not os.path.isdir(MIRROR_ROOT):

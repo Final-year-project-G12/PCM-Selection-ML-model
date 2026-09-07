@@ -1,6 +1,6 @@
 # 00 — Master Overview: ERA5 Rajasthan Climate → PCM Selection Pipeline
 
-⚠️ **CRITICAL UPDATE (2026-08-31): L_required Methodology Correction** — Phase 3's methodology was corrected 2026-08-31, halving L_required values and cascading through Phases 4–8. All outputs from Phases 5–8 documented in this overview are now STALE and must be regenerated. Documented results (κ calibrations, Spearman rho validation values, rankings) below are superseded. See CLAUDE.md §3.1 and `04_climate_signature_rajasthan.py` docstring for full detail.
+⚠️ **CRITICAL UPDATE (2026-08-31): L_required Methodology Correction** — Phase 3's methodology was corrected 2026-08-31, halving L_required values and cascading through Phases 4–8. All outputs from Phases 5–8 documented in this overview are now STALE and must be regenerated. Documented results (κ calibrations, Spearman rho validation values, rankings) below are superseded. See CLAUDE.md §3.1 and `04b_climate_signature.py` docstring for full detail.
 
 ---
 
@@ -41,7 +41,7 @@ Rather than picking PCM candidates by hand for one nominal Indian climate, the p
    simulation (Phase 7), and packages the whole result as per-cluster recommendation cards
    (Phase 8) — **both now implemented and run**, see the status table below. Phase 7's result is
    a genuine, honestly-reported NEGATIVE validation (all three clusters' Spearman rho ≤ 0.4) —
-   see `19_PHASE_7_ONWARD.md` for the full completion report.
+   see `09_PHASE_7_AUDIT.md` for the full completion report.
 
 ## Complete pipeline map (as actually implemented, not the generic assumption)
 
@@ -60,8 +60,8 @@ Phase 2 — PREPROCESSING & CROSS-SOURCE VALIDATION
   03_verify_climate_csv.py       → stdout QA report (schema/coverage/nulls/range/agreement)
   03_qc_plots.py                 → outputs/qc_*.html (spatial + distributional QC)
   03b_agreement_analysis.py      → era5_power_agreement_rajasthan.csv, bias_decision_rajasthan.txt
-        ↓  [DECISION: QUANTILE_MAP — see 14_ERA5_POWER_VALIDATION.md]
-Phase 2.5 — QUALITY CHECK (undocumented until 2026-08-11 — see 15_QUALITY_CONTROL.md)
+        ↓  [DECISION: QUANTILE_MAP — see 04_PHASE_2_AUDIT.md §A.8]
+Phase 2.5 — QUALITY CHECK (undocumented until 2026-08-11 — see 04_PHASE_2_AUDIT.md Part B)
   03b_quality_check_rajasthan.py       → climate_rajasthan_points_clean.csv, quality_report_rajasthan.{md,json}
                                           (Hampel-filter outlier winsorizing on T_amb/RHum/W_spd ONLY —
                                            GHI/CSI deliberately excluded, see that script's docstring —
@@ -71,7 +71,7 @@ Phase 2.5 — QUALITY CHECK (undocumented until 2026-08-11 — see 15_QUALITY_CO
   03b_quality_check_plots_rajasthan.py  → outputs/qc_clean_*.html (post-QC visual sanity checks)
         ↓  Phase 3 now reads climate_rajasthan_points_CLEAN.csv, not 02's raw output directly
 Phase 3 — CLIMATE SIGNATURE CONSTRUCTION
-  signature_lib.py + 04_climate_signature_rajasthan.py → climate_signature_rajasthan.csv
+  signature_lib.py + 04b_climate_signature.py → climate_signature_rajasthan.csv
   (Tier 1 sun-event indices + Tier 2 daily indices + Tm_target/L_required + 5 interaction terms
    + PCA(4 comps, 95% var) + standardized *_z clustering matrix + 2 QC plots)
         ↓
@@ -85,11 +85,11 @@ Phase 4 — CLIMATE REGIME CLUSTERING
 Phase 5 — FEASIBILITY FILTERING  (+ shared PCM property database, run independently)
   01_preprocess.py (PCM_data/) → PCM_Properties_cleaned_mice_pmm{,_detailed}.csv (55 rows, MICE-RF-PMM —
                                    expanded 2026-08-12 from the prior 18-row database, see below)
-  07_feasibility_filter_rajasthan.py → feasibility_survivors_rajasthan{,_kappa_calibrated}.csv
+  07_feasibility_filter.py → feasibility_survivors_rajasthan{,_kappa_calibrated}.csv
         ↓  [Pre-expansion FINDING: 0 survivors at nominal kappa=0.7 — see 07_PHASE_5_AUDIT.md.
             NOT yet re-verified against the expanded 55-row database — outputs on disk are stale.]
 Phase 6 — MULTI-CRITERIA RANKING ENGINE
-  08_mcdm_ranking_rajasthan.py → mcdm_rankings_rajasthan.csv, mcdm_method_agreement_rajasthan.csv
+  08_mcdm_ranking.py → mcdm_rankings_rajasthan.csv, mcdm_method_agreement_rajasthan.csv
   (TOPSIS + PROMETHEE II + VIKOR + GRA, Borda/Copeland/Kendall's W, 1000-draw Monte Carlo)
         ↓
 Phase 7 — PHYSICS-BASED VALIDATION (complete)
@@ -114,7 +114,7 @@ Phase 9 — RECOMMENDATION CARDS (complete)
 
 **Orchestration**: `run_all_rajasthan.py` runs the entire reproducible chain (Phase 2 through
 Phase 8) in one invocation, in the correct dependency order, stopping at the first core-stage
-failure — see `21_REPRODUCIBILITY.md`.
+failure — see "Current architecture" → Resumability below.
 
 ## Phase 1–8 status at a glance
 
@@ -122,8 +122,8 @@ failure — see `21_REPRODUCIBILITY.md`.
 |---|---|---|---|
 | 1 — Data Collection | `00a/00b/00c`, `01`, `01b`, `00_unzip_accum` | **COMPLETE** | 320 pts, 240/240 ERA5 files, 3200/3200 (1 retry) POWER files |
 | 2 — Preprocessing & Validation | `02`, `02b`, `03_verify`, `03_qc_plots`, `03b` | **COMPLETE — with a caught-and-fixed critical bug** | Deaccumulation bug found & fixed; QUANTILE_MAP branch applied |
-| 2.5 — Quality Check | `03b_quality_check`, `03b_validate_quality_fix` | **COMPLETE — 3 sequential corrections, see 15_QUALITY_CONTROL.md** | Hampel filter initially over-corrected genuine cloud-driven GHI/CSI variability; fixed by excluding those two variables from outlier detection entirely |
-| 3 — Climate Signature | `signature_lib.py`, `04` | **COMPLETE — 5 documented corrections** | Tm_target=57°C fixed; Tm_target_capped varies by regime; now reads the Phase 2.5 CLEAN file |
+| 2.5 — Quality Check | `03b_quality_check`, `03b_validate_quality_fix` | **COMPLETE — 3 sequential corrections, see 04_PHASE_2_AUDIT.md Part B** | Hampel filter initially over-corrected genuine cloud-driven GHI/CSI variability; fixed by excluding those two variables from outlier detection entirely |
+| 3 — Climate Signature | `signature_lib.py`, `04b_climate_signature` | **COMPLETE — 5 documented corrections** | Tm_target=57°C fixed; Tm_target_capped varies by regime; now reads the Phase 2.5 CLEAN file |
 | 4 — Regime Clustering | `05` | **COMPLETE — with 2 caught-and-fixed bugs** | k=3 (GMM `diag` covariance, fixed from `full`); GMM cluster-index instability fixed via canonical relabeling (2026-08-11); Koppen-Geiger external validation wired in (ARI=0.19, NMI=0.32 vs GMM) |
 | 5 — Feasibility Filtering | `01_preprocess`, `07` | **PCM database prerequisite now COMPLETE (55 rows); Phase 5 output on disk is STALE, pending re-run** | Database expanded 18→55 rows (2026-08-12), inside the 40–60 target; `feasibility_survivors_rajasthan.csv` still reflects the pre-expansion 25-candidate pool and the old 0-survivors-at-κ=0.7 finding — re-run required, see "What remains" |
 | 6 — MCDM Ranking | `08` | **COMPLETE — with 3 caught-and-fixed bugs, 1 documented deviation** | Runs on κ-relaxed survivor pool; N_DRAWS=1000 not 5000 (documented); AHP pairwise elicitation still a TODO stub; now hard-fails on a provenance mismatch |
@@ -140,8 +140,9 @@ failure — see `21_REPRODUCIBILITY.md`.
   `era5-rajasthan/` regardless of working directory. No hardcoded absolute paths inside the
   numbered scripts themselves.
 - **Resumability**: every download/compute stage has an idempotency mechanism (status-CSV
-  logging + file-size/content checks) — see `21_REPRODUCIBILITY.md`. Every mechanism was
-  independently ground-truthed against the actual files on disk, not just read from code.
+  logging + file-size/content checks), and `run_all_rajasthan.py` runs the core chain in dependency
+  order with `--from <script>` resume support. Every mechanism was independently ground-truthed
+  against the actual files on disk, not just read from code.
 - **State-parameterization**: `05_cluster_rajasthan.py` and `signature_lib.py` are explicitly
   written to be state-agnostic (`STATE_NAME` is the only hardcoded state string), anticipating the
   same pipeline running on Assam/Tamil Nadu/Uttarakhand and a future 4-state combined clustering run.
@@ -185,7 +186,10 @@ validation** (Köppen-Geiger, NBC/ECBC climate zones) — is specified and expli
 values, not fabricated), and a fourth — **physics-based simulation validation** (Phase 7) — is
 specified but not yet implemented.
 
-## Current known issues (see `20_IMPLEMENTATION_ISSUES.md` for full detail)
+## Current known issues
+
+*(This section is the authoritative issue list for the Rajasthan pipeline; the phase audits and
+`12_FINAL_READINESS_REPORT.md` refer back here.)*
 
 1. **[FIXED, mandatory audit checkpoint]** ERA5 accumulated-field deaccumulation bug: an earlier
    `deaccumulate()` assumed classic MARS cumulative-since-reset semantics and diffed consecutive
@@ -214,8 +218,8 @@ specified but not yet implemented.
    structurally inert regardless, and the framework doc's 55–63°C salt-hydrate-specific coverage gap
    is not closed (though that melting-point band is now densely covered by organics — RT54HC/RT55/
    RT57HC/PureTemp 58/CrodaTherm 60/RT60/RT62HC/PureTemp 63). **What has NOT yet happened**:
-   `PCM_Properties_cleaned_mice_pmm_detailed.csv` — the exact file `07_feasibility_filter_rajasthan.py`
-   and `08_mcdm_ranking_rajasthan.py` read — is currently absent from disk and must be regenerated
+   `PCM_Properties_cleaned_mice_pmm_detailed.csv` — the exact file `07_feasibility_filter.py`
+   and `08_mcdm_ranking.py` read — is currently absent from disk and must be regenerated
    (`python PCM_data/PCM_data/01_preprocess.py`), and Phases 5–8's outputs on disk are all still from
    the pre-expansion run. See `07_PHASE_5_AUDIT.md` for full detail.
 7. **[OPEN, minor]** Inconsistent Monsoon month definitions between `02_combine_rajasthan.py`
@@ -239,7 +243,8 @@ specified but not yet implemented.
     invocations of `05_cluster_rajasthan.py`. Fixed via (a) canonical relabeling by ascending mean
     latitude in `05_cluster_rajasthan.py`, and (b) a hard-fail provenance-fingerprint check
     (`provenance_lib.py`) that Phases 6/7/8 each run against `cluster_profiles_rajasthan.csv`
-    before trusting their inputs. See `06_PHASE_4_AUDIT.md` and `19_PHASE_7_ONWARD.md`.
+    before trusting their inputs. See `06_PHASE_4_AUDIT.md` and `09_PHASE_7_AUDIT.md`
+    ("Completion Report").
 12. **[FIXED]** Two numerical bugs in `physics_lib.py`'s Phase 7 solver, both caught by that
     script's own required self-tests before any real result was trusted: a wrong closed-form
     backward-Euler solve (caused unbounded temperature blow-up) and a phase-transition energy-
@@ -272,7 +277,7 @@ objectives.
 | 4 — Regime Clustering | N1 | GMM-discovered regimes (k=3, statistically selected, not hand-picked); external validation now PARTIALLY wired in (Köppen-Geiger, ARI=0.19/NMI=0.32) — N1's "discovered, not hand-picked" claim is now supported by internal statistical measures PLUS one external classification cross-check (NBC/ECBC still open) |
 | 5 — Feasibility Filtering | N3 (partial) | Enforces the corrected 42–70°C band and SWH-specific constraints; **database-size gap closed 2026-08-12** (18–25 → 55 rows, inside the 40–60 target) — N3's practical value depended on having enough real in-band candidates to filter; that prerequisite is now met, but Phase 5 has not yet been re-run against the expanded database, so N3's demonstrated value in the current on-disk output is still the pre-expansion result |
 | 6 — MCDM Ranking | N4 | Four-method consensus + Monte Carlo, not a single TOPSIS winner; Kendall's W explicitly reports when consensus is *not* strong (Cluster 0, W=0.4375) rather than hiding disagreement — this honest reporting is itself part of N4's value proposition |
-| 7 — Physics Validation (COMPLETE) | N5 | Independently validated the MCDM ranking against simulated solar fraction — **the result is a genuine NEGATIVE validation (Spearman rho ≤0.4, all 3 clusters)**, not a confirmation. This is itself evidence for N5 as a methodology (the validation was performed rigorously and reported honestly, exactly per the framework doc's own "write it out plainly" instruction) even though it does not currently confirm the MCDM ranking's output — N5's claim should read "the ranking WAS physics-tested, honestly, with a negative result attributable in part to the still-undersized PCM database" not "the ranking IS physics-validated." See `19_PHASE_7_ONWARD.md`. |
+| 7 — Physics Validation (COMPLETE) | N5 | Independently validated the MCDM ranking against simulated solar fraction — **the result is a genuine NEGATIVE validation (Spearman rho ≤0.4, all 3 clusters)**, not a confirmation. This is itself evidence for N5 as a methodology (the validation was performed rigorously and reported honestly, exactly per the framework doc's own "write it out plainly" instruction) even though it does not currently confirm the MCDM ranking's output — N5's claim should read "the ranking WAS physics-tested, honestly, with a negative result attributable in part to the still-undersized PCM database" not "the ranking IS physics-validated." See `09_PHASE_7_AUDIT.md`. |
 | 8 — Recommendation Cards (COMPLETE) | (packaging) | Aggregates N1–N5's evidence, including Phase 7's negative result and its caveats, into the final deliverable format — `10_recommendation_cards_rajasthan.py`'s own caveats section surfaces the physics-validation band per cluster, not just the MCDM Top-3 |
 
 ### Phase → RG (broader project research gap) mapping — explicitly indirect
@@ -316,13 +321,13 @@ negative result means for the project's claims, not building more pipeline:
    MCDM/physics disagreement. **Re-running Phases 5-8 is not optional cleanup — it will likely change
    the result, not just the numbers.** Concretely: `python PCM_data/PCM_data/01_preprocess.py`
    (regenerates the missing `_detailed.csv`), then `python run_all_rajasthan.py --from
-   07_feasibility_filter_rajasthan.py`.
+   07_feasibility_filter.py`.
 2. Decide and document the κ-relaxation policy for the latent-heat constraint (accept per-cluster
    calibrated κ, or rank-by-proximity-to-L_required instead of hard-gating, per Correction 4's own
-   recommendation in `04_climate_signature_rajasthan.py`'s docstring).
+   recommendation in `04b_climate_signature.py`'s docstring).
 3. NBC/ECBC Indian climate-zone validation remains stubbed (Köppen-Geiger is now wired in — see
    known issue 9 above).
-4. Interpret and write up Phase 7's negative result properly (see `19_PHASE_7_ONWARD.md`) — this is
+4. Interpret and write up Phase 7's negative result properly (see `09_PHASE_7_AUDIT.md`) — this is
    itself a real, reportable finding, not a failure to hide: it means the MCDM ranking, as currently
    weighted, is not confirmed by the physics simulation at the pipeline's current PCM-database size,
    and the honest next step is diagnosis (which criterion's weight, or database expansion), not
@@ -333,10 +338,10 @@ negative result means for the project's claims, not building more pipeline:
 The PCM database expansion (18→55 rows) is done — regenerate the missing
 `PCM_Properties_cleaned_mice_pmm_detailed.csv` (`python PCM_data/PCM_data/01_preprocess.py`), then
 re-run the full chain from Phase 5 (`python run_all_rajasthan.py --from
-07_feasibility_filter_rajasthan.py`) and see whether Phase 7's negative result changes. Phase 7 was
-deliberately run anyway against the *pre-expansion* provisional database — see `19_PHASE_7_ONWARD.md`
-for the reasoning and the full completion report, including why running it now (rather than waiting)
-was itself informative. Every number currently in `feasibility_survivors_rajasthan.csv`,
+07_feasibility_filter.py`) and see whether Phase 7's negative result changes. Phase 7 was
+deliberately run anyway against the *pre-expansion* provisional database — see `09_PHASE_7_AUDIT.md`
+("Completion Report") for the reasoning and the full completion report, including why running it now
+(rather than waiting) was itself informative. Every number currently in `feasibility_survivors_rajasthan.csv`,
 `mcdm_rankings_rajasthan.csv`, `physics_validation_rajasthan.csv`,
 `spearman_rho_by_cluster_rajasthan.csv`, and `recommendation_cards_rajasthan.md` still reflects the
 pre-expansion 18/25-row database and should be treated as superseded pending this re-run.

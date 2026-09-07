@@ -16,6 +16,10 @@
 | `verify_04_ranking_rajasthan.py` | **MCDM ranking validation** (6 plots) | `verify_ranking/` |
 | `phase1_data_collection_rajasthan.py` | **Raw-data QA** (6 plots + MBE/RMSE CSV) | `phase1_data_collection/` |
 | `phase3_climate_signature_rajasthan.py` | **Climate-signature diagnostics** (3 plots) | `phase3_climate_signature/` |
+| `comparison_plots_rajasthan.py` | **8 cross-step comparison plots** (§7) | `comparison_plots/` |
+| `09_mcdm_vs_physics_agreement.py` | **Per-cluster MCDM-vs-physics agreement** + Spearman ρ audit check (§7) | `physics_validation/` |
+| `comparison_phase3_tmcap_old_vs_new.py` | Tm_cap methodology before/after | `comparison_plots/phase3_tmcap_old_vs_new/` |
+| `comparison_phase5_lrequired_before_after.py` | L_required methodology before/after (§7) | `comparison_plots/phase5_lrequired_before_after/` |
 | `build_plots_folder_rajasthan.py` | Assembles the curated 6-phase folder (§6) | `Plots/` |
 | `run_all_plots_v2.py` | Runs all of the above in pipeline order | — |
 
@@ -24,13 +28,18 @@ python run_all_plots_v2.py              # everything, then assembles Plots/
 python run_all_plots_v2.py objective1   # just the 13 plots
 python run_all_plots_v2.py verify       # just the four verification suites
 python run_all_plots_v2.py phases       # just the phase-1 / phase-3 figures
+python run_all_plots_v2.py comparison   # just the cross-step comparison set
 python run_all_plots_v2.py plots        # just re-assemble Plots/
 ```
 
 Phase 1 reads the ~1.4 GB raw points CSV, so a full run takes a few minutes.
 
-Cross-step **comparison plots** are not duplicated here — `../plotting/comparison_plots_rajasthan.py`
-already produces those 8 figures into `../outputs/objective1_plots_rajasthan/comparison_plots/`.
+> **The old `../plotting/` folder is retired.** Its scripts were either duplicates
+> of the ones above (superseded — several carried bugs this set corrects, see §4)
+> or were moved here unchanged. `../outputs/objective1_plots_rajasthan/` holds the
+> figures that folder generated; everything still reachable is regenerated inside
+> `PLOTSV2/`. `../outputs/` also holds unrelated main-pipeline QC artifacts —
+> do not delete it wholesale.
 
 ---
 
@@ -109,8 +118,8 @@ layout. Uttarakhand draws a **single pooled chart** of the top 12 by consensus r
 MCDM ranks are assigned *within* a cluster, so pooling puts three different
 candidates at rank 1 on one pair of axes and overlays lines that are not on a
 common scale. Rajasthan splits per cluster (9 / 14 / 16 candidates), showing every
-candidate in that regime — the same layout `plotting/05_bump_chart.py` uses, with
-the same style and axes as the rest of this set.
+candidate in that regime — the same layout the retired `plotting/05_bump_chart.py`
+used, with the same style and axes as the rest of this set.
 
 **Verify:** flat lines = unanimous ranking; crossings = sensitivity to the
 aggregation method. `savE® OM50` holds rank 1 under TOPSIS, PROMETHEE II, VIKOR and
@@ -119,12 +128,14 @@ in cluster 0 (rank 1 everywhere except GRA, where it falls to 8). GRA is visibly
 the outlier method in all three charts, which is the same disagreement plot 8
 quantifies.
 
-> **Do not use `outputs/objective1_plots_rajasthan/04_mcdm_agreement/bump_chart_cluster_*.html`
-> for the paper.** That version derives its consensus column with
-> `borda_score.rank()`, which defaults to *ascending* — but Borda score is
-> higher = better, so its consensus axis is inverted and the best candidate is
-> drawn last. `physics_validation_rajasthan.csv`'s own `mcdm_borda_rank` column
-> confirms the correct direction (RT50 = rank 1 in cluster 0); PLOTSV2 matches it.
+> **Historical note — the retired version of this chart was wrong.** The old
+> `plotting/05_bump_chart.py` (and its output under
+> `outputs/objective1_plots_rajasthan/04_mcdm_agreement/bump_chart_cluster_*.html`)
+> derived its consensus column with `borda_score.rank()`, which defaults to
+> *ascending* — but Borda score is higher = better, so its consensus axis was
+> inverted and the best candidate was drawn last. Do not cite those files.
+> `physics_validation_rajasthan.csv`'s own `mcdm_borda_rank` column confirms the
+> correct direction (RT50 = rank 1 in cluster 0); PLOTSV2 matches it.
 
 ### 8. Method Rank Correlation Heatmap
 `08_method_rank_correlation_heatmap.png` · `..._interactive.html`
@@ -166,7 +177,7 @@ quantifies.
 ### A. Preprocessing (`verify_preprocessing/`)
 `01_climate_distributions` · `02_data_completeness` · `03_statistical_summary` · `04_feature_engineering` · `05_correlation_analysis` · `06_data_quality_metrics` · `07_preprocessing_summary`
 
-Reads `data/preprocessed/rajasthan_cleaned_physical.csv` — the only file carrying the engineered lag / rolling / delta columns, so plot 4 renders here (the older `plotting/verify_01_preprocessing_rajasthan.py` reads `climate_rajasthan_points_clean.csv` instead and silently skips it).
+Reads `data/preprocessed/rajasthan_cleaned_physical.csv` — the only file carrying the engineered lag / rolling / delta columns, so plot 4 renders here (the retired `plotting/verify_01_preprocessing_rajasthan.py` read `climate_rajasthan_points_clean.csv` instead and silently skipped it).
 
 ### B. Clustering (`verify_clustering/`)
 `01_elbow_curves` · `02_silhouette_plot` · `03_pca_projection` · `04_geographic_map` · `05_cluster_profiles` · `06_cluster_sizes`
@@ -181,7 +192,7 @@ The usual ">0.35 confirms valid separation" rule of thumb is **not** met at the 
 ### C. Feasibility (`verify_feasibility/`)
 `01_survival_rate_by_cluster` · `02_feasible_property_space` · `03_top_candidates_per_cluster` · `04_constraint_analysis` · `05_property_distributions` · `06_summary`
 
-Two corrections against `plotting/verify_03_feasibility_rajasthan.py`:
+Two corrections against the retired `plotting/verify_03_feasibility_rajasthan.py`:
 1. it plotted all 186 evaluation rows as survivors, so plot 1 reported "62 survivors" in every cluster instead of 9 / 14 / 16;
 2. it looked for `pass_*` constraint columns, which Rajasthan does not have (they are `c1_melting_window` … `c8_safety` holding `pass`/`fail`/`not_applicable`/`flag_*` strings), so plot 4 was an empty placeholder.
 
@@ -190,7 +201,7 @@ Two corrections against `plotting/verify_03_feasibility_rajasthan.py`:
 ### D. Ranking (`verify_ranking/`)
 `01_method_correlation` · `02_top3_inclusion_probability` · `03_rank_distributions` · `04_rank_reversal_frequency` · `05_method_agreement` · `06_summary`
 
-Correlations are computed **within each cluster and then averaged** — pooling a 9-candidate cluster's ranks with a 16-candidate cluster's would mix two different scales. `borda_score` is used only to derive `consensus_rank` and is then dropped from the method list (the older script left it in, producing a spurious −1.00 row in the heatmap).
+Correlations are computed **within each cluster and then averaged** — pooling a 9-candidate cluster's ranks with a 16-candidate cluster's would mix two different scales. `borda_score` is used only to derive `consensus_rank` and is then dropped from the method list (the retired `plotting/verify_04_ranking_rajasthan.py` left it in, producing a spurious −1.00 row in the heatmap).
 
 ---
 
@@ -198,17 +209,19 @@ Correlations are computed **within each cluster and then averaged** — pooling 
 
 `build_plots_folder_rajasthan.py` assembles `PLOTSV2/Plots/` in the same 6-phase
 layout as the project-root `Plots/` folder, one figure set per pipeline stage —
-28 figures. It matches the Uttarakhand subfolder file-for-file except in phase 5,
-where the single pooled bump chart becomes three per-cluster ones (see §3, plot 7):
+28 figures. Locally the tree is **flat**: each phase folder holds its figures
+directly (single state, no per-state subfolder). It matches the Uttarakhand set
+file-for-file except in phase 5, where the single pooled bump chart becomes three
+per-cluster ones (see §3, plot 7):
 
 | Phase folder | Figures |
 | :--- | :--- |
-| `1 Data collection/Rajasthan/` | `A_point_map` · `C_era5_vs_power` · `F_yearly_trend` |
-| `2 Data Preprocessing/Rajasthan/` | `01_raw_vs_preprocessed_radiation` · `02_data_completeness` · `05_data_quality_metrics` · `06_correlation_analysis` · `07_preprocessing_summary` |
-| `3 Climate Feature Engineering (Climate Signature)/Rajasthan/` | `point_signature_map` · `signature_correlation_heatmap` · `signature_distributions` |
-| `4 Climate Region Discovery (Clustering)/Rajasthan/` | `01_elbow_curves` · `02_silhouette_plot` · `05_cluster_profiles` · `06_cluster_sizes` |
-| `5 PCM Suitability Evaluation (MCDA)/Rajasthan/` | `03_melting_point_vs_latent_heat` · `04_constraint_analysis` · `04_feasible_candidates_highlighted` · `05_pcm_survivors_per_cluster` · `05_property_distributions` · `07_bump_chart_ranks_cluster_0/1/2` · `08_method_rank_correlation_heatmap` · `10_rank_reversal_violin_bar` |
-| `6 PCM Recommendation and Output/Rajasthan/` | `11_agreement_plot` · `12_tank_temperature_melt_fraction` · `13_recommended_pcm_summary` |
+| `1 Data collection/` | `A_point_map` · `C_era5_vs_power` · `F_yearly_trend` |
+| `2 Data Preprocessing/` | `01_raw_vs_preprocessed_radiation` · `02_data_completeness` · `05_data_quality_metrics` · `06_correlation_analysis` · `07_preprocessing_summary` |
+| `3 Climate Feature Engineering (Climate Signature)/` | `point_signature_map` · `signature_correlation_heatmap` · `signature_distributions` |
+| `4 Climate Region Discovery (Clustering)/` | `01_elbow_curves` · `02_silhouette_plot` · `05_cluster_profiles` · `06_cluster_sizes` |
+| `5 PCM Suitability Evaluation (MCDA)/` | `03_melting_point_vs_latent_heat` · `04_constraint_analysis` · `04_feasible_candidates_highlighted` · `05_pcm_survivors_per_cluster` · `05_property_distributions` · `07_bump_chart_ranks_cluster_0/1/2` · `08_method_rank_correlation_heatmap` · `10_rank_reversal_violin_bar` |
+| `6 PCM Recommendation and Output/` | `11_agreement_plot` · `12_tank_temperature_melt_fraction` · `13_recommended_pcm_summary` |
 
 `--mirror` also copies the tree into the project-root `Plots/` folder, dropping a
 `Rajasthan/` subfolder alongside the existing `Tamilnadu/` and `Uttarakhand/` ones.
@@ -254,3 +267,71 @@ Three things worth knowing about this folder:
    - Method concordance ρ ≥ 0.70 holds for TOPSIS↔PROMETHEE II but **not** for GRA ✘ — report it, do not hide it.
    - Silhouette > 0.35 ✘ at 0.313 — see §4B.
 3. **Provenance** — every downstream CSV carries `upstream_cluster_profile_fingerprint`. If it stops matching `cluster_profiles_rajasthan.csv`, the plots are stale; re-run the pipeline before re-running this folder.
+
+---
+
+## 7. Cross-step comparison plots (`comparison_plots/`, `physics_validation/`)
+
+`python run_all_plots_v2.py comparison` runs all four scripts below. These answer
+"does the output of step N still make sense given step N−1?", which the 13
+objective-1 plots do not.
+
+### `comparison_plots_rajasthan.py` → `comparison_plots/` (8 figures)
+
+| # | Figure | Question it answers |
+| :--- | :--- | :--- |
+| 1 | `01_comparison_cluster_ghi.png` | Are the three climate regimes actually distinct in mean GHI? |
+| 2 | `02_comparison_temp_vs_tm_target.png` | Does each cluster's PCM target melting point sit a sensible 25–35 °C above its mean ambient? |
+| 3 | `03_comparison_mcdm_methods.png` | Do the four MCDM methods agree on the top 5 per cluster? |
+| 4 | `04_comparison_mc_vs_rank.png` | Are the top-ranked candidates the robust ones under weight perturbation? |
+| 5 | `05_comparison_latent_heat_distribution.png` | Is the feasibility filter actually selecting on latent heat? |
+| 6 | `06_comparison_physics_vs_rank.png` | Does a better MCDM rank deliver better simulated performance? |
+| 7 | `07_comparison_cross_cluster_top_pcm.png` | How do the three rank-1 PCMs compare on Tm, latent heat, cycling, supercooling? |
+| 8 | `08_comparison_rank_sensitivity.png` | How much does the ranking move as weight shifts between two methods? |
+
+This is a port of `era5-tamilnadu/plots/comparison_plots_tamilnadu.py`. Four
+comparisons needed more than a column rename, because Rajasthan's schema differs:
+
+- **#2** — Tamil Nadu reads `Tm_target_C` off the feasibility table; Rajasthan
+  carries it per point on the climate signature (`Tm_target_capped_C` preferred).
+- **#4** — Rajasthan folds the Monte Carlo columns *into* `mcdm_rankings_rajasthan.csv`,
+  so there is nothing to merge; the stability numbers sit alongside the consensus rank.
+- **#7** — the MCDM table holds ranks only, so the thermophysical properties are
+  merged in from the feasibility table on `(cluster_id, name)`. The retired
+  `plotting/comparison_plots_rajasthan.py` never produced this figure at all —
+  its property list came up empty and the plot silently skipped.
+- **#8** — Rajasthan stores an integer rank per method plus a Borda score; it has
+  **no** `topsis_score` / `gra_grade` / `promethee_flow` columns to blend, so the
+  sensitivity sweep perturbs weights over normalised *ranks* instead.
+
+Two further corrections against the retired version: it read the Level B (seasonal)
+cluster file, which duplicates every point once per season in the signature merge —
+this one reads Level A; and #5 filters on `survives_all`, since the kappa-calibrated
+table lists all 186 evaluations rather than just the 39 survivors.
+
+### `09_mcdm_vs_physics_agreement.py` → `physics_validation/`
+
+`mcdm_vs_physics_agreement_rajasthan.html` — the richer companion to plot 11.
+Where plot 11 is a single scatter, this computes Spearman ρ **per cluster** with
+p-values and cross-checks them against both the audit-documented values
+(cluster 0 −0.385, cluster 1 +0.125, cluster 2 −0.097) and the stored
+`spearman_rho_by_cluster_rajasthan.csv`, printing a PASS/INFO line for each.
+
+**Read the result honestly.** Pooled across clusters the correlation is
+ρ = −0.036 (p = 0.83) against annual solar fraction and ρ = +0.197 (p = 0.23)
+against hours-target-met — both statistically indistinguishable from no
+relationship. The MCDM ranking is not currently predicting simulated thermal
+performance, and that is the finding to report rather than smooth over.
+
+### Methodology before/after pair
+
+- `comparison_phase3_tmcap_old_vs_new.py` → `comparison_plots/phase3_tmcap_old_vs_new/tmcap_methodology_comparison_rajasthan.html`
+- `comparison_phase5_lrequired_before_after.py` → `comparison_plots/phase5_lrequired_before_after/`
+
+The phase-5 script visualises the `L_required` correction (the combined
+sensible+latent basis, `L_required = SHARE_PCM * Q_night / m_PCM` with
+`SHARE_PCM = 0.5`). **It currently produces nothing and exits cleanly**: it needs a
+pre-correction survivor CSV (`feasibility_survivors_rajasthan_precorrection.csv`)
+that was never retained, because Phase 5 was only ever run with the corrected
+methodology. Re-run Phase 5 against the old formula and save that file if you want
+this figure for the paper.
