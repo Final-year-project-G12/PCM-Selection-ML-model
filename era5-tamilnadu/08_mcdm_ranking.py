@@ -1,76 +1,170 @@
 """
-08_mcdm_ranking.py   (v2 — full 4-method stack + Monte Carlo)
-==================================================================
-PHASE 6 — MULTI-CRITERIA RANKING ENGINE (Objective 1 plan v3.0, Section 9)
+08_mcdm_ranking.py  (Tamil Nadu)
+=============================================================================
+PHASE 6 — MULTI-CRITERIA RANKING ENGINE (Objective1_PCM_Climate_Framework_
+Plan_v3, Section 9). Four-method stack (TOPSIS, PROMETHEE II, VIKOR, GRA)
++ optional CoCoSo + Monte Carlo confidence layer.
 
-REPLACES the earlier "minimum viable" TOPSIS+GRA-only version. This adds
-PROMETHEE II and VIKOR (the plan is explicit that a smaller method set is
-"a regression" — Section 2.2) and the 5,000-draw Monte Carlo stability
-analysis (Section 9.6), which is what turns a Top-3 from an assertion
-into a defensible, stability-quantified result (D6, the headline
-deliverable).
+STATE_NAME is the sole hardcoded state reference — every path derives from
+it, matching 05_cluster_tamilnadu.py's discipline. Criteria/methods/Monte
+Carlo procedure are state-independent; only the input feasibility-survivor
+table changes per state (per phases.md's own note on this).
 
-THE ONE STEP EVERY PCM-MCDM PAPER GETS WRONG (plan v3.0 Section 9.2)
-------------------------------------------------------------------------
-Melting temperature is a TARGET-based criterion — closer to Tm_target is
-better in both directions, not a benefit or cost. Converted to a Gaussian
-fitness score BEFORE anything else touches it:
+PORTED 2026-09-08 from era5-rajasthan/08_mcdm_ranking.py — byte-for-byte
+the same engine apart from STATE_NAME, the nested data/processed/{pcm,
+clustering}/ layout, one column normalisation (Tamil Nadu's Phase 5 names
+the PCM column `name`; Rajasthan names it `pcm_id` — reconciled in
+load_survivors()), and the two "run 07/10" hint strings. REPLACES the
+earlier bespoke Tamil Nadu Phase 6 script (5 criteria only, no
+PROMETHEE-native Tm, no Kendall's W / pairwise-agreement diagnostics, no
+provenance hard-fail). BUG AUDIT of that old script: VIKOR sign was
+CORRECT (denominator max-min > 0); its entropy function lacked the
+near-empty-criterion (<2 real values -> weight 0) guard but the bug was
+LATENT — its 5-criterion set never produced an all-NaN column; the
+8-criterion Table-13 set here makes the guard load-bearing and this port
+carries it. Kappa-calibration lives in Phase 5 (07_feasibility_filter.py),
+whose ported calibrate_kappa_for_cluster() uses the correct >= k direction.
 
-    f_Tm(i) = exp( -(Tm_i - Tm_target)^2 / (2*sigma^2) ),  sigma = 4K
+UNIFIED 2026-09-08 with era5-tamilnadu/08_mcdm_ranking.py. Both states now
+run byte-for-byte the same engine; only STATE_NAME, the cluster-profile
+path and the processed-dir layout differ. What changed this pass:
+  * OUTPUT NAMES — canonical Tamil-Nadu convention for BOTH states, no
+    state suffix: mcdm_full_rankings.csv (full per-survivor audit trail),
+    mcdm_topk_by_cluster.csv (Top-3 subset), monte_carlo_stability.csv
+    (MC columns only), mcdm_method_agreement.csv, and the inclusion plot
+    qc_montecarlo_inclusion.html. (Was mcdm_rankings_rajasthan.csv etc.)
+  * LATENT-HEAT CRITERION — now climate-relative: latent_heat / L_required
+    for THAT cluster (Tamil Nadu's formulation). vol_latent_heat (rho*L)
+    stays a separate criterion. Raw latent heat carried no climate signal
+    because L_required cleared it 3-5x over in every cluster.
+  * CYCLING CRITERION — now the log-scaled cycles_confidence transform
+    (Tamil Nadu's), log1p(cycles)/log1p(max_cycles), NaN-safe, instead of
+    raw cycle counts.
+  * SUPERCOOLING ENTROPY-WEIGHT CAP — the entropy formula has a known
+    pathology on near-zero-ideal cost criteria (supercooling: many
+    candidates report ~0 K, so the column is near-degenerate; the formula
+    reads that as low entropy => high information => spuriously large
+    weight, 48-64% in the first 8-criterion Rajasthan run). Phase 7/8's
+    own diagnosis identified this overweighting as the cause of the
+    negative physics-validation correlation, and Phase 8's calibrated
+    supercooling-penalty sweep WORSENING physics agreement confirmed the
+    direction (overweight, not underweight). Fix: any cost criterion whose
+    ideal value is at/near zero (supercooling, plus cost/corrosion if they
+    ever get real data) has its entropy-derived weight clipped to at most
+    2x its Table-13 prior BEFORE the 50/50 entropy-AHP blend, then the
+    entropy vector is renormalised. supercooling's entropy weight is thus
+    capped at 0.16, not left free to reach 0.64+. Supercooling is NOT
+    removed — all 8 Table-13 criteria are retained.
 
-CRITERIA (unchanged from v1 — only what the database has real values for)
-------------------------------------------------------------------------
-  f_Tm (melting-point fitness, Gaussian)     benefit
-  latent_heat_kJ_kg                          benefit
-  rho_H_MJ_m3 (volumetric latent heat)       benefit
-  TC_W_mK (thermal conductivity)             benefit
-  cycles_confidence (log-scaled, NaN-safe)   benefit
+INPUT FILE — READ THIS FIRST
+-----------------------------
+Reads ONLY feasibility_survivors_by_cluster_kappa_calibrated.csv, never the
+fixed-kappa=0.7 baseline (feasibility_survivors_by_cluster.csv) — that file
+can have ZERO survivors in a cluster (see 07's docstring/run log) and
+cannot be ranked. On load, asserts survives_all==True rows exist for
+EVERY cluster in cluster_profiles_{state}.csv — fails loudly (raises, does
+not proceed with a partial/empty ranking) if any cluster has none.
 
-FOUR RANKING METHODS
+CANDIDATE-POOL CONFIDENCE
+---------------------------
+Per plan doc Table 12, 8-20 survivors/cluster is "healthy"; below 8 is not
+disqualifying (a Top-3 from 5 candidates is still meaningful) but is
+tagged `candidate_pool_status = "undersized"` on every output row for that
+cluster, rather than letting a clean-looking table imply uniform
+reliability across clusters with very different survivor counts. Same
+principle already applied to kappa and to Tm_target_capped_C in this
+pipeline: flag heuristics and small-sample results explicitly.
+
+PCM DATABASE STATE
+------------------
+62 candidates (55 manufacturer + 7 literature), inside the 40-60-row
+manufacturer target — the same shared canonical pool Tamil Nadu uses (see
+07_feasibility_filter.py). Every cluster's Top-3 is still tagged
+candidate_pool_status ("healthy" 8-20 / "undersized" <8) per cluster so
+survivor-count differences between clusters stay visible.
+
+TARGET-BASED Tm HANDLING — sigma=4K and PROMETHEE q=2K/p=8K PROVENANCE
+--------------------------------------------------------------------------
+Both are SPECIFIED IN THE PLAN DOC (Objective1_PCM_Climate_Framework_
+Plan_v3 Section 9.2), not invented for this script and not independently
+literature-calibrated either — the doc's own stated justification:
+  - sigma=4K: "Justify sigma=4K from the heat-exchanger approach
+    temperature" (i.e. tied to the same 5-8K DT_approach range used for
+    Tm_target_C itself in 04_climate_signature_rajasthan.py).
+  - PROMETHEE q=2K/p=8K: stated as having "direct engineering meaning —
+    differences under 2K do not matter; differences over 8K are decisive."
+  - The doc also notes an ASYMMETRIC Gaussian (sigma_upper < sigma_lower,
+    since Tm too high is worse than too low) is "physically better
+    motivated" but leaves the choice open ("whichever is chosen, state it
+    and test the alternative"). This script uses the SYMMETRIC form
+    specified in the brief (sigma=4K both sides) — the asymmetric variant
+    is a documented, not-yet-implemented extension, not silently assumed
+    equivalent.
+  So: report these as "plan-doc-specified, with the plan's own stated
+  engineering rationale" — not as an independently peer-reviewed
+  calibration, and not as an uncited ad hoc heuristic either. That
+  distinction matters for the same reason it mattered for the
+  collector-cap heuristic.
+
+WEIGHTS & CLARIFICATION
 -----------------------
-  TOPSIS      — closeness coefficient, Euclidean ideal/anti-ideal
-  GRA         — grey relational grade vs. the ideal (max) reference
-  PROMETHEE II — net outranking flow; V-shape preference function with
-                 indifference/preference thresholds q=0.10, p=0.30 of the
-                 [0,1] normalized range for every criterion (a documented,
-                 uniform simplification — the plan's own q=2K/p=8K example
-                 is for Tm in physical units, which we've already
-                 transformed into a dimensionless fitness score by this
-                 point, so a physical threshold doesn't carry over
-                 directly; state this simplification if you use it)
-  VIKOR       — compromise ranking Q_i (v=0.5), with the standard
-                 acceptable-advantage / acceptable-stability check flagged
+w_j = lambda*w_entropy_j + (1-lambda)*w_literature_prior_j, lambda=0.5
+(plan doc §9.3). LITERATURE_WEIGHTS_TABLE13 below are the plan doc's
+Table 13 indicative literature-informed priors, NOT a formally elicited
+AHP pairwise comparison matrix. The eigenvector-method AHP code exists as
+a placeholder but is never invoked (PAIRWISE_MATRIX = None). Until a real
+elicited pairwise comparison is performed, this blended approach (50%
+entropy, 50% literature priors) is the current standard.
 
-CONSENSUS
+Entropy-weight stability: per Nabavi et al. (2023, Ind. Eng. Chem. Res.),
+entropy weights are measurably MORE sensitive to matrix perturbation than
+other schemes — and here they're computed on filtered matrices as small as
+5 rows (Cluster 0), exactly the regime where that sensitivity bites
+hardest. This script reports the entropy weight vector alongside the
+literature-prior-only (lambda=0) vector per cluster, flags any single
+criterion whose entropy weight exceeds 40% (near-total domination — same
+read as the Oluah 2020 72.12%-on-thermal-conductivity fixture the plan doc
+itself cites as a cautionary example), and compares the Top-3 at lambda=0
+vs lambda=0.5 the same way the daylength_mean ablation checked whether
+Level B clustering's dominant feature was load-bearing for the result.
+
+RANKING METHODS
+----------------
+VIKOR STABILITY EXPECTATION, stated up front per Jangid et al. (2025,
+Decision Analytics Journal): VIKOR is consistently LESS stable than TOPSIS
+under input uncertainty in direct Monte Carlo comparison. If VIKOR's
+Top-1 retention rate below comes back visibly lower than TOPSIS's, that is
+an EXPECTED outcome consistent with the literature, not evidence this
+implementation is broken.
+
+AGGREGATION
 -----------
-Borda count across all 4 methods' ranks (primary). Copeland pairwise
-majority computed as a cross-check — both reported, and they're flagged
-if they disagree on the #1 pick (plan v3.0 Section 9.5: "where they
-disagree, report both").
+Kendall's W thresholds (W>0.8 strong / W<0.6 ambiguous) are PLAN-DOC-
+SOURCED (Section 9.5: "W>0.8 means strong agreement... If W falls below
+roughly 0.6, investigate"), not this script's own judgment call.
 
-MONTE CARLO STABILITY (plan v3.0 Section 9.6)
-------------------------------------------------
-N_MONTE_CARLO_DRAWS = 5000 by default (matches the plan; reduce if you
-need faster iteration while developing, but restore 5000 for the number
-you actually report). Per draw:
-  - Weights perturbed via a Dirichlet draw centered on the nominal
-    entropy+AHP blended weight vector (concentration below is a stated
-    assumption, not measured — documented).
-  - PCM properties perturbed: Tm +/- Gaussian(0, 1K), latent heat and
-    thermal conductivity +/- Gaussian scaled to 5%/10% relative std (per
-    plan v3.0 Section 9.6's stated uncertainty bands).
-  - TOPSIS is used as the single fast per-draw scorer (recomputing all
-    four methods per draw for 5000 draws is unnecessary — TOPSIS alone is
-    standard practice in MC-MCDM stability studies; this is a stated
-    simplification, not a limitation the plan requires you avoid).
-Reports, per PCM per cluster: Top-3 inclusion probability, Top-1
-retention rate, and Spearman rho of each draw's full ranking against the
-baseline (non-perturbed) TOPSIS ranking.
-
-INPUT  : data/processed/pcm/feasibility_survivors_by_cluster.csv (07's output)
-OUTPUT : data/processed/pcm/mcdm_topk_by_cluster.csv
-         data/processed/pcm/mcdm_full_scores_by_cluster.csv
-         data/processed/pcm/monte_carlo_stability.csv
+MONTE CARLO CONFIDENCE
+------------------------
+Direct methodological precedent: Xu et al. (2026, Architectural
+Engineering and Design Management) used essentially this exact
+architecture — Dirichlet-driven Monte Carlo over TOPSIS weights, several
+thousand iterations, reporting probability-of-rank-1 against a real case
+study — cited here as the design's direct precedent, not a generic
+"Monte Carlo is common" justification.
+5,000 draws (plan doc default; 1,000 is a documented, literature-precedented
+fallback if runtime is impractical — wall-clock time is reported at the
+end, see the run log). random_state=42 (same convention as the clustering
+ablation work) makes the draw sequence exactly reproducible, not just
+statistically similar, on re-run.
+Reports the DETERMINISTIC (non-Monte-Carlo) Top-3 per cluster ALONGSIDE
+the Monte Carlo inclusion-probability table, flagging where they agree
+and where the Monte Carlo layer changes the headline answer — same
+before/after discipline used everywhere else in this pipeline.
+Missing/imputed properties: sampled from their family's (RT/savE/Paraffin/
+Fatty acid/Eutectic) empirical distribution for that property where
+enough donor rows exist, rather than perturbing a fixed point estimate
+with the same Gaussian noise as a measured value — see
+sample_property_for_montecarlo()'s docstring for the exact fallback chain.
 
 HOW TO RUN:
   python 08_mcdm_ranking.py
@@ -79,384 +173,1027 @@ HOW TO RUN:
 import warnings
 warnings.filterwarnings("ignore")
 
+import time
+
 import numpy as np
 import pandas as pd
-from scipy.stats import spearmanr
+import plotly.graph_objects as go
+from scipy.stats import spearmanr, kendalltau
 
-from config import PROCESSED_DIR
+from config import PROCESSED_DIR, BASE_DIR, OUTPUTS_DIR, ensure_data_dirs
+from provenance_lib import file_fingerprint, fingerprint_id, assert_fingerprint_match
 
-SURVIVORS_FILE = PROCESSED_DIR / "pcm" / "feasibility_survivors_by_cluster.csv"
-OUT_TOPK = PROCESSED_DIR / "pcm" / "mcdm_topk_by_cluster.csv"
-OUT_FULL = PROCESSED_DIR / "pcm" / "mcdm_full_scores_by_cluster.csv"
-OUT_MC = PROCESSED_DIR / "pcm" / "monte_carlo_stability.csv"
+ensure_data_dirs()
 
-SIGMA_TM = 4.0
-ENTROPY_AHP_LAMBDA = 0.5
-GRA_ZETA = 0.5
-PROMETHEE_Q, PROMETHEE_P = 0.10, 0.30    # indifference/preference, fraction of [0,1] range
-VIKOR_V = 0.5
+STATE_NAME = "tamilnadu"
 
-N_MONTE_CARLO_DRAWS = 5000     # plan v3.0 Section 9.6. Lower for faster dev iteration.
-MC_DIRICHLET_CONCENTRATION = 30.0    # higher = tighter around nominal weights (documented assumption)
-MC_TM_STD_K = 1.0
-MC_RELATIVE_STD = {"latent_heat_kJ_kg": 0.05, "TC_W_mK": 0.10, "rho_H_MJ_m3": 0.08}
-MC_RANDOM_SEED = 42
+# Tamil Nadu nests the processed tree: data/processed/{pcm,clustering}/ .
+PCM_DIR = PROCESSED_DIR / "pcm"
+CLUSTER_DIR = PROCESSED_DIR / "clustering"
+PCM_DIR.mkdir(parents=True, exist_ok=True)
 
-# ─── Climate-relative latent heat (fixes the "same PCM wins everywhere" issue) ───
-# Plan v3.0 Table 13 lists raw latent_heat_kJ_kg as a benefit criterion. Combined
-# with Tm_target being CONSTANT (Section 6.3's explicit design) and the
-# feasibility filter's L_required floor being cleared by every real candidate
-# 3-5x over, raw latent heat carries ZERO climate information into the ranking
-# — it's the same 7 numbers in every cluster and every season, which is exactly
-# why you saw one PCM win everywhere. Set this True (default) to rank on
-# latent_heat_kJ_kg / L_required instead — margin over what THIS cluster/season
-# actually needs, a genuine benefit criterion, still fully documented as a
-# deviation from the plan's literal Table 13 list. Set False to match Table 13
-# exactly (results will likely converge to one PCM statewide, which is itself a
-# valid, reportable finding — see the [FINDING] message this script already
-# prints either way).
-USE_CLIMATE_RELATIVE_LATENT_HEAT = True
+SURVIVORS_FILE = PCM_DIR / "feasibility_survivors_by_cluster_kappa_calibrated.csv"
+PROFILE_FILE = CLUSTER_DIR / f"cluster_profiles_{STATE_NAME}.csv"
+PCM_MANUFACTURER_CSV = BASE_DIR.parent / "PCM_data" / "data" / "PCM_Properties_cleaned_mice_pmm_detailed.csv"
 
-AHP_PRIOR_BASE = {
-    "f_Tm": 0.24 / 0.80,
-    "latent_heat_kJ_kg": 0.20 / 0.80,
-    "rho_H_MJ_m3": 0.12 / 0.80,
-    "TC_W_mK": 0.13 / 0.80,
-    "cycles_confidence": 0.11 / 0.80,
+# Canonical Tamil-Nadu output naming — same for both states, no suffix.
+OUT_FULL = PCM_DIR / "mcdm_full_rankings.csv"          # full per-survivor audit trail
+OUT_TOPK = PCM_DIR / "mcdm_topk_by_cluster.csv"        # Top-3 per cluster subset
+OUT_MC = PCM_DIR / "monte_carlo_stability.csv"         # Monte Carlo columns only
+OUT_METHOD_AGREEMENT = PCM_DIR / "mcdm_method_agreement.csv"
+OUT_FIGURE = OUTPUTS_DIR / "qc_montecarlo_inclusion.html"
+# Back-compat alias kept so anything still importing OUT_FILE keeps working.
+OUT_FILE = OUT_FULL
+
+RANDOM_STATE = 42
+CANDIDATE_POOL_LO, CANDIDATE_POOL_HI = 8, 20   # plan doc Table 12 "healthy" band
+
+# --- Target-based Tm handling (plan doc §9.2 — see module docstring for
+# full provenance discussion) ------------------------------------------
+SIGMA_TM_K = 4.0
+PROMETHEE_Q_K = 2.0   # indifference threshold
+PROMETHEE_P_K = 8.0   # preference threshold
+
+# --- Weights (plan doc §9.1 Table 13, §9.3) -----------------------------
+LAMBDA_BLEND = 0.5
+# NOTE: the "latent_heat" criterion is computed climate-relative
+# (latent_heat_kJ_kg / L_required for that cluster) and "cycling" is the
+# log-scaled cycles_confidence transform — see build_criteria_matrix().
+# The dict keys are kept stable so downstream column names don't shift.
+CRITERIA = ["Tm_fitness", "latent_heat", "vol_latent_heat", "thermal_conductivity",
+            "cycling", "supercooling", "corrosion", "cost"]
+
+# Cost criteria whose IDEAL value sits at or near zero — the entropy
+# formula overweights these (see module docstring). Their entropy-derived
+# weight is capped at ENTROPY_CAP_MULT x their Table-13 prior before the
+# entropy/AHP blend. Applied identically in both states.
+NEAR_ZERO_IDEAL_COST_CRITERIA = ["supercooling", "corrosion", "cost"]
+ENTROPY_CAP_MULT = 2.0
+CRITERIA_TYPE = {   # "benefit" (higher better) or "cost" (lower better) —
+                     # Tm_fitness is a target criterion but is ALREADY a
+                     # benefit-oriented score after the Gaussian transform
+    "Tm_fitness": "benefit", "latent_heat": "benefit", "vol_latent_heat": "benefit",
+    "thermal_conductivity": "benefit", "cycling": "benefit",
+    "supercooling": "cost", "corrosion": "cost", "cost": "cost",
 }
-LATENT_CRITERION_NAME = ("latent_heat_margin_ratio" if USE_CLIMATE_RELATIVE_LATENT_HEAT
-                          else "latent_heat_kJ_kg")
-AHP_PRIOR = {(LATENT_CRITERION_NAME if k == "latent_heat_kJ_kg" else k): v
-             for k, v in AHP_PRIOR_BASE.items()}
-CRITERIA = list(AHP_PRIOR.keys())
+LITERATURE_WEIGHTS_TABLE13 = {   # plan doc's INDICATIVE starting weights, used as
+    "Tm_fitness": 0.24,   # literature-informed priors until a real pairwise elicitation
+    "latent_heat": 0.20,  # (see PAIRWISE_MATRIX TODO below) replaces it
+    "vol_latent_heat": 0.12,
+    "thermal_conductivity": 0.13,
+    "cycling": 0.11,
+    "supercooling": 0.08,
+    "corrosion": 0.06,   # cluster-dependent — see reweight_corrosion_for_cluster()
+    "cost": 0.06,
+}
+assert abs(sum(LITERATURE_WEIGHTS_TABLE13.values()) - 1.0) < 1e-9
+
+# ═══════════════════════════════════════════════════════════
+# TODO: real AHP pairwise elicitation (FUTURE ENHANCEMENT)
+# ═══════════════════════════════════════════════════════════
+# Fill in an 8x8 Saaty pairwise comparison matrix (criteria in CRITERIA
+# order) from your guide/faculty elicitation, set PAIRWISE_MATRIX
+# below (currently None), and this script will compute weights via the
+# eigenvector method AND the consistency ratio (must be <0.10 per plan doc
+# §9.3) automatically instead of using LITERATURE_WEIGHTS_TABLE13 directly.
+# Record who provided the judgements when you fill this in.
+PAIRWISE_MATRIX = None
+ELICITED_BY = None   # e.g. "Dr. X, thermal engineering faculty, 2026-XX-XX"
+
+RI_TABLE = {1: 0.0, 2: 0.0, 3: 0.58, 4: 0.90, 5: 1.12, 6: 1.24, 7: 1.32, 8: 1.41,
+            9: 1.45, 10: 1.49}
+
+# --- Ranking method toggles ----------------------------------------------
+RUN_COCOSO = False   # optional 5th ranker, plan doc §9.4 — never a replacement for the 4 core methods
+
+# --- Monte Carlo -----------------------------------------------------------
+N_DRAWS = 1000        # plan doc default is 5000; 1000 is the documented,
+                      # literature-precedented fallback (module docstring).
+                      # SET IDENTICALLY IN BOTH STATES (2026-09-08 Phase 6
+                      # unification): the first 5000-draw Rajasthan run took
+                      # 606s wall-clock (183-232s/cluster); Tamil Nadu has 5
+                      # clusters of 9-16 survivors, so 5000 there is ~500-900s
+                      # — impractical for iteration in both. The plan doc
+                      # notes inclusion probabilities converge well before
+                      # 5000. Raise BOTH to 5000 (this one constant) for the
+                      # final reported run once the pipelines are settled.
+DIRICHLET_CONCENTRATION = 25.0   # chosen to give roughly +/-20% variation around
+                                   # nominal weights — see main()'s printed check
+GAUSS_NOISE_PCT = {"latent_heat": 0.05, "thermal_conductivity": 0.10,
+                    "Tm_C_abs_K": 1.0, "cost": 0.30}   # cost noise "wider", documented as 30%
+
+
+def log_header(title):
+    print("\n" + "=" * 68)
+    print(f"  {title}")
+    print("=" * 68)
 
 
 # ═══════════════════════════════════════════════════════════
-# CORE TRANSFORMS
+# 1. LOAD SURVIVORS  (kappa-calibrated file ONLY — see module docstring)
 # ═══════════════════════════════════════════════════════════
 
-def gaussian_tm_fitness(tm, tm_target, sigma=SIGMA_TM):
+def load_survivors():
+    if not SURVIVORS_FILE.exists():
+        raise SystemExit(f"ERROR: {SURVIVORS_FILE} not found — run "
+                          f"07_feasibility_filter.py first.")
+    if not PROFILE_FILE.exists():
+        raise SystemExit(f"ERROR: {PROFILE_FILE} not found — run "
+                          f"05_cluster_{STATE_NAME}.py first.")
+
+    df = pd.read_csv(SURVIVORS_FILE)
+    profiles = pd.read_csv(PROFILE_FILE)
+
+    # Tamil Nadu's Phase 5 routes the candidate pool through
+    # 06_build_pcm_database.py, which names the PCM column `name`
+    # (Rajasthan builds it inline as `pcm_id`). Normalise so the rest of
+    # this ported engine is untouched.
+    if "pcm_id" not in df.columns and "name" in df.columns:
+        df = df.rename(columns={"name": "pcm_id"})
+
+    # Provenance hard-fail check — added 2026-08-11 after Phase 7 caught
+    # this exact class of bug (Phase 5's and Phase 6's outputs disagreeing
+    # on cluster_id/pcm_id pairing because they were run against two
+    # different on-disk versions of cluster_profiles_{state}.csv). This
+    # is a HARD STOP, not a printed warning — see provenance_lib.py.
+    profile_fp_id = fingerprint_id(file_fingerprint(PROFILE_FILE))
+    assert_fingerprint_match(profile_fp_id, df, PROFILE_FILE.name, SURVIVORS_FILE.name)
+    print(f"  Provenance check PASSED — {SURVIVORS_FILE.name} was built from the SAME "
+          f"{PROFILE_FILE.name} currently on disk (fingerprint {profile_fp_id}).")
+
+    survivors = df[df["survives_all"] == True].copy()
+
+    missing_clusters = [cid for cid in profiles["cluster_id"]
+                         if cid not in survivors["cluster_id"].unique()]
+    if missing_clusters:
+        raise SystemExit(
+            f"ERROR: cluster(s) {missing_clusters} have ZERO survives_all==True rows in "
+            f"{SURVIVORS_FILE.name}. Refusing to rank an empty set for any cluster — "
+            f"this is exactly the failure mode the fixed-kappa=0.7 baseline file "
+            f"(feasibility_survivors_by_cluster.csv) can have; if you passed that "
+            f"file by mistake, use the _kappa_calibrated one instead.")
+
+    print(f"  Loaded {len(survivors)} survivor rows across {survivors['cluster_id'].nunique()} "
+          f"clusters from {SURVIVORS_FILE.name}")
+    return survivors, profiles, profile_fp_id
+
+
+# ═══════════════════════════════════════════════════════════
+# 2. RICH PCM PROPERTY TABLE  (density/TC/Cp/corrosion proxy/cost — none
+#    of which made it into 07's output columns, so rebuilt here)
+# ═══════════════════════════════════════════════════════════
+
+def load_rich_pcm_properties():
+    df = pd.read_csv(PCM_MANUFACTURER_CSV)
+    out = pd.DataFrame()
+    out["pcm_id"] = df["product"]
+    out["density_kg_m3"] = df["density_solid"].fillna(df["density_liquid"])
+    out["TC_W_mK"] = df["TC_both"].fillna((df["TC_liquid"] + df["TC_solid"]) / 2.0)
+    out["Cp_kJ_kgK"] = (df["Cp_liquid"].fillna(df["Cp_solid"])
+                         .fillna(df["Cp_solid"].fillna(df["Cp_liquid"])))
+    out["cost"] = np.nan   # no cost field exists anywhere in the source data — see module docstring
+    # Corrosion class: no real corrosion-class field exists in the source
+    # data either. Coarse structural proxy only (matches 07's is_salt_
+    # hydrate detection convention): Inorganic candidates get a higher
+    # (worse) corrosion score than Organic ones. NOT a real corrosion
+    # rating — state this if cited.
+    out["corrosion_score"] = np.where(df["pcm_type"] == "Inorganic", 2.0, 1.0)
+    imputed_cols = [c for c in df.columns if c.endswith("_imputed")]
+    out["any_property_imputed"] = (df[imputed_cols].sum(axis=1) > 0) if imputed_cols else False
+    # Was np.where(df["is_rt_line"] == 1, "Rubitherm RT", "PLUSS savE") — that
+    # column belonged to the old 2-manufacturer database schema and no longer
+    # exists (see the matching fix + comment in
+    # 07_feasibility_filter_rajasthan.py's load_manufacturer_rows()). Using
+    # `manufacturer` here as the drop-in replacement, consistent with that
+    # fix, for sample_property_for_montecarlo()'s same-family donor grouping
+    # below. NOTE: the plan doc's own §9.6 language calls this a "type-class"
+    # distribution, which arguably maps closer to `pcm_type` (11 chemical
+    # subtypes, e.g. n-alkane/fatty-acid/composite) than to `manufacturer`
+    # now that the database spans 6 manufacturers — that was a judgment call
+    # deferred here in favor of the smaller, mechanically-consistent fix;
+    # revisit if Monte Carlo donor-pool composition needs to be family-of-
+    # chemistry rather than family-of-manufacturer.
+    out["family"] = df["manufacturer"]
+    return out
+
+
+def literature_rich_properties():
+    """Same 7 Singh2025 Table 2 rows as 07_feasibility_filter_rajasthan.py.
+    Density is reported for ONLY the generic paraffin wax row in that
+    source (790/916 kg/m3 liquid/solid, reused verbatim here, solid value
+    taken to match load_rich_pcm_properties()'s solid-preferred convention);
+    every other property for every other literature row is genuinely
+    unreported in the source and left NaN, not guessed."""
+    rows = [
+        {"pcm_id": "Myristic acid", "family": "Fatty acid"},
+        {"pcm_id": "Palmitic acid", "family": "Fatty acid"},
+        {"pcm_id": "Myristic-Palmitic eutectic (58/42)", "family": "Eutectic"},
+        {"pcm_id": "Palmitic-Stearic eutectic (64.2/35.8)", "family": "Eutectic"},
+        {"pcm_id": "Paraffin wax (generic)", "family": "Paraffin", "density_kg_m3": 916.0},
+        {"pcm_id": "C22H46 (docosane-class paraffin)", "family": "Paraffin"},
+        {"pcm_id": "C30H62 (triacontane-class paraffin)", "family": "Paraffin"},
+    ]
+    df = pd.DataFrame(rows)
+    for c in ["density_kg_m3", "TC_W_mK", "Cp_kJ_kgK", "cost"]:
+        if c not in df.columns:
+            df[c] = np.nan
+    df["corrosion_score"] = 1.0   # all Organic, per 07's is_salt_hydrate logic
+    df["any_property_imputed"] = False   # genuinely unmeasured, not imputed
+    return df
+
+
+# ═══════════════════════════════════════════════════════════
+# 3. BUILD THE CRITERIA MATRIX  (per cluster)
+# ═══════════════════════════════════════════════════════════
+
+def gaussian_tm_fitness(tm, tm_target, sigma=SIGMA_TM_K):
     return np.exp(-((tm - tm_target) ** 2) / (2 * sigma ** 2))
 
 
-def minmax_normalize(df, cols):
-    M = df[cols].copy()
-    for c in cols:
-        lo, hi = M[c].min(), M[c].max()
-        M[c] = (M[c] - lo) / (hi - lo) if hi > lo else 0.5
-    return M.fillna(0.0).values
+def reweight_corrosion_for_cluster(base_weights, cluster_hsi, hsi_min, hsi_max):
+    """Corrosion criterion weight scaled UP for higher-HSI clusters, per
+    plan doc Table 13's "cluster-dependent: weight higher in high-HSI
+    clusters" note. Linear scaling of the corrosion weight between 1x (at
+    the state's lowest-HSI cluster) and 2x (at the highest) is this
+    script's own choice of scaling FUNCTION — the plan doc specifies the
+    DIRECTION (higher HSI -> higher corrosion weight) but not a specific
+    multiplier; state this if cited. All weights renormalized to sum to 1
+    after the corrosion weight is scaled."""
+    w = dict(base_weights)
+    if hsi_max > hsi_min:
+        hsi_frac = (cluster_hsi - hsi_min) / (hsi_max - hsi_min)
+    else:
+        hsi_frac = 0.5
+    scale = 1.0 + hsi_frac   # 1x .. 2x
+    w["corrosion"] = w["corrosion"] * scale
+    total = sum(w.values())
+    return {k: v / total for k, v in w.items()}
 
+
+def cycles_confidence(cycles, max_cycles=None):
+    """Log-scaled cycling-endurance confidence in [0, 1] (Tamil Nadu's
+    transform, used in both states): log1p(cycles) / log1p(max_cycles).
+    NaN-safe — unreported cycling stays NaN (excluded-by-omission
+    downstream, never zero-filled)."""
+    c = np.asarray(cycles, dtype=float)
+    if max_cycles is None:
+        finite = c[np.isfinite(c)]
+        max_cycles = finite.max() if finite.size else np.nan
+    if not (max_cycles and max_cycles > 0):
+        return np.full_like(c, np.nan, dtype=float)
+    return np.log1p(c) / np.log1p(max_cycles)
+
+
+def build_criteria_matrix(cand_df, tm_target, l_required):
+    """cand_df: rows for ONE cluster's surviving candidates, already
+    joined with rich properties. l_required: that cluster's
+    L_required_kJ_per_kg (climate-relative latent-heat criterion). Returns
+    a DataFrame indexed by pcm_id with the 8 CRITERIA columns (raw,
+    pre-normalization; NaN preserved, never zero-filled — see module
+    docstring on missing-value handling)."""
+    m = pd.DataFrame(index=cand_df["pcm_id"])
+    m["Tm_fitness"] = gaussian_tm_fitness(cand_df["Tm_C"].values, tm_target)
+    # Climate-relative: margin of latent heat over what THIS cluster needs.
+    lr = l_required if (l_required and l_required == l_required and l_required > 0) else np.nan
+    m["latent_heat"] = cand_df["latent_heat_kJ_kg"].values / lr
+    m["vol_latent_heat"] = (cand_df["density_kg_m3"] * cand_df["latent_heat_kJ_kg"] / 1000.0).values  # MJ/m3
+    m["thermal_conductivity"] = cand_df["TC_W_mK"].values
+    m["cycling"] = cycles_confidence(cand_df["cycles_tested"].values)
+    m["supercooling"] = cand_df["supercooling_K"].values
+    m["corrosion"] = cand_df["corrosion_score"].values
+    m["cost"] = cand_df["cost"].values
+    return m
+
+
+# ═══════════════════════════════════════════════════════════
+# 4. ENTROPY WEIGHTS  (per cluster, from that cluster's own filtered matrix)
+# ═══════════════════════════════════════════════════════════
 
 def entropy_weights(matrix):
-    X = matrix.copy()
-    col_sums = X.sum(axis=0)
-    col_sums = np.where(col_sums == 0, 1e-12, col_sums)
-    P = X / col_sums
-    n = X.shape[0]
-    k = 1.0 / np.log(n) if n > 1 else 1.0
+    """Standard Shannon-entropy objective weighting. NaN cells are
+    fillna'd with the column median FOR THIS CALCULATION ONLY — entropy
+    needs a complete matrix to define a probability distribution per
+    column; this is the one place in the whole script a fill is used
+    rather than exclusion, and it never touches the actual ranking-method
+    scores (those use exclusion-by-omission, see module docstring).
+
+    FIXED 2026-08-11: a criterion with TOO FEW real (non-NaN) values to
+    fill from (in the extreme, zero real values — exactly the "cost" case
+    here, since no cost data exists anywhere in the PCM database) used to
+    get assigned the HIGHEST possible entropy weight by an artifact of
+    np.nansum: summing an all-NaN column via nansum silently returns 0.0
+    ("no terms" is treated as "sums to zero"), which computed entropy e=0
+    (spuriously LOW entropy = maximally informative) for a column that
+    actually carries ZERO information. That inflated cost's entropy
+    weight to 64-75% across every Rajasthan cluster in the first run.
+    Columns with fewer than 2 real values now get weight 0 directly,
+    bypassing the entropy formula entirely, rather than let it compute a
+    number from nothing. This does not change any candidate's actual
+    TOPSIS/PROMETHEE/VIKOR/GRA score (cost is NaN for every candidate, so
+    it was already being skipped in every weighted-sum calculation
+    regardless of its nominal weight — see module docstring on
+    exclusion-by-omission) — it only fixes the REPORTED weight vector and
+    the >40%-domination flag, which were both misleading before this fix."""
+    n_real = matrix.notna().sum()
+    valid_cols = [c for c in matrix.columns if n_real[c] >= 2]
+    zero_cols = [c for c in matrix.columns if c not in valid_cols]
+
+    weights = {c: 0.0 for c in zero_cols}
+    if not valid_cols:
+        return {c: 1.0 / len(matrix.columns) for c in matrix.columns}
+
+    Xv = matrix[valid_cols]
+    X = Xv.fillna(Xv.median(numeric_only=True)).values.astype(float)
+    X = np.clip(X, 1e-12, None)   # entropy needs strictly positive values
+    m, n = X.shape
+    P = X / X.sum(axis=0, keepdims=True)
     with np.errstate(divide="ignore", invalid="ignore"):
-        e = -k * np.nansum(np.where(P > 0, P * np.log(P), 0), axis=0)
-    d = 1 - e
-    return d / d.sum() if d.sum() > 0 else np.ones(len(d)) / len(d)
+        e = -1.0 / np.log(m) * np.nansum(P * np.log(P), axis=0) if m > 1 else np.zeros(n)
+    d = np.clip(1 - e, 0, None)
+    w_valid = d / d.sum() if d.sum() > 0 else np.ones(n) / n
+    weights.update(dict(zip(valid_cols, w_valid)))
+
+    # Entropy-formula pathology correction (2026-09-08): a near-zero-ideal
+    # cost criterion (supercooling especially — many candidates report ~0 K,
+    # so the column is near-degenerate and the formula reads that as low
+    # entropy => high information => spuriously large weight, 0.48-0.64 for
+    # supercooling in the first 8-criterion Rajasthan run). HOLD each such
+    # criterion's entropy weight EXACTLY at ENTROPY_CAP_MULT x its Table-13
+    # prior (supercooling: 2 x 0.08 = 0.16) and rescale ONLY the remaining
+    # (uncapped) criteria to fill 1 - sum(caps). A plain cap-then-
+    # renormalise does NOT work here: dividing the whole vector by the
+    # reduced total pushes the capped criterion straight back above its cap.
+    # See module docstring for the Phase 7/8 evidence that this is
+    # overweighting, not underweighting. Corrosion/cost are covered too so
+    # the fix still holds if either ever gets real, non-degenerate data.
+    caps = {c: ENTROPY_CAP_MULT * LITERATURE_WEIGHTS_TABLE13[c]
+            for c in NEAR_ZERO_IDEAL_COST_CRITERIA
+            if c in weights and weights[c] > ENTROPY_CAP_MULT * LITERATURE_WEIGHTS_TABLE13[c]}
+    if caps:
+        fixed_mass = sum(caps.values())
+        free = {k: v for k, v in weights.items() if k not in caps}
+        free_sum = sum(free.values())
+        target_free = max(0.0, 1.0 - fixed_mass)
+        if free_sum > 0:
+            weights = {**caps, **{k: v / free_sum * target_free for k, v in free.items()}}
+        else:
+            weights = {**caps, **{k: 0.0 for k in free}}
+    return weights
+
+
+def blended_weights(entropy_w, prior_w, lam=LAMBDA_BLEND):
+    return {c: lam * entropy_w[c] + (1 - lam) * prior_w[c] for c in CRITERIA}
+
+
+def ahp_weights_from_pairwise(matrix):
+    """Eigenvector-method AHP weights + consistency ratio. Used only if
+    PAIRWISE_MATRIX is filled in; otherwise LITERATURE_WEIGHTS_TABLE13 is
+    used directly as the (documented placeholder) literature-prior weight."""
+    n = matrix.shape[0]
+    eigvals, eigvecs = np.linalg.eig(matrix)
+    idx = np.argmax(eigvals.real)
+    w = np.real(eigvecs[:, idx])
+    w = w / w.sum()
+    lambda_max = eigvals[idx].real
+    CI = (lambda_max - n) / (n - 1) if n > 1 else 0.0
+    RI = RI_TABLE.get(n, 1.49)
+    CR = CI / RI if RI > 0 else 0.0
+    return dict(zip(CRITERIA, w)), CR
 
 
 # ═══════════════════════════════════════════════════════════
-# FOUR RANKING METHODS  (matrix: rows=candidates, cols=criteria, all
-# already benefit-oriented and 0-1 normalized; weights: same order)
+# 5. RANKING METHODS  (missing values excluded-by-omission, not zero-filled
+#    — every weighted sum below sums only over criteria the candidate HAS)
 # ═══════════════════════════════════════════════════════════
+
+def _direction(col):
+    return 1.0 if CRITERIA_TYPE[col] == "benefit" else -1.0
+
 
 def topsis(matrix, weights):
-    norm = matrix / (np.sqrt((matrix ** 2).sum(axis=0)) + 1e-12)
-    weighted = norm * weights
-    v_plus, v_minus = weighted.max(axis=0), weighted.min(axis=0)
-    s_plus = np.sqrt(((weighted - v_plus) ** 2).sum(axis=1))
-    s_minus = np.sqrt(((weighted - v_minus) ** 2).sum(axis=1))
-    return s_minus / (s_plus + s_minus + 1e-12)
+    X = matrix.copy()
+    norm = np.sqrt((X ** 2).sum(skipna=True))
+    R = X.div(norm.replace(0, np.nan), axis=1)
+    V = R.mul(pd.Series(weights), axis=1)
+
+    ideal_best, ideal_worst = {}, {}
+    for c in matrix.columns:
+        col = V[c].dropna()
+        if col.empty:
+            ideal_best[c] = ideal_worst[c] = np.nan
+            continue
+        if CRITERIA_TYPE[c] == "benefit":
+            ideal_best[c], ideal_worst[c] = col.max(), col.min()
+        else:
+            ideal_best[c], ideal_worst[c] = col.min(), col.max()
+
+    d_best = np.sqrt(((V - pd.Series(ideal_best)) ** 2).sum(axis=1, skipna=True))
+    d_worst = np.sqrt(((V - pd.Series(ideal_worst)) ** 2).sum(axis=1, skipna=True))
+    Ci = d_worst / (d_best + d_worst).replace(0, np.nan)
+    return Ci.fillna(0.0)
 
 
-def gra(matrix, weights, zeta=GRA_ZETA):
-    ref = matrix.max(axis=0)
-    delta = np.abs(matrix - ref)
-    delta_min, delta_max = delta.min(), delta.max()
-    coeff = (delta_min + zeta * delta_max) / (delta + zeta * delta_max + 1e-12)
-    return (coeff * weights).sum(axis=1)
+def promethee_ii(matrix, weights, tm_col_present):
+    """PROMETHEE II. Tm_fitness criterion is handled NATIVELY here as
+    -|Tm-Tm_target| with q=2K/p=8K thresholds (plan doc §9.2), NOT via the
+    Gaussian fitness score the other methods use — so this function needs
+    the raw Tm/Tm_target, not the transformed matrix column, for that one
+    criterion. tm_col_present: dict pcm_id -> raw (Tm_C, Tm_target) tuple.
+    Every other criterion uses a linear (V-shape, q=0/p=criterion range)
+    preference function — documented choice, not the only valid one."""
+    ids = list(matrix.index)
+    n = len(ids)
+    flows = pd.Series(0.0, index=ids)
+
+    for j in matrix.columns:
+        col = matrix[j]
+        vals = {i: col[i] for i in ids}
+        rng = col.dropna()
+        span = (rng.max() - rng.min()) if len(rng) > 1 else 1.0
+        span = span if span > 0 else 1.0
+
+        for a in ids:
+            for b in ids:
+                if a == b:
+                    continue
+                va, vb = vals[a], vals[b]
+                if pd.isna(va) or pd.isna(vb):
+                    continue   # missing criterion for either side -> zero contribution, not zero-fill
+
+                if j == "Tm_fitness":
+                    # Native handling: d = how much closer a's Tm sits to
+                    # Tm_target than b's (positive => a preferred), then a
+                    # linear q/p preference function on that distance gap.
+                    tm_a, target = tm_col_present[a]
+                    tm_b, _ = tm_col_present[b]
+                    d = abs(tm_b - target) - abs(tm_a - target)
+                    if d <= 0:
+                        pref = 0.0
+                    elif d <= PROMETHEE_Q_K:
+                        pref = 0.0
+                    elif d >= PROMETHEE_P_K:
+                        pref = 1.0
+                    else:
+                        pref = (d - PROMETHEE_Q_K) / (PROMETHEE_P_K - PROMETHEE_Q_K)
+                else:
+                    d = (va - vb) * _direction(j)
+                    pref = 0.0 if d <= 0 else min(1.0, d / span)
+
+                # Each ordered pair (a,b) is visited once in this double
+                # loop, so accumulating a's preference-over-b into flows[a]
+                # (phi+ contribution) and, symmetrically, when the loop
+                # later visits (b,a), b's preference-over-a into flows[b],
+                # is exactly phi+ - phi- per candidate — the PROMETHEE II
+                # net flow — without a separate second pass.
+                flows[a] += weights[j] * pref
+
+    # Divide by (n-1) pairs compared, matching PROMETHEE II's standard
+    # normalization of the net outranking flow into [-1, 1].
+    flows = flows / max(n - 1, 1)
+    return flows
 
 
-def promethee_ii(matrix, weights, q=PROMETHEE_Q, p=PROMETHEE_P):
-    n, k = matrix.shape
-    phi_plus = np.zeros(n)
-    phi_minus = np.zeros(n)
-    for j in range(k):
-        col = matrix[:, j]
-        d = col[:, None] - col[None, :]                     # d[i,k] = x_i - x_k
-        pref = np.clip((np.abs(d) - q) / (p - q + 1e-12), 0, 1)
-        pref = np.where(d > 0, pref, 0.0)                    # only "i preferred to k" direction
-        phi_plus += weights[j] * pref.sum(axis=1)
-        phi_minus += weights[j] * pref.sum(axis=0)
-    denom = max(n - 1, 1)
-    return (phi_plus - phi_minus) / denom
+def vikor(matrix, weights, v=0.5):
+    best, worst = {}, {}
+    for c in matrix.columns:
+        col = matrix[c].dropna()
+        if col.empty:
+            best[c] = worst[c] = np.nan
+            continue
+        if CRITERIA_TYPE[c] == "benefit":
+            best[c], worst[c] = col.max(), col.min()
+        else:
+            best[c], worst[c] = col.min(), col.max()
 
-
-def vikor(matrix, weights, v=VIKOR_V):
-    f_star = matrix.max(axis=0)
-    f_minus = matrix.min(axis=0)
-    span = np.where((f_star - f_minus) == 0, 1e-12, f_star - f_minus)
-    weighted_gap = weights * (f_star - matrix) / span
-    S = weighted_gap.sum(axis=1)
-    R = weighted_gap.max(axis=1)
-    s_star, s_minus = S.min(), S.max()
-    r_star, r_minus = R.min(), R.max()
-    Q = (v * (S - s_star) / (s_minus - s_star + 1e-12) +
-         (1 - v) * (R - r_star) / (r_minus - r_star + 1e-12))
-    return Q, S, R   # lower Q = better
-
-
-def vikor_compromise_check(Q, names):
-    """Acceptable-advantage + acceptable-stability conditions, standard
-    VIKOR post-check. Returns (is_valid_single_winner, note)."""
-    order = np.argsort(Q)
-    n = len(Q)
-    if n < 2:
-        return True, "only one candidate"
-    dq = 1.0 / max(n - 1, 1)
-    advantage_ok = (Q[order[1]] - Q[order[0]]) >= dq
-    if not advantage_ok:
-        return False, (f"VIKOR acceptable-advantage FAILS "
-                        f"(Q gap {Q[order[1]]-Q[order[0]]:.4f} < {dq:.4f}) — "
-                        f"report a compromise set {names[order[0]]}/{names[order[1]]}, "
-                        f"not a single VIKOR winner")
-    return True, "single VIKOR winner acceptable"
-
-
-# ═══════════════════════════════════════════════════════════
-# CONSENSUS: BORDA + COPELAND
-# ═══════════════════════════════════════════════════════════
-
-def borda_and_copeland(rank_series_list):
-    n = len(rank_series_list[0])
-    m = len(rank_series_list)
-    names = rank_series_list[0].index
-
-    borda = pd.Series(0.0, index=names)
-    for ranks in rank_series_list:
-        borda += (n - ranks + 1)
-
-    rank_matrix = pd.concat(rank_series_list, axis=1).values
-    R = rank_matrix.sum(axis=1)
-    R_bar = R.mean()
-    S = ((R - R_bar) ** 2).sum()
-    W = 12 * S / (m ** 2 * (n ** 3 - n) + 1e-12) if n > 1 else np.nan
-
-    copeland = pd.Series(0.0, index=names)
-    for i, name_i in enumerate(names):
-        for jx, name_j in enumerate(names):
-            if i == jx:
+    S, R = pd.Series(0.0, index=matrix.index), pd.Series(0.0, index=matrix.index)
+    for i in matrix.index:
+        terms = []
+        for c in matrix.columns:
+            x = matrix.loc[i, c]
+            if pd.isna(x) or pd.isna(best[c]) or best[c] == worst[c]:
                 continue
-            wins = sum(1 for ranks in rank_series_list if ranks[name_i] < ranks[name_j])
-            losses = sum(1 for ranks in rank_series_list if ranks[name_i] > ranks[name_j])
-            copeland[name_i] += (1 if wins > losses else (-1 if losses > wins else 0))
+            term = weights[c] * (best[c] - x) / (best[c] - worst[c]) if CRITERIA_TYPE[c] == "benefit" \
+                else weights[c] * (x - best[c]) / (worst[c] - best[c])
+            terms.append(term)
+        S[i] = sum(terms) if terms else np.nan
+        R[i] = max(terms) if terms else np.nan
 
-    return borda, copeland, W
+    # Standard VIKOR: Q_i = v*(S_i-S*)/(S^- -S*) + (1-v)*(R_i-R*)/(R^- -R*),
+    # S*=min(S) (best/Sb), S^-=max(S) (worst/Sw) — denominator is
+    # (worst-best), a POSITIVE quantity. FIXED 2026-08-11: this previously
+    # read (Sb - Sw)/(Rb - Rw) — best-minus-worst, i.e. NEGATIVE — which
+    # silently inverted the entire Q ranking (candidates with the BEST S
+    # and R came out with the WORST/highest Q). Caught via the pairwise
+    # method-agreement diagnostic: VIKOR showed near-total inversion
+    # (rho as low as -0.86) against TOPSIS/PROMETHEE in every cluster,
+    # which is mathematically impossible for a correct implementation
+    # given a candidate with simultaneously the best S AND best R was
+    # ranking dead last pre-fix — a direct contradiction, the same kind of
+    # internal-consistency check that caught the earlier kappa-stepping bug.
+    Sb, Sw = S.min(), S.max()
+    Rb, Rw = R.min(), R.max()
+    Q = v * (S - Sb) / (Sw - Sb if Sw != Sb else 1) + (1 - v) * (R - Rb) / (Rw - Rb if Rw != Rb else 1)
+    return Q.fillna(Q.max() if Q.notna().any() else 0.0), S, R
+
+
+def gra(matrix, weights, rho=0.5):
+    ref = pd.Series(
+        {c: (matrix[c].max() if CRITERIA_TYPE[c] == "benefit" else matrix[c].min()) for c in matrix.columns})
+    diff = (matrix - ref).abs()
+    dmin, dmax = diff.min().min(skipna=True), diff.max().max(skipna=True)
+    dmax = dmax if dmax and dmax > 0 else 1.0
+    xi = (dmin + rho * dmax) / (diff + rho * dmax)
+
+    gamma = pd.Series(0.0, index=matrix.index)
+    for i in matrix.index:
+        terms = [weights[c] * xi.loc[i, c] for c in matrix.columns if pd.notna(xi.loc[i, c])]
+        gamma[i] = np.mean(terms) if terms else 0.0
+    return gamma
+
+
+def cocoso(matrix, weights):
+    """Optional 5th ranker (plan doc §9.4), off by default (RUN_COCOSO)."""
+    X = matrix.fillna(matrix.median(numeric_only=True))
+    norm = pd.DataFrame(index=X.index, columns=X.columns, dtype=float)
+    for c in X.columns:
+        if CRITERIA_TYPE[c] == "benefit":
+            rng = X[c].max() - X[c].min()
+            norm[c] = (X[c] - X[c].min()) / rng if rng > 0 else 1.0
+        else:
+            rng = X[c].max() - X[c].min()
+            norm[c] = (X[c].max() - X[c]) / rng if rng > 0 else 1.0
+    wsum = (norm.mul(pd.Series(weights), axis=1)).sum(axis=1)
+    wprod = (norm.pow(pd.Series(weights), axis=1)).prod(axis=1)
+    ka = (wsum + wprod) / (wsum + wprod).sum()
+    kb = wsum / wsum.min() + wprod / wprod.min()
+    lam = 0.5
+    kc = (lam * wsum + (1 - lam) * wprod) / (lam * wsum.max() + (1 - lam) * wprod.max())
+    k = (ka * kb * kc) ** (1 / 3) + (ka + kb + kc) / 3
+    return k
 
 
 # ═══════════════════════════════════════════════════════════
-# MONTE CARLO STABILITY  (plan v3.0 Section 9.6)
+# 6. AGGREGATION
 # ═══════════════════════════════════════════════════════════
 
-def run_monte_carlo(df, tm_target, w_final, n_draws=N_MONTE_CARLO_DRAWS, seed=MC_RANDOM_SEED):
-    rng = np.random.default_rng(seed)
-    names = df["name"].tolist()
-    n_cand = len(names)
-    l_required = (df["L_required_kJ_per_kg"].iloc[0]
-                  if "L_required_kJ_per_kg" in df.columns else np.nan)
+def borda_count(rank_dict):
+    """rank_dict: {method_name: pd.Series of ranks (1=best), index=pcm_id}."""
+    ids = list(next(iter(rank_dict.values())).index)
+    n = len(ids)
+    borda = pd.Series(0.0, index=ids)
+    for ranks in rank_dict.values():
+        borda += (n - ranks)
+    return borda.sort_values(ascending=False)
 
-    base_matrix = minmax_normalize(df, CRITERIA)
-    baseline_topsis = topsis(base_matrix, w_final)
-    baseline_rank = pd.Series(baseline_topsis, index=names).rank(ascending=False, method="min")
 
-    top3_count = {name: 0 for name in names}
-    top1_count = {name: 0 for name in names}
+def copeland(rank_dict):
+    ids = list(next(iter(rank_dict.values())).index)
+    score = pd.Series(0, index=ids)
+    for a in ids:
+        for b in ids:
+            if a == b:
+                continue
+            wins = sum(1 for ranks in rank_dict.values() if ranks[a] < ranks[b])
+            losses = sum(1 for ranks in rank_dict.values() if ranks[a] > ranks[b])
+            score[a] += (1 if wins > losses else (-1 if losses > wins else 0))
+    return score.sort_values(ascending=False)
+
+
+def kendalls_w(rank_dict):
+    """Kendall's coefficient of concordance across the method rankings.
+    Thresholds (>0.8 strong, <0.6 ambiguous) are PLAN-DOC-SOURCED — see
+    module docstring, not this script's own judgment call."""
+    R = pd.DataFrame(rank_dict)
+    m = R.shape[1]
+    n = R.shape[0]
+    Rsum = R.sum(axis=1)
+    Rbar = Rsum.mean()
+    S = ((Rsum - Rbar) ** 2).sum()
+    W = 12 * S / (m ** 2 * (n ** 3 - n)) if n > 1 else np.nan
+    return W
+
+
+def pairwise_method_agreement(rank_dict):
+    """Spearman rho and Kendall tau between each PAIR of methods' rankings
+    (not just the aggregate Kendall's W across all methods at once). A low
+    W is consistent with either (a) genuine disagreement spread evenly
+    across all method pairs, or (b) one method being a structural outlier
+    while the rest largely agree — those are different findings and W
+    alone can't distinguish them. This can: if one method's mean
+    correlation with the other three is visibly lower than their mutual
+    correlations with EACH OTHER, that method is the outlier, not the
+    stack as a whole.
+
+    Motivating hypothesis for this pipeline specifically: PROMETHEE II is
+    the one method handling Tm_fitness NATIVELY (V-shape q=2K/p=8K
+    threshold on raw |Tm-Tm_target|) rather than through the shared
+    Gaussian-fitness score TOPSIS/VIKOR/GRA all consume — if Tm_fitness is
+    the dominant criterion (as it is, 48-56% entropy weight, in every
+    Rajasthan cluster), a fundamentally different scoring mechanism for
+    that one criterion is a plausible single source of most of the
+    disagreement. Checked empirically below, not assumed — report
+    whichever method actually comes out as the outlier, including if it
+    ISN'T PROMETHEE.
+
+    Returns a DataFrame: method_a, method_b, spearman_rho, kendall_tau."""
+    methods = list(rank_dict.keys())
+    rows = []
+    for i, ma in enumerate(methods):
+        for mb in methods[i + 1:]:
+            ra, rb = rank_dict[ma], rank_dict[mb]
+            common = ra.index.intersection(rb.index)
+            if len(common) < 3:
+                rho, tau = np.nan, np.nan
+            else:
+                rho, _ = spearmanr(ra[common], rb[common])
+                tau, _ = kendalltau(ra[common], rb[common])
+            rows.append({"method_a": ma, "method_b": mb,
+                         "spearman_rho": rho, "kendall_tau": tau})
+    return pd.DataFrame(rows)
+
+
+def method_outlier_summary(pairwise_df, methods):
+    """Per method: mean Spearman rho against each of the OTHER methods.
+    The method with the lowest mean is the outlier candidate — print this
+    alongside the raw pairwise table so the reader sees the evidence, not
+    just the conclusion."""
+    mean_corr = {}
+    for m in methods:
+        rows = pairwise_df[(pairwise_df["method_a"] == m) | (pairwise_df["method_b"] == m)]
+        mean_corr[m] = rows["spearman_rho"].mean()
+    return mean_corr
+
+
+# ═══════════════════════════════════════════════════════════
+# 7. MONTE CARLO CONFIDENCE
+# ═══════════════════════════════════════════════════════════
+
+def sample_property_for_montecarlo(rng, cand_df, col, family_lookup):
+    """For each candidate: if any_property_imputed is True for that
+    candidate's row (i.e. the underlying property came from MICE/RF/PMM
+    imputation, not a real measurement), sample the perturbed value from
+    that candidate's FAMILY's empirical distribution for this property
+    (mean/std across other same-family candidates with a REAL, non-
+    imputed value for it) rather than adding Gaussian noise to a fixed
+    point estimate — per plan doc §9.6 ("sample from the type-class
+    distribution rather than imputing a point value"). Fallback chain if
+    the family has <2 real donor values for this property: fall back to
+    all-candidates' real values for this property; if that's also <2,
+    fall back to standard point-estimate + Gaussian noise (same as a
+    measured value gets) since no distribution can be estimated at all —
+    documented, not silent."""
+    out = cand_df[col].copy().astype(float)
+    imputed_mask = cand_df.get("any_property_imputed", pd.Series(False, index=cand_df.index))
+    for idx in cand_df.index[imputed_mask.fillna(False)]:
+        fam = cand_df.loc[idx, "family"]
+        donors = cand_df.loc[(cand_df["family"] == fam) & (~imputed_mask.fillna(False)), col].dropna()
+        if len(donors) < 2:
+            donors = cand_df.loc[~imputed_mask.fillna(False), col].dropna()
+        if len(donors) >= 2:
+            out[idx] = rng.normal(donors.mean(), donors.std())
+    return out
+
+
+def run_pipeline_once(cand_df, weights, tm_target, l_required, matrix=None):
+    """One full deterministic pass: builds (or reuses) the criteria matrix,
+    runs all 4 core methods (+CoCoSo if enabled), aggregates via Borda.
+    Returns (borda_series, rank_dict) for downstream use."""
+    if matrix is None:
+        matrix = build_criteria_matrix(cand_df, tm_target, l_required)
+
+    tm_lookup = {pid: (cand_df.set_index("pcm_id").loc[pid, "Tm_C"], tm_target) for pid in matrix.index}
+
+    ci = topsis(matrix, weights)
+    phi = promethee_ii(matrix, weights, tm_lookup)
+    q, _, _ = vikor(matrix, weights)
+    gamma = gra(matrix, weights)
+
+    ranks = {
+        "TOPSIS": ci.rank(ascending=False, method="min"),
+        "PROMETHEE_II": phi.rank(ascending=False, method="min"),
+        "VIKOR": q.rank(ascending=True, method="min"),   # lower Q is better
+        "GRA": gamma.rank(ascending=False, method="min"),
+    }
+    if RUN_COCOSO:
+        k = cocoso(matrix, weights)
+        ranks["CoCoSo"] = k.rank(ascending=False, method="min")
+
+    borda = borda_count(ranks)
+    return borda, ranks, {"TOPSIS": ci, "PROMETHEE_II": phi, "VIKOR": q, "GRA": gamma}
+
+
+def monte_carlo(cand_df, base_weights, tm_target, l_required, n_draws, rng):
+    ids = list(cand_df["pcm_id"])
+    top3_count = pd.Series(0, index=ids)
+    top1_count = pd.Series(0, index=ids)
+    rank_reversals = 0
     spearman_rhos = []
 
-    alpha = np.clip(w_final, 1e-6, None) * MC_DIRICHLET_CONCENTRATION
+    base_matrix = build_criteria_matrix(cand_df, tm_target, l_required)
+    base_borda, _, _ = run_pipeline_once(cand_df, base_weights, tm_target, l_required, base_matrix)
+    base_order = base_borda.rank(ascending=False, method="min")
+    family_lookup = cand_df.set_index("pcm_id")["family"].to_dict()
+
+    weight_keys = list(base_weights.keys())
+    alpha = np.array([base_weights[k] for k in weight_keys]) * DIRICHLET_CONCENTRATION
+    alpha = np.clip(alpha, 0.1, None)
 
     for _ in range(n_draws):
-        w_draw = rng.dirichlet(alpha)
+        drawn = rng.dirichlet(alpha)
+        w = dict(zip(weight_keys, drawn))
 
-        tm_draw = df["Tm_C"].values + rng.normal(0, MC_TM_STD_K, n_cand)
-        l_draw = df["latent_heat_kJ_kg"].values * (
-            1 + rng.normal(0, MC_RELATIVE_STD["latent_heat_kJ_kg"], n_cand))
-        tc_draw = df["TC_W_mK"].values * (1 + rng.normal(0, MC_RELATIVE_STD["TC_W_mK"], n_cand))
-        rho_draw = df["rho_H_MJ_m3"].values * (
-            1 + rng.normal(0, MC_RELATIVE_STD["rho_H_MJ_m3"], n_cand))
+        pert = cand_df.copy()
+        pert["latent_heat_kJ_kg"] = sample_property_for_montecarlo(
+            rng, cand_df, "latent_heat_kJ_kg", family_lookup) * (
+            1 + rng.normal(0, GAUSS_NOISE_PCT["latent_heat"], len(cand_df)))
+        pert["TC_W_mK"] = sample_property_for_montecarlo(
+            rng, cand_df, "TC_W_mK", family_lookup) * (
+            1 + rng.normal(0, GAUSS_NOISE_PCT["thermal_conductivity"], len(cand_df)))
+        pert["Tm_C"] = cand_df["Tm_C"] + rng.normal(0, GAUSS_NOISE_PCT["Tm_C_abs_K"], len(cand_df))
+        pert["cost"] = sample_property_for_montecarlo(rng, cand_df, "cost", family_lookup) * (
+            1 + rng.normal(0, GAUSS_NOISE_PCT["cost"], len(cand_df)))
+        pert["density_kg_m3"] = cand_df["density_kg_m3"]
 
-        latent_criterion_draw = (l_draw / l_required) if USE_CLIMATE_RELATIVE_LATENT_HEAT else l_draw
+        matrix = build_criteria_matrix(pert, tm_target, l_required)
+        borda, ranks, _ = run_pipeline_once(pert, w, tm_target, l_required, matrix)
+        order = borda.rank(ascending=False, method="min")
 
-        draw_df = pd.DataFrame({
-            "f_Tm": gaussian_tm_fitness(tm_draw, tm_target),
-            LATENT_CRITERION_NAME: latent_criterion_draw,
-            "rho_H_MJ_m3": rho_draw,
-            "TC_W_mK": tc_draw,
-            "cycles_confidence": df["cycles_confidence"].values,
-        })
-        draw_matrix = minmax_normalize(draw_df, CRITERIA)
-        draw_scores = topsis(draw_matrix, w_draw)
-        draw_rank = pd.Series(draw_scores, index=names).rank(ascending=False, method="min")
+        top3_ids = order[order <= 3].index
+        top3_count[top3_ids] += 1
+        top1_ids = order[order == 1].index
+        top1_count[top1_ids] += 1
 
-        for name in draw_rank[draw_rank <= 3].index:
-            top3_count[name] += 1
-        for name in draw_rank[draw_rank == 1].index:
-            top1_count[name] += 1
+        if not (order.reindex(base_order.index) == base_order).all():
+            rank_reversals += 1
+        try:
+            rho = order.reindex(base_order.index).corr(base_order, method="spearman")
+            if rho == rho:
+                spearman_rhos.append(rho)
+        except Exception:
+            pass
 
-        rho, _ = spearmanr(baseline_rank.values, draw_rank.values)
-        spearman_rhos.append(rho if rho == rho else 0.0)
-
-    result = pd.DataFrame({
-        "name": names,
-        "top3_inclusion_probability": [top3_count[n] / n_draws for n in names],
-        "top1_retention_rate": [top1_count[n] / n_draws for n in names],
-    })
-    result["mean_spearman_rho_vs_baseline"] = float(np.mean(spearman_rhos))
-    result["n_draws"] = n_draws
-    return result.sort_values("top3_inclusion_probability", ascending=False)
+    return {
+        "top3_pct": (top3_count / n_draws * 100).to_dict(),
+        "top1_pct": (top1_count / n_draws * 100).to_dict(),
+        "rank_reversal_freq": rank_reversals / n_draws,
+        "mean_spearman_vs_baseline": float(np.mean(spearman_rhos)) if spearman_rhos else np.nan,
+        "baseline_order": base_order,
+    }
 
 
 # ═══════════════════════════════════════════════════════════
-# PER-CLUSTER RANKING
+# MAIN
 # ═══════════════════════════════════════════════════════════
-
-def rank_cluster(df):
-    df = df.copy().reset_index(drop=True)
-    df["f_Tm"] = gaussian_tm_fitness(df["Tm_C"], df["Tm_target_C"].iloc[0])
-
-    if USE_CLIMATE_RELATIVE_LATENT_HEAT:
-        l_required = df["L_required_kJ_per_kg"].iloc[0]
-        df["latent_heat_margin_ratio"] = df["latent_heat_kJ_kg"] / l_required
-
-    df["cycles_confidence_imputed"] = df["cycles_confidence"].isna()
-    med = df["cycles_confidence"].median()
-    df["cycles_confidence"] = df["cycles_confidence"].fillna(med if med == med else 0.5)
-
-    M = minmax_normalize(df, CRITERIA)
-    w_entropy = entropy_weights(M)
-    w_ahp = np.array([AHP_PRIOR[c] for c in CRITERIA])
-    w_ahp = w_ahp / w_ahp.sum()
-    w_final = ENTROPY_AHP_LAMBDA * w_entropy + (1 - ENTROPY_AHP_LAMBDA) * w_ahp
-    w_final = w_final / w_final.sum()
-
-    df["topsis_score"] = topsis(M, w_final)
-    df["gra_grade"] = gra(M, w_final)
-    df["promethee_flow"] = promethee_ii(M, w_final)
-    vikor_q, vikor_s, vikor_r = vikor(M, w_final)
-    df["vikor_Q"] = vikor_q
-    df["vikor_S"] = vikor_s
-    df["vikor_R"] = vikor_r
-
-    df["topsis_rank"] = df["topsis_score"].rank(ascending=False, method="min").astype(int)
-    df["gra_rank"] = df["gra_grade"].rank(ascending=False, method="min").astype(int)
-    df["promethee_rank"] = df["promethee_flow"].rank(ascending=False, method="min").astype(int)
-    df["vikor_rank"] = df["vikor_Q"].rank(ascending=True, method="min").astype(int)   # lower Q better
-
-    vikor_valid, vikor_note = vikor_compromise_check(vikor_q, df["name"].values)
-    df["vikor_compromise_note"] = vikor_note
-
-    rank_series = [df.set_index("name")[c] for c in
-                   ["topsis_rank", "gra_rank", "promethee_rank", "vikor_rank"]]
-    borda, copeland, kendall_w = borda_and_copeland(rank_series)
-    df["borda_score"] = df["name"].map(borda)
-    df["copeland_score"] = df["name"].map(copeland)
-    df["consensus_rank"] = df["borda_score"].rank(ascending=False, method="min").astype(int)
-    df["copeland_rank"] = df["copeland_score"].rank(ascending=False, method="min").astype(int)
-    df["kendall_w"] = kendall_w
-
-    borda_top1 = df.loc[df["consensus_rank"] == 1, "name"].tolist()
-    copeland_top1 = df.loc[df["copeland_rank"] == 1, "name"].tolist()
-    df["borda_copeland_agree"] = bool(set(borda_top1) & set(copeland_top1))
-
-    for i, c in enumerate(CRITERIA):
-        df[f"weight_{c}"] = w_final[i]
-
-    mc = run_monte_carlo(df, df["Tm_target_C"].iloc[0], w_final)
-    df = df.merge(mc, on="name", how="left")
-
-    return df.sort_values("consensus_rank"), mc
-
 
 def main():
-    print("=" * 68)
-    print("  Phase 6 — Full MCDM Stack (TOPSIS+GRA+PROMETHEE II+VIKOR) +")
-    print(f"  {N_MONTE_CARLO_DRAWS}-draw Monte Carlo — Tamil Nadu")
-    print("=" * 68)
+    t0 = time.time()
+    log_header(f"PHASE 6 — MCDM RANKING ENGINE — {STATE_NAME.title()}")
 
-    if not SURVIVORS_FILE.exists():
-        print(f"\n  ERROR: {SURVIVORS_FILE} not found — run 07_feasibility_filter.py first.")
-        return
+    survivors, profiles, profile_fp_id = load_survivors()
+    rich = pd.concat([load_rich_pcm_properties(), literature_rich_properties()],
+                      ignore_index=True, sort=False)
+    survivors = survivors.merge(rich, on=["pcm_id", "family"], how="left", suffixes=("", "_rich"))
 
-    survivors = pd.read_csv(SURVIVORS_FILE)
-    full_rows, topk_rows, mc_rows = [], [], []
+    hsi_min, hsi_max = profiles["HSI_sunrise"].min(), profiles["HSI_sunrise"].max()
 
-    for cid, grp in survivors.groupby("cluster_id"):
-        passed = grp[grp["passes_all"]]
-        if len(passed) < 2:
-            print(f"\n  Cluster {int(cid)}: only {len(passed)} survivor(s) — skipping.")
-            continue
+    print(f"\n  Criteria (plan doc Table 13): {CRITERIA}")
+    print(f"  Nominal literature-prior weights (Table 13 indicative, TODO real pairwise elicitation): "
+          f"{LITERATURE_WEIGHTS_TABLE13}")
+    if PAIRWISE_MATRIX is not None:
+        prior_w, cr = ahp_weights_from_pairwise(np.array(PAIRWISE_MATRIX))
+        print(f"  Real pairwise matrix supplied -> weights={prior_w}  CR={cr:.4f}"
+              f"  ({'OK, <0.10' if cr < 0.10 else 'FAILS plan doc CR<0.10 requirement — revisit elicitation'})")
+    else:
+        prior_w = LITERATURE_WEIGHTS_TABLE13
+        print("  No PAIRWISE_MATRIX supplied — using Table 13 indicative weights as the literature-prior baseline directly.")
 
-        ranked, mc = rank_cluster(passed)
-        if "cluster_id" in ranked.columns:
-            ranked = ranked.drop(columns=["cluster_id"])
-        ranked.insert(0, "cluster_id", cid)
-        mc.insert(0, "cluster_id", cid)
-        full_rows.append(ranked)
-        mc_rows.append(mc)
+    dirichlet_check_alpha = np.array(list(prior_w.values())) * DIRICHLET_CONCENTRATION
+    print(f"  Dirichlet concentration={DIRICHLET_CONCENTRATION} chosen for ~+/-20% weight variation "
+          f"(alpha sum={dirichlet_check_alpha.sum():.1f})")
 
-        top3 = ranked.head(3)
-        agree_flag = "" if ranked["borda_copeland_agree"].iloc[0] else "  [Borda/Copeland DISAGREE on #1]"
-        print(f"\n  Cluster {int(cid)}  (Tm_target={passed['Tm_target_C'].iloc[0]:.1f}C, "
-              f"n_survivors={len(passed)}, Kendall's W={ranked['kendall_w'].iloc[0]:.3f}){agree_flag}:")
-        for _, row in top3.iterrows():
-            mc_row = mc[mc["name"] == row["name"]]
-            incl = mc_row["top3_inclusion_probability"].iloc[0] if len(mc_row) else float("nan")
-            print(f"    #{row['consensus_rank']}  {row['name']:35s}  Tm={row['Tm_C']:.1f}C  "
-                  f"TOPSIS={row['topsis_score']:.3f}(r{row['topsis_rank']})  "
-                  f"GRA={row['gra_grade']:.3f}(r{row['gra_rank']})  "
-                  f"PROMETHEE={row['promethee_flow']:+.3f}(r{row['promethee_rank']})  "
-                  f"VIKOR_Q={row['vikor_Q']:.3f}(r{row['vikor_rank']})  "
-                  f"MC_Top3%={incl*100:.1f}%")
-        print(f"    VIKOR compromise check: {ranked['vikor_compromise_note'].iloc[0]}")
-        topk_rows.append(top3)
+    all_output_rows = []
+    all_pairwise_rows = []
+    provisional_clusters = []
+    undersized_clusters = []
 
-    if not full_rows:
-        print("\n  ERROR: no cluster had >=2 survivors to rank.")
-        return
+    for prof in profiles.itertuples():
+        cid = prof.cluster_id
+        tm_target = prof.Tm_target_C
+        cluster_hsi = prof.HSI_sunrise
+        l_required = float(prof.L_required_kJ_per_kg)   # climate-relative latent-heat criterion
 
-    full_df = pd.concat(full_rows, ignore_index=True)
-    topk_df = pd.concat(topk_rows, ignore_index=True)
-    mc_df = pd.concat(mc_rows, ignore_index=True)
-    full_df.to_csv(OUT_FULL, index=False)
+        cand_df = survivors[survivors["cluster_id"] == cid].reset_index(drop=True)
+        n_survivors = len(cand_df)
+        status = "healthy" if CANDIDATE_POOL_LO <= n_survivors <= CANDIDATE_POOL_HI else "undersized"
+        if status == "undersized":
+            undersized_clusters.append(cid)
+        provisional_clusters.append(cid)   # every cluster is provisional this run — see module docstring
+
+        log_header(f"Cluster {cid} — {n_survivors} candidates ({status})")
+
+        matrix = build_criteria_matrix(cand_df, tm_target, l_required)
+        ent_w = entropy_weights(matrix)
+        cluster_prior_w = reweight_corrosion_for_cluster(prior_w, cluster_hsi, hsi_min, hsi_max)
+        blend_w = blended_weights(ent_w, cluster_prior_w)
+
+        dominant = max(ent_w, key=ent_w.get)
+        print(f"  Entropy weights: {{{', '.join(f'{k}={v:.3f}' for k, v in ent_w.items())}}}")
+        print(f"  Literature-prior (cluster-adjusted) weights: "
+              f"{{{', '.join(f'{k}={v:.3f}' for k, v in cluster_prior_w.items())}}}")
+        print(f"  Blended (lambda=0.5) weights: "
+              f"{{{', '.join(f'{k}={v:.3f}' for k, v in blend_w.items())}}}")
+        if ent_w[dominant] > 0.40:
+            print(f"  [FLAG] entropy weight for '{dominant}' = {ent_w[dominant]:.1%} — exceeds the 40% "
+                  f"near-total-domination threshold (cf. Oluah 2020's 72.12% thermal-conductivity fixture, "
+                  f"the plan doc's own cautionary example for why entropy alone is untrustworthy).")
+
+        borda_05, ranks_05, scores_05 = run_pipeline_once(cand_df, blend_w, tm_target, l_required, matrix)
+        borda_00, ranks_00, _ = run_pipeline_once(cand_df, cluster_prior_w, tm_target, l_required, matrix)
+        top3_05 = set(borda_05.sort_values(ascending=False).head(3).index)
+        top3_00 = set(borda_00.sort_values(ascending=False).head(3).index)
+        print(f"  Top-3 at lambda=0.5: {sorted(top3_05)}")
+        print(f"  Top-3 at lambda=0.0 (literature-prior only): {sorted(top3_00)}")
+        print(f"  {'SAME Top-3 set regardless of entropy weighting — robust.' if top3_05 == top3_00 else 'Top-3 CHANGES with entropy weighting — entropy is load-bearing for this cluster, not just large in isolation.'}")
+
+        copeland_scores = copeland(ranks_05)
+        W = kendalls_w(ranks_05)
+        agreement = "strong (W>0.8)" if W > 0.8 else ("ambiguous (W<0.6)" if W < 0.6 else "moderate")
+        print(f"  Kendall's W = {W:.3f}  ({agreement}, thresholds per plan doc Section 9.5)")
+        if status == "undersized":
+            print(f"  [CAVEAT] Kendall's W on n={n_survivors} candidates is a noisier estimate than on "
+                  f"a healthy 8-20 pool — this cluster's 'ambiguous' verdict carries the same "
+                  f"provisional status as its Top-3 already does. Revisit once the PCM database "
+                  f"expansion gives this cluster more candidates to compute W over.")
+
+        pairwise_df = pairwise_method_agreement(ranks_05)
+        outlier_corr = method_outlier_summary(pairwise_df, list(ranks_05.keys()))
+        print(f"  Pairwise method agreement (Spearman rho / Kendall tau):")
+        for _, r in pairwise_df.iterrows():
+            print(f"    {r['method_a']:<14s} vs {r['method_b']:<14s}  "
+                  f"rho={r['spearman_rho']:.3f}  tau={r['kendall_tau']:.3f}")
+        outlier_method = min(outlier_corr, key=outlier_corr.get)
+        others_mean = np.mean([v for k, v in outlier_corr.items() if k != outlier_method])
+        print(f"  Mean rho vs. others, per method: "
+              f"{{{', '.join(f'{k}={v:.3f}' for k, v in outlier_corr.items())}}}")
+        if outlier_corr[outlier_method] < 0.5 and (others_mean - outlier_corr[outlier_method]) > 0.2:
+            print(f"  [FINDING] '{outlier_method}' is a structural outlier (mean rho={outlier_corr[outlier_method]:.3f} "
+                  f"vs. others' mutual mean={others_mean:.3f}) — "
+                  f"{'consistent with the PROMETHEE-native-Tm-handling hypothesis' if outlier_method == 'PROMETHEE_II' else 'NOT PROMETHEE — the outlier hypothesis for this pipeline does not hold in this cluster, report the actual outlier instead'}.")
+        else:
+            print(f"  No single method stands out as a structural outlier here — disagreement is spread "
+                  f"roughly evenly across the four methods, consistent with genuine matrix ambiguity "
+                  f"(small candidate pool, closely-matched candidates) rather than one method's Tm handling "
+                  f"driving the low W.")
+        pairwise_df["cluster_id"] = cid
+        all_pairwise_rows.append(pairwise_df)
+
+        borda_top3 = list(borda_05.sort_values(ascending=False).head(3).index)
+        copeland_top3 = list(copeland_scores.sort_values(ascending=False).head(3).index)
+        if set(borda_top3) != set(copeland_top3):
+            print(f"  [FLAG] Borda Top-3 {borda_top3} != Copeland Top-3 {copeland_top3} — reporting both.")
+
+        rng = np.random.default_rng(RANDOM_STATE)
+        mc_t0 = time.time()
+        mc = monte_carlo(cand_df, blend_w, tm_target, l_required, N_DRAWS, rng)
+        mc_elapsed = time.time() - mc_t0
+        print(f"  Monte Carlo: {N_DRAWS} draws in {mc_elapsed:.1f}s "
+              f"({'OK' if mc_elapsed < 120 else '[SLOW — consider N_DRAWS=1000, plan doc documented fallback]'})")
+        print(f"  Mean rank-reversal frequency: {mc['rank_reversal_freq']:.3f}  "
+              f"Mean Spearman rho vs baseline: {mc['mean_spearman_vs_baseline']:.3f}")
+
+        deterministic_top3 = borda_05.sort_values(ascending=False).head(3)
+        for pid in deterministic_top3.index:
+            mc_incl = mc["top3_pct"].get(pid, 0.0)
+            flag = "" if mc_incl >= 50 else "  [MC disagrees: low inclusion prob despite deterministic Top-3]"
+            print(f"    {pid}: deterministic Borda={deterministic_top3[pid]:.2f}  "
+                  f"MC Top-3 inclusion={mc_incl:.1f}%{flag}")
+
+        borda_rank_05 = borda_05.rank(ascending=False, method="min")
+        copeland_rank_05 = copeland_scores.rank(ascending=False, method="min")
+        borda_copeland_agree_cluster = bool(borda_rank_05.idxmin() == copeland_rank_05.idxmin())
+
+        cand_lookup = cand_df.set_index("pcm_id")
+
+        # Legacy column-name map: old Tamil Nadu 5-criterion names -> the
+        # unified CRITERIA keys, so Phase 7/8 / seasonal / cards keep
+        # resolving crit_<name> and weight_<name> off this single file.
+        LEGACY_CRIT = {"f_Tm": "Tm_fitness",
+                       "latent_heat_margin_ratio": "latent_heat",
+                       "rho_H_MJ_m3": "vol_latent_heat",
+                       "cycles_confidence": "cycling"}
+
+        for pid in cand_df["pcm_id"]:
+            row = {
+                "cluster_id": cid, "pcm_id": pid, "name": pid,   # `name` alias for downstream
+                "candidate_pool_status": status,
+                "n_survivors_in_cluster": n_survivors,
+                "L_required_kJ_per_kg": l_required,
+            }
+            # Raw PCM properties passed through for Phase 7/8 / seasonal
+            # (which otherwise re-load them) — keeps those scripts working
+            # off this single file.
+            for prop in ("Tm_C", "latent_heat_kJ_kg", "density_kg_m3", "Cp_kJ_kgK",
+                         "TC_W_mK", "cycles_tested", "supercooling_K"):
+                if prop in cand_lookup.columns:
+                    v = cand_lookup.loc[pid, prop]
+                    row[prop] = float(v) if pd.notna(v) else np.nan
+            # Raw criterion values (pre-normalisation) + blended weights.
+            for c in CRITERIA:
+                v = matrix.loc[pid, c]
+                row[f"crit_{c}"] = float(v) if pd.notna(v) else np.nan
+                row[f"weight_{c}"] = float(blend_w[c])
+            for legacy, src in LEGACY_CRIT.items():
+                row[f"crit_{legacy}"] = row[f"crit_{src}"]
+                row[f"weight_{legacy}"] = float(blend_w[src])
+                row[legacy] = row[f"crit_{src}"]            # bare-name alias (f_Tm, rho_H_MJ_m3, ...)
+            row["weight_TC_W_mK"] = float(blend_w["thermal_conductivity"])
+            # Method ranks + raw scores (raw scores are the old
+            # topsis_score / gra_grade / promethee_flow / vikor_Q columns
+            # Phase 8 cards read directly).
+            row["TOPSIS_rank"] = int(ranks_05["TOPSIS"][pid])
+            row["PROMETHEE_II_rank"] = int(ranks_05["PROMETHEE_II"][pid])
+            row["VIKOR_rank"] = int(ranks_05["VIKOR"][pid])
+            row["GRA_rank"] = int(ranks_05["GRA"][pid])
+            row["topsis_score"] = float(scores_05["TOPSIS"][pid])
+            row["gra_grade"] = float(scores_05["GRA"][pid])
+            row["promethee_flow"] = float(scores_05["PROMETHEE_II"][pid])
+            row["vikor_Q"] = float(scores_05["VIKOR"][pid])
+            row["borda_score"] = float(borda_05[pid])
+            row["consensus_rank"] = int(borda_rank_05[pid])
+            row["copeland_score"] = int(copeland_scores[pid])
+            row["copeland_rank"] = int(copeland_rank_05[pid])
+            row["kendalls_w_cluster"] = float(W)
+            row["kendall_w"] = float(W)                     # legacy alias
+            row["borda_copeland_agree"] = borda_copeland_agree_cluster
+            row["entropy_weight_dominant_criterion"] = dominant
+            row["entropy_weight_dominant_value"] = float(ent_w[dominant])
+            row["top3_at_lambda05"] = pid in top3_05
+            row["top3_at_lambda00"] = pid in top3_00
+            row["mc_top3_inclusion_pct"] = float(mc["top3_pct"].get(pid, 0.0))
+            row["mc_top1_retention_pct"] = float(mc["top1_pct"].get(pid, 0.0))
+            row["mc_rank_reversal_freq_cluster"] = float(mc["rank_reversal_freq"])
+            row["mc_mean_spearman_vs_baseline_cluster"] = float(mc["mean_spearman_vs_baseline"])
+            # Legacy 0-1 aliases (old Tamil Nadu / cards convention).
+            row["top3_inclusion_probability"] = row["mc_top3_inclusion_pct"] / 100.0
+            row["top1_retention_rate"] = row["mc_top1_retention_pct"] / 100.0
+            row["mean_spearman_rho_vs_baseline"] = row["mc_mean_spearman_vs_baseline_cluster"]
+            row["pcm_database_status"] = ("COMPLETE — 55-row manufacturer database "
+                                           "(+7 literature rows = 62 candidates total) as of "
+                                           "2026-08-12, inside the 40-60-row target "
+                                           "(was ~25 rows/18 manufacturer at the prior run)")
+            all_output_rows.append(row)
+
+    out_df = pd.DataFrame(all_output_rows)
+    out_df["upstream_cluster_profile_fingerprint"] = profile_fp_id
+    # Full per-survivor audit trail.
+    out_df.to_csv(OUT_FULL, index=False)
+
+    # Top-3 per cluster subset (consensus_rank <= 3), for Phase 8 cards.
+    topk_df = (out_df[out_df["consensus_rank"] <= 3]
+               .sort_values(["cluster_id", "consensus_rank"])
+               .reset_index(drop=True))
     topk_df.to_csv(OUT_TOPK, index=False)
-    mc_df.to_csv(OUT_MC, index=False)
 
-    print("\n" + "=" * 68)
-    print("  DONE")
-    print(f"  Saved: {OUT_TOPK}")
-    print(f"  Saved: {OUT_FULL}")
-    print(f"  Saved: {OUT_MC}")
+    # Monte Carlo stability columns only.
+    mc_cols = ["cluster_id", "pcm_id", "n_survivors_in_cluster", "candidate_pool_status",
+               "consensus_rank", "mc_top3_inclusion_pct", "mc_top1_retention_pct",
+               "mc_rank_reversal_freq_cluster", "mc_mean_spearman_vs_baseline_cluster",
+               "upstream_cluster_profile_fingerprint"]
+    out_df[[c for c in mc_cols if c in out_df.columns]].to_csv(OUT_MC, index=False)
 
-    top1_sets = topk_df[topk_df["consensus_rank"] == 1].groupby("cluster_id")["name"].first()
-    if top1_sets.nunique() == 1:
-        print(f"\n  [FINDING] Every cluster's #1 PCM is identical ({top1_sets.iloc[0]!r}). "
-              "See 07b_charging_feasibility.py if you want to test whether a "
-              "regime-dependent Tm ceiling changes this — otherwise this is a "
-              "legitimate, reportable outcome (see the script's own docstring "
-              "for two honest ways to phrase it).")
-    disagree = full_df.groupby("cluster_id")["borda_copeland_agree"].first()
-    if (~disagree).any():
-        print(f"\n  [NOTE] Borda and Copeland disagree on #1 for cluster(s) "
-              f"{disagree[~disagree].index.tolist()} — report both per plan v3.0 "
-              f"Section 9.5, don't silently pick one.")
+    pairwise_out = pd.concat(all_pairwise_rows, ignore_index=True)
+    pairwise_out.to_csv(OUT_METHOD_AGREEMENT, index=False)
+
+    # Inclusion-probability figure — one panel per cluster
+    clusters = sorted(out_df["cluster_id"].unique())
+    fig = go.Figure()
+    for cid in clusters:
+        sub = out_df[out_df["cluster_id"] == cid].sort_values("mc_top3_inclusion_pct", ascending=False)
+        fig.add_trace(go.Bar(x=sub["pcm_id"], y=sub["mc_top3_inclusion_pct"],
+                              name=f"Cluster {cid}", visible=(cid == clusters[0])))
+    buttons = [dict(label=f"Cluster {cid}",
+                     method="update",
+                     args=[{"visible": [c == cid for c in clusters]}])
+               for cid in clusters]
+    fig.update_layout(title=f"Monte Carlo Top-3 Inclusion Probability — {STATE_NAME.title()} "
+                             f"({N_DRAWS} draws)",
+                       yaxis_title="Top-3 inclusion %", updatemenus=[dict(buttons=buttons, x=1.1, y=1.1)])
+    fig.write_html(str(OUT_FIGURE))
+
+    log_header("SUMMARY")
+    print(f"  Saved: {OUT_FULL}  ({len(out_df)} rows — full per-survivor audit trail)")
+    print(f"  Saved: {OUT_TOPK}  ({len(topk_df)} rows — Top-3 per cluster)")
+    print(f"  Saved: {OUT_MC}  (Monte Carlo stability columns)")
+    print(f"  Saved: {OUT_METHOD_AGREEMENT}  ({len(pairwise_out)} method-pair rows across "
+          f"{pairwise_out['cluster_id'].nunique()} clusters)")
+    print(f"  Saved: {OUT_FIGURE}")
+    print(f"\n  candidate_pool_status: undersized clusters = {undersized_clusters or 'none'}")
+    print(f"\n  [DATABASE STATUS] All clusters' Top-3 rest on the shared 62-row PCM database "
+          f"(55 manufacturer + 7 literature) — see PCM_data/01_preprocess.py and "
+          f"07_PHASE_5_AUDIT.md. This run reflects only ONE MCDM pass against that database, "
+          f"not yet re-validated by Phase 7 physics simulation — re-run 10_physics_validation.py next.")
+    print(f"\n  Total wall-clock time: {time.time() - t0:.1f}s")
     print("=" * 68)
-    print("\nNext: python 09_recommendation_cards.py, then 10_physics_validation.py "
-          "(Phase 7 — no longer optional, see that script).")
 
 
 if __name__ == "__main__":

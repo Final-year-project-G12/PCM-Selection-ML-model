@@ -157,7 +157,7 @@ Location: `data/plots/tamilnadu_objective1/`. Each numbered plot has a static PN
 | `06_pcm_feasibility_scatter_and_survivors` | Combined scatter and count summary. | Compact view of candidate properties and cluster-level filtering. |
 | `07_bump_chart_ranks` | Rank of leading PCMs across TOPSIS, GRA, PROMETHEE, VIKOR, and consensus. | Agreement or rank reversal between decision methods. |
 | `08_method_rank_correlation_heatmap` | Spearman and Kendall correlations among method ranks. | Whether methods produce broadly consistent orderings. |
-| `09_monte_carlo_top3_probability` | Top-3 inclusion probability from 5,000 uncertainty draws. | Ranking stability under perturbed weights and PCM properties. |
+| `09_monte_carlo_top3_probability` | Top-3 inclusion probability from Monte Carlo uncertainty draws (N_DRAWS=1000; 5000 for the final reported run). | Ranking stability under perturbed weights and PCM properties. `08_mcdm_ranking.py` also writes `outputs/qc_montecarlo_inclusion.html` directly. |
 | `10_rank_reversal_violin_bar` | Rank distributions and rank spread across methods. | Which candidates are sensitive to the MCDM method. |
 | `11_agreement_plot` | Simulated performance rank versus consensus rank. | Whether higher MCDM rank tends to correspond to better simulated performance. |
 | `12_tank_temperature_melt_fraction` | Synthetic daily tank temperature and melt-fraction profile. | Illustrates intended charging/melting/discharging phases (explanatory profile). |
@@ -191,7 +191,7 @@ Standalone verification scripts run manually after each stage. They re-read stag
 | `verify_01_preprocessing_tamilnadu.py` | `04_preprocess_tamilnadu.py` | `climate_tamilnadu_points.csv`, `tamilnadu_cleaned_physical.csv` | `data/plots/verify_preprocessing/` | Distributions, data completeness (>95% target), statistical summary, correlation, pass/fail card |
 | `verify_02_clustering_tamilnadu.py` | `05_cluster_tamilnadu.py` | `climate_signature_tamilnadu.csv`, `cluster_assignments_tamilnadu.csv` | `data/plots/verify_clustering/` | Elbow curves (silhouette/BIC/DB/CH), PCA projection, geographic map, cluster profiles |
 | `verify_03_feasibility_tamilnadu.py` | `07_feasibility_filter.py` | `pcm_database_tamilnadu.csv`, `feasibility_survivors_by_cluster.csv` | `data/plots/verify_feasibility/` | Survival rate per cluster, feasible Tm–L property space, constraint pass/fail |
-| `verify_04_ranking_tamilnadu.py` | `08_mcdm_ranking.py` | `mcdm_topk_by_cluster.csv`, `mcdm_full_scores_by_cluster.csv` | `data/plots/verify_ranking/` | Method correlation heatmap, Top-3 inclusion probability, rank distributions |
+| `verify_04_ranking_tamilnadu.py` | `08_mcdm_ranking.py` | `mcdm_topk_by_cluster.csv`, `mcdm_full_rankings.csv` (renamed 2026-09-08 from `mcdm_full_scores_by_cluster.csv`), `mcdm_method_agreement.csv` | `data/plots/verify_ranking/` | Method correlation heatmap, Top-3 inclusion probability, rank distributions |
 
 ---
 

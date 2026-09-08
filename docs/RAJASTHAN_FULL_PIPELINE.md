@@ -8,6 +8,25 @@ Amrita School of Engineering · Guide: Dr. T. Deepika
 
 Compiled from all uploaded project documents and literature-summary files available in this workspace. Compilation date: 03 September 2026
 
+> ⚠️ **ADDENDUM (2026-09-08): Phase 5 + Phase 6 unified with Tamil Nadu; Phase 7/8 scripts renumbered.**
+> This consolidated archive embeds the individual phase audits, which were updated in place — the
+> summaries here are superseded where they conflict.
+> - **Phase 5** (`07_feasibility_filter.py`): 8-constraint set / order / κ-calibration / provenance
+>   now identical to Tamil Nadu; Constraint 6 (`Tm ≤ Tm_target_capped_C`) replaced the retired
+>   `07b_charging_feasibility.py`. Outputs: `feasibility_survivors_by_cluster{,_kappa_calibrated}.csv`.
+> - **Phase 6** (`08_mcdm_ranking.py`): now byte-identical to Tamil Nadu's engine. 8 Table-13
+>   criteria; climate-relative latent heat (`L/L_required`); log-scaled cycling;
+>   **supercooling entropy weight capped at 2× its Table-13 prior (0.16)** — this implements the
+>   fix recommended by the Phase 8 diagnostic (`## 10 — Phase 8 Audit`, "Real Mechanism:
+>   Near-Zero-Ideal Values + Entropy Formula Pathology"). PROMETHEE handles Tm natively (q=2K/p=8K).
+>   Outputs renamed: `mcdm_full_rankings.csv`, `mcdm_topk_by_cluster.csv`,
+>   `monte_carlo_stability.csv`, `mcdm_method_agreement.csv`, `qc_montecarlo_inclusion.html`.
+> - **Script renumber** (match Tamil Nadu): `09_physics_validation_rajasthan.py` →
+>   `10_physics_validation.py`; `10_recommendation_cards_rajasthan.py` → `09_recommendation_cards.py`.
+>   Both state folders now share Phase 5–8 basenames `07`/`08`/`09`/`10`/`11` (cards = 09, runs LAST).
+> - Every Phase 5–8 result number in this archive is pre-unification; a full re-run is pending.
+>   The "supercooling dominates 48–64%" framing is pre-cap — post-cap, `Tm_fitness` dominates.
+
 # 1. Compilation Scope and Reading Record
 
 This document consolidates the full text of the uploaded project materials
@@ -231,28 +250,29 @@ independently)
  01_preprocess.py (PCM_data/) → PCM_Properties_cleaned_mice_pmm{,_detailed}.csv
  (55 rows, MICE-RF-PMM —
  expanded 2026-08-12 from the prior 18-row database, see below)
- 07_feasibility_filter_rajasthan.py →
- feasibility_survivors_rajasthan{,_kappa_calibrated}.csv
+ 07_feasibility_filter.py →
+ feasibility_survivors_by_cluster{,_kappa_calibrated}.csv
  ↓ [Pre-expansion FINDING: 0 survivors at nominal kappa=0.7 — see
  07_PHASE_5_AUDIT.md.
  NOT yet re-verified against the expanded 55-row database — outputs on disk are
  stale.]
 Phase 6 — MULTI-CRITERIA RANKING ENGINE
- 08_mcdm_ranking_rajasthan.py → mcdm_rankings_rajasthan.csv,
- mcdm_method_agreement_rajasthan.csv
+ 08_mcdm_ranking.py → mcdm_full_rankings.csv,
+ mcdm_method_agreement.csv
  (TOPSIS + PROMETHEE II + VIKOR + GRA, Borda/Copeland/Kendall's W, 1000-draw
  Monte Carlo)
  ↓
 Phase 7 — PHYSICS-BASED VALIDATION (complete)
- physics_lib.py + 09_physics_validation_rajasthan.py →
+ physics_lib.py + 10_physics_validation.py →
  physics_validation_rajasthan.csv,
  spearman_rho_by_cluster_rajasthan.csv,
  outputs/qc_calibration_check_rajasthan.html
  (lumped-enthalpy PCM+tank model, real hourly NASA POWER weather, cited draw
  profile, full calibration;
- RESULT: genuine NEGATIVE validation, rho = -0.385 / +0.125 / -0.097 across 3
- clusters;
- dominant MCDM criterion is supercooling (48–64%) but model cannot simulate it —
+ PRE-UNIFICATION RESULT: rho = -0.385 / +0.125 / -0.097 across 3 clusters, when
+ supercooling was the entropy-dominant MCDM criterion (48–64%). The unified
+ Phase 6 caps supercooling's entropy weight at 0.16 — post-cap Tm_fitness
+ dominates; the re-run against the capped ranking is the actual test —
  see 09_PHASE_7_AUDIT.md)
  ↓
 Phase 8 — SUPERCOOLING PENALTY SENSITIVITY ANALYSIS (complete)
@@ -266,7 +286,7 @@ Phase 8 — SUPERCOOLING PENALTY SENSITIVITY ANALYSIS (complete)
  mechanism incorrect — see 10_PHASE_8_AUDIT.md for full analysis)
  ↓
 Phase 9 — RECOMMENDATION CARDS (complete)
- 10_recommendation_cards_rajasthan.py →
+ 09_recommendation_cards.py →
  outputs/recommendation_cards_rajasthan.md
  (pure aggregation of Phases 4/6/7, one card per cluster + cross-cluster summary
  table, hard-fails
@@ -289,7 +309,7 @@ failure — see 21_REPRODUCIBILITY.md.
 | 2.5 — Quality Check | 03b_quality_check, 03b_validate_quality_fix | COMPLETE — 3 sequential corrections, see 15_QUALITY_CONTROL.md | Hampel filter initially over-corrected genuine cloud-driven GHI/CSI variability; fixed by excluding those two variables from outlier detection entirely |
 | 3 — Climate Signature | signature_lib.py, 04 | COMPLETE — 5 documented corrections | Tm_target=57°C fixed; Tm_target_capped varies by regime; now reads the Phase 2.5 CLEAN file |
 | 4 — Regime Clustering | 05 | COMPLETE — with 2 caught-and-fixed bugs | k=3 (GMM diag covariance, fixed from full); GMM cluster-index instability fixed via canonical relabeling (2026-08-11); Koppen-Geiger external validation wired in (ARI=0.19, NMI=0.32 vs GMM) |
-| 5 — Feasibility Filtering | 01_preprocess, 07 | PCM database prerequisite now COMPLETE (55 rows); Phase 5 output on disk is STALE, pending re-run | Database expanded 18→55 rows (2026-08-12), inside the 40–60 target; feasibility_survivors_rajasthan.csv still reflects the pre-expansion 25-candidate pool and the old 0-survivors-at-κ=0.7 finding — re-run required, see "What remains" |
+| 5 — Feasibility Filtering | 01_preprocess, 07 | PCM database prerequisite now COMPLETE (55 rows); Phase 5 output on disk is STALE, pending re-run | Database expanded 18→55 rows (2026-08-12), inside the 40–60 target; feasibility_survivors_by_cluster.csv still reflects the pre-expansion 25-candidate pool and the old 0-survivors-at-κ=0.7 finding — re-run required, see "What remains" |
 | 6 — MCDM Ranking | 08 | COMPLETE — with 3 caught-and-fixed bugs, 1 documented deviation | Runs on κ-relaxed survivor pool; N_DRAWS=1000 not 5000 (documented); AHP pairwise elicitation still a TODO stub; now hard-fails on a provenance mismatch |
 | 7 — Physics Validation | physics_lib.py, 09 | COMPLETE — 2 caught-and-fixed bugs, real calibration, genuine NEGATIVE result | Spearman rho = -0.385 (Cluster 0) / +0.125 (Cluster 1) / -0.097 (Cluster 2); MCDM ranking weakly/negatively correlates with simulated solar fraction; dominant criterion is supercooling (48–64%) but model cannot simulate it — see 09_PHASE_7_AUDIT.md |
 | 8 — Supercooling Penalty | physics_lib.py, 08_phase8_supercooling_sweep.py | COMPLETE — Sensitivity sweep k ∈ [0.0,0.1,0.2,0.3], honest negative result | Penalty implementation is correct (energy conservation passes); but worsens physics/MCDM agreement instead of improving it — rho degrades Cluster 1 from +0.125 to +0.059, and Cluster 2 from -0.097 to -0.136; suggests supercooling weight is over-estimated or mechanism is incorrect — see 10_PHASE_8_AUDIT.md |
@@ -338,8 +358,8 @@ combined clustering run.
 | climate_signature_rajasthan.csv | 320 | 1 row/point, 86 columns | 04 |
 | cluster_assignments_rajasthan_levelA.csv | 320 | 1 row/point | 05 |
 | cluster_profiles_rajasthan.csv | 3 | 1 row/cluster | 05 |
-| feasibility_survivors_rajasthan.csv | 75 (3 clusters × 25 candidates) | 1 row/cluster×PCM | 07 |
-| mcdm_rankings_rajasthan.csv | 20 (survivors across clusters) | 1 row/cluster×surviving PCM | 08 |
+| feasibility_survivors_by_cluster.csv | 75 (3 clusters × 25 candidates) | 1 row/cluster×PCM | 07 |
+| mcdm_full_rankings.csv | 20 (survivors across clusters) | 1 row/cluster×surviving PCM | 08 |
 | physics_validation_rajasthan.csv | 20 | 1 row/cluster×simulated PCM | 09 |
 | spearman_rho_by_cluster_rajasthan.csv | 3 | 1 row/cluster | 09 |
 | recommendation_cards_rajasthan.md | 3 cards + 1 summary table | 1 card/cluster | 10 |
@@ -463,9 +483,9 @@ RT57HC/PureTemp 58/CrodaTherm 60/RT60/RT62HC/PureTemp 63). What has NOT yet
 happened:
 
 PCM_Properties_cleaned_mice_pmm_detailed.csv — the exact file
-07_feasibility_filter_rajasthan.py
+07_feasibility_filter.py
 
-and 08_mcdm_ranking_rajasthan.py read — is currently absent from disk and must
+and 08_mcdm_ranking.py read — is currently absent from disk and must
 be regenerated
 
 (python PCM_data/PCM_data/01_preprocess.py), and Phases 5–8's outputs on disk
@@ -582,7 +602,7 @@ objectives.
 | 5 — Feasibility Filtering | N3 (partial) | Enforces the corrected 42–70°C band and SWH-specific constraints; database-size gap closed 2026-08-12 (18–25 → 55 rows, inside the 40–60 target) — N3's practical value depended on having enough real in-band candidates to filter; that prerequisite is now met, but Phase 5 has not yet been re-run against the expanded database, so N3's demonstrated value in the current on-disk output is still the pre-expansion result |
 | 6 — MCDM Ranking | N4 | Four-method consensus + Monte Carlo, not a single TOPSIS winner; Kendall's W explicitly reports when consensus is not strong (Cluster 0, W=0.4375) rather than hiding disagreement — this honest reporting is itself part of N4's value proposition |
 | 7 — Physics Validation (COMPLETE) | N5 | Independently validated the MCDM ranking against simulated solar fraction — the result is a genuine NEGATIVE validation (Spearman rho ≤0.4, all 3 clusters), not a confirmation. This is itself evidence for N5 as a methodology (the validation was performed rigorously and reported honestly, exactly per the framework doc's own "write it out plainly" instruction) even though it does not currently confirm the MCDM ranking's output — N5's claim should read "the ranking WAS physics-tested, honestly, with a negative result attributable in part to the still-undersized PCM database" not "the ranking IS physics-validated." See 19_PHASE_7_ONWARD.md. |
-| 8 — Recommendation Cards (COMPLETE) | (packaging) | Aggregates N1–N5's evidence, including Phase 7's negative result and its caveats, into the final deliverable format — 10_recommendation_cards_rajasthan.py's own caveats section surfaces the physics-validation band per cluster, not just the MCDM Top-3 |
+| 8 — Recommendation Cards (COMPLETE) | (packaging) | Aggregates N1–N5's evidence, including Phase 7's negative result and its caveats, into the final deliverable format — 09_recommendation_cards.py's own caveats section surfaces the physics-validation band per cluster, not just the MCDM Top-3 |
 
 ### Phase → RG (broader project research gap) mapping — explicitly indirect
 
@@ -649,7 +669,7 @@ output currently on disk is still tagged `pcm_database_status = "PROVISIONAL —
 yet expanded to 40-60"` because it predates the expansion, and Phase 7's own
 inherited-caveats
 
-discussion (09_physics_validation_rajasthan.py's docstring) explicitly flags
+discussion (10_physics_validation.py's docstring) explicitly flags
 that Cluster 0's
 
 negative rho may be better explained by its undersized candidate pool (n=5) than
@@ -664,7 +684,7 @@ PCM_data/PCM_data/01_preprocess.py
 (regenerates the missing _detailed.csv), then `python run_all_rajasthan.py
 --from
 
-07_feasibility_filter_rajasthan.py`.
+07_feasibility_filter.py`.
 
 1. Decide and document the κ-relaxation policy for the latent-heat constraint
    (accept per-cluster
@@ -699,7 +719,7 @@ PCM_data/PCM_data/01_preprocess.py), then
 
 re-run the full chain from Phase 5 (`python run_all_rajasthan.py --from
 
-07_feasibility_filter_rajasthan.py`) and see whether Phase 7's negative result
+07_feasibility_filter.py`) and see whether Phase 7's negative result
 changes. Phase 7 was
 
 deliberately run anyway against the pre-expansion provisional database — see
@@ -709,9 +729,9 @@ for the reasoning and the full completion report, including why running it now
 (rather than waiting)
 
 was itself informative. Every number currently in
-feasibility_survivors_rajasthan.csv,
+feasibility_survivors_by_cluster.csv,
 
-mcdm_rankings_rajasthan.csv, physics_validation_rajasthan.csv,
+mcdm_full_rankings.csv, physics_validation_rajasthan.csv,
 
 spearman_rho_by_cluster_rajasthan.csv, and recommendation_cards_rajasthan.md
 still reflects the
@@ -796,7 +816,7 @@ reported comparison baseline, confirmed in 05_cluster_rajasthan.py), MCDM method
 (§2.2 — commits to
 
 a four-method stack, not a single TOPSIS-only ranking, confirmed in
-08_mcdm_ranking_rajasthan.py),
+08_mcdm_ranking.py),
 
 PCM selection criteria (§2.3 — corrects the melting-point band to 42–70°C from
 an earlier, apparently
@@ -3357,7 +3377,22 @@ Source path: /mnt/data/07_PHASE_5_AUDIT.md
 # 07 — Phase 5 Audit: Feasibility Filtering (+ PCM Property Database)
 
 Scripts: PCM_data/01_preprocess.py (shared database imputation),
-07_feasibility_filter_rajasthan.py.
+07_feasibility_filter.py.
+
+> **UNIFICATION NOTE (2026-09-08).** Phase 5 was unified with the Tamil Nadu
+> pipeline. Rajasthan is the reference for the LOGIC (8-constraint set and
+> order, missing-value semantics, kappa calibration, corrosion veto,
+> provenance stamping) — that logic is unchanged. What changed here:
+> - **Output files renamed** to Tamil Nadu's canonical names:
+>   `feasibility_survivors_rajasthan.csv` → `feasibility_survivors_by_cluster.csv`,
+>   `feasibility_survivors_rajasthan_kappa_calibrated.csv` →
+>   `feasibility_survivors_by_cluster_kappa_calibrated.csv`. The directory stays
+>   flat (`era5-rajasthan/data/processed/`). Every mention of the old names
+>   elsewhere in this document refers to the same, now-renamed, files.
+> - References updated in `07`–`11`, `09_recommendation_cards.py`,
+>   `check_supercooling_K.py`, `check_supercooling_data.py`, `README.md`.
+> - Still carrying the old names (visualization scripts / guides, not updated):
+>   `PLOTSV2/*.py` and `PLOTSV2/PLOTS_GUIDE.md`.
 
 ## A note on file provenance in this folder
 
@@ -3378,7 +3413,7 @@ PCM-Selection-ML-model/PCM_data/, which is
 
 also what the live Rajasthan pipeline actually imports from (traced directly via
 
-07_feasibility_filter_rajasthan.py line 146:
+07_feasibility_filter.py line 146:
 
 PCM_MANUFACTURER_CSV = BASE_DIR.parent / "PCM_data" / "data" /
 "PCM_Properties_cleaned_mice_pmm_detailed.csv").
@@ -3478,8 +3513,8 @@ remains structurally inert regardless of the expansion.
 What happened in the 2026-08-14 re-run:
 PCM_Properties_cleaned_mice_pmm_detailed.csv was
 
-regenerated and both 07_feasibility_filter_rajasthan.py and
-08_mcdm_ranking_rajasthan.py (Phase 6)
+regenerated and both 07_feasibility_filter.py and
+08_mcdm_ranking.py (Phase 6)
 
 were successfully re-run end-to-end against the expanded database. Two real,
 previously-undocumented
@@ -3500,7 +3535,7 @@ certainly the same class of zip-extraction artifact this project's docs already
 flag for the
 
 until phase 4/ folder (see the file-provenance note above).
-07_feasibility_filter_rajasthan.py's
+07_feasibility_filter.py's
 
 PCM_MANUFACTURER_CSV path (BASE_DIR.parent / "PCM_data" / "data" / ...), and its
 own inline
@@ -3531,9 +3566,9 @@ rather than restructuring the folder tree.
 
 1. is_rt_line column removed by the new 01_preprocess.py, still referenced by
    both
-07_feasibility_filter_rajasthan.py's load_manufacturer_rows() and
+07_feasibility_filter.py's load_manufacturer_rows() and
 
-08_mcdm_ranking_rajasthan.py's load_rich_pcm_properties(). The updated
+08_mcdm_ranking.py's load_rich_pcm_properties(). The updated
 preprocessing script
 
 (rewritten for the 55-row, 6-manufacturer database) deliberately keeps the full
@@ -3664,7 +3699,7 @@ data rather than
 
 resolves in the database's favor.
 
-## 07_feasibility_filter_rajasthan.py — all 8 constraints, exact as implemented
+## 07_feasibility_filter.py — all 8 constraints, exact as implemented
 
 | # | Constraint | Exact rule | Behavior |
 | --- | --- | --- | --- |
@@ -3679,7 +3714,7 @@ resolves in the database's favor.
 
 ## The headline finding, re-verified 2026-08-14: still 0 survivors at nominal thresholds
 
-Re-confirmed directly from the regenerated feasibility_survivors_rajasthan.csv
+Re-confirmed directly from the regenerated feasibility_survivors_by_cluster.csv
 (186 rows = 3
 
 clusters × 62 candidates): every single row still has survives_all = False at
@@ -3740,7 +3775,7 @@ at κ=0." This is
 the actual input Phase 6's MCDM ranking now consumes, and every row in the
 regenerated
 
-mcdm_rankings_rajasthan.csv carries an updated pcm_database_status tag
+mcdm_full_rankings.csv carries an updated pcm_database_status tag
 reflecting the 55-row
 
 database (no longer "PROVISIONAL — ~25-row...") — see 08_PHASE_6_AUDIT.md.
@@ -3851,8 +3886,8 @@ omitted.
 
 ## Outputs
 
-feasibility_survivors_rajasthan.csv,
-feasibility_survivors_rajasthan_kappa_calibrated.csv,
+feasibility_survivors_by_cluster.csv,
+feasibility_survivors_by_cluster_kappa_calibrated.csv,
 
 cluster_profiles_rajasthan.csv (consumed, not produced, here).
 
@@ -3897,7 +3932,7 @@ screening is currently doing real work.
   before this re-run
 could execute at all — see the dedicated section above. Both are now fixed in
 
-07_feasibility_filter_rajasthan.py and 08_mcdm_ranking_rajasthan.py; the
+07_feasibility_filter.py and 08_mcdm_ranking.py; the
 underlying
 
 PCM_data/PCM_data/ nested-folder layout on disk was left as-is (fixed via a
@@ -3948,10 +3983,10 @@ Source path: /mnt/data/08_PHASE_6_AUDIT.md
 
 # 08 — Phase 6 Audit: Multi-Criteria Ranking Engine
 
-Script: 08_mcdm_ranking_rajasthan.py (984 lines). Updated 2026-08-11 — Phases 7
+Script: 08_mcdm_ranking.py (984 lines). Updated 2026-08-11 — Phases 7
 and 8
 
-(09_physics_validation_rajasthan.py, 10_recommendation_cards_rajasthan.py) are
+(10_physics_validation.py, 09_recommendation_cards.py) are
 now also
 
 implemented and run; this script is no longer the implementation frontier. It
@@ -3987,7 +4022,7 @@ for full detail.
 
 ## Inputs
 
-feasibility_survivors_rajasthan_kappa_calibrated.csv (or equivalent survivor
+feasibility_survivors_by_cluster_kappa_calibrated.csv (or equivalent survivor
 set),
 
 cluster_profiles_rajasthan.csv, PCM_Properties_cleaned_mice_pmm_detailed.csv
@@ -4153,7 +4188,7 @@ regardless of imputation status.
 
 ## Actual Rajasthan result — RE-RUN 2026-08-14 against the expanded 55-row database (current)
 
-mcdm_rankings_rajasthan.csv: 39 rows across 3 clusters (n=9/14/16 survivors), up
+mcdm_full_rankings.csv: 39 rows across 3 clusters (n=9/14/16 survivors), up
 from the
 
 pre-expansion 20 rows (n=5/8/7). Two bugs (is_rt_line column removed by the
@@ -4241,9 +4276,9 @@ cross-method-agreement check. No external/physics validation yet (that is Phase
 
 ## Outputs
 
-mcdm_rankings_rajasthan.csv, mcdm_method_agreement_rajasthan.csv,
+mcdm_full_rankings.csv, mcdm_method_agreement.csv,
 
-outputs/qc_montecarlo_inclusion_rajasthan.html.
+outputs/qc_montecarlo_inclusion.html.
 
 ## Cross-phase provenance stamping and hard-fail check (added 2026-08-11)
 
@@ -4268,7 +4303,7 @@ stable across
 separate re-runs (see 06_PHASE_4_AUDIT.md's second documented bug and
 19_PHASE_7_ONWARD.md's full
 
-incident writeup). This script's own output (mcdm_rankings_rajasthan.csv) is now
+incident writeup). This script's own output (mcdm_full_rankings.csv) is now
 stamped with the
 
 same fingerprint, which Phase 7 and Phase 8 each verify in turn.
@@ -4281,12 +4316,12 @@ database expansion) and
 Phase 4's cluster profiles, now verified via the provenance check above. Feeds
 Phase 7
 
-(09_physics_validation_rajasthan.py, which computes Spearman rho between this
+(10_physics_validation.py, which computes Spearman rho between this
 script's Borda/
 
 Copeland ranks and simulated solar fraction) and, via Phase 7, Phase 8
 
-(10_recommendation_cards_rajasthan.py, which also re-imports this script as a
+(09_recommendation_cards.py, which also re-imports this script as a
 module to recompute
 
 the per-criterion contribution decomposition against its own already-saved
@@ -4361,7 +4396,7 @@ mismatch) were found and
 fixed — see 07_PHASE_5_AUDIT.md. Update, 2026-08-14 (later same day): Phase 7
 has now ALSO been
 
-re-run against this fresh ranking (09_physics_validation_rajasthan.py) — the
+re-run against this fresh ranking (10_physics_validation.py) — the
 negative validation
 
 result persists (Spearman rho = -0.385/+0.125/-0.097 across the 3 clusters, mean
@@ -4376,7 +4411,7 @@ now-healthy sample size
 (n=9, no longer undersized) makes its persistently-low Kendall's W a more
 concerning finding, not a
 
-less concerning one. Phase 8 (10_recommendation_cards_rajasthan.py) has also
+less concerning one. Phase 8 (09_recommendation_cards.py) has also
 been re-run and
 
 produced new Top-1 picks (RT50 / savE® OM50 / savE® OM50) — see
@@ -4393,7 +4428,7 @@ Source path: /mnt/data/09_PHASE_7_AUDIT.md
 
 # 09 — Phase 7 Audit: Physics-Based Validation of MCDM Rankings
 
-Script: 09_physics_validation_rajasthan.py (650 lines). Completed 2026-08-11,
+Script: 10_physics_validation.py (650 lines). Completed 2026-08-11,
 re-run 2026-08-14 against expanded 55-row PCM database. Phase 8 extends this
 with supercooling penalty sensitivity testing.
 
@@ -4677,7 +4712,7 @@ was mathematically inert; no effect on rankings across any k.
 Root cause identified (September 1): Phase 6 MCDM criterion "supercooling" does
 NOT use Tm_freezing − Tm_nucleation. It uses supercooling_K = Tm_C −
 Tm_freezing_C, sourced from Phase 5 feasibility filter
-(07_feasibility_filter_rajasthan.py, line 199). This field has real variance:
+(07_feasibility_filter.py, line 199). This field has real variance:
 mean=1.27 K, std=1.29 K, min=−0.50 K, max=3.50 K across survivors.
 
 Corrected implementation: Phase 8 re-wired penalty to use supercooling_K (actual
@@ -5033,7 +5068,7 @@ work in both directions (alternative mechanisms, MCDM recalibration).
 
 ## Phase 9 (Epilogue): Recommendation Cards
 
-Script: 10_recommendation_cards_rajasthan.py (275 lines). Completed 2026-08-14
+Script: 09_recommendation_cards.py (275 lines). Completed 2026-08-14
 (re-run after Phases 5/6/7 updated).
 
 ### Purpose
@@ -5060,7 +5095,7 @@ Per cluster:
   provisional-database flag (now stale pending L_required re-run)
 ### Cross-Phase Consistency Verification
 
-10_recommendation_cards_rajasthan.py re-verifies cluster identity before writing
+09_recommendation_cards.py re-verifies cluster identity before writing
 anything:
 
 1. Fingerprint-stamp check: Compares upstream_cluster_profile_fingerprint
@@ -5172,7 +5207,7 @@ submission.
 | External classification validation | 05_cluster_rajasthan.py | Beck et al. (2018), Scientific Data 5, DOI:10.1038/sdata.2018.214 (Köppen-Geiger) | Strong citation, now wired in for real (2026-08-11) — ARI=0.19/NMI=0.32 vs. GMM. NBC/ECBC remains unwired. |
 | PCM candidate band (42–70°C) | Phase 5 | Framework doc Table 5, cross-referenced against Singh et al. (2025), Solar Energy Materials and Solar Cells 293 (states 40–70°C as the optimal SWH PCM band) | Strong, closely matching independent literature |
 | PCM property values (RT-series validation) | PCM database | Martínez et al. (2025), Heliyon 11 — directly measures/validates RT54HC/RT55/RT64HC, the same product family in this project's database, and finds large literature-vs-measured discrepancies for some | Strong and directly relevant — should be cited as a caveat on manufacturer-datasheet trust, not just a property source |
-| Gaussian Tm-fitness σ=4K | 08_mcdm_ranking_rajasthan.py | Framework doc §9.2 only — "not independently literature-calibrated," per the code's own docstring | Weak/self-sourced — state plainly, do not overclaim external validation |
+| Gaussian Tm-fitness σ=4K | 08_mcdm_ranking.py | Framework doc §9.2 only — "not independently literature-calibrated," per the code's own docstring | Weak/self-sourced — state plainly, do not overclaim external validation |
 | PROMETHEE II q/p thresholds | same | Framework doc §9.4 | Implementation-defined, documented as such |
 | TOPSIS unit-test fixture | same | Oluah (2020) — 72.12% thermal-conductivity domination cited as a cautionary comparator | Direct, used correctly as both a regression-test anchor and an interpretive comparator |
 | MCDM method family (TOPSIS/PROMETHEE/VIKOR/GRA) | same | No dedicated MCDM-methodology paper found cross-referenced in references.bib/.claude/references.md | Gap — these are standard, well-established methods, but a formal write-up should cite each method's originating paper (Hwang & Yoon 1981 for TOPSIS; Brans & Vincke 1985 for PROMETHEE; Opricovic 1998 for VIKOR; Deng 1982 for GRA) |

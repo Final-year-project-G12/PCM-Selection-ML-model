@@ -167,13 +167,26 @@ The ORIGINAL 4-state design (Tamil Nadu + Rajasthan + Assam +
 Uttarakhand combined). Untouched, still correct, still there for when/if
 you extend beyond Tamil Nadu — not part of the current TN-only run.
 
-### `11_level_b_seasonal_analysis.py`
-"Level B" from the plan — checks whether the #1 PCM changes by SEASON
-within each existing Level-A cluster (not a full independent seasonal
-GMM re-clustering — the "nearly free" version the plan explicitly
-permits). Recomputes `L_required` per season (temperature varies
-seasonally; `Tm_target` doesn't, per the plan's rule) and re-ranks with
-TOPSIS using the same weights as the annual case. **Output:**
+### `05a_level_b_regime_shift_tamilnadu.py`
+Phase 4 **Level B — Regime Shift** (the literal plan spec). Rebuilds a
+per-point-per-season Tier-1 signature via
+`signature_lib.build_tier1_signature(group_keys=["point_id","season"])`,
+fits a fresh GMM (k-scan 2–8, shared `suggest_k` cascade from
+`cluster_lib.py`), and reports the regime-shift fraction (how many points
+change cluster across the year) plus a season-tautology check (ARI/NMI +
+ANOVA vs the season labels). **Outputs:**
+`data/processed/clustering/{bic_selection_tamilnadu_levelB,
+cluster_assignments_tamilnadu_levelB, level_b_feature_importance_tamilnadu,
+level_b_season_tautology_tamilnadu, level_b_season_contingency_tamilnadu}.csv`
++ `outputs/qc_level_b_regime_shift_sankey_tamilnadu.html`.
+
+### `11_seasonal_pcm_sensitivity.py`
+*Renamed 2026-09-08 from `11_level_b_seasonal_analysis.py`.* A
+**post-Phase-6** analysis, NOT a clustering step — checks whether the #1
+PCM changes by SEASON within each existing Level-A cluster. Recomputes
+`L_required` per season (temperature varies seasonally; `Tm_target`
+doesn't, per the plan's rule) and re-ranks with TOPSIS using the same
+weights as the annual case. **Output:**
 `level_b_seasonal_topk.csv` + `level_b_seasonal_summary.md`.
 
 ---
@@ -194,28 +207,30 @@ Reads that MICE-PMM-cleaned manufacturer data, renames to the schema the
 rest of the pipeline expects, and appends 7 literature PCMs (fatty
 acids/eutectics/paraffins from `Singh2025`'s Table 2, already in your
 Sources/ folder) with unknown properties left honestly as NaN rather than
-guessed. **Output:** `pcm_database_tamilnadu.csv` — ~25 candidates
-(target is 40-60; the script's own docstring lists exactly which
-Rubitherm/PLUSS grades would close the gap).
+guessed. It is a **thin builder** over the single canonical MICE+RF+PMM
+preprocessing output — it does NOT re-impute anything (`is_rt_line`
+reference replaced with `manufacturer`, matching Rajasthan). **Output:**
+`pcm_database_tamilnadu.csv` — 62 candidates (55 manufacturer + 7
+literature), row-for-row identical to Rajasthan's pool on shared columns.
 
-### `07_feasibility_filter.py`
-Hard-filters the PCM database against EACH cluster's `Tm_target`/
-`L_required` before any MCDM ranking — prevents a compensatory ranking
-method from rewarding a PCM with an unreachable melting point just
-because it has great latent heat. Implements all 8 Table-12 filters:
-melting window, absolute 42-70°C band, latent-heat floor, cycling
-(flagged not excluded if unreported), supercooling veto, corrosion veto,
-safety exclusion, plus auto-relaxation of the melting window if a
-cluster's survivor count falls below 5. **Output:**
-`feasibility_survivors_by_cluster.csv`.
-
-### `07b_charging_feasibility.py` (optional)
-A heuristic, clearly-labeled-as-not-rigorous per-cluster upper cap on
-`Tm_target`, based on each cluster's `kt_mean`/`kt_std` (day-to-day sun
-reliability) — the mechanism the plan names as what makes `Tm_target`
-regime-dependent in principle. Run this BEFORE `07` if you want it to
-take effect (it adds a `Tm_target_C_regime_capped` column that `07`
-automatically prefers if present).
+### `07_feasibility_filter.py` (unified with Rajasthan 2026-09-08)
+Hard-filters the PCM database against EACH cluster before any MCDM ranking.
+Applies the 8 Table-12 constraints in Rajasthan's exact order:
+1. melting window, 2. absolute 42-70°C band, 3. latent-heat floor
+`L ≥ κ·L_required` (κ=0.7 nominal; `pass`/`fail`/`flag_unreported`),
+4. cycling ≥300 (`flag_unreported`, never excludes),
+5. supercooling ≤8K (`flag_unknown`, never excludes),
+6. **charging feasibility** `Tm ≤ Tm_target_capped_C` (Phase 3's
+`kt_worst_month` ceiling, referenced directly — replaces the retired
+`07b_charging_feasibility.py` heuristic),
+7. corrosion veto (bare salt hydrate + `HSI_sunrise` > p75 — structurally
+inert, 0 salt hydrates in the DB), 8. safety exclusion (flag-only).
+Auto-relaxes the melting window by 2K/round (≤4 rounds) if survivors < 5,
+then a **κ-calibration companion pass** steps κ 0.7→0.0 in 0.1 increments
+until each cluster keeps 8-20 survivors. **Output:**
+`feasibility_survivors_by_cluster.csv` (fixed κ=0.7) **and**
+`feasibility_survivors_by_cluster_kappa_calibrated.csv` (the file Phase 6
+ranks). Both carry `upstream_cluster_profile_fingerprint`.
 
 ---
 
@@ -289,9 +304,10 @@ the simulated solar fraction and Spearman ρ. **Output:**
 00a → 00b → 01 → 01b → 00_unzip_accum → 02_combine        (Phase 1)
 02b → 03(/03b) → 04 → 04c(/04c_interactive)                (Phase 2)
 04b → 04d_interactive                                       (Phase 3)
-05 → 05b_interactive → 11_level_b_seasonal_analysis         (Phase 4)
-06 → 07b(optional) → 07                                     (Phase 5)
+05 → 05a_level_b_regime_shift → 05b_interactive             (Phase 4)
+06 → 07                                                     (Phase 5; 07b retired)
 08                                                            (Phase 6)
 10                                                            (Phase 7)
 09                                                            (Phase 8)
+11_seasonal_pcm_sensitivity                                 (post-Phase-6, runs last)
 ```

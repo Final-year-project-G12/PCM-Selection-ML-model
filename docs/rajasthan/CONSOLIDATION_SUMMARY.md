@@ -213,9 +213,12 @@ files now lives in `00_MASTER_OVERVIEW.md` ("Current known issues") and `12_FINA
   visualization/interactive scripts (`00d`, `03b_coverage_viz`, `03b_qmap_before_after_viz`, `03d`,
   `04d`, `04e`, `04f`, `05e`, `05f`, `05g`, `check_supercooling_*`), and the `PLOTSV2/` plotting layer
   (documented in `11_OBJECTIVE1_PLOTTING_AUDIT_AND_PROMPT.md`).
-- Three byte-identical duplicate scripts removed from `era5-rajasthan/`: `10_physics_validation.py`
-  (== `09_physics_validation_rajasthan.py`), `09_recommendation_cards.py`
-  (== `10_recommendation_cards_rajasthan.py`), `03_plots_raw.py` (== `03c_plots_raw_rajasthan.py`).
+- Three byte-identical duplicate scripts removed from `era5-rajasthan/` in an earlier pass, then
+  **the canonical names re-adopted 2026-09-08** so both state folders match:
+  `09_physics_validation_rajasthan.py` → `10_physics_validation.py`,
+  `10_recommendation_cards_rajasthan.py` → `09_recommendation_cards.py`
+  (Phase 7 = 10, Phase 8 cards = 09 in both states; cards run LAST). `03_plots_raw.py`
+  (== `03c_plots_raw_rajasthan.py`) unchanged.
 
 **Result:** 15 focused, highly integrated documentation files (down from 26 at start). Single Phase 2 audit now contains:
 - Complete preprocessing workflow (02_combine + 02b_daily_aggregates)

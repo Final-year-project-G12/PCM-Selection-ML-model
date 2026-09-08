@@ -1,17 +1,17 @@
 # 12 — Final Readiness Report: Tamil Nadu
 
 ## Current Implementation Status
-The Tamil Nadu recommendation pipeline is **implemented from Phase 1 through Phase 8** and a complete 62-PCM run exists (PCM DB, feasibility, ranking, Monte Carlo, physics validation, recommendation cards, Level B). All five v3.0 critical bugs are corrected in source. Two further blocking errors found in the 2026-09-07 reconciliation — missing `config.py` symbols (`SHARE_PCM`, `latent_heat_floor_kj_kg`) and a wrong PCM-input path in `06_build_pcm_database.py` — are also now fixed (see `12_FINAL_READINESS_REPORT.md` §14 and `00_MASTER_OVERVIEW.md`). **Outstanding**: the completed 62-PCM artifacts currently live in the non-canonical `data/processed/processed/` tree; the canonical `data/processed/` tree holds a superseded 25-PCM run. A single clean re-run of the chain (now that import/path errors are fixed) regenerates everything in the canonical location.
+The Tamil Nadu recommendation pipeline is **implemented from Phase 1 through Phase 8**. All five v3.0 critical bugs are corrected in source; the missing `config.py` symbols (`SHARE_PCM`, `latent_heat_floor_kj_kg`) and the wrong PCM-input path in `06_build_pcm_database.py` are fixed. **Phase 5 was unified with Rajasthan on 2026-09-08**: `07_feasibility_filter.py` now applies 8 constraints in Rajasthan's order (Constraint 6 = `Tm ≤ Tm_target_capped_C`), runs the κ-calibration companion pass, and emits `feasibility_survivors_by_cluster.csv` + `feasibility_survivors_by_cluster_kappa_calibrated.csv`; `07b_charging_feasibility.py` was retired; the `data/processed/processed/` path bug is fixed and its stale mirror tree deleted. **Outstanding**: a single clean re-run of the CORE chain (after the unified Phase 3, which must produce `Tm_target_capped_C` via `kt_worst_month`) regenerates everything in the canonical `data/processed/` tree. Pre-unification survivor/physics numbers below are stale.
 
 ---
 
 ## Strongest Components
 - **Full Phase Implementation**: Complete operational loop from data download to physics-based grey-box validation and card generation.
-- **Uncertainty Propagation**: The 5000-draw Monte Carlo stack provides a robust confidence metric for the Top-3 ranks.
+- **Uncertainty Propagation**: The Monte Carlo stack (N_DRAWS=1000; 5000 for the final reported run) provides a robust confidence metric for the Top-3 ranks. Phase 6 unified with Rajasthan 2026-09-08 (8 Table-13 criteria; supercooling entropy weight capped at 2× prior; PROMETHEE native Tm; Kendall's W + pairwise method-agreement).
 - **Level B Seasonal Sensitivity**: Analyzes monsoon-dependent PCM rank flips (`11_level_b_seasonal_analysis.py`).
 - **Current PCM Run**: 62 records are screened, ranked, physics-tested, and summarized in recommendation cards.
-- **Level B Seasonal Sensitivity Findings**: Four of 20 cluster-season combinations change their #1 PCM; `savE® OM55` replaces the annual winner in Summer and Monsoon for clusters 2 and 3.
-- **Validation Transparency**: The v3.1-fixed physics run (`data/processed/processed/pcm/physics_validation_*`) gives **mean Spearman $\rho = +0.177$** (per cluster −0.016, +0.717, +0.355, −0.171, −0.000) and **24 / 59** simulations inside the 54–84% benchmark band. Cluster 1 shows partial rank agreement; the other four are weak/near-zero. Rank-1 `n-Octacosane (C28)` is in band for clusters 0–2, below band for 3–4. Interpret cluster-by-cluster, not as a single global pass/fail.
+- **Level B Seasonal Sensitivity Findings** *(2026-09-08 unified run, k=3)*: 4 of 12 (cluster, season) combinations change their #1 PCM — Cluster 0's annual pick flips to `n-Tetracosane (C24)` in all four seasons. (Pre-unification, k=5: 4 of 20, `savE® OM55` in Summer/Monsoon for clusters 2–3.)
+- **Validation Transparency** *(figures below are from the pre-unification run and are STALE — the `data/processed/processed/` tree they lived in has been deleted; re-run Phase 5→7 to regenerate)*: the earlier physics run gave **mean Spearman $\rho = +0.177$** (per cluster −0.016, +0.717, +0.355, −0.171, −0.000) and **24 / 59** simulations inside the 54–84% benchmark band. Interpret cluster-by-cluster, not as a single global pass/fail.
 
 ---
 
@@ -32,7 +32,7 @@ The Tamil Nadu recommendation pipeline is **implemented from Phase 1 through Pha
 
 ## Validation Verdict
 - **VERDICT: CODE OPERATIONAL — CLEAN RE-RUN INTO CANONICAL TREE PENDING; PHYSICS INTERPRETATION CLUSTER-BY-CLUSTER.**
-- **Reasoning**: The scripts now import and resolve their inputs correctly. A completed 62-PCM run exists in `data/processed/processed/`. Its grey-box physics results are mixed (mean Spearman $\rho = +0.177$; 24/59 simulations in the 54–84% band; realistic cycling 3–260/yr), so PCM recommendations should be reported per cluster with stated model assumptions, not as a single global pass/fail. Regenerate in the canonical `data/processed/` tree before final claims.
+- **Reasoning**: The scripts import and resolve their inputs correctly and Phase 5 is now unified with Rajasthan. No unified run has been executed yet. The earlier (pre-unification, pre-`data/processed/processed/`-deletion) grey-box physics results were mixed (mean Spearman $\rho = +0.177$; 24/59 simulations in the 54–84% band), so PCM recommendations should be reported per cluster with stated model assumptions, not as a single global pass/fail. Re-run the CORE chain into the canonical `data/processed/` tree before final claims.
 
 ---
 
@@ -46,12 +46,11 @@ python 04_preprocess_tamilnadu.py         # includes Step 2b quantile mapping
 python 04b_climate_signature.py
 python 05_cluster_tamilnadu.py
 python 06_build_pcm_database.py           # reads repo-root PCM_data/data/PCM_Properties_cleaned_mice_pmm_detailed.csv (55 rows) -> 62-row DB
-python 07b_charging_feasibility.py        # optional; must precede 07 to take effect
-python 07_feasibility_filter.py
-python 08_mcdm_ranking.py
-python 10_physics_validation.py
-python 09_recommendation_cards.py
-python 11_level_b_seasonal_analysis.py    # runs last: reads 08's mcdm_full_scores_by_cluster.csv
+python 07_feasibility_filter.py           # 8 constraints (C6 = Tm <= Tm_target_capped_C) + kappa calibration -> feasibility_survivors_by_cluster{,_kappa_calibrated}.csv  [07b_charging_feasibility.py RETIRED 2026-09-08]
+python 08_mcdm_ranking.py                 # UNIFIED with Rajasthan; 8 criteria + supercooling entropy cap; reads ..._kappa_calibrated.csv -> mcdm_full_rankings.csv, mcdm_topk_by_cluster.csv, monte_carlo_stability.csv, mcdm_method_agreement.csv
+python 10_physics_validation.py           # reads mcdm_full_rankings.csv
+python 09_recommendation_cards.py         # reads mcdm_topk_by_cluster.csv + feasibility_survivors_by_cluster_kappa_calibrated.csv
+python 11_seasonal_pcm_sensitivity.py     # runs last: reads 08's mcdm_full_rankings.csv
 ```
 
 `python run_all_tamilnadu.py` runs this whole CORE chain in this exact order in one command (`--include-setup` also runs Phase-1 downloads; `--with-optional` adds QA/plot scripts).
@@ -63,7 +62,7 @@ python 11_level_b_seasonal_analysis.py    # runs last: reads 08's mcdm_full_scor
 2. **External cluster validation** — ARI vs Köppen-Geiger / NBC-ECBC zones not implemented.
 3. **Elevation proxy** — Flat 150 m assumption (acceptable for Tamil Nadu plains; mandatory geopotential extraction for Uttarakhand).
 4. **`monsoon_index`** — Proxy-only; NASA POWER precipitation not downloaded.
-5. **5th-percentile insolation charging filter** — Heuristic substitute in `07b_charging_feasibility.py`.
+5. **Charging feasibility** — Now Constraint 6 in `07_feasibility_filter.py`: `Tm ≤ Tm_target_capped_C`, using Phase 3's literature-anchored `kt_worst_month` ceiling (not the literal 5th-percentile daily-insolation mechanism). The old heuristic `07b_charging_feasibility.py` was retired 2026-09-08. Phase 7's grey-box model remains the stronger downstream check.
 6. **Full Level-B GMM** — Current `11_level_b_seasonal_analysis.py` is seasonal re-rank, not independent per-season clustering.
 
 ---

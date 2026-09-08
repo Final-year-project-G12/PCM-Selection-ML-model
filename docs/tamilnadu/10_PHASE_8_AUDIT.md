@@ -13,7 +13,7 @@ Synthesize the multi-phase outputs — climate signatures, GMM cluster profiles,
 `09_recommendation_cards.py` reads and synthesizes outputs from across the pipeline:
 - **Phase 4 Clusters**: `cluster_profiles_tamilnadu.csv` (cluster medoids, coordinates, representative population).
 - **Phase 3 Signature**: `climate_signature_tamilnadu.csv` (regime $T_{\text{amb}}$, GHI, HSI, DTR, $T_{m,\text{target}}$, $L_{\text{required}}$).
-- **Phase 5 Screening**: `feasibility_survivors_by_cluster.csv` (audited survivor candidates).
+- **Phase 5 Screening**: `feasibility_survivors_by_cluster_kappa_calibrated.csv` (κ-calibrated audited survivor candidates — the file `09` reads after the 2026-09-08 unification).
 - **Phase 6 MCDM Engine**: `mcdm_topk_by_cluster.csv` and `monte_carlo_stability.csv` (Top-3 Borda ranks, Copeland checks, Top-1 retention, Top-3 inclusion probabilities).
 - **Phase 7 Physics Validation**: `physics_validation_results.csv` and `physics_validation_spearman.csv` (simulated annual solar fraction, Spearman $\rho$, annual cycles).
 
@@ -27,16 +27,24 @@ Each regime card in `recommendation_cards.md` provides:
 
 ---
 
-## Output Status (Completed 62-PCM Run)
+## Output Status (pre-unification run — STALE)
 
-- **Generated File**: `recommendation_cards.md` (located in `data/processed/processed/pcm/recommendation_cards.md`).
-- **Cluster Recommendations**: Produces 5 dedicated cluster cards covering all 133 population-weighted points in Tamil Nadu.
-- **Statewide Winner**: `n-Octacosane (C28)` emerges as the Top-1 consensus recommendation across all five clusters, supported by Monte Carlo stability metrics.
+- **Generated File**: `recommendation_cards.md`. The old copy lived in the
+  now-deleted `data/processed/processed/pcm/` tree; the canonical location is
+  `data/processed/pcm/recommendation_cards.md`.
+- **2026-09-08 unified run (3 clusters, INDICATIVE — re-run pending):** consensus Top-1 is
+  `Myristic acid` (Cluster 0) / `n-Tetracosane (C24)` (Clusters 1 & 2) — no longer a single
+  statewide winner, and no longer `n-Octacosane` (which is not in the k=3 survivor pool). The
+  seasonal-sensitivity check finds Cluster 0's annual #1 flips to `n-Tetracosane (C24)` in all
+  four seasons. Regenerate after the fresh Phase 6 run.
 
 ---
 
 ## Status
-**Analysis COMPLETE (62-PCM run)** — Re-run `09_recommendation_cards.py` (after `10_physics_validation.py`) to update cards in the canonical location whenever upstream rankings or physics outputs change.
+**Clean re-run PENDING (Phase 5 unified 2026-09-08).** Re-run `06 → 07 → 08 →
+10 → 09` after the unified upstream chain to regenerate the cards in the
+canonical `data/processed/pcm/` location. `09` now reads
+`feasibility_survivors_by_cluster_kappa_calibrated.csv`.
 
 ---
 

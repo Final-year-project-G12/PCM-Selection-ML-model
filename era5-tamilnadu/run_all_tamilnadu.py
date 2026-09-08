@@ -10,11 +10,13 @@ stages — each script starts fresh, same as running it manually).
 Order and dependencies below are derived from each script's actual file
 I/O and cross-checked against docs/tamilnadu/00_MASTER_OVERVIEW.md and
 docs/tamilnadu/21_REPRODUCIBILITY.md — not just filename numbering
-(numbering is NOT always run order: `10_physics_validation.py` must run
-before `09_recommendation_cards.py`, since 09 is pure aggregation that
-includes 10's simulated-solar-fraction output when present; and
-`11_level_b_seasonal_analysis.py` runs LAST because it reads 08's
-mcdm_full_scores_by_cluster.csv).
+(numbering is NOT always run order: `05a_level_b_regime_shift_tamilnadu.py`
+runs right after `05` in Phase-4 order but is non-blocking;
+`10_physics_validation.py` must run before `09_recommendation_cards.py`,
+since 09 is pure aggregation that includes 10's simulated-solar-fraction
+output when present; and `11_seasonal_pcm_sensitivity.py` — renamed
+2026-09-08 from `11_level_b_seasonal_analysis.py` — runs LAST because it
+reads 08's mcdm_full_scores_by_cluster.csv).
 
 REQUIRED LIBRARIES: none beyond the standard library (subprocess/pathlib/
 argparse/time) — this file itself has no third-party dependencies. Each
@@ -46,8 +48,7 @@ INPUT DATA — read before running the CORE chain unattended:
   succeeds independently.
 
 ORDER AND WHY (CORE stages — required, this runner STOPS at the first
-failure since every later stage reads an earlier stage's output, EXCEPT
-07b which is marked optional below — see that entry):
+failure since every later stage reads an earlier stage's output):
   1.  02_combine_tamilnadu.py       — Phase 1 final step: merges ERA5 +
                                        NASA POWER at sun-events ->
                                        climate_tamilnadu_points.csv, the
@@ -77,17 +78,18 @@ failure since every later stage reads an earlier stage's output, EXCEPT
                                        tamilnadu.csv (55 manufacturer + 7
                                        literature = 62 rows; INPUT DATA note
                                        above)
-  7.  07b_charging_feasibility.py   — Phase 5, OPTIONAL: adds a regime-
-                                       capped Tm_target column that 07
-                                       prefers if present. Must run BEFORE
-                                       07 to take effect, so it is
-                                       sequenced here rather than in the
-                                       after-the-fact OPTIONAL group. Its
-                                       failure does NOT stop the run.
-  8.  07_feasibility_filter.py      — Phase 5: hard-filters the PCM
-                                       database per cluster ->
+  7.  07_feasibility_filter.py      — Phase 5: hard-filters the PCM
+                                       database per cluster over 8
+                                       constraints (Constraint 6 =
+                                       charging feasibility, Tm <=
+                                       Tm_target_capped_C from Phase 3) ->
                                        feasibility_survivors_by_cluster.csv
-  9.  08_mcdm_ranking.py            — Phase 6: TOPSIS/GRA/PROMETHEE II/
+                                       (primary, fixed kappa=0.7) and
+                                       feasibility_survivors_by_cluster_
+                                       kappa_calibrated.csv (companion).
+                                       07b_charging_feasibility.py RETIRED
+                                       2026-09-08 — folded into Constraint 6.
+  8.  08_mcdm_ranking.py            — Phase 6: TOPSIS/GRA/PROMETHEE II/
                                        VIKOR + Monte Carlo ->
                                        mcdm_topk_by_cluster.csv,
                                        mcdm_full_scores_by_cluster.csv
@@ -98,13 +100,17 @@ failure since every later stage reads an earlier stage's output, EXCEPT
   11. 09_recommendation_cards.py    — Phase 8: pure aggregation of
                                        everything above -> paste-ready
                                        recommendation_cards.md
-  12. 11_level_b_seasonal_analysis.py — Phase 4 Level B: seasonal Top-k
-                                       re-ranking within each cluster.
-                                       Runs LAST (non-blocking): it reads
-                                       08's mcdm_full_scores_by_cluster.csv
-                                       for the annual weights and 06's PCM
-                                       database, so it cannot run alongside
-                                       05.
+  12. 11_seasonal_pcm_sensitivity.py — post-Phase-6: per-season TOPSIS
+                                       re-ranking within each cluster, #1-PCM
+                                       flip count + flip heatmap. Renamed
+                                       2026-09-08 from
+                                       11_level_b_seasonal_analysis.py (it is
+                                       NOT a Phase-4 clustering step — that
+                                       is 05a_level_b_regime_shift_tamilnadu
+                                       .py). Runs LAST (non-blocking): it
+                                       reads 08's mcdm_full_scores_by_cluster
+                                       .csv for the annual weights and 06's
+                                       PCM database.
 
 SETUP stages (one-time raw-data ACQUISITION — excluded by default: these
 hit external APIs (CDS/ERA5, NASA POWER, WorldPop/GADM), need credentials
@@ -168,29 +174,42 @@ SETUP_SCRIPTS = [
     "00_unzip_accum.py",
 ]
 
-# Required, sequential, stop-on-failure — EXCEPT the one entry marked
-# required=False (07b_charging_feasibility.py), which is explicitly
-# documented as optional but must be sequenced before 07 to take effect
-# (see module docstring). (name, required) pairs, in run order.
+# Required, sequential, stop-on-failure. (name, required) pairs, in run
+# order. Entries marked required=False are non-blocking supplementary
+# analyses (Level B regime shift, seasonal PCM sensitivity).
 CORE_SCRIPTS = [
     ("02_combine_tamilnadu.py", True),
     ("02b_build_daily_aggregates.py", True),
     ("04_preprocess_tamilnadu.py", True),
     ("04b_climate_signature.py", True),
     ("05_cluster_tamilnadu.py", True),
+    # Phase 4 Level B — regime shift. Sequenced immediately after Level A:
+    # it rebuilds its own per-point-per-season Tier-1 signature from
+    # climate_tamilnadu_points.csv + suntimes.csv and does NOT read Level A's
+    # output, so it is independent of everything below. Non-blocking: it is a
+    # supplementary temporal analysis and a failure here must not abort the
+    # Phase 5-8 PCM chain.
+    ("05a_level_b_regime_shift_tamilnadu.py", False),
     ("06_build_pcm_database.py", True),
-    ("07b_charging_feasibility.py", False),
+    # 07b_charging_feasibility.py RETIRED 2026-09-08 — its heuristic
+    # regime-cap (REFERENCE_GOOD_DAY_TEMP / MIN_ACHIEVABLE_TEMP proxy) is
+    # superseded by Constraint 6 inside 07_feasibility_filter.py, which
+    # uses Phase 3's literature-anchored Tm_target_capped_C
+    # (kt_worst_month method) directly. There is now ONE charging-
+    # feasibility path.
     ("07_feasibility_filter.py", True),
     ("08_mcdm_ranking.py", True),
     ("10_physics_validation.py", True),
     ("09_recommendation_cards.py", True),
-    # Phase 4 Level B — sequenced LAST because it reads 08's
+    # Seasonal PCM sensitivity — sequenced LAST because it reads 08's
     # mcdm_full_scores_by_cluster.csv (annual weights) and 06's PCM
     # database. Non-blocking: it is a supplementary seasonal-sensitivity
     # check, and a late failure must not abort the completed core
-    # deliverables (matches CHANGELOG.md's "run last" and
-    # 22_FINAL_READINESS_REPORT.md's "optional seasonal sensitivity").
-    ("11_level_b_seasonal_analysis.py", False),
+    # deliverables. RENAMED 2026-09-08 from 11_level_b_seasonal_analysis.py
+    # — it is a post-Phase-6 re-ranking, not a Phase-4 clustering step; the
+    # actual Level B clustering is 05a_level_b_regime_shift_tamilnadu.py
+    # above.
+    ("11_seasonal_pcm_sensitivity.py", False),
 ]
 
 # QC/plotting/diagnostic — run after the core chain, continue-on-failure,
@@ -201,7 +220,9 @@ OPTIONAL_SCRIPTS = [
     "03b_interactive_raw_qa.py",
     "04c_postprocess_plots.py",
     "04c_interactive_postprocess_qc.py",
-    "04d_signature_interactive.py",
+    # 04d_signature_interactive.py deleted 2026-09-08 — non-core read-only
+    # signature explorer, no downstream dependents (Rajasthan's twin
+    # 04f_signature_interactive.py was deleted in the same pass).
     "05b_cluster_interactive.py",
     "05d_plots_comprehensive.py",
 ]
@@ -242,18 +263,24 @@ def main():
     parser.add_argument("--dry-run", action="store_true",
                          help="Print the resolved run order and exit without running anything.")
     parser.add_argument("--from", dest="from_script", default=None,
-                         help="Resume the CORE chain starting at this script name "
-                              "(e.g. 05_cluster_tamilnadu.py), skipping everything before it. "
+                         help="Resume the CORE chain starting at this script, skipping everything "
+                              "before it (e.g. --from 05_cluster_tamilnadu.py). A leading './' or "
+                              "'.\\' or a directory prefix is accepted — only the filename is matched. "
                               "Does not affect --include-setup or --with-optional stages.")
     args = parser.parse_args()
 
     core = list(CORE_SCRIPTS)
     core_names = [n for n, _ in core]
     if args.from_script:
-        if args.from_script not in core_names:
+        # Tolerate a path-ish argument like ".\04_preprocess_tamilnadu.py",
+        # "./04b_climate_signature.py", or "era5-tamilnadu/05_cluster_tamilnadu.py"
+        # — PowerShell/bash tab-completion adds the "./" or ".\" prefix. Match
+        # on the bare filename.
+        from_name = Path(args.from_script).name
+        if from_name not in core_names:
             print(f"ERROR: --from {args.from_script!r} is not one of the core scripts: {core_names}")
             sys.exit(2)
-        core = core[core_names.index(args.from_script):]
+        core = core[core_names.index(from_name):]
 
     setup = list(SETUP_SCRIPTS) if args.include_setup else []
     optional = list(OPTIONAL_SCRIPTS) if args.with_optional else []

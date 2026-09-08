@@ -280,8 +280,9 @@ against climate-specific design constraints. Located in `era5-rajasthan/`:
 ```
 04_climate_signature_rajasthan.py   →  data/processed/climate_signature_rajasthan.csv
 05_cluster_rajasthan.py             →  data/processed/cluster_profiles_rajasthan.csv
-07_feasibility_filter_rajasthan.py  →  data/processed/feasibility_survivors_rajasthan.csv
-                                        data/processed/feasibility_survivors_rajasthan_kappa_calibrated.csv
+07_feasibility_filter.py            →  data/processed/feasibility_survivors_by_cluster.csv
+                                        data/processed/feasibility_survivors_by_cluster_kappa_calibrated.csv
+                                        (canonical Tamil-Nadu naming, unified 2026-09-08)
 ```
 
 ### `04_climate_signature_rajasthan.py` (PHASE 3)
@@ -344,12 +345,12 @@ design constraints (melting window, absolute Tm band, latent-heat floor,
 cycling endurance, supercooling, charging feasibility, corrosion veto,
 safety flags). Produces two outputs:
 
-1. **PRIMARY (`feasibility_survivors_rajasthan.csv`)**: Fixed κ=0.7 latent-heat
+1. **PRIMARY (`feasibility_survivors_by_cluster.csv`)**: Fixed κ=0.7 latent-heat
    floor, with full diagnostic audit trail (per-cluster, per-constraint results).
    Expected to show the baseline (κ=0.7 against old L_required was a near-zero-survivor
    case, demonstrating why calibration was needed).
 
-2. **COMPANION (`feasibility_survivors_rajasthan_kappa_calibrated.csv`)**: Per-cluster
+2. **COMPANION (`feasibility_survivors_by_cluster_kappa_calibrated.csv`)**: Per-cluster
    calibrated κ, stepped down from 0.7 until 8–20 candidates survive. Includes
    `breakeven_kappa` column (actual threshold each candidate sits at) for ranking.
 

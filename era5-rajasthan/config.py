@@ -8,9 +8,29 @@ CDS credentials are read from the local .cdsapirc file, with environment
 variable fallback for convenience.
 """
 
+import sys as _sys
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent
+
+# Cross-state numeric constants (Phase 2/3 design basis) live in ONE place —
+# PCM-Selection-ML-model/pcm_shared_config.py, one level up — so Rajasthan and
+# Tamil Nadu cannot silently disagree on them. Re-exported here so existing
+# `from config import SHARE_PCM` (etc.) in the scripts keeps working unchanged.
+# Paths above/below stay per-state; only these scalars are shared.
+if str(BASE_DIR.parent) not in _sys.path:
+    _sys.path.insert(0, str(BASE_DIR.parent))
+from pcm_shared_config import (  # noqa: E402
+    COVERAGE_TARGET,
+    MAX_MATCH_HOURS,
+    T_DELIVERY_C,
+    DT_APPROACH_C,
+    TM_TARGET_C,
+    ASSUMED_PCM_MASS_KG,
+    SHARE_PCM,
+    PCA_N_COMPONENTS,
+    T_MAINS_EST_C_TODO,
+)
 
 DATA_DIR = BASE_DIR / "data"
 RAW_ERA5_DIR = DATA_DIR / "raw" / "era5"
@@ -56,9 +76,13 @@ COMBINED_POINTS_FILE = PROCESSED_DIR / "climate_rajasthan_points.csv"
 
 # 03b_quality_check_rajasthan.py's output — Hampel-filtered/winsorized +
 # gap-imputed version of COMBINED_POINTS_FILE, same schema plus per-
-# variable *_outlier_flag columns. 04_climate_signature_rajasthan.py reads
-# THIS file, not COMBINED_POINTS_FILE directly, as of that quality-check
-# script's introduction.
+# variable *_outlier_flag columns.
+# NOTE (2026-09-08): 03b_quality_check_rajasthan.py was SUPERSEDED as Phase
+# 2.5 by 04_preprocess_rajasthan.py (which writes PREPROCESSED_DIR /
+# "rajasthan_cleaned_physical.csv" — see 04b_climate_signature.py's
+# PHYSICAL_FILE). The core chain no longer reads CLEANED_POINTS_FILE or the
+# QUALITY_REPORT_* files below; they remain only for the now-diagnostic
+# 03b_quality_check_rajasthan.py / 03b_quality_check_plots_rajasthan.py.
 CLEANED_POINTS_FILE = PROCESSED_DIR / "climate_rajasthan_points_clean.csv"
 
 QUALITY_REPORT_MD_FILE = PROCESSED_DIR / "quality_report_rajasthan.md"

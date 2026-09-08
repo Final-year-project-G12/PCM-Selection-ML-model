@@ -21,11 +21,24 @@ glance"). All supporting details now embedded in this file.
 **Critical context (documentation history):** Phase 2.5 was implemented on disk (code exists,
 script runs, outputs produced) but was entirely undocumented in the `docs/rajasthan/` folder until
 2026-08-11, despite Phase 3 (`04b_climate_signature.py`) having explicitly read its CLEAN
-output since that same date. This was the single most factually-wrong gap in the doc set prior to
-consolidation: **Phase 3 does not read Phase 2's raw output directly** (a widespread
-misunderstanding) — it reads Phase 2.5's quality-checked output, `climate_rajasthan_points_clean.csv`.
+output since that same date. **Phase 3 does not read Phase 2's raw output directly** — it reads a
+cleaned Phase 2.5 file.
 
-**Pipeline order at a glance:**
+**Updated 2026-09-08 — Phase 2.5 converged onto the Tamil Nadu `04_preprocess` contract.**
+`04_preprocess_rajasthan.py` (previously present but unwired — old §B.11 "audit stub") is now
+Rajasthan's Phase 2.5 stage: `BOUNDS` physical screen + `SZA ≥ 90°` night-mask + per-season
+ERA5→NASA-POWER quantile map **persisted** + Hampel filter + 4-stage/`IterativeImputer` (MICE)
+imputation, writing `data/preprocessed/rajasthan_cleaned_physical.csv`. Phase 3
+(`04b_climate_signature.py`) now reads that file (its `PHYSICAL_FILE`), pulling the same 8 base
+columns via `usecols`. `03b_quality_check_rajasthan.py` (the leaner script Part B below describes)
+is retained as a **standalone diagnostic** — it still writes `climate_rajasthan_points_clean.csv` +
+`quality_report_rajasthan.{md,json}`, but nothing in `run_all_rajasthan.py`'s core chain reads
+them. `03b_validate_quality_fix_rajasthan.py` is **deprecated** (its clean-vs-raw signature diff and
+its shell-out to a nonexistent `04_climate_signature_rajasthan.py` no longer apply). Parts B.4 and
+B.11 below are kept for history and annotated inline; the "quantile-map persistence" open item in
+Parts C/D is now **resolved** (the map is applied in Phase 2.5).
+
+**Pipeline order at a glance (current):**
 
 ```
 Phase 1 (raw NetCDF/JSON, points, suntimes)
@@ -33,9 +46,13 @@ Phase 1 (raw NetCDF/JSON, points, suntimes)
 Phase 2   — 02_combine_rajasthan.py, 02b_build_daily_aggregates.py,
             03_verify_climate_csv.py, 03_qc_plots.py, 03b_agreement_analysis.py
     ↓  climate_rajasthan_points.csv (RAW, 34 cols)
-Phase 2.5 — 03b_quality_check_rajasthan.py, 03b_validate_quality_fix_rajasthan.py
-    ↓  climate_rajasthan_points_clean.csv (CLEANED)
-Phase 3   — 04b_climate_signature.py  (reads the CLEAN file)
+Phase 2.5 — 04_preprocess_rajasthan.py   (BOUNDS + SZA night-mask + per-season
+            quantile map persisted + Hampel + 4-stage/MICE imputation)
+    ↓  data/preprocessed/rajasthan_cleaned_physical.csv
+Phase 3   — 04b_climate_signature.py     (reads rajasthan_cleaned_physical.csv)
+
+    (diagnostic only, not in the core chain:
+     03b_quality_check_rajasthan.py → climate_rajasthan_points_clean.csv)
 ```
 
 ---
@@ -279,12 +296,14 @@ persisted).
 - Quantile mapping fit independently per season on daytime rows; RMSE improved 4/4 seasons, r
   improved 3/4.
 
-**Critical caveat:** Quantile-mapped GHI is never persisted — the correction is reported
-(before/after diagnostic) but not written back to a dataset Phase 3 reads. Phase 3 currently
-consumes *uncorrected* (though already deaccumulation-fixed) ERA5 GHI values. This is an open
-decision: either apply the correction upstream before Phase 3, or explicitly document in the
-write-up that Phase 3+ intentionally uses raw (not bias-corrected) ERA5 GHI and why that's still
-defensible.
+**Critical caveat — RESOLVED 2026-09-08.** `03b_agreement_analysis.py` itself still never persists
+the correction (it stays read-only/advisory), but Phase 2.5's `04_preprocess_rajasthan.py` Step 2b
+now re-fits the same per-season empirical quantile map on daytime rows and writes the corrected
+`era5_GHI` + recomputed `era5_CSI` into `rajasthan_cleaned_physical.csv`, which Phase 3 reads. The
+map is applied **unconditionally per season** (not gated on the `03b` branch), matching Tamil Nadu.
+Phase 3 onward therefore now consumes bias-corrected ERA5 GHI/CSI. Note Tier-2
+(`daily_aggregates_*` from `02b`) is NASA-POWER-derived and unchanged — both tiers are now
+POWER-aligned rather than one raw-ERA5 and one POWER.
 
 ## A.9 Mathematical operations
 
@@ -320,16 +339,15 @@ Check 6 recurs, essentially unchanged, as part of Phase 2.5's Part 1 sanity laye
 
 ## A.13 Dependencies
 
-Requires Phase 1's complete point/time/NetCDF/JSON set. **Corrected 2026-08-11 — earlier
-documentation stated "Everything from Phase 3 onward reads `climate_rajasthan_points.csv`
-directly," which is now factually wrong.** Phase 2.5 (`03b_quality_check_rajasthan.py`) reads
-`climate_rajasthan_points.csv` and produces `climate_rajasthan_points_clean.csv`; Phase 3
-(`04b_climate_signature.py`) reads the CLEAN file, not this phase's raw output directly —
-see Part B below. `daily_aggregates_rajasthan_summary.csv` (from `02b`,
-not touched by the quality-check step) is still read directly by Phase 3. This file
-(`climate_rajasthan_points.csv`) remains the single most-depended-upon RAW output in the pipeline,
-but it is no longer the most-depended-upon FINAL input to Phase 3 — that is now the Phase 2.5 clean
-file.
+Requires Phase 1's complete point/time/NetCDF/JSON set. Phase 3 does **not** read
+`climate_rajasthan_points.csv` directly. **Updated 2026-09-08:** Phase 2.5
+(`04_preprocess_rajasthan.py`) reads `climate_rajasthan_points.csv` and produces
+`data/preprocessed/rajasthan_cleaned_physical.csv`; Phase 3 (`04b_climate_signature.py`) reads that
+file. `daily_aggregates_rajasthan_summary.csv` (from `02b`, untouched by Phase 2.5) is still read
+directly by Phase 3. `climate_rajasthan_points.csv` remains the single most-depended-upon RAW
+output; the most-depended-upon FINAL input to Phase 3 is now `rajasthan_cleaned_physical.csv`
+(previously `climate_rajasthan_points_clean.csv`, from the now-diagnostic
+`03b_quality_check_rajasthan.py`).
 
 ---
 
@@ -337,10 +355,17 @@ file.
 
 ## B.1 Purpose
 
+> **Superseded 2026-09-08.** Part B documents `03b_quality_check_rajasthan.py`, which was Rajasthan's
+> Phase 2.5 until the pipeline converged onto the Tamil Nadu `04_preprocess` contract. Phase 2.5 is
+> now `04_preprocess_rajasthan.py` (see the top-of-file update box and §B.11), and Phase 3 reads
+> `data/preprocessed/rajasthan_cleaned_physical.csv`. `03b_quality_check_rajasthan.py` still runs as
+> a standalone diagnostic and still writes `climate_rajasthan_points_clean.csv` +
+> `quality_report_rajasthan.{md,json}`, but nothing in the core chain reads them. The rest of Part B
+> is kept for history; read it as "what the retired diagnostic does", not "what feeds Phase 3".
+
 Gate Phase 2's output (`climate_rajasthan_points.csv`) through a two-layer quality-check pipeline:
 first a read-only sanity check that never modifies data (Part 1), then an actual data-cleaning step
-with explicit outlier detection and imputation (Part 2). Phase 3 reads the cleaned output,
-`climate_rajasthan_points_clean.csv`, not the raw Phase 2 output.
+with explicit outlier detection and imputation (Part 2).
 
 **Why this phase exists at all:** Phase 2's cross-source validation (§A) caught the deaccumulation
 bug and established which data source to use for GHI. But even valid data can contain rare outliers
@@ -428,9 +453,21 @@ a threshold (default 3.5 for outlier, 2.5 for winsorizing candidate). Applied pe
 season, per point. Over-aggressive filtering detected on GHI/CSI → excluded; remaining application
 is correct and defensible.
 
-**Missing-data imputation:** MICE-style chained-equation imputation with random-forest donors on
-`(season, point_id)` subgroups. Produces `climate_rajasthan_points_clean.csv` with outliers
-winsorized and missing values imputed.
+**Missing-data imputation (as actually coded in `03b_quality_check_rajasthan.py`, correcting an
+earlier draft of this section):** *not* MICE / random-forest. Three named, counted operations per
+variable, in order: (a) linear interpolation for interior gaps ≤ 3 occurrences within a
+`(point_id, event)` series; (b) that **same point's** own `(event, season)` mean for longer gaps
+(never a global or cross-point mean); (c) that same point's `(event)`-level mean as a final
+fallback. Produces `climate_rajasthan_points_clean.csv` with `HAMPEL_VARS` outliers winsorized to
+the local rolling median and gaps filled.
+
+> **Contrast with the current Phase 2.5 (`04_preprocess_rajasthan.py`):** it Hampel-filters
+> `era5_GHI` and `era5_cloud_cover` too (→ NaN), and imputes with the Tamil Nadu 4-stage cascade —
+> interpolate → ffill/bfill → point/KMeans-zone/global median → `IterativeImputer` (MICE) — which
+> **can** pull values across points via the zone median and the iterative model. The GHI/CSI Hampel
+> exclusion documented in §B.4/§B.7 and §C is therefore **not** in force under the current stage;
+> whether that re-introduces the uniform low-clearness-tail erosion those corrections fixed should
+> be checked against the regenerated `climate_signature_rajasthan.csv`.
 
 ## B.5 Part 2b: Validation of the Cleaning
 
@@ -467,15 +504,23 @@ caught.
 Requires Phase 2's complete output. Phase 3 (Climate Signature) reads this phase's CLEAN output,
 not Phase 2's raw output directly.
 
-## B.11 — `04_preprocess_rajasthan.py` (alternate preprocessing path) — audit stub
+## B.11 — `04_preprocess_rajasthan.py` — now the active Phase 2.5
 
-**Status: exists on disk (34 KB, last modified 2026-09-02); its wiring into the active chain is not
-established by the current code and should be confirmed before it is cited as authoritative.**
+**Status (2026-09-08): this IS Rajasthan's Phase 2.5.** `run_all_rajasthan.py`'s core chain runs
+`02b_build_daily_aggregates.py` → **`04_preprocess_rajasthan.py`** → `04b_climate_signature.py` →
+`05_cluster_rajasthan.py` → … . `04b_climate_signature.py` reads this script's
+`rajasthan_cleaned_physical.csv` (its `PHYSICAL_FILE` constant). The earlier "wiring not
+established" status is resolved: it was resolved *by wiring it in*, replacing
+`03b_quality_check_rajasthan.py` in the core chain (that script and
+`03b_validate_quality_fix_rajasthan.py` now carry SUPERSEDED / DEPRECATED banners).
 
-**What it is (from its own docstring):** a "PHASE 2 — PREPROCESSING AND QUALITY CONTROL" script,
-the Rajasthan port of the Tamil Nadu pipeline's `04_preprocess` step. It reads
-`data/processed/climate_rajasthan_points.csv` (`02_combine` output) and writes to a **separate**
-`data/preprocessed/` folder:
+**What it is:** the Rajasthan port of the Tamil Nadu pipeline's `04_preprocess` step —
+functionally near-identical to `era5-tamilnadu/04_preprocess_tamilnadu.py` (same `BOUNDS` dict,
+same `SZA ≥ 90°` solar-column zeroing, same Step-2b per-season quantile map persisted, same
+4-stage + `IterativeImputer` imputation, same MinMax scaling into a separate `_scaled` artifact),
+plus a `SKLEARN_N_JOBS=1` / `LOKY_MAX_CPU_COUNT=1` Windows guard. It reads
+`data/processed/climate_rajasthan_points.csv` (`02_combine` output) and writes to
+`data/preprocessed/`:
 
 - `rajasthan_cleaned_physical.csv` — physical-unit, QC-passed, imputed rows, **not** scaled (its
   docstring notes that the Phase-3 indices are non-linear functions of physical values, so scaling
@@ -486,17 +531,22 @@ the Rajasthan port of the Tamil Nadu pipeline's `04_preprocess` step. It reads
 - Supporting reports observed alongside these on disk: `vif_report.csv`, `yeo_johnson_skew.csv`,
   `correlation_pearson.csv`, `correlation_spearman.csv`, `ghi_quantile_mapping_report.csv`.
 
-**Unresolved consistency point (do not resolve by assumption):** `04_preprocess_rajasthan.py`'s
-docstring says "Phase 3 (04b) reads THIS" (`rajasthan_cleaned_physical.csv`), but
-`04b_climate_signature.py`'s own docstring states it reads
-`data/processed/climate_rajasthan_points_clean.csv` — i.e. `03b_quality_check_rajasthan.py`'s output
-(Part B above), not `04_preprocess_rajasthan.py`'s. `run_all_rajasthan.py`'s core chain runs
-`03b_quality_check_rajasthan.py` → `04b_climate_signature.py` and does **not** list
-`04_preprocess_rajasthan.py`. On current evidence, Part B's `03b_quality_check_rajasthan.py` is the
-Phase-2.5 stage actually feeding Phase 3; `04_preprocess_rajasthan.py` is a parallel /
-Tamil-Nadu-aligned preprocessing implementation whose output feeds the `04d`/`04e`/`05g` QC and
-visualization scripts (see §B.12 and the Phase 3 / Phase 4 audits), not the clustering chain. This
-should be verified against the code and then stated definitively here.
+**Consistency point — RESOLVED 2026-09-08.** The earlier contradiction (`04_preprocess_rajasthan.py`
+docstring said "Phase 3 reads THIS", but `04b_climate_signature.py` read
+`climate_rajasthan_points_clean.csv`, and `run_all_rajasthan.py` listed neither correctly) was
+settled by making `04_preprocess_rajasthan.py` authoritative:
+
+- `04b_climate_signature.py` now defines `PHYSICAL_FILE = PREPROCESSED_DIR /
+  "rajasthan_cleaned_physical.csv"` and reads it (mirroring Tamil Nadu's `04b`).
+- `run_all_rajasthan.py`'s `CORE_SCRIPTS` now lists `04_preprocess_rajasthan.py` and
+  `04b_climate_signature.py` (the previous entry `04_climate_signature_rajasthan.py` named a file
+  that does not exist, so `run_script()` was silently `[SKIP]`-ing Phase 3 in the runner — also
+  fixed).
+- `03b_quality_check_rajasthan.py` moved to `OPTIONAL_SCRIPTS`; `03b_validate_quality_fix_rajasthan.py`
+  removed from the runner.
+
+The `04d`/`04e` post-preprocessing QC scripts already targeted `rajasthan_cleaned_physical.csv`, so
+they now sit correctly downstream of the active Phase 2.5 rather than of a side path.
 
 ## B.12 — Phase 2 / 2.5 visualization & interactive-QC scripts — audit stubs
 
@@ -534,18 +584,15 @@ inputs and exist for visual sanity-checking.
 - **The deaccumulation bug (fixed).** Headline finding of the entire audit — see §A.3 above and
   `00_MASTER_OVERVIEW.md` known issue 1. (Phase 2)
 
-- **Quantile-mapped GHI is never persisted.** `03b_agreement_analysis.py`'s correction is reported
-  (before/after diagnostic table) but not written back into `climate_rajasthan_points.csv`,
-  `climate_rajasthan_points_clean.csv`, or any other dataset that Phase 3 reads. This means Phase 3
-  onward currently consumes the *uncorrected* (though already deaccumulation-fixed) ERA5 GHI
-  values, not the bias-corrected ones — the quantile-mapping result exists only as a
-  methodology-section number, not as an applied correction. **Open decision:** either apply the
-  correction upstream (in Phase 2, before Phase 2.5, or as an explicit step inside Phase 2.5's
-  cleaning) or explicitly document that Phase 3+ intentionally uses raw (not bias-corrected) ERA5
-  GHI and why that is still defensible (e.g., the correction is small relative to the signal at the
-  daily/seasonal aggregation level Phase 3 actually uses). (Phase 2, restated as still-open in
-  Phase 2.5's scope since Phase 2.5 is the last place the correction could still be applied before
-  Phase 3 consumes the data.)
+- **Quantile-mapped GHI persistence — RESOLVED 2026-09-08.** Previously `03b_agreement_analysis.py`
+  computed the per-season ERA5→POWER quantile map but never wrote it back, so Phase 3 consumed
+  uncorrected (deaccumulation-fixed) ERA5 GHI. The new Phase 2.5 stage
+  `04_preprocess_rajasthan.py` (Step 2b) re-fits the same map on daytime rows and persists the
+  corrected `era5_GHI` + recomputed `era5_CSI` into `rajasthan_cleaned_physical.csv`, applied
+  unconditionally per season (matching Tamil Nadu / Uttarakhand). `03b_agreement_analysis.py`
+  itself stays read-only/advisory. Downstream numbers (climate signature, clusters, MCDM, physics
+  validation, recommendation cards) must be regenerated; see the Phase 3+ audits for the diffed
+  results. (Phase 2 → resolved in Phase 2.5.)
 
 - **The "documented 2016-01-01 edge case"** is referenced in three places (`02`'s conceptual
   framing, `03_verify`'s docstring, `03b`'s docstring) but **no code in `02_combine_rajasthan.py`
@@ -570,10 +617,16 @@ inputs and exist for visual sanity-checking.
   restatement in §B.2 Check 5 — same finding, same fix (tighten to `[0,1.5]` or document as
   intentional margin). (Phase 2 / Phase 2.5)
 
-- **Initial Hampel over-correction on GHI/CSI (FIXED, 2026-08-11).** The Hampel filter initially
-  applied to GHI/CSI, removing genuine cloud-driven variability as if it were noise. Diagnosis:
-  weather is not an outlier. Solution: exclude GHI/CSI from outlier detection entirely. Confirmed
-  by visual inspection of pre/post plots. (Phase 2.5)
+- **Initial Hampel over-correction on GHI/CSI (fixed in `03b_quality_check_rajasthan.py`, then
+  RE-OPENED 2026-09-08 by the `04_preprocess` switch).** `03b_quality_check_rajasthan.py` excluded
+  GHI/CSI from Hampel filtering after three documented empirical corrections (filtering them
+  produced a uniform `GHI_noon_mean`↑ / `kt_noon_std`↓ shift across all 320 points — real
+  cloud-driven signal). The current Phase 2.5, `04_preprocess_rajasthan.py`, does **not** carry
+  that exclusion — it Hampel-filters `era5_GHI` and `era5_cloud_cover` (→ NaN → imputed), window
+  15 occurrences each side. **Action:** after regenerating `climate_signature_rajasthan.csv`,
+  diff it against the pre-switch version and check whether `GHI_noon_mean` / `kt_noon_std` /
+  `cloudy_frac` / `monsoon_index` move uniformly in one direction across points; if so, decide
+  whether to port the GHI/CSI Hampel exclusion into `04_preprocess_rajasthan.py`. (Phase 2.5)
 
 - **MICE missing-data imputation is not perfect.** It reconstructs values based on learned patterns
   in the available data. If an entire season is missing for a point, imputation cannot know what
@@ -589,16 +642,21 @@ inputs and exist for visual sanity-checking.
 
 # PART D — Combined Status
 
-**Phase 2 — COMPLETE**, with the deaccumulation fix as a documented, verified correction, and one
-open methodological decision (whether/how to apply the quantile-mapping correction upstream) that
-should be resolved and stated explicitly before this phase is cited as final in a methodology
-write-up.
+**Phase 2 — COMPLETE**, with the deaccumulation fix as a documented, verified correction. The
+quantile-mapping persistence decision that was previously open is now settled — see below.
 
-**Phase 2.5 — COMPLETE**, corrections applied and validated, outputs on disk. Documentation for
-this phase was only added 2026-08-11, correcting a prior factual error in the pipeline docs about
-what Phase 3 actually reads.
+**Phase 2.5 — COMPLETE, restructured 2026-09-08.** Rajasthan converged onto the Tamil Nadu
+`04_preprocess` contract: `04_preprocess_rajasthan.py` is now the Phase 2.5 stage
+(`BOUNDS` + `SZA ≥ 90°` night-mask + per-season quantile map **persisted** + Hampel +
+4-stage/MICE imputation → `data/preprocessed/rajasthan_cleaned_physical.csv`), replacing
+`03b_quality_check_rajasthan.py` (now a standalone diagnostic). Part B above documents the retired
+diagnostic and is annotated inline.
 
-**Combined open item carried into Phase 3 write-up:** the quantile-mapping persistence decision
-(above) is the one unresolved methodological question spanning both phases — it must be settled
-(applied or explicitly justified as skipped) before Phase 3's climate-signature construction is
-described as final.
+**Combined open item — CLOSED.** The quantile-mapping correction is now applied in Phase 2.5
+(unconditionally per season) and Phase 3 reads the corrected data.
+
+**New follow-up (opened by the restructure):** `04_preprocess_rajasthan.py` Hampel-filters
+`era5_GHI` / `era5_cloud_cover`, which `03b_quality_check_rajasthan.py` deliberately did not.
+Regenerate `climate_signature_rajasthan.csv` and the Phase 4–8 outputs, diff against the
+pre-switch versions, and confirm the GHI low-clearness tail is not being uniformly eroded (the
+signature that flagged the original Hampel-on-GHI problem). See Part C.

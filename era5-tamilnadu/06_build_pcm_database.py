@@ -65,7 +65,12 @@ from config import PROCESSED_DIR
 # of this note. If you ever regenerate this file by re-running
 # PCM_data/PCM_data/01_preprocess.py, copy its OUT_DETAILED output here
 # too, or this script will read a stale copy.
-INPUT_CSV = PROCESSED_DIR.parent.parent / "PCM_data" / "data" / "PCM_Properties_cleaned_mice_pmm_detailed.csv"
+#
+# This copy lives at the REPO ROOT (PCM-Selection-ML-model/PCM_data/data/),
+# NOT under era5-tamilnadu/ — there is no per-pipeline PCM_data/ folder for
+# Tamil Nadu (unlike era5-uttarakhand/). PROCESSED_DIR is
+# era5-tamilnadu/data/processed, so three .parent hops reach the repo root.
+INPUT_CSV = PROCESSED_DIR.parent.parent.parent / "PCM_data" / "data" / "PCM_Properties_cleaned_mice_pmm_detailed.csv"
 
 OUT_DIR = PROCESSED_DIR / "pcm"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -83,7 +88,12 @@ def load_manufacturer_rows(csv_path):
 
     out = pd.DataFrame()
     out["name"] = df["product"]
-    out["family"] = df["manufacturer"] if "manufacturer" in df.columns else np.where(df.get("is_rt_line", 0) == 1, "Rubitherm RT", "PLUSS savE")
+    # `manufacturer` (Rubitherm / Pluss / PCM Products Ltd / PureTemp /
+    # CrodaTherm / Literature) replaces the old 2-manufacturer `is_rt_line`
+    # binary flag, which the current canonical 01_preprocess.py no longer
+    # emits — referencing it raised KeyError. Same correction already made
+    # in Rajasthan's 07_feasibility_filter.py and 08_mcdm_ranking.py.
+    out["family"] = df["manufacturer"]
     out["pcm_type"] = df["pcm_type"]
     out["Tm_C"] = df["Tm_melting"]
     out["Tm_freezing_C"] = df["Tm_freezing"]

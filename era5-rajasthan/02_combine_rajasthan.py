@@ -61,6 +61,7 @@ from config import (
     SUNTIMES_FILE,
     COMBINED_POINTS_FILE,
     ensure_data_dirs,
+    MAX_MATCH_HOURS,   # shared cross-state constant (pcm_shared_config.py)
 )
 
 # ═══════════════════════════════════════════════════════════
@@ -83,10 +84,11 @@ MONTHS = [f"{m:02d}" for m in range(1, 13)]
 # grid-cell mean in high-relief regions.
 DEFAULT_ALT_M = 300
 
-# Reject an ERA5/POWER nearest-hour match if it's farther than this from
-# the true sun-event time (guards against silently pairing an event with a
-# reading from a completely different part of the day if data is sparse).
-MAX_MATCH_HOURS = 3
+# MAX_MATCH_HOURS (3 — reject an ERA5/POWER nearest-hour match farther than
+# this from the true sun-event time; guards against silently pairing an event
+# with a reading from a completely different part of the day when data is
+# sparse) is imported from config.py / pcm_shared_config.py so both states
+# match sun-events identically. Value unchanged.
 
 SEASON_MAP = {
     12: ("Winter", 1),  1: ("Winter", 1),  2: ("Winter", 1),
