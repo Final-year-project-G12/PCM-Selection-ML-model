@@ -8,10 +8,15 @@ import matplotlib; matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy.stats import spearmanr, kendalltau
+# pyrefly: ignore [missing-import]
 import plotly.express as px
+# pyrefly: ignore [missing-import]
 import plotly.graph_objects as go
+# pyrefly: ignore [missing-import]
 from plotly.subplots import make_subplots
+# pyrefly: ignore [missing-import]
 import folium
+# pyrefly: ignore [missing-import]
 from folium.plugins import MarkerCluster
 warnings.filterwarnings("ignore")
 
@@ -91,7 +96,7 @@ def p02():
                       color_discrete_sequence=px.colors.qualitative.Set1)
     fig_px.update_traces(marker=dict(size=8,opacity=0.8)); fig_px.update_layout(height=600)
     shtml(fig_px,"02_climate_regime_map_interactive.html")
-    m=folium.Map(location=[df["lat"].mean(),df["lon"].mean()],zoom_start=7,tiles="CartoDB positron")
+    m=folium.Map(location=[df["lat"].mean(),df["lon"].mean()],zoom_start=7,tiles="OpenStreetMap")
     mc=MarkerCluster().add_to(m)
     cf=["red","green","blue","purple","orange","darkred","lightred","beige"]
     for _,r in df.iterrows():
@@ -106,6 +111,7 @@ def p03():
     print("[3/13] Melting Point vs Latent Heat")
     df=load(FEASIBILITY,"feasibility")
     if df is None or not {"Tm_C","latent_heat_kJ_kg"}.issubset(df.columns): return
+    if "passes_all" in df.columns: df=df[df["passes_all"]]  # file has ALL candidates + pass/fail flag, not just survivors
     fig,ax=plt.subplots(figsize=(11,7))
     for cid,g in df.groupby("cluster_id"):
         ax.scatter(g["Tm_C"],g["latent_heat_kJ_kg"],color=PAL[int(cid)%len(PAL)],s=80,alpha=0.8,edgecolors="white",lw=0.5,label=f"Cluster {cid}")
@@ -129,6 +135,7 @@ def p04():
     print("[4/13] Feasible Candidates Highlighted")
     feas=load(FEASIBILITY,"feasibility"); db=load(PCM_DB,"pcm_db")
     if feas is None: return
+    if "passes_all" in feas.columns: feas=feas[feas["passes_all"]]  # same fix as p03
     fig,axes=plt.subplots(1,2,figsize=(16,7))
     if db is not None and {"Tm_C","latent_heat_kJ_kg"}.issubset(db.columns):
         axes[0].scatter(db["Tm_C"],db["latent_heat_kJ_kg"],color="#cccccc",s=40,alpha=0.6,label="All candidates",zorder=2)
@@ -150,6 +157,7 @@ def p05():
     print("[5/13] Feasible count per climate regime")
     df=load(FEASIBILITY,"feasibility")
     if df is None: return
+    if "passes_all" in df.columns: df=df[df["passes_all"]]  # same fix as p03
     cnt=df.groupby("cluster_id").size().reset_index(name="n")
     fig,ax=plt.subplots(figsize=(9,5))
     bars=ax.bar(cnt["cluster_id"].astype(str),cnt["n"],color=[PAL[int(c)%len(PAL)] for c in cnt["cluster_id"]],edgecolor="white",lw=1.2)
@@ -167,6 +175,7 @@ def p06():
     print("[6/13] pcm_feasibility_scatter + pcm_survivors_per_cluster")
     df=load(FEASIBILITY,"feasibility")
     if df is None: return
+    if "passes_all" in df.columns: df=df[df["passes_all"]]  # same fix as p03
     fig,axes=plt.subplots(1,2,figsize=(16,6))
     for cid,g in df.groupby("cluster_id"):
         axes[0].scatter(g["Tm_C"],g["latent_heat_kJ_kg"],color=PAL[int(cid)%len(PAL)],s=70,alpha=0.85,edgecolors="white",lw=0.5,label=f"Cluster {cid}")

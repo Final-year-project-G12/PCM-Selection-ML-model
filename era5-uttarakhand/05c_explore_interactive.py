@@ -60,9 +60,12 @@ warnings.filterwarnings("ignore")
 
 import numpy as np
 import pandas as pd
+# pyrefly: ignore [missing-import]
 import plotly.graph_objects as go
 import streamlit as st
+# pyrefly: ignore [missing-import]
 import folium
+# pyrefly: ignore [missing-import]
 import branca.colormap as cm
 
 from config import COMBINED_POINTS_FILE, PREPROCESSED_DIR
@@ -396,7 +399,7 @@ elif view == "Location Map":
             colormap = cm.LinearColormap(
                 ["#2d6a4f", "#52b788", "#d9ed92", "#f9c74f", "#f3722c"],
                 vmin=vmin, vmax=vmax, caption=f"{prop_name} (noon mean)")
-            m = folium.Map(location=[10.9, 78.5], zoom_start=7, tiles="CartoDB positron")
+            m = folium.Map(location=[29.7, 78.9], zoom_start=7, tiles="OpenStreetMap")
             colormap.add_to(m)
             for _, row in summary_df.iterrows():
                 is_selected = row["point_id"] == highlight_id

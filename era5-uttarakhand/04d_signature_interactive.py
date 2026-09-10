@@ -20,10 +20,15 @@ warnings.filterwarnings("ignore")
 
 import numpy as np
 import pandas as pd
+# pyrefly: ignore [missing-import]
 import plotly.express as px
+# pyrefly: ignore [missing-import]
 from plotly.subplots import make_subplots
+# pyrefly: ignore [missing-import]
 import plotly.graph_objects as go
+# pyrefly: ignore [missing-import]
 import folium
+# pyrefly: ignore [missing-import]
 import branca.colormap as cm
 
 from config import PROCESSED_DIR
@@ -56,7 +61,7 @@ print(f"  Points: {len(sig)}")
 print("\n[A] Multi-layer Folium map (toggle indices in the layer control) ...")
 
 fmap = folium.Map(location=[sig["lat"].mean(), sig["lon"].mean()],
-                   zoom_start=7, tiles="CartoDB positron")
+                   zoom_start=7, tiles="OpenStreetMap")
 
 layers_added = 0
 for col in MAP_LAYERS:

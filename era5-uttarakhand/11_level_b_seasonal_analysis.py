@@ -52,7 +52,7 @@ warnings.filterwarnings("ignore")
 import numpy as np
 import pandas as pd
 
-from config import PREPROCESSED_DIR, PROCESSED_DIR, latent_heat_floor_kj_kg
+from config import PREPROCESSED_DIR, PROCESSED_DIR, SHARE_PCM, latent_heat_floor_kj_kg
 
 PHYSICAL_FILE = PREPROCESSED_DIR / "uttarakhand_cleaned_physical.csv"
 ASSIGN_FILE = PROCESSED_DIR / "clustering" / "cluster_assignments_uttarakhand.csv"
@@ -71,9 +71,15 @@ SIGMA_TM = 4.0
 # single fixed-volume draw), so annual and seasonal L_required stay on the
 # same basis within this pipeline.
 T_DELIVERY_C = 50.0
-DRAW_RATE_KG_PER_S = 60.0 / 1000 / 60
+# Matches 04b_climate_signature.py's corrected L_required formula (flat
+# domestic 300 L/day draw over a 7h window, SHARE_PCM=0.5 split) — the
+# earlier DRAW_RATE_KG_PER_S formula was a unit-conversion bug (missing
+# water's density factor) that made L_required ~1000x too small. Fixed to
+# match Tamil Nadu's own documented "BUG FIX v3.1" for the same issue.
+DRAW_VOLUME_L = 300.0
+DRAW_MASS_KG = DRAW_VOLUME_L * 1.0
 CP_WATER = 4.186
-ASSUMED_PCM_MASS_KG = 50.0
+ASSUMED_PCM_MASS_KG = 150.0  # must match 04b_climate_signature.py
 USE_CLIMATE_RELATIVE_LATENT_HEAT = False  # must match 08_mcdm_ranking.py's actual
                                             # criteria — this pipeline ranks on raw
                                             # latent_heat_kJ_kg, not a margin ratio,
@@ -170,8 +176,8 @@ def main():
                 continue
             ta_mean_season = season_rows["era5_T_amb"].mean()
             t_mains_season = ta_mean_season - 2.0
-            q_night_kw_season = DRAW_RATE_KG_PER_S * CP_WATER * (T_DELIVERY_C - t_mains_season)
-            l_required_season = (q_night_kw_season * 3600 * 7) / ASSUMED_PCM_MASS_KG
+            q_total_kj_season = DRAW_MASS_KG * CP_WATER * (T_DELIVERY_C - t_mains_season)
+            l_required_season = (q_total_kj_season * SHARE_PCM) / ASSUMED_PCM_MASS_KG
 
             ranked = rank_seasonal(pcm_db, tm_target, l_required_season, weights)
             if ranked is None:

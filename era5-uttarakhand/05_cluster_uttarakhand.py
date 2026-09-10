@@ -100,7 +100,18 @@ def main():
 
     rows = []
     for k in k_candidates_safe:
-        gmm = GaussianMixture(n_components=k, covariance_type="full",
+        # covariance_type="diag" (diagonal) — NOT "full" — is the correct
+        # choice here. A full covariance matrix requires D*(D+1)/2
+        # parameters PER component; with len(z_cols) standardized signature
+        # dimensions and only 45 points total, full covariance is severely
+        # overdetermined, which is exactly what caused every point's
+        # max_membership_prob to saturate at 1.000 in the original run
+        # (soft clustering silently degenerating to hard clustering).
+        # Diagonal covariance assumes feature independence after PCA and
+        # needs only D parameters per component — the standard fix for
+        # high-dimensional, low-sample-count GMM, and Tamil Nadu's own
+        # 133-point run made the same correction for the same reason.
+        gmm = GaussianMixture(n_components=k, covariance_type="diag",
                                random_state=RANDOM_STATE, n_init=5)
         labels = gmm.fit_predict(X)
         bic = gmm.bic(X)
@@ -147,8 +158,9 @@ def main():
     print(f"  Saved: {OUT_DIR / 'kmeans_comparison_uttarakhand.csv'}")
 
     k_final_safe = min(K_FINAL, len(X) - 1)
-    print(f"\n[3/4] Final Gaussian Mixture fit at K={k_final_safe} ...")
-    gmm_final = GaussianMixture(n_components=k_final_safe, covariance_type="full",
+    print(f"\n[3/4] Final Gaussian Mixture fit at K={k_final_safe} "
+          f"(covariance_type=diag — see the note above [1/4]) ...")
+    gmm_final = GaussianMixture(n_components=k_final_safe, covariance_type="diag",
                                  random_state=RANDOM_STATE, n_init=10)
     hard_labels = gmm_final.fit_predict(X)
     soft_probs = gmm_final.predict_proba(X)
