@@ -288,6 +288,12 @@ def main():
         pct_pts = (n_pts / n_samples) * 100.0
         tot_pop = sub["population"].sum() if "population" in sub.columns else np.nan
 
+        # Energy requirements calculation (§4 SWH spec)
+        t_mains_mean = np.maximum(5.0, sub["Ta_mean"] - 6.0).mean()
+        q_required_kWh = (100.0 * 4186.0 * (50.0 - t_mains_mean)) / 3_600_000.0
+        req_energy_kJ_kg = (q_required_kWh * 3600.0) / 50.0
+        hsi_val = sub["HSI"].mean() if "HSI" in sub.columns else sub["RH_mean"].mean()
+
         p_row = {
             "cluster_id": k_idx,
             "n_points": n_pts,
@@ -302,6 +308,12 @@ def main():
             "wind_mean_mean": sub["wind_mean"].mean(),
             "monsoon_index_mean": sub["monsoon_index"].mean() if "monsoon_index" in sub.columns else np.nan,
             "elev_proxy_mean": sub["elev_proxy"].mean() if "elev_proxy" in sub.columns else np.nan,
+            "Tm_target_C": 44.0,
+            "Tm_target_mean": 44.0,
+            "L_required_kWh_mean": q_required_kWh,
+            "L_required_kJ_per_kg": req_energy_kJ_kg,
+            "HSI": hsi_val,
+            "HSI_mean": hsi_val,
         }
         profile_rows.append(p_row)
 

@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from config import PREPROCESSED_DIR, PLOTS_DIR
 from importlib.util import module_from_spec, spec_from_file_location

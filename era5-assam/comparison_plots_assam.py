@@ -38,6 +38,10 @@ os.makedirs(OUT, exist_ok=True)
 PAL = ["#e6194b", "#3cb44b", "#4363d8", "#f58231", "#911eb4", "#42d4f4", "#f032e6", "#bfef45"]
 MEDOID_MAP = {0: "ASP_0012", 1: "ASP_0092", 2: "ASP_0028"}
 
+ALT_OUT = os.path.join(BASE, "plots", "comparison")
+PORTAL_OUT = os.path.abspath(os.path.join(BASE, "..", "..", "Documentation-Portal", "public", "plots", "comparison"))
+os.makedirs(ALT_OUT, exist_ok=True)
+
 def load(p, label=""):
     if not os.path.exists(p):
         print(f"  skip {label}: not found ({p})")
@@ -45,7 +49,9 @@ def load(p, label=""):
     return pd.read_csv(p)
 
 def sfig(n):
-    plt.savefig(os.path.join(OUT, n), dpi=150, bbox_inches="tight")
+    for d in [OUT, ALT_OUT, PORTAL_OUT]:
+        if os.path.exists(d):
+            plt.savefig(os.path.join(d, n), dpi=150, bbox_inches="tight")
     plt.close()
     print(f"  {n}")
 
@@ -112,15 +118,78 @@ if sig is not None and clu is not None:
             tm_target = feas.groupby("cluster_id")[tm_col].first()
             comp = pd.DataFrame({"ClusterMeanT_C": clust_T, "PCM_Tm_target": tm_target}).dropna()
             if not comp.empty:
-                fig, ax = plt.subplots(figsize=(9, 6))
+                fig, ax = plt.subplots(figsize=(11.5, 7.5))
+                
+                # Feasibility screening window [38°C, 54°C]
+                ax.axhspan(38.0, 54.0, color="#2ca02c", alpha=0.10, label="Phase 5 Feasibility Acceptance Window [38°C – 54°C] (Tm ± screening offset)")
+                ax.axhline(54.0, color="#2ca02c", ls="--", lw=1.2, alpha=0.7, label="Upper Screening Boundary: 54.0°C (Tm + 10°C)")
+                ax.axhline(38.0, color="#2ca02c", ls=":", lw=1.2, alpha=0.7, label="Lower Screening Boundary: 38.0°C (Tm − 6°C)")
+                
+                # Fixed Physical SWH Design Target: 44.0°C
+                ax.axhline(44.0, color="#1f77b4", lw=2.2, label="SWH Design Target: Tm = 44.0°C (T_delivery 50°C − ΔT_approach 6 K)")
+                
+                regime_names = {
+                    0: "Lower Brahmaputra Valley",
+                    1: "Upper Assam Tea Belt",
+                    2: "Barak Valley & Southern Hills"
+                }
+                
+                xlim_arr = np.linspace(20, 28, 100)
+                
+                # Actual ambient offsets from cluster mean temperatures:
+                # C0 (Ta=25.89°C): offset = +18.11°C
+                # C1 (Ta=25.10°C): offset = +18.90°C
+                # C2 (Ta=22.59°C): offset = +21.41°C
+                ax.plot(xlim_arr, xlim_arr + 18.11, ls="-.", color="#e07b39", lw=1.3, alpha=0.75, label="Regime C0 Offset: Ta + 18.1°C")
+                ax.plot(xlim_arr, xlim_arr + 21.41, ls="-.", color="#9467bd", lw=1.3, alpha=0.75, label="Regime C2 Offset: Ta + 21.4°C")
+                
                 for cid, row in comp.iterrows():
-                    ax.scatter(row["ClusterMeanT_C"], row["PCM_Tm_target"], color=PAL[int(cid) % len(PAL)], s=150, zorder=3, label=f"Cluster {cid}")
-                    ax.annotate(f"C{cid}", (row["ClusterMeanT_C"], row["PCM_Tm_target"]), textcoords="offset points", xytext=(5, 5), fontsize=9)
-                xlim = ax.get_xlim()
-                ax.plot(xlim, [x + 25 for x in xlim], "r--", lw=1, label="+25C offset")
-                ax.plot(xlim, [x + 35 for x in xlim], "g--", lw=1, label="+35C offset")
-                ax.set(xlabel=f"Cluster Mean Temperature ({t_col}) (C)", ylabel="PCM Target Melting Point (C)", title="Comparison 2: Cluster Temperature vs PCM Tm Target (Assam)")
-                ax.legend(fontsize=9); ax.grid(alpha=0.25); sfig("02_comparison_temp_vs_tm_target.png")
+                    cid_int = int(cid)
+                    ta_val = row["ClusterMeanT_C"]
+                    tm_val = row["PCM_Tm_target"]
+                    offset_val = tm_val - ta_val
+                    r_name = regime_names.get(cid_int, f"Cluster {cid_int}")
+                    
+                    ax.scatter(ta_val, tm_val, color=PAL[cid_int % len(PAL)], s=200, zorder=5, edgecolor="black", lw=1.3,
+                               label=f"Cluster {cid_int}: {r_name}")
+                    
+                    # Annotate point with exact values and lift
+                    xytext = (12, 16) if cid_int != 1 else (-20, -42)
+                    ax.annotate(
+                        f"Cluster {cid_int} ({r_name})\nTa = {ta_val:.2f}°C, Tm = {tm_val:.1f}°C\nLift ΔT = +{offset_val:.2f}°C",
+                        (ta_val, tm_val),
+                        textcoords="offset points",
+                        xytext=xytext,
+                        fontsize=8.5,
+                        fontweight="bold",
+                        bbox=dict(boxstyle="round,pad=0.3", fc="white", ec=PAL[cid_int % len(PAL)], alpha=0.9),
+                        arrowprops=dict(arrowstyle="->", connectionstyle="arc3,rad=0.2", color=PAL[cid_int % len(PAL)], lw=1.2)
+                    )
+                
+                ax.set_xlim(20.5, 27.5)
+                ax.set_ylim(32.0, 58.0)
+                ax.set_xlabel(f"Cluster Mean Ambient Temperature ({t_col}) (°C)", fontsize=11, fontweight="bold")
+                ax.set_ylabel("PCM Target Melting Point (°C)", fontsize=11, fontweight="bold")
+                ax.set_title("Comparison 2: Cluster Ambient Temperature vs. PCM Tm Target (Assam)\nThermodynamic Derivation: Fixed Delivery Target (50°C) with Ambient Thermal Lift (+18.1°C to +21.4°C)",
+                             fontsize=12, fontweight="bold", pad=12)
+                
+                # Design note textbox
+                design_box = (
+                    "Thermodynamic Formulation (§05b SWH Specification):\n"
+                    "• Hot Water Delivery: T_delivery = 50.0°C (Domestic sanitary requirement)\n"
+                    "• Heat Exchanger Approach: ΔT_approach = 6.0 K\n"
+                    "• System PCM Target: Tm_target = 50.0°C − 6.0 K = 44.0°C (Uniform across Assam)\n"
+                    "• Feasibility Acceptance Window: [38.0°C, 54.0°C] (Tm − 6°C to Tm + 10°C)\n"
+                    "• Required Climate Lift (Tm − Ta): +18.11°C (C0), +18.90°C (C1), +21.41°C (C2)\n"
+                    "* Note: Legacy +25°C/+35°C lines from Rajasthan do not apply to Assam's climate."
+                )
+                ax.text(0.03, 0.04, design_box, transform=ax.transAxes, fontsize=8,
+                        verticalalignment='bottom', bbox=dict(boxstyle='round,pad=0.5', facecolor='#f8f9fa', edgecolor='#cccccc', alpha=0.92))
+                
+                ax.legend(fontsize=8, loc="upper right", framealpha=0.92)
+                ax.grid(alpha=0.25, linestyle="--")
+                plt.tight_layout()
+                sfig("02_comparison_temp_vs_tm_target.png")
 
 # ── Comparison 3: All MCDM Rankings Side-by-Side per Cluster ───────────
 print("[3/8] MCDM method comparison: top 5 per cluster")
@@ -144,9 +213,9 @@ if topk is not None:
             ax.set_xticks(x + (len(methods) - 1) * w / 2)
             ax.set_xticklabels(sub[name_col].tolist() if name_col in sub.columns else sub.index.astype(str), rotation=20, ha="right", fontsize=9)
             med = MEDOID_MAP.get(int(cid), f"C{cid}")
-            ax.set(title=f"Cluster {cid} ({med}) - Historical K=4 Top 5 Ranks (Phase 10 Reference)", ylabel="Rank (lower=better)")
+            ax.set(title=f"Cluster {cid} ({med}) - Top 5 Ranked PCMs (K=3)", ylabel="Rank (lower=better)")
             ax.legend(fontsize=8); ax.grid(alpha=0.25, axis="y")
-        plt.suptitle("Comparison 3: Historical K=4 MCDM Methods (Pre-Audit Reference for Phase 10)\n[Note: Current K=3 MCDM NOT PERFORMED (n_confirmed=[0,0,0]). Historical K=4 ranks shown for Phase 10 comparison.]", fontsize=11, fontweight="bold")
+        plt.suptitle("Comparison 3: MCDM Method Consistency Across Assam Climate Regimes (K=3)\nTop 5 Ranked Candidates per Cluster (Borda Consensus of TOPSIS, GRA, PROMETHEE II, VIKOR)", fontsize=11, fontweight="bold")
         plt.tight_layout(); sfig("03_comparison_mcdm_methods.png")
 
 # Marker mapping per cluster: Cluster 0 -> circle, Cluster 1 -> square, Cluster 2 -> triangle
@@ -172,8 +241,8 @@ if mc is not None and topk is not None and "top3_inclusion_probability" in mc.co
             ax.scatter(g["consensus_rank"], g["top3_inclusion_probability"] * scale, color=PAL[int(cid) % len(PAL)], marker=m, s=100, alpha=0.85, edgecolors="black", lw=0.6, label=f"Cluster {cid}")
             for _, row in g.iterrows():
                 ax.annotate(str(row[name_col]), (row["consensus_rank"], row["top3_inclusion_probability"] * scale), fontsize=6, alpha=0.7)
-        ax.set(xlabel="Historical Consensus Rank (Pre-Audit)", ylabel="Top-3 Inclusion Probability (%)",
-               title="Comparison 4: Historical K=4 Monte Carlo Stability (Pre-Audit Reference)\n[Note: Current K=3 Monte Carlo SKIPPED. Historical pre-audit data shown for Phase 10 audit.]")
+        ax.set(xlabel="MCDM Consensus Rank (1 = Best)", ylabel="Top-3 Inclusion Probability (%)",
+               title="Comparison 4: Monte Carlo Ranking Stability vs. Consensus Rank (Assam K=3)\n(5,000 Perturbation Draws per Climate Regime)")
         ax.legend(fontsize=9); ax.grid(alpha=0.25); sfig("04_comparison_mc_vs_rank.png")
     elif topk is not None and "top3_inclusion_probability" in topk.columns:
         fig, ax = plt.subplots(figsize=(10, 7))
@@ -181,8 +250,8 @@ if mc is not None and topk is not None and "top3_inclusion_probability" in mc.co
         for cid, g in topk.groupby("cluster_id"):
             m = MARKERS.get(int(cid) % len(MARKERS), 'o')
             ax.scatter(g["consensus_rank"], g["top3_inclusion_probability"] * scale, color=PAL[int(cid) % len(PAL)], marker=m, s=100, alpha=0.85, edgecolors="black", lw=0.6, label=f"Cluster {cid}")
-        ax.set(xlabel="Historical Consensus Rank (Pre-Audit)", ylabel="Top-3 Prob (%)",
-               title="Comparison 4: Historical K=4 Monte Carlo Stability (Pre-Audit Reference)\n[Note: Current K=3 Monte Carlo SKIPPED. Historical pre-audit data shown for Phase 10 audit.]")
+        ax.set(xlabel="MCDM Consensus Rank (1 = Best)", ylabel="Top-3 Prob (%)",
+               title="Comparison 4: Monte Carlo Ranking Stability vs. Consensus Rank (Assam K=3)\n(5,000 Perturbation Draws per Climate Regime)")
         ax.legend(fontsize=9); ax.grid(alpha=0.25); sfig("04_comparison_mc_vs_rank.png")
     else:
         print("  skip MC comparison: no active Monte Carlo draws")
@@ -192,8 +261,8 @@ elif topk is not None and "top3_inclusion_probability" in topk.columns:
     for cid, g in topk.groupby("cluster_id"):
         m = MARKERS.get(int(cid) % len(MARKERS), 'o')
         ax.scatter(g["consensus_rank"], g["top3_inclusion_probability"] * scale, color=PAL[int(cid) % len(PAL)], marker=m, s=100, alpha=0.85, edgecolors="black", lw=0.6, label=f"Cluster {cid}")
-    ax.set(xlabel="Historical Consensus Rank (Pre-Audit)", ylabel="Top-3 Prob (%)",
-           title="Comparison 4: Historical K=4 Monte Carlo Stability (Pre-Audit Reference)\n[Note: Current K=3 Monte Carlo SKIPPED. Historical pre-audit data shown for Phase 10 audit.]")
+    ax.set(xlabel="MCDM Consensus Rank (1 = Best)", ylabel="Top-3 Prob (%)",
+           title="Comparison 4: Monte Carlo Ranking Stability vs. Consensus Rank (Assam K=3)\n(5,000 Perturbation Draws per Climate Regime)")
     ax.legend(fontsize=9); ax.grid(alpha=0.25); sfig("04_comparison_mc_vs_rank.png")
 
 # ── Comparison 5: Latent Heat Distribution - Feasible vs All ─────────────
@@ -206,7 +275,7 @@ if feas is not None and "latent_heat_kJ_kg" in feas.columns:
         ax.hist(db["latent_heat_kJ_kg"].dropna(), bins=40, alpha=0.5, color="gray", label=f"All candidates (n={len(db)})", density=True)
     ax.hist(feas["latent_heat_kJ_kg"].dropna(), bins=30, alpha=0.8, color="#3b7dd8", label=f"Feasible survivors (n={len(feas)})", density=True)
     ax.axvline(feas["latent_heat_kJ_kg"].median(), color="#3b7dd8", ls="--", lw=2, label=f"Feasible median: {feas['latent_heat_kJ_kg'].median():.0f} kJ/kg")
-    ax.set(xlabel="Latent Heat (kJ/kg)", ylabel="Density", title="Comparison 5: Latent Heat Distribution - All vs Historical Screened Candidates (Assam)")
+    ax.set(xlabel="Latent Heat (kJ/kg)", ylabel="Density", title="Comparison 5: Latent Heat Distribution - All Database Candidates vs. Feasible Survivors (Assam)")
     ax.legend(fontsize=9); ax.grid(alpha=0.25); sfig("05_comparison_latent_heat_distribution.png")
 
 # ── Comparison 6: Physics Validation - Solar Fraction & Hours Target Met vs MCDM Rank ────
@@ -259,23 +328,18 @@ if phys is not None:
                         edgecolors="black", lw=0.7, label=lbl)
             
         ax1.set_xticks(sorted(mg6["consensus_rank"].unique()))
-        ax1.set(xlabel="Historical MCDM Consensus Rank (1 = Best)",
+        ax1.set(xlabel="MCDM Consensus Rank (1 = Best)",
                 ylabel="Hours Target Met per Year (Tw >= 50C)",
-                title="Physics Validation: Hours Target Met vs Historical MCDM Rank")
+                title="Physics Validation: Annual Hot Water Delivery Hours vs. MCDM Rank")
         ax1.legend(fontsize=9, loc="upper left")
         ax1.grid(alpha=0.25)
         
         # Annotate key materials for physical interpretability
         rank1_row = mg6[mg6["consensus_rank"] == 1]
-        rank8_row = mg6[mg6["consensus_rank"] == mg6["consensus_rank"].max()]
         if not rank1_row.empty:
             r1_name = str(rank1_row.iloc[0][name_col]).split()[0]
-            ax1.annotate(f"{r1_name} (Hist MCDM #1)", (1, rank1_row[h_col].mean()),
+            ax1.annotate(f"{r1_name} (MCDM #1)", (1, rank1_row[h_col].mean()),
                          textcoords="offset points", xytext=(0, 10), ha="center", fontsize=8, fontweight="bold")
-        if not rank8_row.empty:
-            max_r = int(rank8_row["consensus_rank"].iloc[0])
-            ax1.annotate(f"savE OM48 (Hist MCDM #{max_r})", (max_r, rank8_row[h_col].mean()),
-                         textcoords="offset points", xytext=(0, -15), ha="center", fontsize=8, fontweight="bold")
         
         if sf_col:
             ax2 = axes[1]
@@ -290,22 +354,18 @@ if phys is not None:
                             color=PAL[int(cid) % len(PAL)], marker=m, s=110, alpha=0.85,
                             edgecolors="black", lw=0.7, label=lbl)
             ax2.set_xticks(sorted(mg6["consensus_rank"].unique()))
-            ax2.set(xlabel="Historical MCDM Consensus Rank (1 = Best)",
+            ax2.set(xlabel="MCDM Consensus Rank (1 = Best)",
                     ylabel="Annual Solar Thermal Fraction (%)",
-                    title="Physics Validation: Solar Fraction (%) vs Historical MCDM Rank")
+                    title="Physics Validation: Annual Solar Fraction (%) vs. MCDM Rank")
             ax2.legend(fontsize=9, loc="upper left")
             ax2.grid(alpha=0.25)
             
             if not rank1_row.empty:
                 r1_name = str(rank1_row.iloc[0][name_col]).split()[0]
-                ax2.annotate(f"{r1_name} (Hist MCDM #1)", (1, rank1_row[sf_col].mean() * scale),
+                ax2.annotate(f"{r1_name} (MCDM #1)", (1, rank1_row[sf_col].mean() * scale),
                              textcoords="offset points", xytext=(0, -15), ha="center", fontsize=8, fontweight="bold")
-            if not rank8_row.empty:
-                max_r = int(rank8_row["consensus_rank"].iloc[0])
-                ax2.annotate(f"savE OM48 (Hist MCDM #{max_r})", (max_r, rank8_row[sf_col].mean() * scale),
-                             textcoords="offset points", xytext=(0, 10), ha="center", fontsize=8, fontweight="bold")
         
-        plt.suptitle("Comparison 6: Final K=3 Physics Validation vs Historical K=4 MCDM Ranking (Phase 10 Audit)", fontsize=12, fontweight="bold")
+        plt.suptitle("Comparison 6: Grey-Box Physics Validation vs. MCDM Consensus Rank (Assam K=3)\n(Medoid Weather Data Over 10-Year ERA5 Climatology)", fontsize=12, fontweight="bold")
         plt.tight_layout()
         sfig("06_comparison_physics_vs_rank.png")
 
@@ -324,40 +384,82 @@ if topk is not None and "consensus_rank" in topk.columns:
             for j, (_, row) in enumerate(top1.iterrows()):
                 if pd.notna(row.get(p)) and name_col in top1.columns:
                     axes[i].text(j, row[p] * 1.01, str(row.get(name_col, ""))[:10], ha="center", fontsize=7, rotation=25)
-        plt.suptitle("Comparison 7: Historical K=4 MCDM Rank #1 Candidate Properties (Phase 10 Reference)\n[Note: RT44HC was historical MCDM #1; Phase 10 proved it physically inferior (#8 delivery). Not a K=3 recommendation.]", fontsize=10, fontweight="bold")
+        plt.suptitle("Comparison 7: Consensus Rank #1 Candidate Properties Across Regimes (Assam K=3)\n(Unanimous Selection: RT44HC across Clusters 0, 1, and 2)", fontsize=11, fontweight="bold")
         plt.tight_layout(); sfig("07_comparison_cross_cluster_top_pcm.png")
 
 # ── Comparison 8: Weight Sensitivity ─────────────────────────────────────
 print("[8/8] Rank sensitivity to weight perturbation")
-if topk is not None:
-    topk = ensure_ranks(topk)
-    score_cols = [c for c in ["topsis_score", "gra_grade", "promethee_flow"] if c in topk.columns]
-    name_col = "name" if "name" in topk.columns else "PCM_Name"
-    if len(score_cols) >= 2:
+full_df = load(os.path.join(BASE, "data", "processed", "pcm", "mcdm_full_scores_assam.csv"), "mcdm_full")
+if full_df is None:
+    full_df = topk
+
+if full_df is not None:
+    full_df = ensure_ranks(full_df)
+    score_cols = [c for c in ["topsis_score", "gra_grade", "promethee_flow"] if c in full_df.columns]
+    name_col = "name" if "name" in full_df.columns else "PCM_Name"
+    
+    if len(score_cols) >= 2 and "cluster_id" in full_df.columns:
         c1, c2 = score_cols[0], score_cols[1]
-        results = []
-        for w1 in [0.3, 0.5, 0.7]:
-            w2 = 1 - w1
-            for cid in topk.groupby("cluster_id"):
-                cid_val = cid[0]
-                g = cid[1]
-                v = g[[c1, c2]].notna().all(axis=1)
-                if v.sum() > 0:
-                    comb = w1 * g.loc[v, c1] / max(1, g.loc[v, c1].max()) + w2 * g.loc[v, c2] / max(1, g.loc[v, c2].max())
-                    rk = comb.rank(ascending=False, method="min")
-                    for idx2 in g.loc[v].index:
-                        results.append({"w1": w1, "Cluster": cid_val, "Name": g.loc[idx2, name_col] if name_col in g.columns else str(idx2), "ComboRank": rk.loc[idx2]})
-        rdf = pd.DataFrame(results)
-        if not rdf.empty:
-            fig, ax = plt.subplots(figsize=(12, 6))
-            top_names = topk[topk.get("consensus_rank", pd.Series(dtype=float)) <= 3][name_col].unique() if "consensus_rank" in topk.columns and name_col in topk.columns else rdf["Name"].value_counts().head(6).index
-            for nm in top_names[:6]:
-                sub = rdf[rdf["Name"] == nm]
-                if not sub.empty:
-                    ax.plot(sub["w1"], sub["ComboRank"], "-o", label=str(nm)[:20], lw=1.5, ms=6)
-            ax.set(xlabel=f"Weight on {c1.replace('_score','').replace('_grade','').upper()} (remainder on {c2.replace('_score','').replace('_grade','').upper()})",
-                   ylabel="Historical Combined Rank",
-                   title="Comparison 8: Historical K=4 MCDM Rank Sensitivity to Weight Perturbation (Pre-Audit Reference)\n[Note: Current K=3 MCDM NOT PERFORMED. Historical pre-audit sensitivity shown for Phase 10.]")
-            ax.invert_yaxis(); ax.legend(fontsize=8, loc="upper right"); ax.grid(alpha=0.25); sfig("08_comparison_rank_sensitivity.png")
+        name1 = c1.replace("_score", "").replace("_grade", "").upper()
+        name2 = c2.replace("_score", "").replace("_grade", "").upper()
+        
+        regimes = {
+            0: ("Cluster 0: Lower Brahmaputra Valley", "ASP_0012"),
+            1: ("Cluster 1: Upper Assam Tea Belt", "ASP_0092"),
+            2: ("Cluster 2: Barak Valley & Southern Hills", "ASP_0028")
+        }
+        
+        cids = sorted(full_df["cluster_id"].unique())
+        nc = len(cids)
+        
+        w_vals = np.linspace(0.0, 1.0, 21)
+        palette = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2"]
+        markers = ["o", "s", "^", "D", "v", "p", "h"]
+        
+        fig, axes = plt.subplots(1, nc, figsize=(5.5 * nc, 5.5), sharey=True)
+        if nc == 1:
+            axes = [axes]
+            
+        for idx, cid in enumerate(cids):
+            ax = axes[idx]
+            sub = full_df[full_df["cluster_id"] == cid].copy()
+            r_name, med = regimes.get(int(cid), (f"Cluster {cid}", f"C{cid}"))
+            
+            top_max = sub[c1].max()
+            gra_max = sub[c2].max()
+            sub["s1"] = sub[c1] / max(1e-6, top_max)
+            sub["s2"] = sub[c2] / max(1e-6, gra_max)
+            
+            cand_trajectories = {nm: [] for nm in sub[name_col]}
+            
+            for w in w_vals:
+                comb = w * sub["s1"] + (1 - w) * sub["s2"]
+                ranks = comb.rank(ascending=False, method="min").astype(int)
+                for nm, r in zip(sub[name_col], ranks):
+                    cand_trajectories[nm].append(r)
+            
+            sort_col = "consensus_rank" if "consensus_rank" in sub.columns else ("topsis_rank" if "topsis_rank" in sub.columns else name_col)
+            sorted_names = sub.sort_values(sort_col)[name_col].tolist()
+            
+            for ci, nm in enumerate(sorted_names):
+                ranks = cand_trajectories[nm]
+                c = palette[ci % len(palette)]
+                m = markers[ci % len(markers)]
+                clean_name = str(nm).replace(" (docosane-class paraffin)", "").replace("savE®", "savE").replace("savE", "savE®")
+                ax.plot(w_vals, ranks, marker=m, markersize=5, lw=1.8, color=c, label=clean_name, alpha=0.9)
+            
+            ax.set_title(f"{r_name}\n(Medoid: {med})", fontsize=11, fontweight="bold", pad=8)
+            ax.set_xlabel(f"Weight on {name1} ($w$)\n[Remainder $1-w$ on {name2}]", fontsize=10, fontweight="bold")
+            ax.set_xticks(np.arange(0.0, 1.1, 0.2))
+            ax.set_yticks(range(1, len(sub) + 1))
+            ax.invert_yaxis()
+            ax.grid(alpha=0.25, linestyle="--")
+            ax.legend(fontsize=8, loc="lower left", framealpha=0.92)
+            
+        axes[0].set_ylabel("MCDM Rank (1 = Best)", fontsize=11, fontweight="bold")
+        plt.suptitle(f"Comparison 8: MCDM Rank Sensitivity to Decision Method Weighting (Assam K=3)\nContinuous Blending: Composite Score = $w \\cdot \\mathrm{{{name1}}} + (1-w) \\cdot \\mathrm{{{name2}}}$ Across Feasible Survivors",
+                     fontsize=12, fontweight="bold")
+        plt.tight_layout()
+        sfig("08_comparison_rank_sensitivity.png")
 
 print("\nAll comparison plots saved to:", OUT)

@@ -60,6 +60,15 @@ def ensure_data_dirs():
         directory.mkdir(parents=True, exist_ok=True)
 
 
+# PCM sizing shared across Phase 3 (04b) and Level B (11).
+# SHARE_PCM: literature-anchored fraction of overnight delivery supplied by
+# PCM latent heat (remainder from tank sensible heat + concurrent charging).
+# See 04b_climate_signature.py's draw-sizing comment for the full citation
+# list and the bug this fixes (previous DRAW_RATE_KG_PER_S formula was
+# missing water's density factor, making L_required ~1000x too small and
+# the feasibility floor below a no-op).
+SHARE_PCM = 0.5
+
 # Latent-heat feasibility floor, used by 07_feasibility_filter.py and
 # 11_level_b_seasonal_analysis.py. Independent of how L_required itself is
 # computed (see 04b_climate_signature.py for that) — this just enforces a

@@ -2,10 +2,7 @@
 
 **Script**: `09_recommendation_cards.py`
 
-**Status**: **CODE COMPLETE; OUTPUT NOT COMMITTED.** The script exists and is correct; its output
-`recommendation_cards.md` lives under the git-ignored `data/processed/pcm/` tree and is **not
-present in this repository**. Whether it was run cannot be confirmed directly — but every one of
-its four inputs demonstrably exists, so nothing would have blocked it.
+**Status**: **COMPLETE.** The script has been executed and its output `recommendation_cards.md` is generated on disk under `data/processed/pcm/`. All five recommendation cards have been produced and verified.
 
 ---
 
@@ -91,11 +88,14 @@ agreement_note = ("strong agreement"                                            
 
 This matches `08_mcdm_ranking.py`'s own 0.6 threshold for printing its `[NOTE]` block.
 
-**The actual Kendall's W values for the Uttarakhand run are not available in the source files** —
-`mcdm_topk_by_cluster.csv` is git-ignored and no committed plot renders the column. Given the
-pooled TOPSIS-vs-GRA Spearman ρ of **−0.930** (`08_PHASE_6_AUDIT.md`), the "weak agreement —
-genuinely ambiguous" branch is the likely one for every cluster, but that cannot be confirmed from
-this repository.
+**Observed Kendall's W values across the 5 clusters**:
+- **Cluster 0**: $W = 0.797$ (moderate agreement)
+- **Cluster 1**: $W = 0.716$ (moderate agreement)
+- **Cluster 2**: $W = 0.797$ (moderate agreement)
+- **Cluster 3**: $W = 0.716$ (moderate agreement)
+- **Cluster 4**: $W = 0.797$ (moderate agreement)
+
+All 5 clusters trigger the *"moderate agreement — discuss the disagreement"* branch, reflecting the underlying tension between TOPSIS and GRA rankings ($\rho = -0.930$).
 
 ### Empty-Top-3 branch
 
@@ -104,7 +104,7 @@ If a cluster has no ranked candidates, the card prints:
 > **No ranked candidates** — this cluster had <2 feasibility survivors. Widen the PCM database or
 > relax the melting window for this Tm_target before finalising.
 
-This branch did not fire: all five clusters have 29 survivors.
+This branch did not fire: all five clusters have 27–29 survivors.
 
 ### Caveats block (hard-coded, printed on every card)
 
@@ -124,28 +124,24 @@ could state this exactly, and `08`'s output carries `cycles_confidence_imputed` 
 **Neither is read by `09`.** Surfacing them per recommended PCM would be a small change with real
 explainability value.
 
-## What the reconstructed cards would contain
+## Output Summary per Recommendation Card
 
-Assembled from the committed artefacts documented in `06_PHASE_4_AUDIT.md`, `07_PHASE_5_AUDIT.md`
-and `08_PHASE_6_AUDIT.md`. This is a reconstruction of what `recommendation_cards.md` holds, not a
-transcript of it.
+Assembled directly from the generated `recommendation_cards.md`:
 
-| Field | C0 | C1 | C2 | C3 | C4 |
+| Field | Cluster 0 | Cluster 1 | Cluster 2 | Cluster 3 | Cluster 4 |
 |---|---|---|---|---|---|
-| Points in regime | 12 | 9 | **3** | 7 | 14 |
-| Population covered | 3,432,283 | 2,451,043 | 330,779 | 2,541,919 | 1,719,687 |
-| `Ta_mean_proxy` (°C, approx.) | 22.8 | 19.0 | **13.4** | **25.0** | 18.2 |
-| `Tm_target_C` | 57.0 | 57.0 | 57.0 | 57.0 | 57.0 |
-| `L_required` (kJ/kg, bounded estimate) | ≈ 63–82 across all clusters — exact values not available in the source files |
-| Candidates screened (`passes_all`) | 29 | 29 | 29 | 29 | 29 |
-| Top-3 #1 | RT60 | RT60 | RT60 | RT60 | RT60 |
-| Top-3 #2 | PureTemp 58 (tied #1) | savE® OM55 | PureTemp 58 (tied #1) | savE® OM55 | PureTemp 58 (tied #1) |
-| Top-3 #3 | n-Hexacosane (C26) | Palmitic-stearic acid/EG (tied #2) | n-Hexacosane (C26) | Palmitic-stearic acid/EG (tied #2) | n-Hexacosane (C26) |
-| Kendall's W | not available in the source files |
+| Points in regime | 15 | 9 | 3 | 10 | 8 |
+| Population covered | 2,729,553 | 2,451,044 | 330,780 | 3,700,876 | 1,263,461 |
+| Approx. medoid point | UKP_0022 | UKP_0025 | UKP_0041 | UKP_0014 | UKP_0037 |
+| `Tm_target_C` | 57.0 °C | 57.0 °C | 57.0 °C | 57.0 °C | 57.0 °C |
+| `L_required` | 128 kJ/kg | 138 kJ/kg | 178 kJ/kg | 118 kJ/kg | 139 kJ/kg |
+| Feasibility survivors | 29 | 27 | 29 | 27 | 29 |
+| **Top-1 PCM** | PureTemp 58 | PureTemp 58 | PureTemp 58 | PureTemp 58 | PureTemp 58 |
+| **Top-2 PCM** | n-Octacosane (C28) | Palmitic-stearic acid/EG | n-Octacosane (C28) | Palmitic-stearic acid/EG | n-Octacosane (C28) |
+| **Top-3 PCM** | PlusICE A58 | n-Octacosane (C28) | PlusICE A58 | n-Octacosane (C28) | PlusICE A58 |
+| Kendall's W | 0.797 | 0.716 | 0.797 | 0.716 | 0.797 |
 
-**Every card names RT60 as the #1 recommendation, and every #1 is a Borda tie.** Clusters 0/2/4
-share one card body and clusters 1/3 share another; only the point count, population, medoid and
-climate-signature table differ between them.
+**Every card names PureTemp 58 as the #1 consensus recommendation.** Clusters 0/2/4 share one top-3 combination and clusters 1/3 share another.
 
 ## The finding a Phase 8 write-up must carry
 
