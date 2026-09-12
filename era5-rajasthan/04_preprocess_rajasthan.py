@@ -532,18 +532,32 @@ log("  Saved: correlation_pearson.csv, correlation_spearman.csv, correlation_hea
 # ═══════════════════════════════════════════════════════════
 log("\n[11/13] Variance Inflation Factor ...")
 
-vif_sample = day_sub[CORR_COLS].dropna().sample(min(50_000, len(day_sub)), random_state=42)
+# VIF is meant to flag UNPLANNED redundancy among candidate predictors. Two
+# columns in CORR_COLS are deliberate arithmetic identities of others —
+# era5_T_depression == era5_T_amb - era5_T_dew, and era5_cloud_opacity
+# == 1 - era5_CSI (pre-clip) — so including them just makes the design
+# matrix rank-deficient (statsmodels SingularMatrixWarning, VIF ~1e15 for
+# the whole trio) without adding any diagnostic signal. They stay in the
+# Step 10 correlation report, where they ARE informative; they're excluded
+# here. Nothing is dropped from the actual dataset.
+VIF_EXCLUDE = {"era5_T_depression", "era5_cloud_opacity"}
+vif_cols = [c for c in CORR_COLS if c not in VIF_EXCLUDE]
+vif_sample = day_sub[vif_cols].dropna().sample(min(50_000, len(day_sub)), random_state=42)
 vif_sample = vif_sample.loc[:, vif_sample.std() > 1e-8]  # drop any constant column (VIF undefined)
 vif_rows = []
-for i, col in enumerate(vif_sample.columns):
-    try:
-        vif_val = variance_inflation_factor(vif_sample.values, i)
-    except Exception:
-        vif_val = np.nan
-    vif_rows.append({"feature": col, "VIF": round(float(vif_val), 2) if vif_val == vif_val else None})
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")   # any residual near-singularity in the solar-geometry cluster
+    for i, col in enumerate(vif_sample.columns):
+        try:
+            vif_val = variance_inflation_factor(vif_sample.values, i)
+        except Exception:
+            vif_val = np.nan
+        vif_rows.append({"feature": col, "VIF": round(float(vif_val), 2) if vif_val == vif_val else None})
 vif_df = pd.DataFrame(vif_rows).sort_values("VIF", ascending=False)
 vif_df.to_csv(PREPROCESSED_DIR / "vif_report.csv", index=False)
 log(vif_df.to_string(index=False))
+log(f"  Excluded from VIF (deliberate arithmetic identities, still in the correlation report): "
+    f"{sorted(VIF_EXCLUDE & set(CORR_COLS))}")
 log("  Saved: vif_report.csv  (VIF > 10 = high multicollinearity — reported, nothing dropped)")
 
 
@@ -645,4 +659,4 @@ print(f"  Physical (Phase 3 input) : {physical_path}")
 print(f"  Scaled (ML/DRL use)      : {scaled_path}")
 print(f"  QC report                : {report_path}")
 print("=" * 68)
-print("\nNext: python 04b_climate_signature_rajasthan.py")
+print("\nNext: python 04b_climate_signature.py")

@@ -6,6 +6,69 @@ file. "Was" = what the earlier version did; "Now" = what changed.
 
 ---
 
+## 2026-09-08 — Phase 5 unification with Rajasthan
+
+Phase 5 (feasibility filtering) was unified with `era5-rajasthan/07_feasibility_filter.py`.
+Rajasthan is the reference for the LOGIC; Tamil Nadu's filenames
+(`feasibility_survivors_by_cluster{,_kappa_calibrated}.csv`) are canonical
+for BOTH states (Rajasthan's `feasibility_survivors_rajasthan*.csv` were
+renamed to match).
+
+### `07_feasibility_filter.py` — rewritten to the unified architecture
+- **Was**: 7 filters, no charging-feasibility constraint, no κ-calibration,
+  read `Tm_target_C_regime_capped` from `07b` when present, emitted one
+  output with `passes_all`.
+- **Now**: 8 constraints in Rajasthan's exact order. **Constraint 6 =
+  charging feasibility**, `Tm ≤ Tm_target_capped_C`, taken directly from
+  Phase 3's `kt_worst_month`-derived ceiling in
+  `cluster_profiles_tamilnadu.csv` (not re-derived). `flag_unreported` /
+  `flag_unknown` semantics on C3/C4/C5 (C4, C5 never exclude). Constraint 7
+  (corrosion veto) and 8 (safety) ported verbatim — both structurally inert
+  on the current DB (0 salt hydrates; flammability is Yes/No not a grade).
+  `calibrate_kappa_for_cluster()` ported verbatim (κ 0.7→0.0 by 0.1, target
+  8-20 survivors/cluster, evaluated at the primary run's final
+  melting-window relaxation round). Emits BOTH
+  `feasibility_survivors_by_cluster.csv` (fixed κ=0.7) and
+  `feasibility_survivors_by_cluster_kappa_calibrated.csv`. Both stamped with
+  `upstream_cluster_profile_fingerprint`. Emits `survives_all` plus
+  `passes_all` (alias) for downstream compatibility.
+
+### `07b_charging_feasibility.py` — DELETED
+- The `REFERENCE_GOOD_DAY_TEMP` / `MIN_ACHIEVABLE_TEMP` heuristic that wrote
+  `Tm_target_C_regime_capped` is superseded by Constraint 6. Removed from
+  `run_all_tamilnadu.py`. There is now one charging-feasibility path.
+
+### `06_build_pcm_database.py`
+- **Was**: `family` column fell back to `np.where(df.get("is_rt_line", 0) == 1, …)`.
+- **Now**: `family = df["manufacturer"]` directly (matches Rajasthan;
+  `is_rt_line` is not in the canonical preprocessing output). Confirmed this
+  script is a thin builder over `PCM_Properties_cleaned_mice_pmm_detailed.csv`
+  — it has no independent imputation loop.
+
+### `08_mcdm_ranking.py`, `09_recommendation_cards.py`
+- Now read `feasibility_survivors_by_cluster_kappa_calibrated.csv` (mirrors
+  Rajasthan's `08`). Survivor-boolean reads tolerate `survives_all` /
+  `passes_all`. `08`'s "#1 identical statewide" note no longer points at the
+  retired `07b`.
+
+### `11_seasonal_pcm_sensitivity.py`
+- `tm_target` now prefers `Tm_target_capped_C`, then legacy
+  `Tm_target_C_regime_capped`, then `Tm_target_C`.
+
+### Data layout
+- The `data/processed/processed/` path-duplication bug was already fixed in
+  `config.py` / `04b_climate_signature.py`; its stale mirror tree
+  (`era5-tamilnadu/data/processed/processed/`, 35 files) was **deleted**.
+
+### `05_cluster_regions.py` (cross-region Phase 4, standalone — not in run_all)
+- Fixed `REGION_FILES["Rajasthan"]`: was `SIGNATURE_DIR.parent.parent /
+  "era5-rajasthan" / … / "signatures" / …` which resolved to
+  `era5-tamilnadu/data/era5-rajasthan/…` and used a `signatures/` segment
+  Rajasthan doesn't have. Now `BASE_DIR.parent / "era5-rajasthan" / "data"
+  / "processed" / "climate_signature_rajasthan.csv"`.
+
+---
+
 ## v3.2 Bug Fixes (Phase 7 physics solver — critical correctness)
 
 Found during a cross-check of the Tamil Nadu pipeline against the
@@ -94,8 +157,16 @@ band) even after v3.1 shipped.
 ### `04b_climate_signature.py` (already fixed in prior round)
 - **1000× flow rate bug fixed.** Now uses `DRAW_VOLUME_L = 300` (Avargani et al. 2021).
 
-### `11_level_b_seasonal_analysis.py`
+### `11_seasonal_pcm_sensitivity.py` (renamed 2026-09-08 from `11_level_b_seasonal_analysis.py`)
 - **Draw volume aligned with 04b.** Seasonal `L_required` now uses 300 L/day formula (was still using buggy `DRAW_RATE_KG_PER_S`).
+- **Renamed** — it is a *post-Phase-6* re-ranking, not a Phase-4 clustering step. The actual Phase-4 Level B (per-point-per-season GMM re-clustering) is the new `05a_level_b_regime_shift_tamilnadu.py`.
+- **New**: `outputs/qc_seasonal_pcm_flip_heatmap_tamilnadu.html` — (cluster × season) grid coloured by #1-PCM identity, flipped cells red-outlined against the annual baseline.
+
+### `05a_level_b_regime_shift_tamilnadu.py` (NEW 2026-09-08)
+- Phase 4 **Level B — Regime Shift**, ported from Rajasthan's `05a`. Per-point-per-season Tier-1 signature (via shared `signature_lib.build_tier1_signature`), fresh GMM (k-scan 2–8), regime-shift fraction + season-tautology check, `outputs/qc_level_b_regime_shift_sankey_tamilnadu.html` alluvial plot.
+
+### `cluster_lib.py` (NEW 2026-09-08)
+- Shared Phase-4 machinery (`bootstrap_ari_stability`, 3-tier `suggest_k`, `fit_k_range`, `canonical_relabel_by_latitude`) — one implementation for both states and both clustering levels. `05_cluster_tamilnadu.py`'s hardcoded `K_FINAL=5` replaced by the cascade (now selects **k=3**); k-scan widened 2–10 → 2–12; Köppen-Geiger external validation + canonical latitude relabel + `provenance_lib` hard-fail checks wired in.
 
 ### `05_cluster_tamilnadu.py` (already fixed in prior round)
 - **GMM covariance fixed.** `covariance_type="diag"` (was `"full"`).
@@ -207,13 +278,16 @@ model, not a toy — but it is still a simplified lumped model, per the
 plan's own explicit permission ("a crude model honestly described beats
 an elaborate one that is wrong").
 
-### `11_level_b_seasonal_analysis.py` — Phase 4, Level B (seasonal sensitivity)
-The "nearly free" addition the plan calls out specifically for Tamil
-Nadu's out-of-phase north-east monsoon. For each existing Level-A
-cluster, recomputes L_required per season (Ta_mean varies seasonally;
-Tm_target stays constant per the plan's rule) and re-ranks with a
-single-method TOPSIS (using the SAME weights as the annual ranking, for a
-fair comparison) per (cluster, season). Reports whether the #1 PCM flips
+### `11_seasonal_pcm_sensitivity.py` — post-Phase-6 seasonal PCM sensitivity
+*(Renamed 2026-09-08 from `11_level_b_seasonal_analysis.py` — see the
+2026-09-08 section above. The Phase-4 "Level B" name now belongs to
+`05a_level_b_regime_shift_tamilnadu.py`.)* The "nearly free" addition the
+plan calls out specifically for Tamil Nadu's out-of-phase north-east
+monsoon. For each existing Level-A cluster, recomputes L_required per
+season (Ta_mean varies seasonally; Tm_target stays constant per the plan's
+rule) and re-ranks with a single-method TOPSIS (using the SAME weights as
+the annual ranking, for a fair comparison) per (cluster, season). Reports
+whether the #1 PCM flips
 between seasons — a flip is direct empirical motivation for Objective 3's
 adaptive controller, generated from your own data; no flip is also a
 valid, reportable finding (the Tm_target rule is robust to seasonal
@@ -296,7 +370,8 @@ python 07_feasibility_filter.py         # now with corrosion + safety filters
 python 08_mcdm_ranking.py               # now full 4-method + Monte Carlo (~5000 draws — allow a minute or two)
 python 09_recommendation_cards.py       # now includes physics validation section
 python 10_physics_validation.py         # Phase 7, run BEFORE the 09 above if you want it in the cards
-python 11_level_b_seasonal_analysis.py  # optional but recommended — TN's monsoon story
+python 05a_level_b_regime_shift_tamilnadu.py  # Phase 4 Level B — regime-shift re-clustering
+python 11_seasonal_pcm_sensitivity.py  # post-Phase-6 — seasonal PCM flip check (TN's monsoon story)
 ```
 
 Note the ordering nuance: run `10` before the final `09` if you want

@@ -1,10 +1,29 @@
 # 08 — Phase 6 Audit: Multi-Criteria Ranking Engine
 
-Script: `08_mcdm_ranking.py` (984 lines). **Updated 2026-08-11 — Phases 7 and 8
-(`09_physics_validation_rajasthan.py`, `10_recommendation_cards_rajasthan.py`) are now also
-implemented and run; this script is no longer the implementation frontier. It now also stamps a
-cross-phase provenance fingerprint and hard-fails if its input doesn't match — see the new section
-below.**
+Script: `08_mcdm_ranking.py`. **Updated 2026-08-11** — provenance fingerprint hard-fail wired in.
+
+> **UNIFIED WITH TAMIL NADU (2026-09-08).** `era5-rajasthan/08_mcdm_ranking.py` and
+> `era5-tamilnadu/08_mcdm_ranking.py` are now the same engine byte-for-byte apart from
+> `STATE_NAME`, the processed-dir layout and two hint strings. Changes this pass — the
+> pipeline has **not** been re-run, so every number below is pre-unification and stale:
+> - **Output names** are Tamil Nadu's canonical set for both states, no suffix:
+>   `mcdm_full_rankings.csv` (full per-survivor audit trail — was `mcdm_rankings_rajasthan.csv`),
+>   `mcdm_topk_by_cluster.csv` (new Top-3 subset), `monte_carlo_stability.csv` (new, MC columns
+>   only), `mcdm_method_agreement.csv`, `qc_montecarlo_inclusion.html`. References updated in
+>   `08_phase8_supercooling_sweep.py`, `09`, `10`, `11`. `PLOTSV2/*.py` still use old names.
+> - **Latent-heat criterion** is now climate-relative (`latent_heat / L_required` per cluster);
+>   `vol_latent_heat` (ρ·L) stays separate.
+> - **Cycling criterion** is now log-scaled `cycles_confidence` (`log1p(cycles)/log1p(max)`).
+> - **Supercooling entropy-weight cap (NEW):** the Shannon-entropy formula overweights
+>   near-zero-ideal cost criteria — supercooling reached 48–64% in the first 8-criterion run,
+>   which Phase 7/8 diagnosed as the cause of the negative physics-validation correlation
+>   (Phase 8's calibrated supercooling-penalty sweep *worsening* agreement confirmed
+>   overweighting). Each cost criterion whose ideal ≈ 0 (supercooling; cost/corrosion if they
+>   ever get real data) now has its entropy-derived weight clipped to ≤ 2× its Table-13 prior
+>   (supercooling ≤ 0.16) *before* the 50/50 entropy-AHP blend, then the entropy vector is
+>   renormalised. Supercooling is **not** removed — all 8 Table-13 criteria are retained.
+> - **Monte Carlo draws** set to `N_DRAWS = 1000` in both states (one constant; raise both to
+>   5000 for the final reported run).
 
 ## Purpose
 
@@ -19,7 +38,7 @@ property values.
 
 ## Inputs
 
-`feasibility_survivors_rajasthan_kappa_calibrated.csv` (or equivalent survivor set),
+`feasibility_survivors_by_cluster_kappa_calibrated.csv` (or equivalent survivor set),
 `cluster_profiles_rajasthan.csv`, `PCM_Properties_cleaned_mice_pmm_detailed.csv` (read directly, a
 second time, for the "rich" properties — density/TC/Cp/corrosion-proxy/cost — not passed through
 from Phase 5).
@@ -118,25 +137,23 @@ regardless of imputation status.
 
 ## Actual Rajasthan result — RE-RUN 2026-08-14 against the expanded 55-row database (current)
 
-`mcdm_rankings_rajasthan.csv`: **39 rows across 3 clusters (n=9/14/16 survivors)**, up from the
+`mcdm_full_rankings.csv`: **39 rows across 3 clusters (n=9/14/16 survivors)**, up from the
 pre-expansion 20 rows (n=5/8/7). Two bugs (`is_rt_line` column removed by the rewritten
 `01_preprocess.py`, and a `PCM_data/PCM_data/` path-nesting mismatch) had to be fixed first to make
 this re-run possible at all — see `07_PHASE_5_AUDIT.md` for the full writeup; the `family` field this
 script uses for Monte Carlo same-family donor fallback now derives from the real `manufacturer` column
 (6 values) rather than the old binary Rubitherm/Pluss flag.
 
-**The dominant entropy criterion changed for every cluster**: `supercooling` now dominates all three
-(Cluster 0 = 63.8%, Cluster 1 = 48.6%, Cluster 2 = 57.0%) — all three exceed the script's own 40%
-"near-total-domination" flag threshold (previously it was `Tm_fitness` dominating Clusters 0/1 at
-48.2%/49.4%, with `supercooling` only dominant in Cluster 2). **Kendall's W**: Cluster 0 = 0.388
-(down from 0.4375, still below the 0.6 ambiguous threshold — but **no longer tagged undersized**,
-n=9 now within the healthy 8–20 band, so low agreement here can no longer be attributed to sample
-size), Cluster 1 = 0.635 (up from 0.536, now crosses into the "moderate" band), Cluster 2 = 0.634 (up
-from 0.589, also now "moderate") — **no cluster reaches the "strong agreement" (W>0.8) band**, and
-Cluster 0's persistently low W despite a healthy sample size is a new finding worth its own scrutiny
-(possible genuine method disagreement on this cluster's ranking, not a data-sparsity artifact). GRA is
-newly flagged by the script's own diagnostic as the "structural outlier" method (lowest mean pairwise
-rho vs. the other three) in all three clusters — not previously called out by name in this file.
+**Dominant entropy criterion — PRE- vs POST-unification.** The pre-unification (raw entropy) run had
+`supercooling` dominating all three clusters (63.8% / 48.6% / 57.0%) — an artifact of the
+entropy formula overweighting a near-zero-ideal cost criterion. The **unified engine (2026-09-08)
+caps supercooling's entropy weight at 0.16**, and the actual 2026-09-08 run shows **`Tm_fitness`
+dominating** (entropy weight 59.6% / 69.7% / 66.8%, all flagged by the >40%-domination check), with
+supercooling *blended* at ≈0.19 / 0.16 / 0.17 (down from ≈0.31–0.47 blended pre-cap). **Kendall's
+W** in that run: 0.338 / 0.650 / 0.554 — no cluster reaches "strong" (W>0.8); Cluster 0 stays
+"ambiguous". The ported pairwise method-agreement diagnostic flags **GRA as the structural outlier**
+(lowest mean pairwise ρ vs the other three) in all three clusters — an independent disagreement
+source that the supercooling cap does not address.
 
 ## Literature support
 
@@ -156,8 +173,11 @@ cross-method-agreement check. No external/physics validation yet (that is Phase 
 
 ## Outputs
 
-`mcdm_rankings_rajasthan.csv`, `mcdm_method_agreement_rajasthan.csv`,
-`outputs/qc_montecarlo_inclusion_rajasthan.html`.
+`mcdm_full_rankings.csv` (full per-survivor audit trail), `mcdm_topk_by_cluster.csv` (Top-3 subset),
+`monte_carlo_stability.csv` (MC columns), `mcdm_method_agreement.csv` (method-pair ρ/τ),
+`outputs/qc_montecarlo_inclusion.html`. All carry `upstream_cluster_profile_fingerprint`. The full
+file also carries legacy column aliases (`name`, `topsis_score`, `gra_grade`, `kendall_w`,
+`top3_inclusion_probability`, …) so Phase 7/8 / seasonal scripts read it unchanged.
 
 ## Cross-phase provenance stamping and hard-fail check (added 2026-08-11)
 
@@ -169,16 +189,16 @@ because Phase 7 caught Phase 5's and Phase 6's outputs disagreeing cluster-by-cl
 belonged to which `cluster_id`, traced to Phase 4's GMM cluster labels not being stable across
 separate re-runs (see `06_PHASE_4_AUDIT.md`'s second documented bug and `09_PHASE_7_AUDIT.md`'s
 "Completion Report" for the full incident writeup). This script's own output
-(`mcdm_rankings_rajasthan.csv`) is now stamped with the
+(`mcdm_full_rankings.csv`) is now stamped with the
 same fingerprint, which Phase 7 and Phase 8 each verify in turn.
 
 ## Dependencies
 
 Requires Phase 5's κ-calibrated survivor set (itself provisional pending database expansion) and
 Phase 4's cluster profiles, now verified via the provenance check above. Feeds Phase 7
-(`09_physics_validation_rajasthan.py`, which computes Spearman rho between this script's Borda/
+(`10_physics_validation.py`, which computes Spearman rho between this script's Borda/
 Copeland ranks and simulated solar fraction) and, via Phase 7, Phase 8
-(`10_recommendation_cards_rajasthan.py`, which also re-imports this script as a module to recompute
+(`09_recommendation_cards.py`, which also re-imports this script as a module to recompute
 the per-criterion contribution decomposition against its own already-saved weight formula).
 
 ## Problems / risks
@@ -210,12 +230,12 @@ undersized, Kendall's W 0.388/0.635/0.634 (Clusters 1–2 now "moderate," Cluste
 no longer explainable by small sample size). Two bugs blocking this re-run (`is_rt_line` column
 removed by the rewritten preprocessing script; a `PCM_data/PCM_data/` path mismatch) were found and
 fixed — see `07_PHASE_5_AUDIT.md`. **Update, 2026-08-14 (later same day): Phase 7 was also re-run
-against that ranking** (`09_physics_validation_rajasthan.py`) — the negative validation result
+against that ranking** (`10_physics_validation.py`) — the negative validation result
 persisted (Spearman rho = -0.385/+0.125/-0.097 across the 3 clusters, mean -0.119, all in the ≤0.4
 "genuine negative" band vs. the pre-expansion -0.900/-0.096/-0.198) — so the larger database did
 **not** resolve the MCDM-vs-physics disagreement; if anything Cluster 0's now-healthy sample size
 (n=9, no longer undersized) makes its persistently-low Kendall's W a more concerning finding, not a
-less concerning one. Phase 8 (`10_recommendation_cards_rajasthan.py`) was also re-run and produced
+less concerning one. Phase 8 (`09_recommendation_cards.py`) was also re-run and produced
 Top-1 picks RT50 / savE® OM50 / savE® OM50 — see `09_PHASE_7_AUDIT.md` and `10_PHASE_8_AUDIT.md` for
 the writeup. **All of the numbers in this "Update, 2026-08-14" paragraph predate the 2026-08-31
 `L_required` correction (top banner) and are superseded by it; the post-correction re-run status for

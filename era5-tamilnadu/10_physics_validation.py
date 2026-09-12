@@ -102,10 +102,16 @@ import pandas as pd
 from scipy.stats import spearmanr
 
 from config import PROCESSED_DIR, SUNTIMES_FILE
+# Cross-phase provenance check (wired in 2026-09-08, mirroring Rajasthan's
+# 09_physics_validation_rajasthan.py). Phase 7 consumes Phase 6's scores and
+# hard-fails if they were built from a different clustering run than the one
+# currently on disk — this is exactly the class of bug caught on 2026-08-11.
+from provenance_lib import file_fingerprint, fingerprint_id, assert_fingerprint_match
 
+PROFILE_FILE = PROCESSED_DIR / "clustering" / "cluster_profiles_tamilnadu.csv"
 DAILY_FILE = PROCESSED_DIR / "daily_aggregates_tamilnadu.csv"
 ASSIGN_FILE = PROCESSED_DIR / "clustering" / "cluster_assignments_tamilnadu.csv"
-SCORES_FILE = PROCESSED_DIR / "pcm" / "mcdm_full_scores_by_cluster.csv"
+SCORES_FILE = PROCESSED_DIR / "pcm" / "mcdm_full_rankings.csv"   # renamed 2026-09-08 Phase 6 unification (was mcdm_full_scores_by_cluster.csv)
 OUT_RESULTS = PROCESSED_DIR / "pcm" / "physics_validation_results.csv"
 OUT_SPEARMAN = PROCESSED_DIR / "pcm" / "physics_validation_spearman.csv"
 
@@ -357,6 +363,16 @@ def main():
     assign_df = pd.read_csv(ASSIGN_FILE)
     scores_df = pd.read_csv(SCORES_FILE)
 
+    # PROVENANCE HARD-FAIL before simulating anything: if Phase 4 has been
+    # re-run since Phase 6 produced these scores, cluster_id no longer means
+    # the same regime and a fully-computed validation result would be built
+    # on mismatched inputs (the 2026-08-11 incident).
+    current_profile_fp_id = fingerprint_id(file_fingerprint(PROFILE_FILE))
+    assert_fingerprint_match(current_profile_fp_id, scores_df,
+                              PROFILE_FILE.name, SCORES_FILE.name)
+    print(f"  Provenance check PASSED — {SCORES_FILE.name} matches the "
+          f"{PROFILE_FILE.name} currently on disk (fingerprint {current_profile_fp_id}).")
+
     all_results, spearman_rows = [], []
 
     for cid in sorted(assign_df["cluster_id"].unique()):
@@ -411,6 +427,9 @@ def main():
 
     results_df = pd.DataFrame(all_results)
     spearman_df = pd.DataFrame(spearman_rows)
+    # Re-stamp so Phase 8 (09_recommendation_cards.py) can run the same check.
+    for _df in (results_df, spearman_df):
+        _df["upstream_cluster_profile_fingerprint"] = current_profile_fp_id
     results_df.to_csv(OUT_RESULTS, index=False)
     spearman_df.to_csv(OUT_SPEARMAN, index=False)
 

@@ -123,8 +123,10 @@ print("  Saved: B_cluster_profiles.html")
 # ═══════════════════════════════════════════════════════════
 print("\n[C] Population covered per cluster ...")
 
-if "total_population_covered" in profiles.columns:
-    fig = px.pie(profiles, names="cluster_id", values="total_population_covered",
+# Column renamed 2026-09-08 to match Rajasthan's cluster_profiles schema:
+# total_population_covered -> total_population.
+if "total_population" in profiles.columns:
+    fig = px.pie(profiles, names="cluster_id", values="total_population",
                  title="Population coverage per climate regime (novelty claim N6)",
                  hole=0.35)
     fig.write_html(str(OUT_DIR / "C_population_share.html"), include_plotlyjs="cdn")

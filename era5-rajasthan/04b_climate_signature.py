@@ -13,21 +13,20 @@ Phase 4's cross-region 05_cluster_regions.py can concatenate both states'
 outputs directly.
 
 INPUTS:
-  data/processed/climate_rajasthan_points_clean.csv      (sun-event samples:
-      sunrise/noon/sunset, physical units — 03b_quality_check_rajasthan.py's
-      output, NOT 02_combine_rajasthan.py's raw output directly. CORRECTED
-      2026-08-11: this script used to read climate_rajasthan_points.csv
-      straight from 02_combine, with no outlier detection or reported
-      missing-data handling in between — 03b_quality_check_rajasthan.py
-      fills that gap (Hampel-filter winsorizing + point-seasonal-mean gap
-      imputation, both audited via *_outlier_flag columns and
-      quality_report_rajasthan.{md,json}) and this script now reads its
-      output instead. Same schema, same physical units. NOTE: the file
-      this ultimately derives from had its era5_GHI/LW_down/precipitation
-      columns corrupted by a since-fixed deaccumulation bug (see
-      accum_to_flux() in 02_combine_rajasthan.py) — if you regenerate from
-      scratch, re-run 02_combine_rajasthan.py, then 03b_quality_check_
-      rajasthan.py, in that order, before this script.)
+  data/preprocessed/rajasthan_cleaned_physical.csv       (sun-event samples:
+      sunrise/noon/sunset, physical units — 04_preprocess_rajasthan.py's
+      output, NOT 02_combine_rajasthan.py's raw output directly. As of the
+      2026-09 convergence onto the Tamil Nadu 04_preprocess contract, this
+      script reads that file instead of climate_rajasthan_points_clean.csv
+      (03b_quality_check_rajasthan.py, now a diagnostic-only script). The 8
+      base columns pulled via usecols carry: the BOUNDS physical screen, the
+      SZA>=90 night-mask, per-season quantile-mapped era5_GHI/era5_CSI
+      (ERA5 -> NASA POWER), the Hampel filter, and the 4-stage + MICE
+      imputation cascade. NOTE: the file this ultimately derives from had
+      its era5_GHI/LW_down/precipitation columns corrupted by a since-fixed
+      deaccumulation bug (see accum_to_flux() in 02_combine_rajasthan.py) —
+      if you regenerate from scratch, re-run 02_combine_rajasthan.py, then
+      04_preprocess_rajasthan.py, in that order, before this script.)
   data/processed/daily_aggregates_rajasthan_summary.csv (Tier 2, one row
       per point — GHI_daily_kWh, SAI, kt_daily_mean/std, cloudy_frac, CCI,
       HDD18, CDD24, DTR_true, seasonality, monsoon_index)
@@ -182,7 +181,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 from config import (
-    CLEANED_POINTS_FILE,
+    PREPROCESSED_DIR,
     DAILY_AGGREGATES_FILE,
     DAILY_AGGREGATES_SUMMARY_FILE,
     SUNTIMES_FILE,
@@ -191,16 +190,34 @@ from config import (
     CLIMATE_SIGNATURE_FILE,
     OUTPUTS_DIR,
     ensure_data_dirs,
+    # Cross-state design-basis constants — defined once in
+    # PCM-Selection-ML-model/pcm_shared_config.py, re-exported by config.py.
+    T_DELIVERY_C,
+    DT_APPROACH_C,
+    TM_TARGET_C,
+    ASSUMED_PCM_MASS_KG,
+    SHARE_PCM,
+    PCA_N_COMPONENTS,
+    T_MAINS_EST_C_TODO,
 )
 from signature_lib import EVENT_ORDER, build_tier1_signature
 
 ensure_data_dirs()
 
-# --- PCM-facing design basis (§6.3, matches Tamil Nadu's 04b for
-# cross-state comparability) ------------------------------------------
-T_DELIVERY_C = 50.0            # Indian domestic SWH delivery target, §6.3
-DT_APPROACH_C = 7.0            # heat-exchanger approach temp, midpoint of the doc's 5-8K range
-TM_TARGET_C = T_DELIVERY_C + DT_APPROACH_C   # -> 57 C, indirect-system assumption
+# Phase 2.5 output this script reads — 04_preprocess_rajasthan.py's
+# physical-units file (bounds + SZA night-mask + per-season quantile-mapped
+# era5_GHI/era5_CSI + 4-stage/MICE imputation), mirroring Tamil Nadu's
+# 04b_climate_signature.py:PHYSICAL_FILE. Replaced climate_rajasthan_points_
+# clean.csv (03b_quality_check_rajasthan.py's output) when the pipeline
+# converged onto the Tamil Nadu 04_preprocess contract.
+PHYSICAL_FILE = PREPROCESSED_DIR / "rajasthan_cleaned_physical.csv"
+
+# --- PCM-facing design basis (§6.3) ---------------------------------------
+# T_DELIVERY_C / DT_APPROACH_C / TM_TARGET_C now come from
+# pcm_shared_config.py (via config.py) so Rajasthan and Tamil Nadu's 04b
+# cannot drift apart. Values unchanged: 50.0 + 7.0 -> 57.0 C, indirect-
+# system assumption (T_delivery = Indian-domestic SWH target §6.3;
+# DT_approach = midpoint of the doc's 5-8 K heat-exchanger range).
 
 """
 Night-discharge design basis [Avargani et al. 2021, J. Energy Storage]:
@@ -237,21 +254,18 @@ WATER_DENSITY_KG_PER_L = 1.0      # kg/L
 
 NIGHT_DRAW_TOTAL_KG = NIGHT_DRAW_TOTAL_L * WATER_DENSITY_KG_PER_L   # = 300.0 kg
 CP_WATER = 4.186                         # kJ/kg.K
-ASSUMED_PCM_MASS_KG = 50.0                # placeholder mass, matches Tamil Nadu
+# ASSUMED_PCM_MASS_KG (50.0 kg placeholder) and SHARE_PCM (0.5, literature-
+# anchored combined sensible+latent fraction — Zhao 2022, Huang 2020,
+# Abdelsalam 2020, Koželj 2021; range 0.4–0.78; Avargani et al. 2021's 300 L
+# is delivered by an integrated collector + PCM tank + sensible tank, not PCM
+# latent heat alone) are imported from pcm_shared_config.py via config.py so
+# Rajasthan and Tamil Nadu cannot disagree on them. Values unchanged.
 
-# PCM's fractional contribution to total night-time thermal delivery in a
-# combined PCM-tank (sensible + latent) system. EXPLICIT HEURISTIC informed
-# by reported PCM energy/volume contribution fractions of 15–78% across
-# combined sensible-latent systems (Zhao 2022, Huang 2020, Abdelsalam 2020,
-# Koželj 2021), not a first-principles derivation. Avargani et al. (2021)
-# themselves deliver their 300 L benchmark via integrated system architecture
-# (collector + PCM tank + sensible-heat tank), not PCM latent heat alone.
-# Central estimate 0.5, range 0.4–0.7. Replaces the prior all-latent assumption.
-SHARE_PCM = 0.5
-
-# PCA block — the correlated temperature/pressure columns (§6.4). Kept
+# PCA block — the correlated temperature/elevation columns (§6.4). Kept
 # OUT of the final standalone clustering matrix; replaced by their PCA
-# component scores instead.
+# component scores instead. (NOTE: earlier revisions of this file and the
+# §6.4 bullet labelled this "the temperature/pressure block" — there is no
+# pressure variable in PCA_BLOCK; it is a temperature + elevation block.)
 PCA_BLOCK = ["Ta_mean", "Ta_p95", "Ta_p05", "T_sunrise_mean", "T_noon_mean",
              "HDD18", "CDD24", "elevation_m"]
 
@@ -272,14 +286,18 @@ print("\n[1/9] Loading inputs ...")
 
 pts_cols = ["point_id", "date", "event", "era5_T_amb", "era5_RHum",
             "era5_GHI", "era5_CSI", "era5_W_spd"]
-# Reads the QUALITY-CHECKED file (03b_quality_check_rajasthan.py's output),
-# NOT the raw 02_combine_rajasthan.py output directly — corrected
-# 2026-08-11 when that quality-check step was introduced. Same schema as
-# the raw file (Hampel-winsorized + gap-imputed, with added
-# *_outlier_flag columns this script doesn't need and doesn't read).
-events_df = pd.read_csv(CLEANED_POINTS_FILE, usecols=pts_cols, parse_dates=["date"])
+# Reads 04_preprocess_rajasthan.py's physical-units output, NOT the raw
+# 02_combine_rajasthan.py output directly. era5_GHI/era5_CSI here are the
+# per-season quantile-mapped (ERA5 -> NASA POWER) values, after the BOUNDS
+# screen, SZA>=90 night-mask, Hampel filter and the 4-stage/MICE imputation
+# cascade. The file also carries lag/rolling/scaled/engineered columns this
+# script doesn't need — usecols pulls only the 8 base columns above.
+# (Superseded climate_rajasthan_points_clean.csv / 03b_quality_check_
+# rajasthan.py when the pipeline converged onto the Tamil Nadu 04_preprocess
+# contract.)
+events_df = pd.read_csv(PHYSICAL_FILE, usecols=pts_cols, parse_dates=["date"])
 events_df["event"] = pd.Categorical(events_df["event"], categories=EVENT_ORDER, ordered=True)
-print(f"  climate_rajasthan_points_clean.csv : {len(events_df):,} rows, "
+print(f"  rajasthan_cleaned_physical.csv : {len(events_df):,} rows, "
       f"{events_df['point_id'].nunique()} points")
 
 sun_df = pd.read_csv(SUNTIMES_FILE, parse_dates=["date"])
@@ -446,11 +464,11 @@ print(f"  Tm_target_capped_C (worst-month): {sig['Tm_target_capped_C'].min():.1f
 print(f"  Tm_target_capped_C_p05day (OLD, reference only): "
       f"{sig['Tm_target_capped_C_p05day'].min():.1f} - {sig['Tm_target_capped_C_p05day'].max():.1f} C")
 
-# T_mains estimate — same simple offset form as Tamil Nadu's
-# 04b_climate_signature.py (Ta_mean - 2 C). Not derived from a specific
-# published correlation; kept identical to the Tamil Nadu precedent for
-# cross-state comparability, as the plan doc's §6.3 "standard lag
-# correlation" wording is not itself pinned to a specific formula.
+# T_mains estimate — flat `Ta_mean - 2 C` offset, identical in both states'
+# 04b. TODO (shared, tracked once): this is NOT a published correlation —
+# see pcm_shared_config.T_MAINS_EST_C_TODO. Replace with a Kusuda &
+# Achenbach-style ground-temperature annual-lag model before L_required (and
+# the Phase 5 latent-heat gate it drives) is presented as final.
 sig["T_mains_est_C"] = sig["Ta_mean"] - 2.0
 
 # Q_night = total night-draw mass x cp_water x (T_delivery - T_mains) — a
@@ -467,6 +485,7 @@ print(f"  L_required_kJ_per_kg  : {sig['L_required_kJ_per_kg'].min():.0f} - "
       f"{sig['L_required_kJ_per_kg'].max():.0f} kJ/kg  (literature-anchored, "
       f"PCM {SHARE_PCM*100:.0f}% of total night delivery, with tank sensible heat "
       f"+ concurrent charging supplying the rest)")
+print(f"  [TODO] {T_MAINS_EST_C_TODO}")
 
 
 # ═══════════════════════════════════════════════════════════
@@ -494,7 +513,7 @@ print("  Added 5 interaction terms (GHIxkt_std, DTRxcloudy_frac, "
 
 
 # ═══════════════════════════════════════════════════════════
-# 8. PCA ON THE CORRELATED TEMPERATURE/PRESSURE BLOCK ONLY
+# 8. PCA ON THE CORRELATED TEMPERATURE/ELEVATION BLOCK ONLY
 # ═══════════════════════════════════════════════════════════
 
 print("\n[8/9] PCA on the correlated block "
@@ -504,7 +523,12 @@ pca_input = sig[PCA_BLOCK].fillna(sig[PCA_BLOCK].median())
 pca_scaler = StandardScaler()
 pca_input_scaled = pca_scaler.fit_transform(pca_input)
 
-pca = PCA(n_components=0.95, random_state=42)
+# n_components PINNED (pcm_shared_config.PCA_N_COMPONENTS) rather than a
+# data-determined 0.95-variance threshold, so climate_signature_rajasthan.csv
+# and climate_signature_tamilnadu.csv carry the SAME PC1..PCn columns and
+# Phase 4's 05_cluster_regions.py can concatenate them. 4 was Rajasthan's
+# own 95%-variance count, so this leaves Rajasthan's PC columns unchanged.
+pca = PCA(n_components=PCA_N_COMPONENTS, random_state=42)
 pca_scores = pca.fit_transform(pca_input_scaled)
 n_comp = pca_scores.shape[1]
 for i in range(n_comp):
@@ -512,7 +536,8 @@ for i in range(n_comp):
 
 loadings = pd.DataFrame(pca.components_.T, index=PCA_BLOCK,
                          columns=[f"PC{i+1}" for i in range(n_comp)])
-print(f"  {n_comp} components retained (95% variance). Loadings:")
+print(f"  {n_comp} components retained (pinned; cumulative variance "
+      f"{pca.explained_variance_ratio_.sum():.3f}). Loadings:")
 print(loadings.round(3).to_string())
 print(f"  Explained variance ratio: {np.round(pca.explained_variance_ratio_, 3)}")
 print("  -> Read the sign/magnitude pattern per component (plan doc expects roughly "

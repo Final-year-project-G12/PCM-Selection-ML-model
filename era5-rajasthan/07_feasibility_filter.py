@@ -94,8 +94,8 @@ INPUTS:
   PCM_data/data/PCM_Properties_cleaned_mice_pmm_detailed.csv  (shared, not
       state-specific — path resolved relative to this file's grandparent)
 
-OUTPUTS:
-  data/processed/feasibility_survivors_rajasthan.csv — PRIMARY run, fixed
+OUTPUTS (canonical Tamil-Nadu naming — see OUT_FILE below):
+  data/processed/feasibility_survivors_by_cluster.csv — PRIMARY run, fixed
       kappa=0.7 (kept exactly as specified). One row per (cluster_id,
       pcm_id) evaluated at that cluster's FINAL melting-window relaxation
       round, with one column per constraint (pass/fail/flag/not_applicable/
@@ -104,7 +104,7 @@ OUTPUTS:
       audit trail that only ever shows survivors (who trivially pass
       everything) isn't actually an audit trail. Filter to
       `survives_all == True` for the plain Top-N input.
-  data/processed/feasibility_survivors_rajasthan_kappa_calibrated.csv —
+  data/processed/feasibility_survivors_by_cluster_kappa_calibrated.csv —
       COMPANION run, not a replacement. Same audit-trail shape, but kappa
       is stepped down per cluster (0.7 -> 0.0 in 0.1 increments) until
       that cluster retains 8-20 survivors, per the calibration procedure
@@ -153,8 +153,14 @@ ensure_data_dirs()
 STATE_NAME = "rajasthan"
 
 PROFILE_FILE = PROCESSED_DIR / f"cluster_profiles_{STATE_NAME}.csv"
-OUT_FILE = PROCESSED_DIR / f"feasibility_survivors_{STATE_NAME}.csv"
-OUT_FILE_KAPPA_CALIBRATED = PROCESSED_DIR / f"feasibility_survivors_{STATE_NAME}_kappa_calibrated.csv"
+# CANONICAL NAMING (2026-09-08): Tamil Nadu's convention
+# (feasibility_survivors_by_cluster{,_kappa_calibrated}.csv) is the single
+# canonical name for BOTH states. Rajasthan's former
+# feasibility_survivors_rajasthan{,_kappa_calibrated}.csv were renamed to
+# these. The directory stays flat (era5-rajasthan/data/processed/), which
+# is Rajasthan's own path convention — only the filename is unified.
+OUT_FILE = PROCESSED_DIR / "feasibility_survivors_by_cluster.csv"
+OUT_FILE_KAPPA_CALIBRATED = PROCESSED_DIR / "feasibility_survivors_by_cluster_kappa_calibrated.csv"
 
 # Shared PCM database — NOT state-specific. Resolved relative to this
 # file's grandparent (PCM-Selection-ML-model/), matching where PCM_data/
