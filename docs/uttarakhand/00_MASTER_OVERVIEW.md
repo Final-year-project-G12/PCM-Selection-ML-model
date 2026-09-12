@@ -105,7 +105,8 @@ PHASE 6 — MULTI-CRITERIA RANKING
                                      data/processed/pcm/mcdm_full_scores_by_cluster.csv
         |
 PHASE 7 — PHYSICS-BASED VALIDATION
-  (NO SCRIPT PRESENT — see 09_PHASE_7_AUDIT.md)
+  10_physics_validation.py        -> data/processed/pcm/physics_validation_results.csv
+                                     data/processed/pcm/physics_validation_spearman.csv
         |
 PHASE 8 — RECOMMENDATION CARDS
   09_recommendation_cards.py      -> data/processed/pcm/recommendation_cards.md
@@ -131,7 +132,7 @@ FIGURE / VERIFICATION LAYER (not part of the numbered phase chain)
 | 4 — Regime Clustering | `05`, `05b` | **RUN** | **K_FINAL = 5**, GMM full covariance; sizes **12 / 9 / 3 / 7 / 14**; silhouette 0.279 |
 | 5 — Feasibility Filtering | `06`, `07` (`07b` optional) | **RUN** | 55-candidate database; melting window [52, 65] °C; **29 candidates satisfy every implemented filter, identically in all 5 clusters** |
 | 6 — MCDM Ranking | `08` | **RUN** | TOPSIS + GRA + Borda; **RT60 is consensus rank 1 in all 5 clusters**; pooled TOPSIS-vs-GRA Spearman **rho = −0.930** |
-| 7 — Physics Validation | — | **NOT IMPLEMENTED** | No script exists; `NEXT_STEPS.md` records it as accepted future work |
+| 7 — Physics Validation | `10_physics_validation.py` | **RUN** | Implicit Backward Euler grey-box model; 92% of runs in [54%, 84%] SF band; mean Spearman rho = **+0.124** |
 | 8 — Recommendation Cards | `09` | **CODE PRESENT, OUTPUT NOT COMMITTED** | `recommendation_cards.md` is under the git-ignored `data/processed/` tree |
 
 ## Current architecture

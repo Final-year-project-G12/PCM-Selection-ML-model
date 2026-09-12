@@ -197,14 +197,14 @@ standalone files — their content was written directly into the consolidated ta
 |  +- 06_PHASE_4_AUDIT.md  [Regime clustering]
 |  +- 07_PHASE_5_AUDIT.md  [PCM database + feasibility filtering]
 |  +- 08_PHASE_6_AUDIT.md  [MCDM ranking engine]
-|  +- 09_PHASE_7_AUDIT.md  [Physics validation — NOT IMPLEMENTED]
+|  +- 09_PHASE_7_AUDIT.md  [Physics-based validation — 10_physics_validation.py implicit Backward Euler grey-box model]
 |  +- 10_PHASE_8_AUDIT.md  [Recommendation cards]
 |
 +- Context & reference:
 |  +- 01_PROJECT_CONTEXT.md
 |  +- 02_DATA_SOURCES_AND_VARIABLES.md
-|  +- 11_LITERATURE_MAPPING.md
 |  +- 11_OBJECTIVE1_PLOTTING_AND_VERIFICATION_AUDIT.md
+|  +- 13_LITERATURE_MAPPING.md
 |
 +- Post-pipeline:
    +- 12_FINAL_READINESS_REPORT.md   [Implementation issues + reproducibility + final verdict]
