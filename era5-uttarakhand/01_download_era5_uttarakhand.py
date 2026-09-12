@@ -29,24 +29,21 @@ Two separate API calls per month (ERA5 rule), same as before:
   • instant  — analysis variables (TYPE=AN): temperature, wind, humidity, pressure
       Needs exactly INSTANT_HOURS — snapshots don't depend on neighbours.
   • accum    — forecast variables (TYPE=FC): solar radiation, precipitation
-      ERA5 accumulated fields are cumulative since the last forecast reset
-      (00 UTC or 12 UTC). To recover the true 1-hour flux via diff() (see
-      deaccumulate() in 02_combine_uttarakhand.py, unchanged), every target
-      hour's immediate predecessor is also downloaded:
-          ACCUM_HOURS = INSTANT_HOURS ∪ {(h - 1) mod 24 for h in INSTANT_HOURS}
-      deaccumulate()'s reset_mask = hour.isin([1, 13]) already generalizes
-      correctly to this wider/contiguous hour set — see that function's
-      docstring for why hours 1 and 13 (the first step after each 00Z/12Z
-      reset) must use the raw value directly rather than diff().
-
-      One true edge case: 2016-01-01 has no 2015-12-31 file to supply hour
-      23 as hour 0's predecessor. Because 02_combine_uttarakhand.py
-      concatenates every month/year into one continuous sorted series per
-      point *before* calling deaccumulate(), every other month boundary is
-      bridged automatically (hour 23 is downloaded on every day of every
-      month, including each month's last day) — only that single first day
-      of the whole 10-year dataset is short a predecessor, and pandas'
-      diff() naturally yields NaN there rather than a silently wrong value.
+      This used to also download each target hour's immediate predecessor
+      (ACCUM_HOURS = INSTANT_HOURS ∪ {(h-1) mod 24 for h in INSTANT_HOURS}),
+      on the assumption that ERA5's accumulated fields (ssrd/strd/tp) are
+      cumulative since the last forecast reset (00/12 UTC) and need a
+      diff() against the prior hour to recover a true 1-hour flux.
+      That assumption was wrong for what this pipeline's CDS/cfgrib
+      pipeline actually delivers: inspecting the raw NetCDF directly shows
+      ssrd rising and falling through the day and returning to exactly 0
+      at night — impossible for a value accumulating since a reset, which
+      can only increase. What's actually delivered is already the
+      per-step (1-hour) value. 02_combine_uttarakhand.py's deaccumulate()
+      was fixed accordingly (2026-09) to use the raw per-step value
+      directly instead of diffing it — see that function's docstring.
+      The extra h-1 hour is still downloaded here (harmless, just unused
+      by the fixed logic) rather than re-triggering a full re-download.
 
 HOW TO RUN:
   1. Save your API key in era5-uttarakhand/.cdsapirc  (see .cdsapirc.example)

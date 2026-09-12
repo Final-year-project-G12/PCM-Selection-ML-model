@@ -1,7 +1,7 @@
 """
 03b_agreement_analysis.py
 =============================================================================
-CROSS-SOURCE VALIDATION — TAMIL NADU POPULATION POINTS  (ERA5 vs NASA POWER)
+CROSS-SOURCE VALIDATION — UTTARAKHAND POPULATION POINTS  (ERA5 vs NASA POWER)
 =============================================================================
 Decides whether ERA5 alone is a defensible backbone for downstream
 preprocessing, or needs bias correction against NASA POWER, before any
@@ -23,7 +23,9 @@ warnings.filterwarnings("ignore")
 
 import numpy as np
 import pandas as pd
+# pyrefly: ignore [missing-import]
 import plotly.graph_objects as go
+# pyrefly: ignore [missing-import]
 from plotly.subplots import make_subplots
 
 from config import COMBINED_POINTS_FILE, PROCESSED_DIR, OUTPUTS_DIR, ensure_data_dirs
@@ -213,7 +215,7 @@ def decide_branch(agreement_df, df, pairs):
 
 def write_decision_txt(branch, info, qmap_results, diagnostics):
     lines = [
-        "TAMIL NADU — ERA5 vs NASA POWER CROSS-SOURCE AGREEMENT DECISION",
+        "UTTARAKHAND — ERA5 vs NASA POWER CROSS-SOURCE AGREEMENT DECISION",
         "=" * 68,
         f"GHI noon: n={info['n_noon']:,}  MBE={info['mbe_noon']:.2f} W/m²  r={info['r_noon']}",
         f"DECISION: {branch}",

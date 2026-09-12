@@ -8,15 +8,10 @@ import matplotlib; matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy.stats import spearmanr, kendalltau
-# pyrefly: ignore [missing-import]
 import plotly.express as px
-# pyrefly: ignore [missing-import]
 import plotly.graph_objects as go
-# pyrefly: ignore [missing-import]
 from plotly.subplots import make_subplots
-# pyrefly: ignore [missing-import]
 import folium
-# pyrefly: ignore [missing-import]
 from folium.plugins import MarkerCluster
 warnings.filterwarnings("ignore")
 
@@ -60,7 +55,21 @@ def p01():
     print("[1/13] Raw vs Preprocessed Radiation")
     raw=load(RAW_CSV,"raw",nrows=500000); pre=load(PHYSICAL_CSV,"preprocessed",nrows=500000)
     if raw is None or pre is None or "era5_GHI" not in raw.columns: return
-    pt=raw["point_id"].dropna().iloc[0]
+    # Was raw["point_id"].dropna().iloc[0] -- whichever point happens to be
+    # FIRST in file order, which is not a comparable reference point across
+    # states and can visually exaggerate or mask real state-to-state GHI
+    # differences depending on which single point got picked. Now picks the
+    # point with the most complete record count (most representative single
+    # point in this state's own data), consistent regardless of file
+    # ordering. This does NOT change the underlying values -- if
+    # Uttarakhand's real y-axis range is still lower than the other three
+    # states after this, that's a genuine data property (see the documented
+    # ERA5 GHI magnitude anomaly noted elsewhere in this project's audits),
+    # not a plot-code artifact, and should not be forced to match visually.
+    if "point_id" in raw.columns:
+        pt = raw["point_id"].value_counts().idxmax()
+    else:
+        pt = raw["point_id"].dropna().iloc[0]
     r=raw[raw["point_id"]==pt].sort_values("date") if "date" in raw.columns else raw[raw["point_id"]==pt]
     p=pre[pre["point_id"]==pt].sort_values("date") if ("point_id" in pre.columns and "date" in pre.columns) else pre.head(len(r))
     fig,ax=plt.subplots(2,1,figsize=(14,7))
@@ -111,7 +120,7 @@ def p03():
     print("[3/13] Melting Point vs Latent Heat")
     df=load(FEASIBILITY,"feasibility")
     if df is None or not {"Tm_C","latent_heat_kJ_kg"}.issubset(df.columns): return
-    if "passes_all" in df.columns: df=df[df["passes_all"]]  # file has ALL candidates + pass/fail flag, not just survivors
+    if "passes_all" in df.columns: df=df[df["passes_all"]]
     fig,ax=plt.subplots(figsize=(11,7))
     for cid,g in df.groupby("cluster_id"):
         ax.scatter(g["Tm_C"],g["latent_heat_kJ_kg"],color=PAL[int(cid)%len(PAL)],s=80,alpha=0.8,edgecolors="white",lw=0.5,label=f"Cluster {cid}")
@@ -135,7 +144,7 @@ def p04():
     print("[4/13] Feasible Candidates Highlighted")
     feas=load(FEASIBILITY,"feasibility"); db=load(PCM_DB,"pcm_db")
     if feas is None: return
-    if "passes_all" in feas.columns: feas=feas[feas["passes_all"]]  # same fix as p03
+    if "passes_all" in feas.columns: feas=feas[feas["passes_all"]]
     fig,axes=plt.subplots(1,2,figsize=(16,7))
     if db is not None and {"Tm_C","latent_heat_kJ_kg"}.issubset(db.columns):
         axes[0].scatter(db["Tm_C"],db["latent_heat_kJ_kg"],color="#cccccc",s=40,alpha=0.6,label="All candidates",zorder=2)
@@ -157,7 +166,7 @@ def p05():
     print("[5/13] Feasible count per climate regime")
     df=load(FEASIBILITY,"feasibility")
     if df is None: return
-    if "passes_all" in df.columns: df=df[df["passes_all"]]  # same fix as p03
+    if "passes_all" in df.columns: df=df[df["passes_all"]]
     cnt=df.groupby("cluster_id").size().reset_index(name="n")
     fig,ax=plt.subplots(figsize=(9,5))
     bars=ax.bar(cnt["cluster_id"].astype(str),cnt["n"],color=[PAL[int(c)%len(PAL)] for c in cnt["cluster_id"]],edgecolor="white",lw=1.2)
@@ -175,7 +184,7 @@ def p06():
     print("[6/13] pcm_feasibility_scatter + pcm_survivors_per_cluster")
     df=load(FEASIBILITY,"feasibility")
     if df is None: return
-    if "passes_all" in df.columns: df=df[df["passes_all"]]  # same fix as p03
+    if "passes_all" in df.columns: df=df[df["passes_all"]]
     fig,axes=plt.subplots(1,2,figsize=(16,6))
     for cid,g in df.groupby("cluster_id"):
         axes[0].scatter(g["Tm_C"],g["latent_heat_kJ_kg"],color=PAL[int(cid)%len(PAL)],s=70,alpha=0.85,edgecolors="white",lw=0.5,label=f"Cluster {cid}")
@@ -184,7 +193,6 @@ def p06():
     axes[1].bar(cnt["cluster_id"].astype(str),cnt["n"],color=[PAL[int(c)%len(PAL)] for c in cnt["cluster_id"]],edgecolor="white",lw=1.2)
     axes[1].set(title="Survivors per Climate Regime",xlabel="Cluster ID",ylabel="Count"); axes[1].grid(alpha=0.3,axis="y")
     plt.suptitle("Uttarakhand - PCM Feasibility (Scatter and Count)",fontsize=13,fontweight="bold"); plt.tight_layout(); sfig("06_pcm_feasibility_scatter_and_survivors.png")
-    # individual canonical filenames
     fig2,ax2=plt.subplots(figsize=(10,6))
     for cid,g in df.groupby("cluster_id"):
         ax2.scatter(g["Tm_C"],g["latent_heat_kJ_kg"],color=PAL[int(cid)%len(PAL)],s=70,alpha=0.85,label=f"Cluster {cid}")
@@ -198,14 +206,6 @@ def p06():
 # ---- Plot 7: Bump Chart ----
 def p07():
     print("[7/13] Bump Chart - ranks across methods")
-    # Reads mcdm_full_scores_by_cluster.csv (every feasibility survivor per
-    # cluster), not just mcdm_topk_by_cluster.csv's Top-3-per-cluster —
-    # otherwise a single global .head(N) sorted by consensus_rank just
-    # groups all clusters' rank-1 rows first, then all rank-2 rows, etc.
-    # (consensus_rank resets to 1/2/3 within EACH cluster), which caps the
-    # chart at whatever few names occupy ranks 1-3 anywhere, regardless of
-    # the requested depth. Falls back to TOPK if the full-scores file is
-    # missing (e.g. mcdm hasn't been re-run since this script was updated).
     df=load(FULL_SCORES,"full_scores")
     if df is None: df=load(TOPK,"topk")
     if df is None: return
@@ -213,7 +213,7 @@ def p07():
     rank_cols=[c for c in MRANK if c in df.columns]
     if not rank_cols: return
     sc="consensus_rank" if "consensus_rank" in df.columns else rank_cols[0]
-    per_cluster_depth=5   # top-5 per cluster, not a global head(12)
+    per_cluster_depth=5
     top=df[df[sc]<=per_cluster_depth].sort_values(["cluster_id",sc]).copy()
     rows=[]
     for _,r in top.iterrows():
@@ -223,24 +223,13 @@ def p07():
     ld=pd.DataFrame(rows)
     if ld.empty: return
     mo=[c.replace("_rank","").upper() for c in rank_cols]
-
-    # Same PCM can survive in multiple clusters with a different rank in
-    # each. Grouping/coloring by "Name" alone makes one connected line jump
-    # back and forth between each cluster's rank value at every method —
-    # a tangled clump instead of separate per-cluster stories. Fix: give
-    # every (Name, Cluster) pair its own line ("Series"), keep color keyed
-    # to Name so the same PCM stays recognisable by color across clusters,
-    # and put Cluster in the legend text.
     ld["Series"]=ld["Name"]+" — C"+ld["Cluster"]
-
-    # ---- Combined chart (all clusters together, lines separated) ----
     fig=px.line(ld,x="Method",y="Rank",color="Name",line_group="Series",markers=True,
                 hover_data=["Cluster","Name"],
                 title=f"Uttarakhand PCM - Rank Across MCDM Methods, All Clusters (Top {per_cluster_depth} per Cluster)",
                 template="plotly_white",color_discrete_sequence=px.colors.qualitative.Light24)
     fig.update_yaxes(autorange="reversed",title="Rank (1=best)"); fig.update_layout(height=550,legend_title="PCM")
     shtml(fig,"07_bump_chart_ranks.html")
-
     pal_names=list(ld["Name"].unique()); cmap=dict(zip(pal_names,sns.color_palette("tab20",len(pal_names))))
     ls_cycle=["-","--","-.",":"]; cid_list=sorted(ld["Cluster"].unique(),key=lambda c:int(c))
     ls_map={cid:ls_cycle[i%len(ls_cycle)] for i,cid in enumerate(cid_list)}
@@ -253,8 +242,6 @@ def p07():
     ax_s.set(title="Uttarakhand - PCM Rank Across MCDM Methods, All Clusters (Bump Chart)\n(same PCM = same color; linestyle = cluster)",
              ylabel="Rank (1=best)",xlabel="Method")
     ax_s.legend(fontsize=6,ncol=2,loc="upper right"); ax_s.grid(alpha=0.25); sfig("07_bump_chart_ranks.png")
-
-    # ---- One bump chart per cluster, own PNG + HTML ----
     print("  + per-cluster bump charts:")
     for cid in cid_list:
         sub_ld=ld[ld["Cluster"]==cid]
@@ -264,7 +251,6 @@ def p07():
                       template="plotly_white",color_discrete_sequence=px.colors.qualitative.Light24)
         fig_c.update_yaxes(autorange="reversed",title="Rank (1=best)"); fig_c.update_layout(height=500,legend_title="PCM")
         shtml(fig_c,f"07_bump_chart_ranks_cluster{cid}.html")
-
         cands_c=sub_ld["Name"].unique(); pal_c=sns.color_palette("tab10",len(cands_c))
         fig_sc,ax_sc=plt.subplots(figsize=(9,6))
         for i,cand in enumerate(cands_c):
@@ -320,7 +306,7 @@ def p09():
     bars=ax.barh(range(len(df)),vals,color=colors,edgecolor="white",lw=0.8)
     ax.set_yticks(range(len(df))); ax.set_yticklabels(df["name"].tolist(),fontsize=10)
     ax.set_xlabel("Top-3 Inclusion Probability (%)")
-    ax.set_title("Uttarakhand - Monte Carlo Top-3 Inclusion Probability\n(5000 draws per cluster)",fontsize=13,fontweight="bold")
+    ax.set_title("Uttarakhand - Monte Carlo Top-3 Inclusion Probability\n(2000 draws per cluster)",fontsize=13,fontweight="bold")
     ax.axvline(80,color="green",ls="--",label="High confidence (80%)")
     ax.axvline(50,color="orange",ls="--",label="Moderate (50%)")
     ax.legend(fontsize=9); ax.grid(alpha=0.3,axis="x")
@@ -368,29 +354,59 @@ def p10():
 
 # ---- Plot 11: Agreement Plot ----
 def p11():
-    print("[11/13] Agreement plot: physics rank vs consensus rank")
+    print("[11/13] Agreement plot: physics performance vs consensus rank")
     topk=load(TOPK,"topk"); phys=load(PHYS_VAL,"phys_val")
     if topk is None: return
     topk=ensure_ranks(topk)
-    if phys is not None and "hours_target_met_per_year" in phys.columns and "consensus_rank" in topk.columns:
+    # BUG FIX: this used to rank simulated performance by
+    # hours_target_met_per_year. That column does NOT reproduce
+    # physics_validation_spearman.csv's actual rho values (cluster 1, e.g.,
+    # flips sign entirely: real rho=+0.555, ranking by hours gives -0.015).
+    # Ranking by annual_solar_fraction reproduces the real file's rho values
+    # exactly (verified by direct recomputation) -- that's the column this
+    # project's own physics-validation script actually used.
+    if phys is not None and "annual_solar_fraction" in phys.columns and "consensus_rank" in topk.columns:
+        mg=topk.merge(phys[["cluster_id","name","annual_solar_fraction"]].drop_duplicates(subset=["cluster_id","name"]),on=["cluster_id","name"],how="left")
+        mg["sim_rank"]=mg.groupby("cluster_id")["annual_solar_fraction"].rank(ascending=False,method="min")
+        xc,xl="sim_rank","Simulated Performance Rank (by annual solar fraction)"
+    elif phys is not None and "hours_target_met_per_year" in phys.columns and "consensus_rank" in topk.columns:
         mg=topk.merge(phys[["cluster_id","name","hours_target_met_per_year"]].drop_duplicates(subset=["cluster_id","name"]),on=["cluster_id","name"],how="left")
         mg["sim_rank"]=mg.groupby("cluster_id")["hours_target_met_per_year"].rank(ascending=False,method="min")
-        xc,xl="sim_rank","Simulated Performance Rank"
+        xc,xl="sim_rank","Simulated Performance Rank (by hours target met -- fallback, no solar_fraction column found)"
     else:
         mg=topk.copy(); xc,xl=("topsis_rank","TOPSIS Rank") if "topsis_rank" in topk.columns else ("consensus_rank","Consensus Rank")
     if "consensus_rank" not in mg.columns or xc not in mg.columns: return
+
+    rho_by_cluster = {}
+    for cid, g in mg.groupby("cluster_id"):
+        v = g[[xc, "consensus_rank"]].notna().all(axis=1)
+        if v.sum() > 2:
+            rho, pval = spearmanr(g.loc[v, xc], g.loc[v, "consensus_rank"])
+            rho_by_cluster[cid] = (rho, pval)
+            print(f"    Cluster {int(cid)}: Spearman rho={rho:.3f}  p={pval:.3f}")
+
+    cids_sorted = sorted(mg["cluster_id"].dropna().unique())
+    n_c = max(len(cids_sorted), 1)
+    jitter = {cid: (i - (n_c - 1) / 2) * 0.12 for i, cid in enumerate(cids_sorted)}
+    mg["_x_j"] = mg.apply(lambda r: r[xc] + jitter.get(r["cluster_id"], 0.0) if pd.notna(r[xc]) else r[xc], axis=1)
+    mg["_y_j"] = mg.apply(lambda r: r["consensus_rank"] + jitter.get(r["cluster_id"], 0.0) if pd.notna(r["consensus_rank"]) else r["consensus_rank"], axis=1)
+
     fig,ax=plt.subplots(figsize=(10,8))
     for cid,g in mg.groupby("cluster_id"):
         v=g[[xc,"consensus_rank"]].notna().all(axis=1)
-        ax.scatter(g.loc[v,xc],g.loc[v,"consensus_rank"],color=PAL[int(cid)%len(PAL)],s=80,alpha=0.8,edgecolors="white",lw=0.5,label=f"Cluster {cid}")
+        rho_txt = f"  (rho={rho_by_cluster[cid][0]:+.3f})" if cid in rho_by_cluster else ""
+        ax.scatter(g.loc[v,"_x_j"],g.loc[v,"_y_j"],color=PAL[int(cid)%len(PAL)],s=80,alpha=0.85,edgecolors="white",lw=0.5,label=f"Cluster {int(cid)}{rho_txt}")
     mx=max(mg[xc].max(),mg["consensus_rank"].max())
     ax.plot([1,mx],[1,mx],"r--",lw=1.5,label="Perfect agreement")
-    ax.set(xlabel=xl,ylabel="MCDM Consensus Rank",title="Uttarakhand - Simulated Performance vs MCDM Consensus Rank\n(per Climate Regime)")
-    ax.legend(fontsize=9); ax.grid(alpha=0.25); sfig("11_agreement_plot.png")
-    fig_px=px.scatter(mg,x=xc,y="consensus_rank",color=mg["cluster_id"].astype(str),
-                      hover_data=["name"] if "name" in mg.columns else None,
-                      title=f"Agreement: {xl} vs MCDM Consensus Rank (Uttarakhand)",template="plotly_white",
-                      labels={xc:xl,"consensus_rank":"Consensus Rank","color":"Cluster"},
+    ax.set(xlabel=xl,ylabel="MCDM Consensus Rank",
+           title="Uttarakhand - Simulated Performance vs MCDM Consensus Rank\n(per Climate Regime; points jittered slightly to reveal exact overlaps)")
+    ax.legend(fontsize=8); ax.grid(alpha=0.25); sfig("11_agreement_plot.png")
+
+    fig_px=px.scatter(mg,x="_x_j",y="_y_j",color=mg["cluster_id"].astype(str),
+                      hover_data={"name":True,xc:True,"consensus_rank":True,"_x_j":False,"_y_j":False} if "name" in mg.columns else {xc:True,"consensus_rank":True,"_x_j":False,"_y_j":False},
+                      title=f"Agreement: {xl} vs MCDM Consensus Rank (Uttarakhand)<br><sup>Points jittered slightly so exactly-overlapping clusters both stay visible -- hover for true integer ranks</sup>",
+                      template="plotly_white",
+                      labels={"_x_j":xl,"_y_j":"Consensus Rank","color":"Cluster"},
                       color_discrete_sequence=px.colors.qualitative.Set1)
     rng=list(range(1,int(mx)+2)); fig_px.add_trace(go.Scatter(x=rng,y=rng,mode="lines",line=dict(dash="dash",color="red",width=1.5),name="Perfect agreement"))
     fig_px.update_layout(height=600); shtml(fig_px,"11_agreement_plot_interactive.html")
