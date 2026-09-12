@@ -1,8 +1,11 @@
-TAMIL NADU — ERA5 vs NASA POWER CROSS-SOURCE AGREEMENT DECISION
+UTTARAKHAND — ERA5 vs NASA POWER CROSS-SOURCE AGREEMENT DECISION
 ====================================================================
-GHI noon: n=164,385  MBE=-602.35 W/m²  r=-0.034
-DECISION: MANUAL_REVIEW
+GHI noon: n=164,385  MBE=19.55 W/m²  r=0.7586
+DECISION: QUANTILE_MAP
 
-Diagnostics:
-  GHI: 24.4% of NOON ERA5 GHI below 5 W/m² (high fraction suggests deaccumulation bug)
-  Median era5_SZA by event: {'sunrise': 89.7, 'noon': 29.3, 'sunset': 92.3}
+Per-season quantile-mapping before/after:
+ season      n  MBE_before  RMSE_before  r_before  MBE_after  RMSE_after  r_after
+ Winter 106279     20.7581      94.0849    0.9524    -0.0838     93.9426   0.9428
+ Summer 102109     33.7322     105.1647    0.9710     0.2199     99.5995   0.9681
+Monsoon 103322    -16.6710     114.3479    0.9383    -0.0034    102.8174   0.9500
+Retreat 100019     -0.3977      85.3207    0.9653    -0.0865     88.3740   0.9632

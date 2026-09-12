@@ -8,16 +8,22 @@ trying to onboard another state's data yet.
 
 ## Where things actually stand
 
+**Update (2026-09): all 8 phases below are done and verified**, including
+a full rerun after fixing two correctness bugs (flat elevation proxy, and
+an ERA5 GHI/longwave/precipitation deaccumulation bug that deflated GHI
+~10x — see the elevation and GHI notes near the end of this doc). The
+table below is kept for phase-by-phase context, not as an open TODO list.
+
 | Phase | What's needed | Status |
 |---|---|---|
-| 1. Data Collection | ERA5 + NASA POWER, 45 population-weighted Uttarakhand points, 3 sun-events/day, 10 years | **Done.** Points confirmed (`00a_build_population_grid.py`, ~87.5% population coverage); `02_combine_uttarakhand.py` produces `climate_uttarakhand_points.csv`. |
-| 2. Preprocessing & QC | 13-step sequence + Tier-2 daily-integral repair | **`02b_build_daily_aggregates.py` confirmed run** (45/45 points, 0 skipped, 164,385 point-days). `04_preprocess_uttarakhand.py` code delivered — confirm it's actually been run and `qc_report.txt` ends in all-PASS before moving on. |
-| 3. Climate Signature | 2-tier ~18-index vector per point, Tm_target/L_required, PCA, standardization | **Code delivered (`04b_climate_signature.py`, Tier1+Tier2 merge), not yet confirmed run.** |
-| 4. Climate Regime Clustering | GMM, BIC-selected K, silhouette sanity | **Code delivered (`05_cluster_uttarakhand.py`), not yet confirmed run.** With only 45 points, expect a smaller K than a 133-point state would support — see `README_PREPROCESSING.md` for why. |
-| 5. Feasibility Filtering | Hard-filter PCM database per cluster | **Code delivered, not yet run.** `06_build_pcm_database.py` (sources from the MICE+RF+PMM-cleaned manufacturer data in `PCM_data/`, ~25 candidates total) + `07_feasibility_filter.py`. Run these next, after Phases 3-4 are confirmed. |
-| 6. Multi-Criteria Ranking | TOPSIS + GRA minimum, entropy+AHP weights, Gaussian Tm fitness transform, Borda consensus | **Code delivered, not yet run.** `08_mcdm_ranking.py`. This is the headline deliverable. |
-| 7. Physics-Based Validation | Grey-box lumped enthalpy tank model, Spearman rho vs. MCDM rank | **Not written.** Do a minimal single-PCM sanity version per cluster if time allows, otherwise record as future work — an accepted, publishable outcome per the plan doc. |
-| 8. Explanation & Output | Recommendation card per cluster | **Code delivered, not yet run.** `09_recommendation_cards.py` — turns 4-6's output directly into your results section. |
+| 1. Data Collection | ERA5 + NASA POWER, 45 population-weighted Uttarakhand points, 3 sun-events/day, 10 years | **Done.** Points confirmed (`00a_build_population_grid.py`, ~87.5% population coverage); `02_combine_uttarakhand.py` produces `climate_uttarakhand_points.csv` (493,155 rows, 100% ERA5/POWER coverage). |
+| 2. Preprocessing & QC | 13-step sequence + Tier-2 daily-integral repair | **Done.** `02b_build_daily_aggregates.py` confirmed (45/45 points, 164,385 point-days). `04_preprocess_uttarakhand.py` run — `qc_report.txt` ends 5/5 checks PASS, 489,105 rows, 0 NaN/duplicates. |
+| 3. Climate Signature | 2-tier ~18-index vector per point, Tm_target/L_required, PCA, standardization | **Done.** `04b_climate_signature.py` run (Tier1+Tier2 merge, 45/45 Tier-2 coverage). PCA: 2 components, 90.7%/6.8% variance, `elevation_m` loads a balanced ~0.37 on PC1. |
+| 4. Climate Regime Clustering | GMM, BIC-selected K, silhouette sanity | **Done.** `05_cluster_uttarakhand.py` run, K_FINAL=5, silhouette=0.28 (in the expected 0.15-0.40 band for 45 points — see `README_PREPROCESSING.md` for why higher isn't better here). Cluster sizes: 7/3/9/10/16. |
+| 5. Feasibility Filtering | Hard-filter PCM database per cluster | **Done.** `06_build_pcm_database.py` (55 candidates: 31 manufacturer + 24 literature) + `07_feasibility_filter.py` — all 5 clusters HIGH survivor count (27-29 each). |
+| 6. Multi-Criteria Ranking | TOPSIS + GRA minimum, entropy+AHP weights, Gaussian Tm fitness transform, Borda consensus | **Done.** `08_mcdm_ranking.py` run — Kendall's W 0.72-0.80 per cluster; PureTemp 58 is the consensus #1 in every cluster (a real finding, not a bug — see the script's own printed explanation). |
+| 7. Physics-Based Validation | Grey-box lumped enthalpy tank model, Spearman rho vs. MCDM rank | **Done.** `10_physics_validation.py` — 92% of simulations land in the published 54-84% solar-fraction benchmark band. |
+| 8. Explanation & Output | Recommendation card per cluster | **Done.** `09_recommendation_cards.py` run — `recommendation_cards.md`, 5 cluster cards. |
 
 ---
 
@@ -41,10 +47,10 @@ trying to onboard another state's data yet.
 5. `python 04b_climate_signature.py` — Phase 3, merges Tier1+Tier2. Check
    `pca_loadings.csv` reads sensibly (should look like "heat"/"humidity"
    components) and `signature_distributions.png` doesn't show anything
-   degenerate. Check how much weight `elev_proxy` carries — see the
-   elevation note in `README_PREPROCESSING.md`; with Uttarakhand's real
-   elevation spread (~200-2000m populated), this is worth a genuine look,
-   not just a caveat sentence.
+   degenerate. `elevation_m` weight was already checked and resolved (see
+   the elevation note near the end of this doc and in
+   `README_PREPROCESSING.md`) — real per-point elevation now feeds this,
+   not a proxy.
 6. `python 05_cluster_uttarakhand.py` — Phase 4. Look at
    `bic_selection_uttarakhand.csv`, pick K where silhouette lands in the
    0.15-0.40 band (not higher — see the script's own comments on why;
@@ -116,13 +122,11 @@ trying to onboard another state's data yet.
 - Don't build the TabTransformer/VAE encoder ablation — it's explicitly
   optional-only in the plan doc and adds nothing to Objective 1's core
   claim.
-- **Do** think about per-point real elevation (plan v3.0's "Repair 2")
-  before you finalize clusters — unlike the Tamil Nadu build (where this
-  was reasonably deprioritized), Uttarakhand's 200m-2000m populated
-  elevation range is exactly the case this repair was written for. It
-  doesn't have to happen before Phase 4's first pass, but check whether
-  `elev_proxy` is carrying real weight in `04b`'s PCA/correlation output
-  before treating a first clustering run as final.
+- **Done**: per-point real elevation (plan v3.0's "Repair 2") — see the
+  elevation note near the end of this doc. `elev_proxy` did carry real
+  weight, as expected for Uttarakhand's 200m-2500m populated range;
+  `00c_attach_elevation.py` now supplies real `elevation_m`, and clusters
+  have been regenerated against it.
 - Don't run the full 5,000-draw Monte Carlo stability analysis unless
   Phase 5/6 finishes with time spare — a smaller draw count (even 500)
   with the method reported honestly beats skipping it silently, but it
@@ -173,15 +177,39 @@ for Uttarakhand, only filenames.
 
 ## What's genuinely still open after 06-09 run
 
-- **PCM database is ~25 rows, not 40-60.** `06`'s docstring lists exactly
-  what's missing. Add real datasheet rows if time allows; the pipeline
-  works correctly either way, it's a coverage question, not a
-  correctness one.
+- **PCM database is now 55 rows** (31 manufacturer + 24 literature,
+  MICE+RF+PMM-imputed to full coverage across 42-70C) — the earlier ~25-row
+  count is stale; `06_build_pcm_database.py`'s docstring has the current
+  breakdown.
 - **Corrosion veto and 5th-percentile-day charging feasibility** are not
   applied in `07` — the database and cluster profiles don't carry the
   data those two specific filters from Table 12 need yet. Documented,
   not silently skipped. `07b_charging_feasibility.py` covers the
   regime-dependent Tm cap piece of this if you want it before `07`.
 - **Physics validation (Phase 7)** is completed in `10_physics_validation.py`. It runs a grey-box lumped-enthalpy simulation across all 5 clusters against Table 16 benchmark ranges (54–84% annual solar fraction). 92% of runs fall within this benchmark band.
-- **Elevation proxy** — flagged above, worth resolving before you treat
-  Phase 4's clusters as final if `elev_proxy` shows real weight.
+- **Elevation proxy — RESOLVED (2026-09).** `00c_attach_elevation.py` now
+  attaches real per-point elevation from ERA5 geopotential (196m-2510m
+  across the 45 points, replacing both the flat 1200m solar-geometry
+  default and the pressure-ratio `elev_proxy`). PCA loading is now a
+  balanced ~0.37 on PC1 alongside temperature/humidity, not an outsized,
+  unexplained weight. Clusters, feasibility, MCDM ranking, seasonal
+  analysis, physics validation, and all plots have been regenerated
+  against this.
+- **ERA5 GHI/LW/precipitation were deflated ~10x — RESOLVED (2026-09).**
+  `02_combine_uttarakhand.py`'s `deaccumulate()` assumed ERA5's old
+  cumulative-since-forecast-reset convention and diffed consecutive hours.
+  The CDS/cfgrib pipeline actually delivers `ssrd`/`strd`/`tp` already as
+  per-step (hourly) values — confirmed by inspecting raw NetCDF across
+  2016/2020/2025 (a diurnal curve that rises then falls and returns to
+  exactly 0 at night is impossible under the old cumulative convention).
+  Noon GHI went from averaging ~60 W/m^2 (CSI ~0.09 on a documented
+  zero-cloud-cover day — physically impossible) to ~683 W/m^2 (CSI ~1.0 on
+  the same day). Cross-source agreement with NASA POWER went from
+  MBE=-602 W/m^2, r=-0.03 (branch: MANUAL_REVIEW) to MBE=+20 W/m^2,
+  r=0.76 (branch: QUANTILE_MAP). The radiation-based signature indices
+  (GHI_daily_kWh, kt_mean, SAI, cloudy_frac, CCI, seasonality) were
+  already sourced from NASA POWER via Tier-2 (100% coverage) and were
+  NOT affected by this bug; `monsoon_index` (ERA5 precipitation-based)
+  and the Tier-1 proxy fallbacks were. Full pipeline rerun (04 through 12)
+  against the fix; seasonal PCM flips went from 4/20 to 8/20
+  (cluster, season) combinations — a stronger version of the same finding.

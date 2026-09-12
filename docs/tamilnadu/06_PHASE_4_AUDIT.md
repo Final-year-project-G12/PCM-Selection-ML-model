@@ -11,7 +11,14 @@ Scripts: `cluster_lib.py`, `05_cluster_tamilnadu.py`, `05a_level_b_regime_shift_
 - **Provenance hard-fail**: `provenance_lib.py` fingerprint checks are wired into the Phase 5→6→7→8 handoffs (07/08/10/09), identical to Rajasthan — a downstream phase `SystemExit`s if `cluster_profiles_tamilnadu.csv` was regenerated underneath it.
 - **The "Level B" name collision is resolved.** The two analyses that were both called "Level B" now have distinct names and files (see below).
 
+<<<<<<< HEAD
+## Level B: Seasonal Sensitivity (v3.1 corrected)
+- Recomputes `L_required_season` per season using 300 L/day draw (matching `04b`).
+- Single-method TOPSIS re-rank per (cluster, season); reports #1 PCM flips.
+- NE monsoon out-of-phase cycle provides physical basis for seasonal variation.
+=======
 ## Level A — spatial clustering (`05_cluster_tamilnadu.py`)
+>>>>>>> 935afa34a2c58bf28d0e38fac953d563fa476637
 
 - GMM `covariance_type="diag"` (kept — same reasoning as Rajasthan's 2026-08-10 fix, now documented once in `cluster_lib.py`), `n_init` 5 (scan) / 10 (final), `random_state=42`. K-Means fit in parallel as a **reported comparison baseline only**.
 - **Completed-run result (2026-09-08 re-run, k=3):**
@@ -48,8 +55,12 @@ A genuine Phase-4 **clustering** step, ported unchanged from Rajasthan's `05a`. 
 - Execution order: runs **after Phase 6** (reads `08`'s `mcdm_full_rankings.csv` — renamed 2026-09-08 from `mcdm_full_scores_by_cluster.csv` — and `06`'s PCM database); `run_all_tamilnadu.py` sequences it last, non-blocking. `05a` (Level B regime shift) runs in Phase-4 order, also non-blocking.
 
 ## Status
+<<<<<<< HEAD
+**COMPLETE (v3.1 fixes applied — re-run `05` and `11` after Phase 3 re-run)**
+=======
 
 **COMPLETE (unified pipeline, re-run 2026-09-08).** Level A k=3; Level B regime-shift k=4 (90.2% shift, season-tautology ARI 0.501); seasonal PCM sensitivity 3/12 flips. Downstream Phase 5→6 re-run on the new `cluster_profiles_tamilnadu.csv` (fingerprint stamped through). Phase 7 (`10_physics_validation.py`) and Phase 8 (`09_recommendation_cards.py`) not re-run in this pass — they will hard-fail the provenance check until re-run against the current clustering.
+>>>>>>> 935afa34a2c58bf28d0e38fac953d563fa476637
 
 ## Literature Support
 

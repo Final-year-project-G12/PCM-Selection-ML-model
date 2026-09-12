@@ -5,9 +5,7 @@ Final-year B.Tech CSE project:
 **"Climate-Adaptive Intelligent Control and Optimization of PCM Thermal Storage for Solar Water Heating"**
 Objective 1 builds a **climate-region-aware PCM recommendation framework**: turning 10 years of reanalysis climate data into population-weighted climate regimes, deriving PCM performance targets per regime, and ranking candidate phase-change materials against those targets with an auditable, multi-method, uncertainty-aware pipeline.
 
-Governing document: `Objective1_PCM_Climate_Framework_Plan_v3.docx` ("the framework doc"), version 3.0. The **Tamil Nadu pipeline is implemented from Phase 1 through Phase 8** and a complete 62-PCM run exists. Critical v3.0 bugs were corrected in **v3.1** (August 2026); three further blocking script/orchestrator errors were fixed in the **2026-09-07 reconciliation** (see "Corrected Issues" below and `12_FINAL_READINESS_REPORT.md`).
-
----
+Governing document: `Objective1_PCM_Climate_Framework_Plan_v3.docx` ("the framework doc"), version 3.0. The **Tamil Nadu pipeline has been fully implemented from Phase 1 through Phase 8**. Critical v3.0 bugs were corrected in **v3.1** (August 2026). A cross-check against the Rajasthan pipeline's documented bug history then found that v3.1's Phase 7 fix had not actually taken effect — two further solver bugs were reproducing the pre-fix symptom. Both are corrected in **v3.2**; see `19_PHASE_7_8_AUDIT.md` and `20_IMPLEMENTATION_ISSUES.md` (#6, #7).
 
 ## What the ERA5 Pipeline Achieves
 1. **Population-Weighted Sampling**: Samples Tamil Nadu at 133 population-weighted points (representing 87.5% of the state's population) to ensure findings are representative of where domestic demand actually resides.
@@ -19,6 +17,8 @@ Governing document: `Objective1_PCM_Climate_Framework_Plan_v3.docx` ("the framew
 7. **Grey-Box Physics Validation**: Solves a lumped-enthalpy tank simulation using backward Euler, driven by the real 10-year daily weather of each regime's medoid point, evaluating Spearman rank concordance.
 8. **Recommendation Cards**: Generates markdown summary cards for each climate regime.
 
+<<<<<<< HEAD
+=======
 ---
 
 ## Research Gaps Addressed (N1–N6 Novelty & RG1–RG5 Mapping)
@@ -45,6 +45,7 @@ Objective 1 addresses the broader final-year project goals. The framework doc es
 
 ---
 
+>>>>>>> 935afa34a2c58bf28d0e38fac953d563fa476637
 ## Complete Pipeline Map
 ```
 Phase 1 — DATA COLLECTION
@@ -73,6 +74,12 @@ Phase 4 — CLIMATE REGIME CLUSTERING
   05b_cluster_interactive.py    → interactive GMM cluster map
         ↓
 Phase 5 — FEASIBILITY FILTERING
+<<<<<<< HEAD
+  07_feasibility_filter.py      → feasibility_survivors_by_cluster.csv (8 Table-12 filters)
+        ↓
+Phase 6 — MULTI-CRITERIA RANKING ENGINE
+  08_mcdm_ranking.py            → mcdm_topk_by_cluster.csv, monte_carlo_stability.csv
+=======
   06_build_pcm_database.py      → pcm_database_tamilnadu.csv (55 manufacturer + 7 literature = 62 rows)
   07_feasibility_filter.py      → feasibility_survivors_by_cluster.csv (8 Table-12 constraints, fixed κ=0.7)
                                  + feasibility_survivors_by_cluster_kappa_calibrated.csv (κ-calibrated companion)
@@ -84,33 +91,48 @@ Phase 6 — MULTI-CRITERIA RANKING ENGINE  (UNIFIED with Rajasthan 2026-09-08 �
                                   (8 Table-13 criteria; climate-relative latent heat; log-scaled cycling;
                                    supercooling entropy weight capped at 2× prior; PROMETHEE native Tm;
                                    Kendall's W + pairwise agreement; N_DRAWS=1000)
+>>>>>>> 935afa34a2c58bf28d0e38fac953d563fa476637
         ↓
 Phase 7 — PHYSICS-BASED VALIDATION
-  10_physics_validation.py      → physics_validation_results.csv, physics_validation_spearman.csv (UA_TANK=2.0 W/K, v3.1)
+  10_physics_validation.py      → physics_validation_results.csv (UA_TANK=2.0 W/K + corrected backward-Euler solve + night isolation, v3.2)
         ↓
 Phase 8 — RECOMMENDATION CARDS
   09_recommendation_cards.py    → recommendation_cards.md
-
-  run_all_tamilnadu.py          → runs the whole CORE chain above in dependency order in one command
 ```
 
----
-
 ## Phase 1–8 Status and Headline Findings
-
 | Phase | Script(s) | Status | Headline Finding |
 |---|---|---|---|
 | 1 — Data Collection | `00a`, `00b`, `01`, `01b`, `00_unzip_accum` | **COMPLETE** | 133 points, 240 NetCDF files, 1330 NASA POWER JSON files. |
 | 2 — Preprocessing & QA | `02`, `02b`, `03`, `03b`, `04`, `04c` | **COMPLETE (v3.1 fixes applied)** | Deaccumulation replaced with `accum_to_flux()`. Per-season quantile mapping in Step 2b. Re-run required for new outputs. |
+<<<<<<< HEAD
+| 3 — Climate Signature | `04b`, `04d` | **COMPLETE** | 300 L/day draw with `SHARE_PCM=0.5`; current generated cluster targets are approximately 301-326 kJ/kg. |
+| 4 — GMM Clustering | `05`, `05b`, `11` | **COMPLETE (v3.1 fixes applied)** | K=5 regimes, `covariance_type="diag"`. Level B seasonal re-rank uses corrected draw volume. |
+| 5 — Feasibility | `06`, `07` | **COMPLETE** | 62 PCM records are audited per cluster; current pass counts are 9-15 and vary by cluster. |
+| 6 — MCDM Ranking | `08` | **COMPLETE** | 4-method Borda + 5000-draw Monte Carlo. |
+| 7 — Physics Validation | `10` | **COMPLETE (v3.2 fixes applied)** | Tank ambient heat loss active (`UA_TANK_W_K=2.0`); backward-Euler solve error and missing night-isolation both fixed. Mean Spearman ρ = +0.177 (was -0.151); 41% of runs now in the 54–84% benchmark band (was 0%). |
+| 8 — Rec Cards | `09` | **COMPLETE** | Aggregates Phases 4–7 into `recommendation_cards.md`. |
+=======
 | 3 — Climate Signature | `04b`, `04d` | **Analysis complete; clean re-run pending** | 300 L/day draw with `SHARE_PCM=0.5` (now defined in `config.py`); completed-run cluster targets ≈ 301-326 kJ/kg. |
 | 4 — GMM Clustering | `05`, `05a`, `05b`, `cluster_lib.py` | **COMPLETE (unified with Rajasthan 2026-09-08)** | **k=3** via the shared 3-tier `suggest_k` cascade (bootstrap-ARI tiebreak), `covariance_type="diag"`, Köppen-Geiger external validation (ARI 0.067), canonical latitude relabel, `provenance_lib` hard-fail wired into 07/08/10/09. `05a` = Level B regime-shift re-clustering (k=4, 90.2% shift). `11_seasonal_pcm_sensitivity.py` (post-Phase-6, reads `08` outputs) is now listed under Phase 5-8, not here. |
 | 5 — Feasibility | `06`, `07` | **Code unified with Rajasthan 2026-09-08; clean re-run pending** | `06` builds 62 records (55 manufacturer + 7 literature) from the one canonical MICE/PMM output; `07` applies 8 constraints (Constraint 6 = `Tm ≤ Tm_target_capped_C` from Phase 3) + κ-calibration, emitting `feasibility_survivors_by_cluster.csv` and `…_kappa_calibrated.csv`. `07b_charging_feasibility.py` deleted. Pre-unification pass counts 15/9/13/13/9 are stale. |
 | 6 — MCDM Ranking | `08` | **UNIFIED with Rajasthan 2026-09-08 (byte-identical engine); re-run pending** | 8 Table-13 criteria; climate-relative latent heat; log-scaled cycling; **supercooling entropy weight capped at 2× prior (0.16)**; PROMETHEE native Tm (q=2K/p=8K); Kendall's W + pairwise method-agreement; N_DRAWS=1000. 2026-09-08 run: k=3, `Tm_fitness`-dominant, Top-1 = Myristic acid / n-Tetracosane / Palmitic-Stearic. |
 | 7 — Physics Validation | `10` | **Analysis complete; clean re-run pending** | `UA_TANK_W_K=2.0` active. Completed run: mean Spearman ρ = **+0.177** (per cluster −0.016/+0.717/+0.355/−0.171/−0.000); 24/59 sims in 54-84% band; cycles 3-260/yr. |
 | 8 — Rec Cards | `09` | **Re-run pending** | Aggregates Phases 4–7 into `recommendation_cards.md` (k=3 → 3 cluster cards after the unified Phase 4). |
+>>>>>>> 935afa34a2c58bf28d0e38fac953d563fa476637
 
----
+## Corrected Issues (v3.1 — August 2026; v3.2 — physics solver)
+All five critical bugs from the v3.0 audit are fixed in source code (v3.1). Two further Phase 7 solver bugs, which had silently kept the v3.1 physics fix from taking effect, are fixed as v3.2. See `20_IMPLEMENTATION_ISSUES.md` for full details and numerical proof.
 
+<<<<<<< HEAD
+1. **Deaccumulation** → `accum_to_flux()` in `02_combine_tamilnadu.py` (v3.1)
+2. **Quantile mapping** → Step 2b in `04_preprocess_tamilnadu.py` + `03b_agreement_analysis.py` (v3.1)
+3. **1000× flow rate** → 300 L/day in `04b_climate_signature.py` and `11_level_b_seasonal_analysis.py` (v3.1)
+4. **GMM overfitting** → `covariance_type="diag"` in `05_cluster_tamilnadu.py` (v3.1)
+5. **Tank heat loss** → `UA_TANK_W_K=2.0` in `10_physics_validation.py` (v3.1, but ineffective until v3.2)
+6. **Backward-Euler closed-form solve error** → numerator corrected to use old `Tp` only, in `10_physics_validation.py` (v3.2)
+7. **Missing night/idle collector-coupling isolation** → `NIGHT_ISOLATION_FRACTION=0.05` gates the collector coupling when Tc<Tw, in `10_physics_validation.py` (v3.2)
+=======
 ## Corrected Issues
 
 The five v3.0 critical bugs plus three blocking script/orchestrator errors found on 2026-09-07 are fixed in source:
@@ -170,12 +192,21 @@ The five v3.0 critical bugs plus three blocking script/orchestrator errors found
 The `data/processed/processed/` path-duplication bug is **fixed** in `config.py` / `04b_climate_signature.py`, and the stale `era5-tamilnadu/data/processed/processed/` mirror tree has been **deleted** (2026-09-08). The canonical `data/processed/` tree still holds a superseded pre-unification Phase 5 run (7-constraint schema); one clean re-run of the CORE chain — after the unified Phase 3 (which must produce `Tm_target_capped_C` via `kt_worst_month`) — regenerates `pcm_database_tamilnadu.csv` (62 rows), `feasibility_survivors_by_cluster.csv`, `feasibility_survivors_by_cluster_kappa_calibrated.csv`, and everything downstream, in the canonical location. Do not quote pre-unification survivor counts.
 
 ---
+>>>>>>> 935afa34a2c58bf28d0e38fac953d563fa476637
 
 ## Still Open
-See `12_FINAL_READINESS_REPORT.md`: PCM database expansion, external cluster validation, elevation proxy, monsoon precipitation download, full Level-B GMM.
+See `22_FINAL_READINESS_REPORT.md`: PCM database expansion, external cluster validation, elevation proxy, monsoon precipitation download, full Level-B GMM, bootstrap-ARI k-selection, cross-phase provenance hard-fail, residual Phase 7 tank/collector calibration.
 
 ## Plot Documentation
-See `11_PLOTS_GUIDE.md` for the interpretation and exact location of plots produced by raw QA, preprocessing, climate-signature, clustering, comprehensive, Objective 1, and comparison scripts.
+See `23_PLOTS_GUIDE.md` for the interpretation and exact location of plots produced by the raw QA, preprocessing, climate-signature, clustering, comprehensive, Objective 1, and comparison scripts.
 
-## Literature Support Matrix
-See `13_LITERATURE_MAPPING.md` for the complete method-to-paper mapping matrix.
+## Literature Support
+| Pipeline Component | Key Reference | Source File |
+|---|---|---|
+| Population grid | GADM + WorldPop | `03_PHASE_1_AUDIT.md` |
+| Solar geometry | Reda & Andreas (2004) SPA | `12_SOLAR_GEOMETRY.md` |
+| Cross-source validation | Ghodusinejad et al. (2026) | `sources/Ghodusinejad2026SolarIrradianceForecasting_summary.md` |
+| Climate signature / sizing | Avargani et al. (2021), Singh et al. (2025) | `sources/Singh2025PCM_SWH_ComprehensiveReview_summary.md` |
+| MCDM stack | Chen et al. (2025) Taguchi+GRA | `sources/Chen2025TaguchiGRA_PCM_Nanofluid_SWH_summary.md` |
+| Physics validation | Barqawi (2025) | `sources/Barqawi2025DynamicSimulationPCM_SWH_summary.md` |
+| Full matrix | — | `17_LITERATURE_MAPPING.md` |

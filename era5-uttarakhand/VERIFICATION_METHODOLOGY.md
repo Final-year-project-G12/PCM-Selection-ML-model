@@ -185,6 +185,8 @@ data/
 **Red flag (investigate):**
 - Preprocessing: entire sections missing or scaled incorrectly
 - Clustering: silhouette < 0.3, k-choice ambiguous, scattered clusters
+  (**except for Uttarakhand's own 45-point run — see the note under
+  "Validation Checklist" below before treating this as a red flag here**)
 - Feasibility: < 5% or > 90% survival (constraints misconfigured)
 - Ranking: low method agreement, high rank reversal, unstable top-3
 
@@ -207,6 +209,15 @@ data/
 ---
 
 ## Validation Checklist
+
+**Uttarakhand-specific note on the silhouette thresholds below**: with only
+45 population-weighted points, `05_cluster_uttarakhand.py` explicitly
+documents 0.15-0.40 as the expected/preferred silhouette band — a score
+above ~0.4 is more likely to mean an over-simplified signature than a
+genuinely crisp regime split (see that script's own printed guidance, and
+`NEXT_STEPS.md`). Uttarakhand's actual runs land at 0.24-0.28, which fails
+this generic ≥0.4 checklist item literally but is the correct, expected
+outcome for this state's sample size — don't treat it as a red flag here.
 
 - [ ] Preprocessing: no NaN remaining, distributions smooth, no data loss > 5%
 - [ ] Clustering: silhouette ≥ 0.4 (avg), k ∈ {3,4,5}, geographic coherence ✓

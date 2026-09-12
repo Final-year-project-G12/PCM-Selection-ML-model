@@ -97,7 +97,7 @@ print("\n[B] Signature correlation heatmap (Plotly) ...")
 
 INDEX_COLS = ["Ta_mean", "Ta_p95", "Ta_p05", "DTR", "GHI_daily_kWh",
               "kt_mean", "kt_std", "SAI", "CCI", "cloudy_frac", "HDD18", "CDD24",
-              "RH_mean", "HSI", "wind_mean", "seasonality", "monsoon_index", "elev_proxy"]
+              "RH_mean", "HSI", "wind_mean", "seasonality", "monsoon_index", "elevation_m"]
 INDEX_COLS = [c for c in INDEX_COLS if c in sig.columns]
 corr = sig[INDEX_COLS].corr()
 fig = px.imshow(corr, text_auto=".2f", color_continuous_scale="RdBu_r", zmin=-1, zmax=1,

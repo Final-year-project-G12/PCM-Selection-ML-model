@@ -27,7 +27,7 @@ This table is the quick-reference for supervisors. Each row maps one pipeline de
 | **Climate signature**         | Two-tier (sun-event + daily integral) + PCA           | Monthly mean T and GHI only                                           | Singh (2025) — 40–70°C band, latent heat priority; Odoi-Yorke (2025) — weather as ML input  | **Improvement**: captures monsoon variability monthly means miss                                      |
 | **Hot water draw sizing**     | 300 L/day flat volume (Avargani 2021)                 | 30–60 L/day in Taguchi studies or unstated                            | Chen (2025) — ≥30 L/day; Chopra (2023) — 60 L/person × 6 = 360 L/day                        | **Aligned**: domestic-scale draw, consistent with Indian SWH studies                                  |
 | **Regime clustering**         | GMM, K=5, BIC selection, `diag` covariance            | K-Means, hierarchical, or admin zones                                 | Liu (2025) — GA/PSO for structure, not climate zones; Singh (2025) — no GMM                 | **Novel (N1)**: discovered regimes vs arbitrary geography                                             |
-| **PCM database**              | 62 rows (55 manufacturer MICE+RF+PMM-completed + 7 literature), RF+PMM imputation for gaps | Manufacturer datasheet only or ANN-predicted properties               | Martinez (2025) — Rubitherm measured data; Singh (2025) Table 2                             | **Gap**: literature has 200+ PCMs cited but we use an auditable 62-row subset                          |
+| **PCM database**              | 25 rows, RF-PMM imputation for gaps                   | Manufacturer datasheet only or ANN-predicted properties               | Martinez (2025) — Rubitherm measured data; Singh (2025) Table 2                             | **Gap**: literature has 200+ PCMs cited but we use auditable 25 only                                  |
 | **Feasibility screening**     | 8 hard filters + κ-relaxation                         | Soft penalty or no pre-screen                                         | Singh (2025) — selection priority: L, k, Tm; Abdellatif (2025) — modeling constraints       | **Aligned**: hard Tm/L floor before ranking (Singh priority order)                                    |
 | **PCM ranking**               | TOPSIS + GRA + PROMETHEE II + VIKOR + Borda + 5000 MC | Single method: Taguchi+GRA or AHP+TOPSIS alone                        | **Chen (2025)** — Taguchi L36 + GRA only; Chopra (2023) — Monte Carlo for economics         | **Improvement**: 4-method consensus + uncertainty vs Chen's single GRA                                |
 | **Physics validation**        | Lumped-enthalpy 3-phase, backward Euler, real weather | TRNSYS Type 840, EnergyPlus, or synthetic sinusoidal GHI              | **Barqawi (2025)** — 3-phase ODE + RK45; Chen (2025) — TRNSYS <5% error                     | **Aligned structure**, different solver (Euler vs RK45) and real vs synthetic climate                 |
@@ -42,7 +42,7 @@ This table is the quick-reference for supervisors. Each row maps one pipeline de
 - **"Aligned"** = we do what the literature recommends; cite the matching paper.
 - **"Improvement"** = we go beyond typical single-site / single-method papers; cite as novelty.
 - **"Gap filled"** = literature identifies the problem but few papers implement it; cite as contribution.
-- **"Gap"** = honest limitation we still have (e.g., 62 PCM rows vs Singh's 200+ cited studies).
+- **"Gap"** = honest limitation we still have (e.g., 25 PCM rows vs Singh's 200+ cited studies).
 
 ---
 
@@ -408,7 +408,7 @@ Dynamic Time Warping (DTW) applied to the full 10-year daily GHI series would cl
 | ------------------------ | ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
 | Climate features         | Two-tier: sun-event stats + daily integrals | **Singh (2025)**: PCM priority = latent heat, k, Tm — needs integrated energy; Odoi-Yorke (2025): ML inputs = irradiance, Ta, flow | **More complete** than monthly-mean papers       |
 | Tm target                | Fixed 57°C (50+7°C indirect)                | **Singh (2025)**: optimal SWH PCM band **40–70°C**; Chen (2025): RT35HC for 30°C delivery target                                   | **Within literature band**, higher delivery temp |
-| L_required               | `SHARE_PCM · (300 L/day · Cp · ΔT) ÷ 50 kg PCM`, `SHARE_PCM = 0.5` | Chen (2025): ≥30 L/day, 20% PCM volume; Chopra (2023): 360 L/day (6×60 L); combined sensible+latent PCM share Zhao (2022), Huang (2020) | **Aligned** with Indian domestic draw studies; PCM supplies a literature-anchored 50% share |
+| L_required               | 300 L/day ÷ 50 kg PCM                       | Chen (2025): ≥30 L/day, 20% PCM volume; Chopra (2023): 360 L/day (6×60 L)                                                          | **Aligned** with Indian domestic draw studies    |
 | Dimensionality reduction | PCA (4 components)                          | Liu (2025): feature selection via GA/ANN; no PCA in PCM-SWH reviews                                                                | **Standard ML** for collinear climate vars       |
 
 
@@ -832,4 +832,8 @@ An alternative Level-B check would perturb the MCDM weights (increasing the weig
 
 ---
 
+<<<<<<< HEAD
+*This document covers all 13 primary scripts in the Tamil Nadu pipeline (Phase 1 through Phase 8). All algorithmic choices are made in conformance with `Objective1_PCM_Climate_Framework_Plan_v3.docx`. Critical bugs corrected in v3.1 (August 2026). Use **Part 0** for supervisor presentation; use per-script **Literature comparison** and **Reference Papers — Chosen vs Rejected** tables for thesis methodology section.*
+=======
 *This document covers the 16 algorithm-bearing scripts in the Tamil Nadu pipeline (`00a`, `00b`, `01`, `01b`, `02`, `02b`, `03`, `04`, `04b`, `05`, `06`, `07`, `08`, `10`, `09`, `11` — Phase 1 through Phase 8). Orchestration and QA/visualisation helpers (`run_all_tamilnadu.py`, `00_unzip_accum.py`, `03b_agreement_analysis.py`, `04c*`, `04d`, `05b`–`05d`, `plots/verify_0*`, `plots_tamilnadu_ppt/*`) are audited in the phase-audit docs and `23_PLOTS_GUIDE.md`, not here. (`07b_charging_feasibility.py` was retired 2026-09-08 — its charging-feasibility check is now Constraint 6 in `07`.) All algorithmic choices are made in conformance with `Objective1_PCM_Climate_Framework_Plan_v3.docx`. Critical bugs corrected in v3.1 (August 2026); config-symbol and PCM-input-path fixes 2026-09-07; Phase 5 unified with Rajasthan 2026-09-08 (see `20_IMPLEMENTATION_ISSUES.md` and the CHANGELOG). Use **Part 0** for supervisor presentation; use per-script **Literature comparison** and **Reference Papers — Chosen vs Rejected** tables for thesis methodology section.*
+>>>>>>> 935afa34a2c58bf28d0e38fac953d563fa476637

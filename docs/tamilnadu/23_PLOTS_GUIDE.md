@@ -1,17 +1,16 @@
-# 11 — Plot Guide: Tamil Nadu Pipeline
+# 23 — Plot Guide: Tamil Nadu Pipeline
 
-This guide documents what the plotting scripts show, what each result can be used to infer, and where the generated files are written. Paths are relative to the `era5-tamilnadu/` pipeline folder (run scripts from there; `config.py` anchors all output paths). The plots are diagnostic or explanatory unless stated otherwise; a plot does not by itself prove causality or model accuracy.
+This guide documents what the plotting scripts show, what each result can be used to infer, and where the generated files are written. Paths are relative to the repository root. The plots are diagnostic or explanatory unless stated otherwise; a plot does not by itself prove causality or model accuracy.
 
 ## How To Run
 
-Run scripts from the `era5-tamilnadu/` folder. Output folders are created automatically.
+Run scripts from the repository root. Output folders are created automatically.
 
 ```text
 python 03_plots_raw.py
 python 03b_interactive_raw_qa.py
 python 04_preprocess_tamilnadu.py
 python 04c_postprocess_plots.py
-python 04c_interactive_postprocess_qc.py
 python 04b_climate_signature.py
 python 04d_signature_interactive.py
 python 05_cluster_tamilnadu.py
@@ -19,15 +18,9 @@ python 05b_cluster_interactive.py
 python 05d_plots_comprehensive.py
 python plots/generate_tamilnadu_plots.py
 python plots/comparison_plots_tamilnadu.py
-python plots/verify_01_preprocessing_tamilnadu.py
-python plots/verify_02_clustering_tamilnadu.py
-python plots/verify_03_feasibility_tamilnadu.py
-python plots/verify_04_ranking_tamilnadu.py
 ```
 
-`05c_explore_interactive.py` and the four apps under `plots_tamilnadu_ppt/interactive_plots/` are Streamlit apps — launch them with `streamlit run <script>`, not `python`. There is no `Objective 1/` folder; all pipeline scripts live directly in `era5-tamilnadu/` (with the batch plot helpers under `era5-tamilnadu/plots/`). The tables below document the scripts used by the current pipeline.
-
----
+The scripts in `Objective 1/` are duplicate/older-location copies of several root scripts. The tables below document the root scripts that are used by the current pipeline.
 
 ## 1. Raw Data QA: `03_plots_raw.py`
 
@@ -44,8 +37,6 @@ Location: `data/plots/raw/`
 | `F_yearly_trend.png` | Mean noon GHI and ambient temperature for each year from 2016 to 2025. | Abrupt year-to-year steps that could indicate a download, unit, or processing discontinuity. |
 
 Interactive equivalents are written by `03b_interactive_raw_qa.py` to `data/plots/raw_interactive/` with the same A-F names and `.html` extensions. `03b_agreement_analysis.py` additionally writes `data/processed/era5_power_agreement_tamilnadu.csv`, `outputs/qc_era5_power_scatter_tamilnadu.html`, and `outputs/bias_decision_tamilnadu.txt`.
-
----
 
 ## 2. Preprocessing QA: `04_preprocess_tamilnadu.py` and `04c_postprocess_plots.py`
 
@@ -70,7 +61,16 @@ The first script writes diagnostics to `data/preprocessed/`:
 
 Interactive postprocessing equivalents are in `data/plots/post_preprocess_interactive/` as HTML files.
 
----
+A separate, standalone script, `plots/verify_01_preprocessing_tamilnadu.py`, writes to
+`data/plots/verify_preprocessing/`, including `07_preprocessing_summary.png`'s "Data
+retention" statistic. **(v3.3 fix)** This retention figure previously divided two
+unrelated, independently hardcoded row caps used only to keep the distribution plots
+fast (`nrows=500000` for the raw file, `nrows=200000` for the preprocessed file),
+which produced a meaningless ~40.0% regardless of the real data. It now counts full
+files by line (no column parsing, so it stays cheap) and reports true retention —
+currently **99.18%** (1,445,577 of 1,457,547 raw rows survive preprocessing). The
+distribution plots below the summary still sample the first N rows for speed; the
+summary text now says so explicitly.
 
 ## 3. Climate Signature: `04b_climate_signature.py`
 
@@ -85,8 +85,6 @@ Location: `data/processed/signatures/`
 Interactive equivalents are in `data/processed/signatures/interactive/`: `A_signature_layers.html`, `B_correlation.html`, `C_distributions.html`, and `D_scatter_matrix.html`.
 
 The signature stage also derives `Tm_target` and `L_required`. Current sizing uses a 300 L/day draw and `SHARE_PCM=0.5`; the generated `L_required` values are run-specific and should be read from the signature or feasibility CSV rather than inferred from a plot.
-
----
 
 ## 4. Climate Regimes: `05_cluster_tamilnadu.py`
 
@@ -109,8 +107,6 @@ Interactive cluster outputs from `05b_cluster_interactive.py` are in `data/proce
 
 `05c_explore_interactive.py` is a Streamlit explorer rather than a batch plot generator. It displays raw/processed time series and a property-colored map and caches the map as `data/plots/interactive_explorer/location_map.html`.
 
----
-
 ## 5. Comprehensive Climate Plots: `05d_plots_comprehensive.py`
 
 Location: `data/plots/comprehensive/`. By default this script reads the processed climate file; set `USE_PROCESSED=False` in the script for raw-file plots.
@@ -124,24 +120,22 @@ Location: `data/plots/comprehensive/`. By default this script reads the processe
 | `maps/A2_population_map.html` | Population weighting represented spatially. |
 | `maps/A3_india_context.html` | Tamil Nadu points shown in national geographic context. |
 
-These maps show spatial coverage and gradients. They do not establish that climate causes a PCM ranking difference without downstream target and ranking evidence.
+These maps show spatial coverage and gradients. They do not establish that climate causes a PCM ranking difference without the downstream target and ranking evidence.
 
-### Time Series and Statistics
+### Time series and statistics
 
-| File | What it shows | Main Inference |
+| File | What it shows | Main inference |
 |---|---|---|
 | `timeseries/B1_noon_GHI_sample_points.png` | Seven-day rolling noon GHI for 12 sample points. | Compare seasonal timing and variability among representative locations. |
 | `timeseries/B2_noon_GHI_all_points.png` | All point traces plus the Tamil Nadu mean. | Distinguish statewide behavior from local variability. |
-| `timeseries/B3_Tamb_vs_GHI_scatter.png` | Ambient temperature versus GHI. | Inspect whether hotter conditions tend to coincide with stronger/weaker radiation in sampled data. |
-| `timeseries/B4_annual_cycle_GHI.png` | Annual cycle of noon GHI. | Identify seasonal solar-resource pattern. |
+| `timeseries/B3_Tamb_vs_GHI_scatter.png` | Ambient temperature versus GHI. | Inspect whether hotter conditions tend to coincide with stronger/weaker radiation in the sampled data. |
+| `timeseries/B4_annual_cycle_GHI.png` | Annual cycle of noon GHI. | Identify the seasonal solar-resource pattern. |
 | `statistics/C1_correlation_matrix.png` | Correlations among selected climate variables. | Identify covariate redundancy and unexpected relationships. |
 | `statistics/C2_GHI_violin_season.png` | Seasonal GHI distributions. | Compare medians and spread between seasons. |
 | `statistics/C3_diurnal_profile_season.png` | Sunrise/noon/sunset profiles by season. | Check event timing and seasonal diurnal differences using the three sampled events. |
 | `statistics/C4_cloud_vs_GHI_density.png` | Cloud-related variable versus GHI density/relationship. | Inspect how cloudiness is associated with radiation availability. |
 | `solar_resource/D1_CSI_distribution.png` | Clear-sky index distribution. | Describe cloud attenuation and radiation intermittency. |
-| `solar_resource/D2_top20_points_GHI.png` | Highest-noon-GHI points. | Locate strongest sampled solar-resource points; not a population-weighted ranking unless population is encoded. |
-
----
+| `solar_resource/D2_top20_points_GHI.png` | Highest-noon-GHI points. | Locate the strongest sampled solar-resource points; this is not a population-weighted ranking unless population is encoded in the script. |
 
 ## 6. Objective 1 PCM Plots: `plots/generate_tamilnadu_plots.py`
 
@@ -151,19 +145,21 @@ Location: `data/plots/tamilnadu_objective1/`. Each numbered plot has a static PN
 |---|---|---|
 | `01_raw_vs_preprocessed_radiation` | Raw and cleaned GHI for one point. | Whether preprocessing changed the radiation series materially. |
 | `02_climate_regime_map` | GMM cluster labels geographically. | Where each climate regime occurs and how confidently points are assigned. |
-| `03_melting_point_vs_latent_heat` | Feasibility records in Tm-latent-heat space, with cluster windows/floors. | Which candidates satisfy temperature and latent-heat constraints for each cluster. |
+| `03_melting_point_vs_latent_heat` | Feasibility records in Tm-latent-heat space, with cluster windows/floors. | Which candidates satisfy the temperature and latent-heat constraints for each cluster. |
 | `04_feasible_candidates_highlighted` | All PCM database records versus feasibility records. | How hard screening reduces the candidate set relative to the full 62-record database. |
 | `05_pcm_survivors_per_cluster` | Count of feasibility-audit rows by cluster. | Use only `passes_all=True` rows for survivor counts; the CSV itself retains all audited candidates. |
-| `06_pcm_feasibility_scatter_and_survivors` | Combined scatter and count summary. | Compact view of candidate properties and cluster-level filtering. |
-| `07_bump_chart_ranks` | Rank of leading PCMs across TOPSIS, GRA, PROMETHEE, VIKOR, and consensus. | Agreement or rank reversal between decision methods. |
+| `06_pcm_feasibility_scatter_and_survivors` | Combined scatter and count summary. | A compact view of candidate properties and cluster-level filtering. |
+| `07_bump_chart_ranks` | **(v3.3 fix)** Rank of the top-5-per-cluster PCMs (by consensus rank, from the full `mcdm_full_scores_by_cluster.csv`, not just the top-3 shortlist) across TOPSIS, GRA, PROMETHEE, VIKOR, and consensus, one line per (PCM, cluster) pair — color keyed to PCM name, line style keyed to cluster, so a PCM that appears in multiple clusters at different ranks no longer zigzags into one misleading line. | Agreement or rank reversal between decision methods, and how much candidate diversity exists once all 5 clusters' shortlists are pooled (previously under-counted at 4 unique PCMs because the source file only carried the top 3 per cluster and candidates were merged by name alone). |
+| `07_bump_chart_ranks_cluster{0..4}` | **(v3.3, new)** Same bump chart as above but filtered to one cluster's own top-5 candidates per file — 5 separate, uncluttered charts. | Read a single cluster's method agreement without the combined chart's multi-cluster line density. |
 | `08_method_rank_correlation_heatmap` | Spearman and Kendall correlations among method ranks. | Whether methods produce broadly consistent orderings. |
 | `09_monte_carlo_top3_probability` | Top-3 inclusion probability from Monte Carlo uncertainty draws (N_DRAWS=1000; 5000 for the final reported run). | Ranking stability under perturbed weights and PCM properties. `08_mcdm_ranking.py` also writes `outputs/qc_montecarlo_inclusion.html` directly. |
 | `10_rank_reversal_violin_bar` | Rank distributions and rank spread across methods. | Which candidates are sensitive to the MCDM method. |
-| `11_agreement_plot` | Simulated performance rank versus consensus rank. | Whether higher MCDM rank tends to correspond to better simulated performance. |
-| `12_tank_temperature_melt_fraction` | Synthetic daily tank temperature and melt-fraction profile. | Illustrates intended charging/melting/discharging phases (explanatory profile). |
-| `13_recommended_pcm_summary` | Top-3 consensus recommendations and properties per cluster. | Communicates final candidate shortlist; check stability and physics evidence alongside it. |
+| `11_agreement_plot` | **(v3.3 fix)** Simulated performance rank versus consensus rank, points jittered a small deterministic amount per cluster so that clusters sharing identical integer (rank, rank) coordinates no longer render as a single hidden point (hover/tooltip still shows the true, un-jittered rank values). | Whether higher MCDM rank tends to correspond to better simulated performance, with all 5 clusters actually visible instead of some being drawn on top of others. |
+| `11b_physics_vs_mcdm_all_clusters` | **(v3.3, new)** One HTML/PNG page, one subplot panel per cluster, plotting each candidate's simulated annual solar fraction against its MCDM consensus rank, with a shaded 54–84% benchmark band, green markers for in-band candidates and red for out-of-band, and that cluster's Spearman ρ shown in the panel title. | A single-page view of whether MCDM-favoured candidates actually land in the realistic physics-validated performance band, per cluster, without switching between files. |
+| `12_tank_temperature_melt_fraction` | A representative synthetic daily tank temperature and melt-fraction profile. | Illustrates the intended charging/melting/discharging phases; it is explanatory and is not the full 10-year physics-validation output. |
+| `13_recommended_pcm_summary` | Top-3 consensus recommendations and their properties per cluster. | Communicates the final candidate shortlist; stability and physics evidence should be checked alongside it. |
 
----
+Files use the corresponding names with `.png` or `_interactive.html`. The generator also writes the canonical `pcm_feasibility_scatter.png` and `pcm_survivors_per_cluster.png`.
 
 ## 7. Cross-Step PCM Comparisons: `plots/comparison_plots_tamilnadu.py`
 
@@ -172,14 +168,16 @@ Location: `data/plots/comparison/`
 | File | What it shows | What it helps infer |
 |---|---|---|
 | `01_comparison_cluster_ghi.png` | Mean GHI and standard deviation by cluster. | Whether regimes differ in solar resource. |
-| `02_comparison_temp_vs_tm_target.png` | Cluster mean temperature versus PCM target melting point. | Whether target has a consistent offset from climate temperature. |
-| `03_comparison_mcdm_methods.png` | Top-five ranks from each MCDM method, side by side. | Method agreement and disagreements in candidate rankings. |
+| `02_comparison_temp_vs_tm_target.png` | Cluster mean temperature versus PCM target melting point. | Whether the target has a consistent offset from climate temperature. |
+| `03_comparison_mcdm_methods.png` | Top-five ranks from each MCDM method, side by side. | Method agreement and disagreements in the candidates users may select. |
 | `04_comparison_mc_vs_rank.png` | Consensus rank versus Monte Carlo Top-3 probability. | Whether nominal rank is supported by uncertainty stability. |
-| `05_comparison_latent_heat_distribution.png` | Latent-heat distributions for database records and feasibility rows. | How screening changes material-property distribution. |
+| `05_comparison_latent_heat_distribution.png` | Latent-heat distributions for all database records and feasibility rows. | How screening changes the material-property distribution. |
 | `06_comparison_physics_vs_rank.png` | Consensus rank against simulated hours target met and complete cycles/year. | Whether decision rankings align with physical performance and cycling. |
 | `07_comparison_cross_cluster_top_pcm.png` | Properties of each cluster's consensus rank-1 PCM. | Whether recommended material properties change across regimes. |
 | `08_comparison_rank_sensitivity.png` | Rank response to selected weight shifts. | How sensitive the result is to weighting assumptions. |
 
+<<<<<<< HEAD:docs/tamilnadu/23_PLOTS_GUIDE.md
+=======
 ---
 
 ## 8. Step-by-Step Verification: `plots/verify_01…04_*.py`
@@ -195,10 +193,11 @@ Standalone verification scripts run manually after each stage. They re-read stag
 
 ---
 
+>>>>>>> 935afa34a2c58bf28d0e38fac953d563fa476637:docs/tamilnadu/11_PLOTS_GUIDE.md
 ## Reading Rules
 
-1. **Plot + CSV Pair**: Always use the plot and its source CSV together.
-2. **Filter Audit**: `feasibility_survivors_by_cluster.csv` is a full audit; count actual survivors using `passes_all=True`.
-3. **Database Scope**: 62 candidate records (55 manufacturer-derived + 7 literature).
-4. **Run-Specific Outputs**: Treat targets, probabilities, Spearman values, and solar fractions as run-specific outputs.
-5. **Validation Primacy**: Plots do not replace numerical tests, Monte Carlo analysis, or physics validation tables.
+1. Use the plot and its source CSV together. Plots summarize the data and may hide rows, use samples, or show only Top-3 records.
+2. Treat `data/processed/pcm/feasibility_survivors_by_cluster.csv` as a full filter audit. Count survivors with `passes_all=True`, not by counting all rows in the file.
+3. Treat the current PCM database as 62 records: 55 manufacturer-derived MICE+RF+PMM-completed rows and 7 literature rows with genuinely unreported properties left missing.
+4. Treat values such as `L_required`, Top-3 probabilities, Spearman correlation, and solar fractions as run-specific outputs. Regenerate downstream artifacts after changing climate inputs, configuration, or PCM data.
+5. A visualization can reveal patterns and quality problems; it cannot replace the numerical tests, uncertainty analysis, or physics-validation tables.

@@ -187,7 +187,9 @@ def build_signature_tier1(point_id, point_df):
     total = precip.sum()
     row["monsoon_index"] = jjas / total if total > 0 else np.nan
 
-    row["elev_proxy"] = point_df["era5_P_atm"].mean() / 1013.25
+    # Real per-point elevation (00c_attach_elevation.py, ERA5 geopotential),
+    # not the pressure-ratio proxy this used before plan v3.0 "Repair 2".
+    row["elevation_m"] = point_df["elevation_m"].iloc[0]
 
     row["lat"] = point_df["lat"].iloc[0]
     row["lon"] = point_df["lon"].iloc[0]
@@ -284,9 +286,9 @@ sig["int_CCI_x_1minusSAI"] = sig["CCI"] * (1 - sig["SAI"])
 print("  Added 4 interaction terms (int_wind_x_TaMinusTsoil removed — see comment)")
 
 # ═══════════════════════════════════════════════════════════
-print("\n[5/6] PCA on the correlated temperature/pressure block ...")
+print("\n[5/6] PCA on the correlated temperature/elevation block ...")
 
-PCA_BLOCK = ["Ta_mean", "Ta_p95", "Ta_p05", "HDD18", "CDD24", "RH_mean", "elev_proxy"]
+PCA_BLOCK = ["Ta_mean", "Ta_p95", "Ta_p05", "HDD18", "CDD24", "RH_mean", "elevation_m"]
 pca_input = sig[PCA_BLOCK].fillna(sig[PCA_BLOCK].median())
 pca_scaler = StandardScaler()
 pca_input_scaled = pca_scaler.fit_transform(pca_input)
@@ -333,7 +335,7 @@ print("\nDiagnostic plots ...")
 
 INDEX_COLS = ["Ta_mean", "Ta_p95", "Ta_p05", "DTR", "GHI_daily_kWh",
               "kt_mean", "kt_std", "SAI", "CCI", "cloudy_frac", "HDD18", "CDD24",
-              "RH_mean", "HSI", "wind_mean", "seasonality", "monsoon_index", "elev_proxy"]
+              "RH_mean", "HSI", "wind_mean", "seasonality", "monsoon_index", "elevation_m"]
 INDEX_COLS = [c for c in INDEX_COLS if c in sig.columns]
 
 fig, ax = plt.subplots(figsize=(11, 9))

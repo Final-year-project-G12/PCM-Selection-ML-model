@@ -1,5 +1,8 @@
 # 05 — Phase 3 Audit: Climate Signature Construction
 
+<<<<<<< HEAD
+Script: `04b_climate_signature.py`, `04d_signature_interactive.py`.
+=======
 Scripts: `signature_lib.py`, `04b_climate_signature.py`.
 
 **Unified with Rajasthan (2026-09-08).** Tamil Nadu's Phase 3 is now a
@@ -12,14 +15,33 @@ output CSVs — the **same 88-column output schema** (names, order, dtypes) as
 plumbing (Tamil Nadu's Tier-2 table uses `_true`/`_mean`-suffixed names that
 are renamed to canonical on load; `monsoon_index`, absent from that table, is
 computed here as the same Jun–Sep GHI-fraction proxy Rajasthan's `02b` uses).
+>>>>>>> 935afa34a2c58bf28d0e38fac953d563fa476637
 
 ## Purpose
-Collapse each point's 10-year hourly and daily weather data into a single, physically grounded climate signature vector. This vector defines the climatology of each location, maps meteorological stress directly to PCM performance requirements, and computes climate-adaptive PCM thermal targets (`Tm_target`, `L_required`).
-
----
+Collapse each point's 10-year hourly/daily weather into a single climate signature vector, which defines the location's climatology and determines the PCM performance targets.
 
 ## Processing Details
+1. **Tier 1 (Sun-Event Statistics)**: Means and percentiles of sun-event temperatures, GHI, humidity, wind. HSI (Thom 1959 Discomfort Index).
+2. **Tier 2 (Daily-Integral Merge)**: True daily integrals from `02b` — GHI, SAI, cloudy fraction, CCI, HDD18, CDD24, DTR.
+3. **Derived targets (v3.1 corrected)**:
+   - `Tm_target = 50.0 + 7.0 = 57.0°C`
+   - `L_required = (DRAW_MASS_KG × CP_WATER × ΔT) / ASSUMED_PCM_MASS_KG`
+   - `DRAW_VOLUME_L = 300` (Avargani et al. 2021 domestic baseline)
+4. **Five Interaction Terms**: GHI×kt_std, DTR×cloudy_frac, RH×(Ta−Tm), wind×(Ta−Tsoil), CCI×(1−SAI).
+5. **PCA Reduction**: 4 components on temperature/climate block (>95% variance).
+6. **Standardization**: z-scoring for GMM clustering matrix.
 
+<<<<<<< HEAD
+## Current Finding
+- **Was**: `DRAW_RATE_KG_PER_S = 60.0 / 1000 / 60` → 0.001 kg/s → `L_required` ≈ 52 kJ/kg (latent-heat filter bypassed).
+- **Fixed**: `DRAW_VOLUME_L = 300`, `DRAW_MASS_KG = 300 kg` (realistic domestic scale).
+- **Current model**: `SHARE_PCM = 0.5`; PCM supplies half of the delivery energy while sensible storage and concurrent charging supply the remainder.
+- **Current generated result**: cluster `L_required` values are approximately 301-326 kJ/kg. These are run-specific outputs, not a universal constant.
+- **Also applied in**: `11_level_b_seasonal_analysis.py` (seasonal `L_required` uses the same share model).
+
+## Status
+**COMPLETE (v3.1 fixes applied — re-run `04b` for updated signatures)**
+=======
 ### 1. Two-Tier Signature Design
 - **Tier 1 (Sun-Event Statistics, `signature_lib.build_tier1_signature()`)**: One shared implementation, called here with `group_keys=["point_id"]` (whole-year, one row per point) and by the seasonal analysis with `group_keys=["point_id", "season"]`. Curated columns (identical to Rajasthan): `T_sunrise_mean/p05`, `T_noon_mean`, `T_sunset_mean/p95`, `diurnal_gradient` (noon−sunrise, an acknowledged underestimate of true DTR), `kt_noon_mean/std`, `GHI_noon_mean`, `GHI_sunset_mean`, `RH_sunrise_mean`, `wind_noon_mean/sunset_mean`, `HSI_sunrise` (Thom's (1959) Discomfort Index), `Ta_mean/p95/p05` (daily-collapsed first), `daylength_mean`, `daylength_amplitude`. The former blanket per-event mean/std/p5/p95 computation is removed.
 - **Tier 2 (Daily-Integral Merge)**: True daily integrals from `02b_build_daily_aggregates.py` (`tier2_signature_tamilnadu.csv`), renamed to the canonical names Rajasthan's `daily_aggregates_rajasthan_summary.csv` uses: `GHI_daily_kWh`, `SAI`, `kt_daily_mean/std`, `cloudy_frac`, `CCI`, `HDD18`, `CDD24`, `DTR_true`, `seasonality`. `monsoon_index` is computed in `04b` (Jun–Sep noon GHI / annual noon GHI) — a GHI-fraction proxy, NOT precipitation-based; 3×/day ERA5 sample, coarser than Rajasthan's full-hourly integral. State this as a limitation.
@@ -80,12 +102,13 @@ Correlation `|r| > 0.9` flags on the final feature set: **16 pairs** for Tamil N
 **COMPLETE (unified pipeline, re-run 2026-09-08).** `04b_climate_signature.py` regenerated end-to-end from `tamilnadu_cleaned_physical.csv` + `tier2_signature_tamilnadu.csv` + `daily_aggregates_tamilnadu.csv` + `suntimes.csv` + `population_grid_points.csv` (with real `elevation_m` from `00c_attach_elevation.py`). The NASA POWER hourly cache is not on disk, so `02b` was not re-run — its existing Tier-2 outputs are treated as fixed inputs. Open shared gap: `T_mains_est_C` placeholder (see §4).
 
 ---
+>>>>>>> 935afa34a2c58bf28d0e38fac953d563fa476637
 
 ## Literature Support
-
-| Component | Reference / Method | Source File |
+| Component | Reference | Source |
 |---|---|---|
-| 300 L/day Domestic Draw | Avargani et al. (2021) | `sources/Singh2025PCM_SWH_ComprehensiveReview_summary.md` |
-| Fractional PCM Share (0.5) | Zhao (2022); Huang (2020); Abdelsalam (2020) | `13_LITERATURE_MAPPING.md` |
-| Discomfort Index (HSI) | Thom (1959) Discomfort Index | Standard meteorological literature |
-| Feature-to-Property Mapping | Liu et al. (2025); Singh et al. (2025) Table 2 | `sources/Liu2025AI_PCM_TES_Prediction_Optimization_summary.md` |
+| 300 L/day draw volume | Avargani et al. (2021) | `17_LITERATURE_MAPPING.md` |
+| HSI / discomfort index | Thom (1959) | `17_LITERATURE_MAPPING.md` |
+| PCM melting band 42–70°C | Singh et al. (2025) Table 2 | `sources/Singh2025PCM_SWH_ComprehensiveReview_summary.md` |
+| Worst-month sizing | Durin et al. (2018) | `17_LITERATURE_MAPPING.md` |
+| Climate-feature → PCM mapping | Liu et al. (2025) | `sources/Liu2025AI_PCM_TES_Prediction_Optimization_summary.md` |

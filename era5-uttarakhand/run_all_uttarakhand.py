@@ -112,6 +112,10 @@ hit external APIs (CDS/ERA5, NASA POWER, WorldPop/GADM), need credentials
 --include-setup if you genuinely want them run first, in this order):
   00a_build_population_grid.py  — population-weighted sample points
   00b_build_suntimes.py         — sunrise/noon/sunset times per point/day
+  00c_attach_elevation.py       — real per-point elevation (ERA5 geopotential)
+                                   for population_grid_points.csv; must run
+                                   before 02_combine_uttarakhand.py, which
+                                   otherwise falls back to a flat default
   01_download_era5_uttarakhand.py — ERA5 download (needs suntimes.csv)
   01b_download_nasapower.py     — NASA POWER download
   00_unzip_accum.py             — fixes any ZIP-disguised .nc files;
@@ -164,6 +168,7 @@ BASE_DIR = Path(__file__).resolve().parent
 SETUP_SCRIPTS = [
     "00a_build_population_grid.py",
     "00b_build_suntimes.py",
+    "00c_attach_elevation.py",
     "01_download_era5_uttarakhand.py",
     "01b_download_nasapower.py",
     "00_unzip_accum.py",
