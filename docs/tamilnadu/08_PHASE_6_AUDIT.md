@@ -82,14 +82,10 @@ all 4 method ranks + raw scores, Borda/consensus/Copeland, Kendall's W, entropy-
   (C2). Several deterministic Top-3 picks have MC Top-3 inclusion < 50% (flagged).
 
 ## Status
-<<<<<<< HEAD
-**COMPLETE**
-=======
 
 **Unified with Rajasthan; fresh run pending** (the 2026-09-08 run predates the final supercooling
 cap fix). Re-run `08_mcdm_ranking.py` → `10_physics_validation.py` → `09_recommendation_cards.py`.
 Also raise `N_DRAWS` to 5000 for the reported numbers.
->>>>>>> 935afa34a2c58bf28d0e38fac953d563fa476637
 
 ## Literature Support
 | Component | Reference | Source |
