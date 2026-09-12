@@ -183,7 +183,7 @@ agreement" in your methodology if you want to.
   wind x (Ta-Tsoil), CCI x (1-SAI)) — now computed on the canonical
   (true-where-available) columns.
 - **PCA on the correlated block only** (Ta_mean, Ta_p95, Ta_p05, HDD18,
-  CDD24, RH_mean, elev_proxy) — retained to 95% variance.
+  CDD24, RH_mean, elevation_m) — retained to 95% variance.
 - **Clustering matrix** explicitly excludes lat/lon (never cluster on
   geography — it would guarantee the "result" is just a map of
   Uttarakhand's shape), the raw PCA_BLOCK columns (redundant with PC1..PCn),

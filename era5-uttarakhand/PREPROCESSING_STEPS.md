@@ -56,15 +56,23 @@ Reads the **physical-units** file only, plus `02b`'s
 3x-daily record into one row — this is the object Phase 4 actually
 clusters, not the raw data.
 
-- **18 named indices** (Ta_mean, Ta_p95/p05, DTR, GHI_mean, GHI_daily_kWh, kt_mean, kt_std, SAI, CCI, cloudy_frac, HDD18, CDD24, RH_mean, HSI, wind_mean, seasonality, monsoon_index, elev_proxy) — each one line of physical justification (see the script's Table-8-equivalent docstring). Every index is computed from what the 3-events/day sampling actually supports; two are explicitly flagged as proxies (DTR = noon-sunrise, not true max-min; monsoon_index = a JJAS *fraction*, not an absolute rainfall total, since precipitation is only sampled 3x/day) — wherever `02b`'s true daily-integral value exists it's used as the canonical column instead (see `02b`'s section for which indices that covers).
+- **18 named indices** (Ta_mean, Ta_p95/p05, DTR, GHI_mean, GHI_daily_kWh, kt_mean, kt_std, SAI, CCI, cloudy_frac, HDD18, CDD24, RH_mean, HSI, wind_mean, seasonality, monsoon_index, elevation_m) — each one line of physical justification (see the script's Table-8-equivalent docstring). Every index is computed from what the 3-events/day sampling actually supports; two are explicitly flagged as proxies (DTR = noon-sunrise, not true max-min; monsoon_index = a JJAS *fraction*, not an absolute rainfall total, since precipitation is only sampled 3x/day) — wherever `02b`'s true daily-integral value exists it's used as the canonical column instead (see `02b`'s section for which indices that covers). `elevation_m` is real per-point elevation (see the elevation note below), not a proxy.
 - **Tm_target and L_required** — the corrected v2.0 rule: `Tm_target = T_delivery + delta_T_approach` (PCM sits *above* delivery temperature so heat flows PCM->water during discharge; the earlier subtract-based rule had the sign backwards). Comes out to a constant 57 C here (50 + 7, indirect-system assumption) — held constant across all points by design, not tuned per cluster.
 - **5 interaction terms** (GHI x kt_std, DTR x cloudy_frac, RH x (Ta-Tm), wind x (Ta-Tsoil), CCI x (1-SAI)).
-- **PCA on the correlated block only** (Ta_mean, Ta_p95, Ta_p05, HDD18, CDD24, RH_mean, elev_proxy) — retained to 95% variance (typically 2-3 components). Solar/variability indices are deliberately kept *out* of PCA since they carry the discriminating signal.
+- **PCA on the correlated block only** (Ta_mean, Ta_p95, Ta_p05, HDD18, CDD24, RH_mean, elevation_m) — retained to 95% variance (typically 2-3 components). Solar/variability indices are deliberately kept *out* of PCA since they carry the discriminating signal.
 - **Standardization** of the full signature matrix (z-scores), saved alongside the raw values.
 
 **Outputs:** `climate_signature_uttarakhand.csv` (one row per point), `pca_loadings.csv`, correlation heatmap, per-index distribution plot, an Uttarakhand map colored by GHI_mean/monsoon_index.
 
-**elevation note:** points use the flat 1200m proxy from `02_combine_uttarakhand.py`, not real per-point elevation. Uttarakhand's populated terrain spans roughly 200m (Terai plains) to 2000m (hill towns), so this proxy matters *more* here than it would for a flatter state — worth stating as a limitation, and worth actually fixing if `elev_proxy`/`HSI` turn out to matter for cluster separation (check `pca_loadings.csv` and the correlation heatmap for how much weight `elev_proxy` is carrying before deciding whether it's worth the effort).
+**elevation note — RESOLVED (2026-09):** points used to use a flat 1200m
+proxy from `02_combine_uttarakhand.py`, not real per-point elevation, and
+this mattered more here than it would for a flatter state (populated
+terrain spans ~200m Terai plains to ~2500m hill towns). Confirmed via
+`pca_loadings.csv`: the proxy carried real weight (-0.33/0.59 on PC1/PC2)
+before the fix. `00c_attach_elevation.py` now attaches real per-point
+elevation from ERA5 geopotential; `elevation_m`'s post-fix loading is a
+balanced ~0.37 on PC1 alongside temperature/humidity — real signal, not
+an outsized artifact.
 
 ---
 

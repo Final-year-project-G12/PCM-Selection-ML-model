@@ -15,6 +15,10 @@ regime, ending in one recommendation card per regime.
 PHASE 0/1 — SAMPLING DESIGN + RAW DOWNLOAD
   00a_build_population_grid.py    →  data/processed/population_grid_points.csv
   00b_build_suntimes.py           →  data/processed/suntimes.csv
+  00c_attach_elevation.py         →  population_grid_points.csv gains `elevation_m`
+                                      (real per-point elevation from ERA5 geopotential —
+                                      run before 02_combine_uttarakhand.py; see "Notes /
+                                      known limitations" below)
   01_download_era5_uttarakhand.py →  data/raw/era5/points/*.nc
   01b_download_nasapower.py       →  data/raw/nasapower/*.json
   00_unzip_accum.py               →  (fixes zip-disguised-as-.nc files in place)
@@ -91,6 +95,7 @@ in the same order, via `subprocess`.
 # ── Phase 0/1 — sampling design + raw download ──────────────────────────
 python 00a_build_population_grid.py     # GADM boundary + WorldPop raster -> population_grid_points.csv
 python 00b_build_suntimes.py            # sunrise/noon/sunset UTC times (pvlib) -> suntimes.csv
+python 00c_attach_elevation.py          # real per-point elevation (ERA5 geopotential) -> population_grid_points.csv
 python 01_download_era5_uttarakhand.py  # ERA5, sized to the population points + sun-event hours
 python 01b_download_nasapower.py        # NASA POWER cross-check data, per point/year
 python 00_unzip_accum.py                # fixes any CDS zip-disguised-as-.nc files
@@ -251,16 +256,38 @@ equation-of-time code).
   land at 23:55 UTC the day before) — `time_utc` is always the true instant;
   `date` is pvlib's nominal calendar-date assignment for that event.
 
+### `00c_attach_elevation.py`
+Attaches real per-point elevation, replacing the flat `DEFAULT_ALT_M`
+`02_combine_uttarakhand.py` otherwise falls back to for solar-geometry
+(air mass, clear-sky irradiance) calculations. Downloads ERA5's
+time-invariant surface geopotential field (one CDS request — orography
+doesn't change over time, so no per-year download) over the same bounding
+envelope `01_download_era5_uttarakhand.py` uses, and converts to elevation
+via `z / 9.80665` (WMO standard gravity).
+
+- Output: `data/raw/era5/invariant/era5_UK_geopotential.nc` (raw cache);
+  `population_grid_points.csv` gains an `elevation_m` column, updated in place.
+- Must run before `02_combine_uttarakhand.py` for the real elevation to
+  take effect — otherwise it silently falls back to the flat default.
+- **Real limitation, not resolved by this script**: ERA5's native grid is
+  ~0.25° (~28km), so its orography is a grid-cell *mean* elevation. In
+  Uttarakhand's high-relief terrain (200m-7000m+) a single cell value
+  smooths out real local relief — still far closer to the truth than one
+  flat number for the whole state, but not a substitute for a real DEM.
+- Requires `.cdsapirc` (same credentials as `01_download_era5_uttarakhand.py`).
+
 ### `01_download_era5_uttarakhand.py`
 Downloads ERA5 hourly reanalysis over the bounding envelope of the
 population points (not the whole state), for three narrow UTC hour windows
 computed from `suntimes.csv` — one around sunrise, one around solar noon,
 one around sunset — each padded ~1hr and correctly handling the
 cross-midnight wraparound case above. Keeps the original pipeline's
-instant/accum variable split and deaccumulation-helper-hour logic
-(generalized to the new dynamic hour set — see the script's docstring and
-`deaccumulate()` in `02_combine_uttarakhand.py` for why that still works
-correctly).
+instant/accum variable split; the extra predecessor-hour fetch
+(`ACCUM_HOURS = INSTANT_HOURS ∪ {h-1}`) is now vestigial rather than
+required — `deaccumulate()` in `02_combine_uttarakhand.py` no longer diffs
+against it (see that function's docstring for why: the CDS/cfgrib pipeline
+delivers `ssrd`/`strd`/`tp` already as per-step values, and the old
+diff-based logic was silently deflating GHI ~10x — fixed 2026-09).
 
 - Output: `data/raw/era5/points/era5_UK_points_{year}_{month}_{instant,accum}.nc`
 - Status tracking: `data/raw/era5/download_status_points.csv`
@@ -651,19 +678,26 @@ random-forest imputation).
 
 ## Notes / known limitations
 
-- **First day of the dataset**: 2016-01-01 has no prior day to supply an
-  accumulation-deaccumulation predecessor hour if a sun event's window
-  touches hour 0 UTC — the affected `era5_GHI`/related columns for that one
-  day come out as a natural `NaN` rather than a wrong value. Every other
-  month boundary is bridged automatically (see `01_download_era5_uttarakhand.py`'s
-  docstring for why).
-- **Elevation**: population points don't carry elevation data, so
-  `02_combine_uttarakhand.py` uses a flat 1200m approximation for solar-geometry
-  calculations. This is a real limitation for Uttarakhand specifically —
-  populated zones range roughly 200-2000m — worth checking whether
-  `elev_proxy` carries real weight in `04b`'s PCA/correlation output
-  before treating a first `05` clustering run as final (see
-  `README_PREPROCESSING.md` for more).
+- **ERA5 GHI/LW/precipitation deaccumulation bug — RESOLVED (2026-09)**:
+  `02_combine_uttarakhand.py`'s `deaccumulate()` used to diff consecutive
+  hours on the assumption that `ssrd`/`strd`/`tp` accumulate since the last
+  00Z/12Z forecast reset. The CDS/cfgrib pipeline actually delivers these
+  already as per-step (hourly) values, so the diff computed a "delta of
+  hourly totals" and silently deflated GHI ~10x (noon GHI averaged ~60
+  W/m^2 against an independently-computed clear-sky GHI of ~894 W/m^2 for
+  the same rows). Fixed to use the raw per-step value directly; ERA5-vs-
+  NASA-POWER agreement went from MBE=-602 W/m^2, r=-0.03 to MBE=+20 W/m^2,
+  r=0.76. See `README_PREPROCESSING.md` for the full writeup. The old
+  "first day of the dataset has no predecessor hour" caveat no longer
+  applies — there's no diffing against a predecessor hour anymore.
+- **Elevation — RESOLVED (2026-09)**: population points didn't carry
+  elevation data, so `02_combine_uttarakhand.py` used a flat 1200m
+  approximation for solar-geometry calculations — a real limitation for
+  Uttarakhand specifically (populated zones range ~200-2500m).
+  `00c_attach_elevation.py` now attaches real per-point elevation from
+  ERA5's time-invariant geopotential field; `elevation_m` carries a
+  balanced ~0.37 PCA loading on PC1 in `04b`, not an outsized artifact
+  (see `README_PREPROCESSING.md` for more).
 - **WorldPop download size**: ~1.5-2GB, one-time, cached in
   `data/raw/population/`. The download auto-retries (up to 5 attempts) and
   resumes from where it left off via HTTP Range requests if the connection
