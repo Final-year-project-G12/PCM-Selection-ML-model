@@ -51,7 +51,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-from config import PREPROCESSED_DIR, PROCESSED_DIR
+from config import PREPROCESSED_DIR, PROCESSED_DIR, SHARE_PCM
 
 SIGNATURE_DIR = PROCESSED_DIR / "signatures"
 SIGNATURE_DIR.mkdir(parents=True, exist_ok=True)
@@ -64,9 +64,33 @@ T_DELIVERY_C = 50.0
 DT_APPROACH_C = 7.0
 TM_TARGET_C = T_DELIVERY_C + DT_APPROACH_C   # 57 C, indirect-system assumption
 
-DRAW_RATE_KG_PER_S = 60.0 / 1000 / 60
-CP_WATER = 4.186
-ASSUMED_PCM_MASS_KG = 50.0
+# --- HOT-WATER DRAW SIZING (BUG FIX, matching Tamil Nadu's v3.1 fix) --------
+# Previous code: DRAW_RATE_KG_PER_S = 60.0 / 1000 / 60  -> 0.001 kg/s (WRONG)
+#   This converts 60 L/min -> m^3/s but OMITS the x1000 kg/m^3 density factor,
+#   giving a night draw of only ~25 kg over 7h instead of a domestic-scale
+#   draw. That makes L_required collapse to ~50 kJ/kg, rendering the 100
+#   kJ/kg latent-heat floor a no-op -- every PCM in the database clears it
+#   regardless of how poorly suited it actually is. Confirmed as the same
+#   bug already found and fixed in the Tamil Nadu pipeline.
+#
+# FIX: use a flat domestic daily draw volume (Avargani et al. 2021: 300
+# L/day) distributed over a 7-hour overnight storage window. Mass = 300 kg
+# (water density ~1 kg/L). SHARE_PCM=0.5: PCM supplies ~50% of overnight
+# delivery: tank sensible heat + concurrent charging supply the remainder
+# (Zhao 2022; Huang 2020; Abdelsalam 2020; Kozelj 2021).
+DRAW_VOLUME_L   = 300.0               # litres per day (domestic household)
+DRAW_MASS_KG    = DRAW_VOLUME_L * 1.0  # kg (density of water ~1 kg/L)
+DRAW_HOURS      = 7.0                  # overnight storage window (hours)
+CP_WATER        = 4.186               # kJ/(kg*K)
+# ASSUMED_PCM_MASS_KG=150 (not 50): raised after the draw-sizing fix above
+# revealed that 50 kg demands >=250 kJ/kg of latent heat per kg of PCM to
+# meet the SHARE_PCM=0.5 target across all clusters -- above the ceiling of
+# every commercial/literature PCM in the 42-70C range (max ~260 kJ/kg in
+# this database), making Phase 5 feasibility fail almost everywhere. 150 kg
+# is a more realistic charge size for a 300 L/day household PCM tank and
+# keeps L_required in the ~120-180 kJ/kg range the database can actually
+# satisfy, while still being a real, binding constraint (not a no-op).
+ASSUMED_PCM_MASS_KG = 150.0
 
 KT_CLOUDY_THRESHOLD = 0.35
 
@@ -209,6 +233,8 @@ CANON_MAP = {
     "Ta_p95": "Ta_p95_true",
     "Ta_p05": "Ta_p05_true",
     "seasonality": "seasonality_true",
+    "RH_mean": "RH_mean_true",
+    "wind_mean": "wind_mean_true",
 }
 for canon, true_col in CANON_MAP.items():
     proxy_col = f"{canon}_proxy"
@@ -226,8 +252,16 @@ print("\n[3/6] Derived PCM-facing quantities (Tm_target, L_required) ...")
 
 sig["Tm_target_C"] = TM_TARGET_C
 sig["T_mains_est_C"] = sig["Ta_mean"] - 2.0
-q_night_kw = DRAW_RATE_KG_PER_S * CP_WATER * (T_DELIVERY_C - sig["T_mains_est_C"])
-sig["L_required_kJ_per_kg"] = (q_night_kw * 3600 * 7) / ASSUMED_PCM_MASS_KG
+# L_required = PCM-specific latent heat target (kJ/kg PCM).
+# SHARE_PCM = 0.5 -- PCM supplies ~50% of overnight delivery; tank sensible
+# heat + concurrent charging supply the remainder (Zhao 2022; Huang 2020;
+# Abdelsalam 2020; Kozelj 2021).
+q_total_kJ = DRAW_MASS_KG * CP_WATER * (T_DELIVERY_C - sig["T_mains_est_C"])
+sig["L_required_kJ_per_kg"] = (q_total_kJ * SHARE_PCM) / ASSUMED_PCM_MASS_KG
+
+print(f"  Draw volume: {DRAW_VOLUME_L:.0f} L ({DRAW_MASS_KG:.0f} kg), "
+      f"delivery at {T_DELIVERY_C:.0f} C, PCM mass {ASSUMED_PCM_MASS_KG:.0f} kg, "
+      f"SHARE_PCM={SHARE_PCM}")
 print(f"  Tm_target: constant {TM_TARGET_C:.0f} C across all points")
 print(f"  L_required range: {sig['L_required_kJ_per_kg'].min():.0f} - "
       f"{sig['L_required_kJ_per_kg'].max():.0f} kJ/kg")
@@ -238,10 +272,16 @@ print("\n[4/6] Interaction terms ...")
 sig["int_GHI_x_ktstd"] = sig["GHI_daily_kWh"] * sig["kt_std"]
 sig["int_DTR_x_cloudyfrac"] = sig["DTR"] * sig["cloudy_frac"]
 sig["int_RH_x_TaMinusTm"] = sig["RH_mean"] * (sig["Ta_mean"] - sig["Tm_target_C"])
-sig["Tsoil_proxy_C"] = sig["Ta_mean"] - 3.0
-sig["int_wind_x_TaMinusTsoil"] = sig["wind_mean"] * (sig["Ta_mean"] - sig["Tsoil_proxy_C"])
 sig["int_CCI_x_1minusSAI"] = sig["CCI"] * (1 - sig["SAI"])
-print("  Added 5 interaction terms")
+# REMOVED: int_wind_x_TaMinusTsoil. It was defined as
+# wind_mean * (Ta_mean - Tsoil_proxy_C), with Tsoil_proxy_C = Ta_mean - 3.0
+# (no real soil-temperature data source exists) — so (Ta_mean - Tsoil_proxy_C)
+# is IDENTICALLY 3.0 for every point, collapsing the whole "interaction" term
+# to wind_mean * 3.0, a rescaled duplicate of wind_mean that was still being
+# fed into the clustering matrix (only Tsoil_proxy_C itself was dropped, not
+# this term), silently double-weighting wind. Removed rather than kept with
+# a fabricated soil-temperature model.
+print("  Added 4 interaction terms (int_wind_x_TaMinusTsoil removed — see comment)")
 
 # ═══════════════════════════════════════════════════════════
 print("\n[5/6] PCA on the correlated temperature/pressure block ...")
@@ -268,7 +308,7 @@ print(f"  Explained variance ratio: {np.round(pca.explained_variance_ratio_, 3)}
 # excludes lat/lon (never cluster on geography — plan v3.0 Section 6.2),
 # excludes proxy/true duplicate columns (only the canonical version clusters).
 DROP_FROM_CLUSTERING = set(PCA_BLOCK) | {"lat", "lon", "population",
-                                          "T_mains_est_C", "Tsoil_proxy_C"}
+                                          "T_mains_est_C"}
 DROP_FROM_CLUSTERING |= {c for c in sig.columns if c.endswith("_proxy")}
 DROP_FROM_CLUSTERING |= {c for c in sig.columns if c.endswith("_true") or c.endswith("_true_mean")}
 sig_for_clustering_cols = [c for c in sig.columns if c not in DROP_FROM_CLUSTERING]

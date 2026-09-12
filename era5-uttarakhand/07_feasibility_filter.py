@@ -154,7 +154,7 @@ def main():
     n_high = sum(1 for r in all_rows if r["passes_all"].sum() > 25)
     if n_low:
         print(f"  [NOTE] {n_low} cluster(s) still under 5 survivors after max relaxation "
-              f"({MAX_RELAX_STEPS * RELAX_STEP_K:.0f}K) — your database (25 rows) is "
+              f"({MAX_RELAX_STEPS * RELAX_STEP_K:.0f}K) — your database ({len(pcm_db)} rows) is "
               f"thin for this; add more candidates in the affected Tm range (06's "
               f"'still outstanding' list) if time allows.")
     if n_high:

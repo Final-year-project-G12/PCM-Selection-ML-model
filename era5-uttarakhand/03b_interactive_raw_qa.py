@@ -23,10 +23,15 @@ warnings.filterwarnings("ignore")
 
 import numpy as np
 import pandas as pd
+# pyrefly: ignore [missing-import]
 import plotly.express as px
+# pyrefly: ignore [missing-import]
 import plotly.graph_objects as go
+# pyrefly: ignore [missing-import]
 from plotly.subplots import make_subplots
+# pyrefly: ignore [missing-import]
 import folium
+# pyrefly: ignore [missing-import]
 import branca.colormap as cm
 
 from config import COMBINED_POINTS_FILE, PLOTS_DIR
@@ -59,7 +64,7 @@ point_meta = df.groupby("point_id").agg(
 ).reset_index()
 
 fmap = folium.Map(location=[point_meta["lat"].mean(), point_meta["lon"].mean()],
-                   zoom_start=7, tiles="CartoDB positron")
+                   zoom_start=7, tiles="OpenStreetMap")
 colormap = cm.LinearColormap(
     colors=["#440154", "#3b528b", "#21918c", "#5ec962", "#fde725"],
     vmin=point_meta["population"].min(), vmax=point_meta["population"].max(),
