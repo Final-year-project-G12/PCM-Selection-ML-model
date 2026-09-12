@@ -1,11 +1,4 @@
-# 13 — Literature Mapping Matrix
-
-> **Consolidation Note (2026-09-07)**:
-> Following the documentation consolidation, methodological justifications formerly stored in standalone files (`10_TEMPORAL_PROCESSING.md`, `11_SPATIAL_PROCESSING.md`, `12_SOLAR_GEOMETRY.md`, `13_SOLAR_DERIVED_VARIABLES.md`, `14_ERA5_POWER_VALIDATION.md`, `15_QUALITY_CONTROL.md`, `16_CLIMATE_SIGNATURE.md`, `18_RESEARCH_GAP_MAPPING.md`) have been embedded directly into their respective phase audits (`00_MASTER_OVERVIEW.md`, `03_PHASE_1_AUDIT.md`, `04_PHASE_2_AUDIT.md`, `05_PHASE_3_AUDIT.md`). This document serves as the single comprehensive mapping matrix connecting Tamil Nadu pipeline methodology to peer-reviewed literature.
-
----
-
-## Methodological Mapping Matrix
+# 17 — Literature Mapping Matrix
 
 The methodological choices in the Tamil Nadu implementation are mapped to peer-reviewed references from `sources/` (literature summaries in `sources.zip`):
 
@@ -28,8 +21,6 @@ The methodological choices in the Tamil Nadu implementation are mapped to peer-r
 | **Techno-Economic Sizing** | DSTS system optimization | Duraivel (2025) | `Duraivel2025DSTS_TechnoEconomic_summary.md` | Medium |
 | **SWH State of Art** | System-level context | Al-Mamun (2023); Odoi & Yorke (2025) | `AlMamun2023SWH_StateOfArt_summary.md`, `OdoiYorke2025AI_SWH_Review_summary.md` | Strong |
 | **Spearman Validation** | MCDM vs simulated solar fraction | Framework doc §10 | — | Strong |
-
----
 
 ## Full Reference List
 1. Reda, I. and Andreas, A., 2004. Solar position algorithm for solar radiation applications. *Solar Energy*, 76(5), pp.577-589.
