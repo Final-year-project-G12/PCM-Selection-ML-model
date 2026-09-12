@@ -13,8 +13,9 @@ your 4 days trying to onboard another state's data.
 | 1. Data Collection | ERA5 + NASA POWER, 133 TN points, 3 sun-events/day, 10 years | **Done.** |
 | 2. Preprocessing & QC | 13-step sequence + Tier-2 daily-integral repair + v3.1 fixes | **Code fixed (v3.1).** Deaccumulation, quantile mapping, agreement analysis. **Re-run required.** See `CHANGELOG.md`. |
 | 3. Climate Signature | 2-tier ~18-index vector per point, Tm_target/L_required, PCA, standardization | **Done, same annualization fix applied.** |
-| 4. Climate Regime Clustering (Level A) | GMM, BIC-selected K, silhouette sanity | **Done.** |
-| 4b. Level B (seasonal) | Check whether Top-3 flips between seasons | **Code delivered, not yet run.** `11_level_b_seasonal_analysis.py`. |
+| 4. Climate Regime Clustering (Level A) | GMM, 3-tier `suggest_k` cascade (bootstrap-ARI tiebreak), Köppen-Geiger external validation, canonical latitude relabel | **Done, unified with Rajasthan (2026-09-08). k=3.** `05_cluster_tamilnadu.py` + shared `cluster_lib.py`. |
+| 4b. Level B — Regime Shift | Per-point-per-season GMM re-clustering; regime-shift fraction + season-tautology check; Sankey plot | **Done (2026-09-08). k=4, 90.2% of points shift, season-tautology ARI 0.501.** `05a_level_b_regime_shift_tamilnadu.py`. |
+| 11. Seasonal PCM Sensitivity | Check whether the #1 PCM flips between seasons (post-Phase-6 TOPSIS re-rank) | **Done (2026-09-08). 3/12 (cluster, season) cells flip.** `11_seasonal_pcm_sensitivity.py` (renamed from `11_level_b_seasonal_analysis.py`). |
 | 5. Feasibility Filtering | Hard-filter PCM database per cluster, all 8 Table 12 filters | **Done, upgraded.** Corrosion veto + safety exclusion added (`07_feasibility_filter.py`). |
 | 6. Multi-Criteria Ranking | TOPSIS + GRA + PROMETHEE II + VIKOR, entropy+AHP weights, Gaussian Tm fitness, Borda+Copeland consensus, 5000-draw Monte Carlo | **Done, upgraded to the full 4-method + Monte Carlo stack.** `08_mcdm_ranking.py` v2. |
 | 7. Physics-Based Validation | Grey-box lumped enthalpy tank model, Spearman rho vs. MCDM rank | **Implemented, not deferred.** `10_physics_validation.py` — real climate data, stated tank assumptions, calibration check against the 54-84% benchmark band. |
@@ -147,12 +148,12 @@ your 4 days trying to onboard another state's data.
 05b_cluster_interactive.py       (Phase 4 explorer, interactive)
 04b_climate_signature.py         (Tier1+Tier2 merge, + HDD/CDD fix)
 06_build_pcm_database.py         (Phase 5 prep — MICE+RF+PMM sourced DB)
-07_feasibility_filter.py         (Phase 5 — now all 8 Table 12 filters)
-07b_charging_feasibility.py      (optional — heuristic regime-capped Tm)
-08_mcdm_ranking.py               (Phase 6 — full 4-method + Monte Carlo)
+07_feasibility_filter.py         (Phase 5 — 8 Table 12 constraints + κ-calibration; unified with Rajasthan 2026-09-08)
+08_mcdm_ranking.py               (Phase 6 — full 4-method + Monte Carlo; reads feasibility_survivors_by_cluster_kappa_calibrated.csv)
+05a_level_b_regime_shift_tamilnadu.py  (Phase 4 Level B — regime-shift GMM re-clustering)
 09_recommendation_cards.py       (Phase 8 — now includes Phase 7 results)
 10_physics_validation.py         (Phase 7 — grey-box tank model, real data)
-11_level_b_seasonal_analysis.py  (Phase 4 Level B — seasonal sensitivity)
+11_seasonal_pcm_sensitivity.py   (post-Phase-6 — seasonal PCM #1-flip check; renamed from 11_level_b_seasonal_analysis.py)
 README_PREPROCESSING.md          (documents every Phase 2-4 step)
 CHANGELOG.md                     (everything fixed/added this round)
 ```
@@ -160,11 +161,13 @@ CHANGELOG.md                     (everything fixed/added this round)
 Run order for what's left (everything else has already been run
 successfully per your earlier session output):
 ```
-python 07_feasibility_filter.py         # re-run: now includes corrosion + safety filters
-python 08_mcdm_ranking.py               # re-run: now full 4-method + Monte Carlo (~1-2 min)
-python 10_physics_validation.py         # NEW — Phase 7, real climate data (~few minutes)
+python 06_build_pcm_database.py         # re-run: thin builder over canonical MICE/PMM CSV (is_rt_line -> manufacturer)
+python 07_feasibility_filter.py         # re-run: 8 constraints (C6 = Tm <= Tm_target_capped_C) + κ-calibration -> feasibility_survivors_by_cluster{,_kappa_calibrated}.csv  [07b retired]
+python 08_mcdm_ranking.py               # re-run: full 4-method + Monte Carlo; reads the _kappa_calibrated file (~1-2 min)
+python 05a_level_b_regime_shift_tamilnadu.py  # Phase 4 Level B — regime-shift re-clustering
+python 10_physics_validation.py         # Phase 7, real climate data (~few minutes)
 python 09_recommendation_cards.py       # re-run: now pulls in Phase 7 results
-python 11_level_b_seasonal_analysis.py  # NEW — optional but recommended
+python 11_seasonal_pcm_sensitivity.py  # post-Phase-6 — seasonal PCM flip check
 ```
 
 `03_plots_raw.py` and `04_preprocess_tamilnadu.py` are unchanged from the
@@ -172,11 +175,11 @@ originals — they were already correct.
 
 ## What's genuinely still open after all of the above run
 
-- **PCM database is ~25 rows, not 40-60.** `06`'s docstring lists exactly
-  what's missing (RT58/RT60/RT62HC, PLUSS OM55/OM65, a properly-sourced
-  salt hydrate). Add real datasheet rows if time allows; the pipeline
-  works correctly either way, it's a coverage question, not a
-  correctness one.
+- **PCM database is 62 rows** (55 manufacturer + 7 literature), inside the
+  40-60 manufacturer-row target. Additional salt hydrates (RT58/RT60/RT62HC,
+  PLUSS OM55/OM65, a properly-sourced salt hydrate) remain optional coverage
+  expansion, not a correctness issue — and note the corrosion veto
+  (Constraint 7) stays structurally inert until real salt-hydrate rows exist.
 - **External cluster validation** (ARI vs. Köppen-Geiger/NBC zones) is
   not implemented — needs an external classification lookup this
   pipeline doesn't have. Lower priority for TN-only scope per both
@@ -185,7 +188,8 @@ originals — they were already correct.
   need fixing before Uttarakhand.
 - **`monsoon_index`** stays proxy-only (NASA POWER precipitation was
   never downloaded) — documented, not a blocker.
-- **Level B** as implemented (`11`) is the "nearly free" version the plan
-  explicitly permits (per-season re-ranking within existing Level-A
-  clusters), not full independent per-season GMM clustering. Upgrade if
-  you have time and want the literal spec.
+- **Level B** now has BOTH forms (2026-09-08): `05a_level_b_regime_shift_tamilnadu.py`
+  is the literal spec — full independent per-point-per-season GMM
+  re-clustering with a regime-shift fraction and season-tautology check.
+  `11_seasonal_pcm_sensitivity.py` (renamed from `11_level_b_seasonal_analysis.py`)
+  is the separate post-Phase-6 per-season TOPSIS re-rank / #1-flip check.

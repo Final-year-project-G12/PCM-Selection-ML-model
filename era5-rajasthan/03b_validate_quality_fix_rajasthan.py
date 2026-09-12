@@ -1,6 +1,17 @@
 """
 03b_validate_quality_fix_rajasthan.py
 =============================================================================
+DEPRECATED 2026-09-08. This validated 03b_quality_check_rajasthan.py, which
+is no longer Rajasthan's Phase 2.5 stage (04_preprocess_rajasthan.py is —
+see that script and 03b_quality_check_rajasthan.py's own SUPERSEDED banner).
+Two of this script's assumptions no longer hold: (a) Phase 3
+(04b_climate_signature.py) now reads data/preprocessed/rajasthan_cleaned_
+physical.csv, not climate_rajasthan_points_clean.csv; (b) it shells out to
+"04_climate_signature_rajasthan.py", a filename that does not exist (the
+real file is 04b_climate_signature.py). Removed from run_all_rajasthan.py.
+Kept on disk for provenance only; do not run without reworking it against
+the current pipeline.
+=============================================================================
 VALIDATION for 03b_quality_check_rajasthan.py — run AFTER that script and
 AFTER 04_climate_signature_rajasthan.py has been updated to read
 climate_rajasthan_points_clean.csv (already done as part of introducing

@@ -52,7 +52,7 @@ Governing document: Objective1_PCM_Climate_Framework_Plan_v3.docx ("the framewor
 
 3. Two-Tier Climate Signature: Redefines 10 years of hourly/daily data into instantaneous sun-event statistics (Tier 1) and true daily-integral indices (Tier 2). 
 
-4. Climate Regimes (Level A & B): Clusters points into spatial climate regimes (Level A) using Gaussian Mixture Models (GMM) and performs seasonal sensitivity analysis (Level B). 
+4. Climate Regimes (Level A & B): Clusters points into spatial climate regimes (Level A, `05_cluster_tamilnadu.py`) using Gaussian Mixture Models (GMM), then re-clusters per point per season to detect regime shifts (Level B, `05a_level_b_regime_shift_tamilnadu.py`). A separate post-Phase-6 script (`11_seasonal_pcm_sensitivity.py`) checks whether the recommended PCM flips by season. 
 
 5. PCM Feasibility & Screening: Filters the current 62-candidate database (55 manufacturer-derived + 7 literature) against physical, corrosion, and safety constraints. The feasibility CSV retains a full percandidate audit; current runs retain 9-15 candidates per cluster. 
 
@@ -78,7 +78,7 @@ Phase 3 — CLIMATE SIGNATURE CONSTRUCTION 04b_climate_signature.py      → cli
 
 Phase 4 — CLIMATE REGIME CLUSTERING 
 
-05_cluster_tamilnadu.py       → cluster_assignments (K_FINAL=5, covariance_type=diag) 05b_cluster_interactive.py    → interactive GMM cluster map 11_level_b_seasonal_analysis.py → level_b_seasonal_topk.csv, level_b_seasonal_summary.md 
+05_cluster_tamilnadu.py       → cluster_assignments (k=3 via cluster_lib.suggest_k, covariance_type=diag) 05a_level_b_regime_shift_tamilnadu.py → cluster_assignments_tamilnadu_levelB.csv + regime-shift Sankey 05b_cluster_interactive.py    → interactive GMM cluster map 11_seasonal_pcm_sensitivity.py → seasonal_pcm_sensitivity_topk.csv, seasonal_pcm_sensitivity_summary.md (post-Phase-6) 
 
 ↓ 
 
@@ -109,7 +109,7 @@ Phase 8 — RECOMMENDATION CARDS
 |1 — Data Collection|`00a`, `00b`, `01`,<br>`01b`,<br>`00_unzip_accum`|**COMPLETE**<br>|133 points, 240 NetCDF<br>fles, 1330 NASA POWER<br>JSON fles.|
 |2 — Preprocessing & QA|`02`, `02b`, `03`,<br>`03b`, `04`, `04c`|**COMPLETE (v3.1 fxes<br>applied)**|Deaccumulation<br>replaced with<br>`accum_to_fux()`. Per-<br>season quantile<br>mapping in Step 2b. Re-<br>run required for new<br>outputs.|
 |3 — Climate Signature|`04b`, `04d`|**COMPLETE**<br>|300 L/day draw with<br>`SHARE_PCM=0.5`;<br>current generated<br>cluster targets are<br>approximately 301-326<br>kJ/kg.|
-|4 — GMM Clustering|`05`, `05b`, `11`|**COMPLETE (v3.1 fxes<br>applied)**|K=5 regimes,<br>`covariance_type="diag"<br>`. Level B seasonal re-<br>rank uses corrected|
+|4 — GMM Clustering|`05`, `05a`, `05b`,<br>`cluster_lib.py`|**COMPLETE (unified<br>with Rajasthan<br>2026-09-08)**|**k=3** via shared 3-tier<br>`suggest_k` cascade<br>(bootstrap-ARI tiebreak),<br>`covariance_type="diag"`,<br>Köppen-Geiger external<br>validation, canonical<br>latitude relabel. `05a` =<br>Level B regime-shift (k=4,<br>90.2% shift).|
 
 
 
@@ -130,7 +130,7 @@ All five critical bugs from the v3.0 audit are fixed in source code. See 20_IMPL
 
 10. Quantile mapping → Step 2b in `04_preprocess_tamilnadu.py` + `03b_agreement_analysis.py` 
 
-11. 1000× flow rate → 300 L/day in `04b_climate_signature.py` and `11_level_b_seasonal_analysis.py` 
+11. 1000× flow rate → 300 L/day in `04b_climate_signature.py` and `11_seasonal_pcm_sensitivity.py` 
 
 12. GMM overfitting → `covariance_type="diag"` in `05_cluster_tamilnadu.py` 
 
@@ -468,7 +468,7 @@ Collapse each point's 10-year hourly/daily weather into a single climate signatu
 
 - Current generated result: cluster `L_required` values are approximately 301-326 kJ/kg. These are runspecific outputs, not a universal constant. 
 
-- Also applied in: `11_level_b_seasonal_analysis.py` (seasonal `L_required` uses the same share model). 
+- Also applied in: `11_seasonal_pcm_sensitivity.py` (seasonal `L_required` uses the same share model). 
 
 ### **Status** 
 
@@ -494,7 +494,7 @@ Source: 06_PHASE_4_AUDIT(1).md
 
 ## **06 — Phase 4 Audit: Climate Regime Clustering** 
 
-Scripts: 05_cluster_tamilnadu.py, 05b_cluster_interactive.py, 11_level_b_seasonal_analysis.py. 
+Scripts: 05_cluster_tamilnadu.py, 05b_cluster_interactive.py, 11_seasonal_pcm_sensitivity.py. 
 
 ### **Purpose** 
 

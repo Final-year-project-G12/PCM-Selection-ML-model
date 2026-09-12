@@ -72,9 +72,16 @@ ensure_data_dirs()
 YEARS  = [str(y) for y in range(2016, 2026)]
 MONTHS = [f"{m:02d}" for m in range(1, 13)]
 
-# Uttarakhand is mountainous; populated zones range roughly 200-2000m.
-# Use 1200m as a representative default for solar-geometry calculations
-# (Rajasthan pipeline uses 300m for its flat desert/plateau terrain).
+# Fallback only — real per-point elevation now comes from population_df's
+# `elevation_m` column (attached by 00c_attach_elevation.py from ERA5's
+# invariant geopotential field). This flat constant is used only if that
+# column is missing or NaN for a given point (e.g. 00c hasn't been run yet).
+# Uttarakhand is the worst case for a flat assumption in this project —
+# populated terrain runs ~200m (Terai) to several thousand metres (high
+# Himalayan belt) — so a single value is wrong by kilometres for a large
+# fraction of points and 00c must always be run first here. See also the
+# README caveat about ERA5 orography being a grid-cell mean in high-relief
+# regions.
 DEFAULT_ALT_M = 1200
 
 # Reject an ERA5/POWER nearest-hour match if it's farther than this from
@@ -393,7 +400,7 @@ def nearest_row(series_df, target_time, max_hours=MAX_MATCH_HOURS):
 # PROCESS ONE POINT
 # ═══════════════════════════════════════════════════════════
 
-def process_point_era5(lat, lon, instant_ds, accum_ds):
+def process_point_era5(lat, lon, instant_ds, accum_ds, alt_m=DEFAULT_ALT_M):
     """Nearest-neighbor snap to the ERA5 grid, concatenate the full
     instant+accum hourly series across all years, deaccumulate, compute
     solar geometry. Returns (era5_df, grid_lat, grid_lon)."""
@@ -433,7 +440,7 @@ def process_point_era5(lat, lon, instant_ds, accum_ds):
 
     df = df[~df.index.duplicated(keep="first")]
     df = apply_unit_conversions(df)
-    df = compute_solar(df, lat, lon, alt=DEFAULT_ALT_M)
+    df = compute_solar(df, lat, lon, alt=alt_m)
 
     # ERA5 time index decoded tz-naive UTC (see decode_time) — localize so
     # it compares against suntimes.csv's tz-aware time_utc.
@@ -443,8 +450,11 @@ def process_point_era5(lat, lon, instant_ds, accum_ds):
 
 def process_point(point_row, instant_ds, accum_ds, sun_df):
     point_id = point_row.point_id
+    alt_m = getattr(point_row, "elevation_m", DEFAULT_ALT_M)
+    if alt_m is None or (isinstance(alt_m, float) and np.isnan(alt_m)):
+        alt_m = DEFAULT_ALT_M
     era5_df, grid_lat, grid_lon = process_point_era5(
-        point_row.lat, point_row.lon, instant_ds, accum_ds)
+        point_row.lat, point_row.lon, instant_ds, accum_ds, alt_m=alt_m)
     power_df = load_power_series(point_id)
 
     if era5_df is None and power_df is None:
@@ -463,6 +473,7 @@ def process_point(point_row, instant_ds, accum_ds, sun_df):
             "point_id": point_id,
             "lat": point_row.lat, "lon": point_row.lon,
             "population": point_row.population, "weight": point_row.weight,
+            "elevation_m": alt_m,
             "date": r.date, "event": r.event, "time_utc": target,
             "grid_lat": grid_lat, "grid_lon": grid_lon,
         }

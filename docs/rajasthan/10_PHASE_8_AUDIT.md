@@ -1,10 +1,21 @@
 # 10 — Phase 8 Audit: Supercooling Penalty Sensitivity Analysis
 
-Scripts: `08_phase8_supercooling_sweep.py` (310 lines), the supercooling penalty implementation in
+> ✅ **THIS DIAGNOSTIC'S RECOMMENDATION WAS IMPLEMENTED (2026-09-08).** The "Real Mechanism:
+> Near-Zero-Ideal Values + Entropy Formula Pathology" finding below, and the "Sensitivity Test:
+> Force Supercooling Weight Down" result (capping supercooling's weight flips MCDM-vs-physics ρ
+> from −0.385 to +0.561 in Cluster 0), directly motivated the unified `08_mcdm_ranking.py`'s
+> **supercooling entropy-weight cap**: any near-zero-ideal cost criterion's entropy-derived weight
+> is held at ≤ 2× its Table-13 prior (supercooling ≤ 0.16) before the 50/50 blend. The k-sweep
+> here — agreement *worsens* as the physics-side supercooling penalty rises — is the empirical
+> evidence that supercooling was *over*-weighted in the MCDM, i.e. that capping (not adding a
+> physics penalty) is the right correction. Phase 6/7/8 re-run against the capped engine is pending.
+> Phase-8 companion script `09_recommendation_cards.py` renamed to
+> `09_recommendation_cards.py` in the same pass (matching Tamil Nadu).
+
+Scripts: `08_phase8_supercooling_sweep.py`, the supercooling penalty implementation in
 `physics_lib.py`, and two read-only diagnostic helpers `check_supercooling_data.py` /
-`check_supercooling_K.py` (audit stub at the end of this file). **Completed 2026-09-01.** Phase 8
-directly tests Phase 7's finding that supercooling dominates MCDM weights (48–64%) yet cannot be
-simulated in the base model. Sensitivity sweep k ∈ [0.0, 0.1, 0.2, 0.3].
+`check_supercooling_K.py` (audit stub at the end of this file). Sensitivity sweep
+k ∈ [0.0, 0.1, 0.2, 0.3]. Results below are PRE-unification (raw supercooling entropy weight).
 
 ## Purpose
 
@@ -179,7 +190,15 @@ Both (a) an entropy-weighting artifact and (b) a structural physics-model scope 
 
 ### Recommendation for Write-Up
 
-State the physics-model scope limitation on supercooling explicitly, citing this section. Consider (but flag explicitly) a variance-floor or CV-based regularization for near-zero-ideal cost criteria in the entropy formula, analogous to the existing <2-real-values→weight-0 guard — but note this will **not** by itself raise Cluster 0's Kendall's W, since the PROMETHEE-vs-GRA/TOPSIS structural disagreement is independent and needs its own investigation.
+State the physics-model scope limitation on supercooling explicitly, citing this section.
+
+> **IMPLEMENTED 2026-09-08:** the "regularization for near-zero-ideal cost criteria in the entropy
+> formula, analogous to the existing <2-real-values→weight-0 guard" recommended here is now live in
+> `08_mcdm_ranking.py` — supercooling / corrosion / cost entropy weights are held at ≤ 2× their
+> Table-13 prior before the blend. As predicted here, this will **not** by itself raise Cluster 0's
+> Kendall's W: the unified run confirms GRA (all clusters) and PROMETHEE (Cluster 0) as independent
+> structural outliers via the ported pairwise method-agreement diagnostic. That is a separate
+> investigation.
 
 ## Future Work
 
@@ -223,7 +242,7 @@ Collect real discharge curves for surviving PCM candidates (literature or lab):
 Two short read-only scripts used while diagnosing the "Critical Correction: Field Identification"
 issue above. Neither writes any file or is part of any pipeline chain:
 
-- **`check_supercooling_K.py`** — loads `feasibility_survivors_rajasthan_kappa_calibrated.csv`,
+- **`check_supercooling_K.py`** — loads `feasibility_survivors_by_cluster_kappa_calibrated.csv`,
   filters to `survives_all` rows, de-dupes on `pcm_id`, and prints `supercooling_K` per candidate
   plus its mean / std / min / max. This is the script that established `supercooling_K` (i.e.
   `Tm_C − Tm_freezing_C`) has real variance across survivors, confirming it — not the all-zero
@@ -249,9 +268,11 @@ This framing demonstrates rigor (hypothesis was tested, result was reported hone
 
 ---
 
-## Phase 9 (Epilogue): Recommendation Cards
+## Phase 8 deliverable (Epilogue): Recommendation Cards
 
-**Script**: `10_recommendation_cards_rajasthan.py` (275 lines). **Completed 2026-08-14** (re-run after Phases 5/6/7 updated).
+**Script**: `09_recommendation_cards.py` (renumbered 2026-09-08 from
+`10_recommendation_cards_rajasthan.py`; numbered 09 to match Tamil Nadu but runs LAST, after
+`10_physics_validation.py`). Re-run pending against the unified Phase 5/6 outputs.
 
 ### Purpose
 
@@ -268,7 +289,7 @@ Per cluster:
 
 ### Cross-Phase Consistency Verification
 
-`10_recommendation_cards_rajasthan.py` re-verifies cluster identity before writing anything:
+`09_recommendation_cards.py` re-verifies cluster identity before writing anything:
 1. **Fingerprint-stamp check**: Compares `upstream_cluster_profile_fingerprint` against Phase 6's own fingerprint. If mismatched, raises `SystemExit` before computing anything.
 2. **Independent medoid cross-check**: Recomputes medoid per cluster_id and verifies against `cluster_profile_cards_rajasthan.md` (from Phase 4) and `physics_validation_rajasthan.csv` (from Phase 7). Hard-fails naming exactly which cluster_id and file disagree if mismatch found.
 

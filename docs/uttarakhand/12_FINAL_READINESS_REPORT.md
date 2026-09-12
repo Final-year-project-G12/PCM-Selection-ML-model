@@ -7,8 +7,7 @@ readiness verdict for the `era5-uttarakhand/` pipeline.
 
 ## Current implementation status
 
-**Phases 1 through 6 and Phase 8 are implemented and have been run end-to-end on real Uttarakhand
-data. Phase 7 (physics validation) does not exist.**
+**Phases 1 through 8 are implemented and have been run end-to-end on real Uttarakhand data.**
 
 | Phase | Script(s) | Status | Headline result |
 |---|---|---|---|
@@ -20,7 +19,7 @@ data. Phase 7 (physics validation) does not exist.**
 | 4 — Regime Clustering | `05`, `05b` | **COMPLETE** | **K = 5**, GMM full covariance; sizes **12 / 9 / 3 / 7 / 14**; silhouette 0.279 |
 | 5 — Feasibility Filtering | `06`, `07`, `07b` | **COMPLETE** | 55-candidate database; window [52, 65] °C; **29 survivors, identical in all 5 clusters** |
 | 6 — MCDM Ranking | `08` | **COMPLETE** | TOPSIS + GRA + Borda; **RT60 #1 in all 5 clusters**; pooled TOPSIS-vs-GRA ρ = **−0.930** |
-| 7 — Physics Validation | — | **NOT IMPLEMENTED** | No script exists; declared future work in three source files |
+| 7 — Physics Validation | `10_physics_validation.py` | **COMPLETE** | Implicit Backward Euler grey-box tank model; **92% in [54%, 84%] SF band**; mean Spearman ρ = **+0.124** |
 | 8 — Recommendation Cards | `09` | **CODE COMPLETE, OUTPUT NOT COMMITTED** | 5 cards; every #1 is RT60 and every #1 is a Borda tie |
 
 ---

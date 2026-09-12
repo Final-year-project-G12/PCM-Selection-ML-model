@@ -22,8 +22,8 @@ upstream of Phase 4 are unaffected by this correction.
 | 4 | Number of feasible PCM candidates per regime | **MISSING** | — |
 | 5 | *(→ #3 and #4, exact filenames)* `pcm_feasibility_scatter.png`, `pcm_survivors_per_cluster.png` | **MISSING** | — |
 | 6 | Bump chart — rank per method + consensus | **MISSING** | — |
-| 7 | Heatmap — Spearman/Kendall correlation between the 4 methods | **MISSING** (underlying numbers exist) | data in `mcdm_method_agreement_rajasthan.csv` |
-| 8 | Histogram/bar — Monte Carlo Top-3 inclusion probability | **EXISTS** | `outputs/qc_montecarlo_inclusion_rajasthan.html` |
+| 7 | Heatmap — Spearman/Kendall correlation between the 4 methods | **MISSING** (underlying numbers exist) | data in `mcdm_method_agreement.csv` |
+| 8 | Histogram/bar — Monte Carlo Top-3 inclusion probability | **EXISTS** | `outputs/qc_montecarlo_inclusion.html` |
 | 9 | Violin/bar — rank-reversal frequency across draws | **MISSING** (underlying numbers exist) | data persisted per-candidate in Phase 6 output, no plot |
 | 10 | Agreement plot — simulated rank vs. MCDM consensus rank, per cluster | **MISSING** | — |
 | 11 | Tank temperature / melt-fraction profile, representative day–night cycle | **MISSING**, requires a small simulator instrumentation change | — |
@@ -110,7 +110,7 @@ not a data-sparsity artifact (n=9, a healthy sample size).
 
 ### 2.7 Monte Carlo Top-3 inclusion probability
 
-**Status: EXISTS** — `outputs/qc_montecarlo_inclusion_rajasthan.html`.
+**Status: EXISTS** — `outputs/qc_montecarlo_inclusion.html`.
 
 **Why plotted:** Quantifies how robust each candidate's Top-3 status is to ±weight and ±property
 perturbation (Dirichlet/Gaussian draws), so the final Top-3 isn't presented as more certain than it
@@ -145,7 +145,7 @@ match:
 - Cluster 2: ρ = −0.097 (flat/weak downward)
 
 If a regenerated scatter shows any cluster trending strongly positive, the join between
-`mcdm_rankings_rajasthan.csv` and `physics_validation_rajasthan.csv` is probably wrong (check you're
+`mcdm_full_rankings.csv` and `physics_validation_rajasthan.csv` is probably wrong (check you're
 joining on cluster_id **and** PCM candidate, using the canonically-relabeled cluster_id, not a raw
 GMM label — see §2.2).
 
@@ -242,7 +242,7 @@ column names, just verify them directly against the files.
 
 ⚠️ CRITICAL FIRST STEP: Phase 3's L_required methodology was corrected 2026-08-31 (SHARE_PCM=0.5),
 which cascades through Phases 5–9. Before writing any plot that reads a Phase 5+ output file
-(feasibility_survivors_rajasthan*.csv, mcdm_rankings_rajasthan.csv, physics_validation_rajasthan.csv,
+(feasibility_survivors_by_cluster*.csv, mcdm_full_rankings.csv, physics_validation_rajasthan.csv,
 spearman_rho_by_cluster_rajasthan.csv, recommendation_cards_rajasthan.md), import
 `provenance_lib.py` and check whether each file's embedded `upstream_cluster_profile_fingerprint`
 matches the current on-disk `cluster_profiles_rajasthan.csv`. If Phases 5–9 have not yet been
@@ -291,7 +291,7 @@ PART A — the 13 requested plots
    - Read the full PCM candidate pool (PCM_Properties_cleaned_mice_pmm_detailed.csv +
      literature_rows(), or however 07_feasibility_filter.py assembles its candidate set —
      import and call its own loader function rather than re-implementing it) and
-     feasibility_survivors_rajasthan_kappa_calibrated.csv. Scatter Tm (x) vs. latent_heat (y), all
+     feasibility_survivors_by_cluster_kappa_calibrated.csv. Scatter Tm (x) vs. latent_heat (y), all
      candidates in light grey, survivors colored by cluster_id, non-survivors left grey. Draw a
      shaded vertical band for the 42–70°C target range and a horizontal reference line at the
      CURRENT L_required value read directly from cluster_profiles_rajasthan.csv (not hardcoded — it
@@ -303,15 +303,15 @@ PART A — the 13 requested plots
 4. Number of feasible PCM candidates per climate regime
    → outputs/objective1_plots_rajasthan/03_feasibility/pcm_survivors_per_cluster.png
    - Simple grouped bar: primary run (kappa=0.7 fixed) survivor count vs. kappa-calibrated survivor
-     count, per cluster, from feasibility_survivors_rajasthan.csv vs.
-     feasibility_survivors_rajasthan_kappa_calibrated.csv. Annotate each cluster's calibrated kappa
+     count, per cluster, from feasibility_survivors_by_cluster.csv vs.
+     feasibility_survivors_by_cluster_kappa_calibrated.csv. Annotate each cluster's calibrated kappa
      value on its bar. Verification block: print totals and compare against the audit-documented
      numbers if the fingerprint matches a known run (39 total post-correction calibrated, or 20 total
      pre-correction) — print which one it matches, or flag as a new/unrecognized run.
 
 5. Bump chart — rank per method + consensus
    → outputs/objective1_plots_rajasthan/04_mcdm_agreement/bump_chart_rajasthan.html (plotly)
-   - Read mcdm_rankings_rajasthan.csv. For each cluster (separate chart or faceted), plot each
+   - Read mcdm_full_rankings.csv. For each cluster (separate chart or faceted), plot each
      candidate's rank under TOPSIS, PROMETHEE, VIKOR, GRA, and Borda-consensus as connected points
      across 5 x-positions, one line per candidate, hover shows candidate name + all 5 ranks.
      Verification block: compute Spearman rho between VIKOR's ranks and TOPSIS's ranks per cluster;
@@ -322,14 +322,14 @@ PART A — the 13 requested plots
 6. Heatmap — Spearman/Kendall correlation between the 4 methods
    → outputs/objective1_plots_rajasthan/04_mcdm_agreement/method_correlation_heatmap_rajasthan.html
      (plotly, one heatmap per cluster or faceted)
-   - Read mcdm_method_agreement_rajasthan.csv if it already contains pairwise method correlations; if
+   - Read mcdm_method_agreement.csv if it already contains pairwise method correlations; if
      it only has partial data, compute the 4x4 Spearman correlation matrix directly from
-     mcdm_rankings_rajasthan.csv's per-method rank columns. Verification block: identify which method
+     mcdm_full_rankings.csv's per-method rank columns. Verification block: identify which method
      has the lowest mean pairwise correlation with the other three in each cluster, and print whether
      it matches the audit's own finding (GRA, all three clusters).
 
 7. Histogram/bar — Monte Carlo Top-3 inclusion probability per candidate
-   - Already exists at outputs/qc_montecarlo_inclusion_rajasthan.html (Phase 6). Copy into
+   - Already exists at outputs/qc_montecarlo_inclusion.html (Phase 6). Copy into
      outputs/objective1_plots_rajasthan/05_montecarlo/ alongside the new plot below rather than
      regenerating. Verification block: print correlation between inclusion probability and
      any_property_imputed flag (should be negative — imputed-property candidates should show lower/
@@ -338,7 +338,7 @@ PART A — the 13 requested plots
 8. Violin or bar — rank-reversal frequency across the Monte Carlo draws
    → outputs/objective1_plots_rajasthan/05_montecarlo/rank_reversal_frequency_rajasthan.html (plotly)
    - Read the per-candidate rank-reversal-frequency column already persisted in Phase 6's output
-     (check mcdm_rankings_rajasthan.csv's columns directly — the Phase 6 audit confirms this is
+     (check mcdm_full_rankings.csv's columns directly — the Phase 6 audit confirms this is
      computed and saved, verify the exact column name on disk rather than guessing). One violin/bar
      per cluster. Note: N_DRAWS=1000 in this pipeline (not literature-cited 5000) — label the axis/
      caption accordingly, don't claim 5000 draws. Verification block: print mean rank-reversal
@@ -348,7 +348,7 @@ PART A — the 13 requested plots
 9. Agreement plot — simulated performance rank vs. MCDM consensus rank, per cluster
    → outputs/objective1_plots_rajasthan/06_physics_validation/mcdm_vs_physics_agreement_rajasthan.html
      (plotly, one panel per cluster)
-   - Join mcdm_rankings_rajasthan.csv (Borda/Copeland rank) with physics_validation_rajasthan.csv
+   - Join mcdm_full_rankings.csv (Borda/Copeland rank) with physics_validation_rajasthan.csv
      (simulated annual solar fraction) on cluster_id + candidate identity — confirm the join key by
      inspecting both files' columns directly, do not assume. Scatter MCDM rank (x) vs. simulated
      solar fraction (y), with a fitted trend line, per cluster. Verification block: compute Spearman
@@ -375,7 +375,7 @@ PART A — the 13 requested plots
 11. Summary figure — recommended PCM + key properties, per cluster
     → outputs/objective1_plots_rajasthan/07_recommendation_summary/summary_cards_rajasthan.png
     - Parse recommendation_cards_rajasthan.md (or, preferably, read the same underlying CSVs it was
-      built from — mcdm_rankings_rajasthan.csv Top-1 per cluster, physics_validation_rajasthan.csv,
+      built from — mcdm_full_rankings.csv Top-1 per cluster, physics_validation_rajasthan.csv,
       cluster_profiles_rajasthan.csv) and render a 3-panel (one per cluster) card-style figure: Top-1
       PCM name, Tm, latent heat, MCDM confidence (Monte Carlo inclusion probability), and the Phase 7
       Spearman rho with an explicit "physics validation: NOT confirmed" flag where rho <= 0.4.

@@ -190,7 +190,7 @@ clusters healthy:**
 Total survivors at each cluster's calibrated κ: **39** (9+14+16), up from 20 (5+8+7) — nearly double,
 and — the headline change — **Cluster 0 is no longer stuck at "insufficient even at κ=0."** This is
 the actual input Phase 6's MCDM ranking now consumes, and every row in the regenerated
-`mcdm_rankings_rajasthan.csv` carries an updated `pcm_database_status` tag reflecting the 55-row
+`mcdm_full_rankings.csv` (renamed 2026-09-08 from `mcdm_rankings_rajasthan.csv`) carries an updated `pcm_database_status` tag reflecting the 55-row
 database (no longer `"PROVISIONAL — ~25-row..."`) — see `08_PHASE_6_AUDIT.md`.
 
 A separate, dated bug fix remains documented in-code from before this re-run: the kappa-calibration
@@ -241,8 +241,14 @@ persisted, which is itself the validation mechanism — nothing is silently drop
 
 ## Outputs
 
-`feasibility_survivors_rajasthan.csv`, `feasibility_survivors_rajasthan_kappa_calibrated.csv`,
-`cluster_profiles_rajasthan.csv` (consumed, not produced, here).
+`feasibility_survivors_by_cluster.csv`, `feasibility_survivors_by_cluster_kappa_calibrated.csv`
+(**renamed 2026-09-08** from `feasibility_survivors_rajasthan{,_kappa_calibrated}.csv` — Tamil
+Nadu's `feasibility_survivors_by_cluster*` naming is now canonical for both states; the directory
+stays flat at `era5-rajasthan/data/processed/`). `cluster_profiles_rajasthan.csv` (consumed, not
+produced, here). All references in `08`–`11`, `10_recommendation_cards_rajasthan.py`,
+`check_supercooling_K.py` and `check_supercooling_data.py` were updated; the `PLOTSV2/` plotting
+scripts and `PLOTS_GUIDE.md` still carry the old names and need their path strings updated
+separately (they are visualization scripts, excluded from the unification change).
 
 ## Dependencies
 

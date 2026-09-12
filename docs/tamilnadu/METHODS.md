@@ -515,9 +515,9 @@ MICE is the gold standard for tabular imputation and is used in the upstream PCM
 
 ### Method Chosen: **8-Filter Hard-Screen with Step-Down κ-Relaxation**
 
-Applies 8 sequential hard filters (melting window, absolute band, latent heat floor, cycling, supercooling, corrosion, safety, charging). If fewer than 5 candidates survive, the melting window is relaxed by 2K per step (up to 4 steps) — see Section 8's κ-calibration rule in the framework plan.
+Applies 8 sequential hard constraints in this order: (1) melting window, (2) absolute band [42,70]°C, (3) latent-heat floor `L ≥ κ·L_required` (κ=0.7 nominal; `pass`/`fail`/`flag_unreported`), (4) cycling ≥300 (`flag_unreported`, never excludes), (5) supercooling ≤8K (`flag_unknown`, never excludes), (6) **charging feasibility** `Tm ≤ Tm_target_capped_C` (Phase 3's `kt_worst_month` ceiling, referenced directly), (7) corrosion veto (bare salt hydrate + `HSI_sunrise` > p75), (8) safety exclusion (flag-only). If fewer than 5 candidates survive, the melting window is relaxed by 2K per round (up to 4 rounds). A companion κ-calibration pass then steps κ from 0.7 → 0.0 in 0.1 increments until each cluster retains 8–20 survivors, writing `feasibility_survivors_by_cluster_kappa_calibrated.csv` (the file Phase 6 ranks).
 
-> ✅ **CORRECTED (v3.1)**: `L_required` now uses 300 L/day draw — latent-heat floor is binding. See `20_IMPLEMENTATION_ISSUES.md`.
+> ✅ **UNIFIED (2026-09-08)**: identical constraint set / order / κ-calibration / provenance stamping to `era5-rajasthan/07_feasibility_filter.py`. Constraint 6 replaces the retired heuristic `07b_charging_feasibility.py`. `L_required` is on the combined sensible+latent basis (Phase 3 OPTION A). See `20_IMPLEMENTATION_ISSUES.md`.
 
 **Why hard-screen before MCDM chosen:**
 
@@ -538,7 +538,7 @@ Fuzzy membership could give partial credit to PCMs near the melting window bound
 | Selection priority   | Hard screen then rank                           | **Singh (2025)**: (1) L, (2) k, (3) Tm, (4) cp, (5) ρ                              | **Aligned order** — we enforce L and Tm before MCDM |
 | Melting window       | [Tm_target−5, Tm_target+8]°C                    | **Singh (2025)**: 40–70°C band; **Abdellatif (2025)**: modeling constraints review | **SWH-specific**, narrower than building PCM        |
 | Corrosion veto       | HSI > p75 → exclude salt hydrates               | **Hamzat (2025)**: environmental/corrosion as deployment barrier                   | **Aligned** — humid coastal TN clusters             |
-| Charging feasibility | Heuristic in `07b` (5th-percentile not literal) | Barqawi (2025): charging under variable irradiance                                 | **Partial gap** — physics validation supersedes     |
+| Charging feasibility | Constraint 6: `Tm ≤ Tm_target_capped_C` (Phase 3 `kt_worst_month` ceiling) | Barqawi (2025): charging under variable irradiance | **Aligned** — literature-anchored poor-period cap; `07b` heuristic retired |
 
 
 ### Reference Papers — Chosen vs Rejected
@@ -557,9 +557,32 @@ Fuzzy membership could give partial credit to PCMs near the melting window bound
 
 ## 08 — `08_mcdm_ranking.py` — Multi-Criteria Decision Making
 
-### Method Chosen: **4-Method Stack (TOPSIS + GRA + PROMETHEE II + VIKOR) with Borda Consensus + 5000-Draw Monte Carlo**
+> ✅ **UNIFIED with Rajasthan (2026-09-08):** `08_mcdm_ranking.py` is now a byte-for-byte port of
+> `era5-rajasthan/08_mcdm_ranking.py`. Changes vs the earlier Tamil Nadu script:
+> - **8 Table-13 criteria** (was 5): adds `vol_latent_heat`, `supercooling` (cost), `corrosion`
+>   (cost, structural proxy, inert), `cost` (cost, always-NaN → weight 0 via the `<2 real values`
+>   guard). Latent heat is climate-relative (`latent_heat / L_required`); cycling is log-scaled
+>   `cycles_confidence`.
+> - **PROMETHEE II handles Tm natively** — `|Tm − Tm_target|` with q=2K / p=8K, not the Gaussian
+>   `f_Tm` the other three methods use.
+> - **Supercooling entropy-weight cap:** the Shannon-entropy formula overweights near-zero-ideal
+>   cost criteria (supercooling reached 0.48–0.64); it is now held at ≤ 2× its Table-13 prior
+>   (0.16) before the 50/50 blend, with the remaining criteria rescaled. This corrects the
+>   overweighting Rajasthan's Phase 7/8 diagnosed as the cause of its negative physics-validation
+>   correlation.
+> - **Diagnostics added:** Kendall's W (plan-doc thresholds), pairwise method-agreement + outlier
+>   detection, λ=0 vs λ=0.5 Top-3 ablation, provenance hard-fail.
+> - **Monte Carlo `N_DRAWS = 1000`** in both states (raise both to 5000 for the final reported
+>   run) — the 606 s wall-clock of a 5000-draw run is impractical for iteration.
+> - Outputs renamed: `mcdm_full_rankings.csv`, `mcdm_topk_by_cluster.csv`,
+>   `monte_carlo_stability.csv`, `mcdm_method_agreement.csv`, `qc_montecarlo_inclusion.html`.
+> "5000-draw" / "5-cluster" references below are pre-unification.
 
-Ranks the feasibility survivors using four independent MCDM methods, aggregates via Borda count (and cross-checks with Copeland pairwise), and propagates weight/property uncertainty through 5,000 Dirichlet + Gaussian Monte Carlo draws.
+### Method Chosen: **4-Method Stack (TOPSIS + GRA + PROMETHEE II + VIKOR) with Borda Consensus + Monte Carlo**
+
+Ranks the feasibility survivors using four independent MCDM methods over the 8 Table-13 criteria,
+aggregates via Borda count (cross-checked with Copeland pairwise), and propagates weight/property
+uncertainty through `N_DRAWS` (=1000; 5000 for the final run) Dirichlet + Gaussian Monte Carlo draws.
 
 **Why 4-method stack chosen:**
 
@@ -687,7 +710,9 @@ LaTeX would produce a publication-quality typeset PDF but requires a full TeX in
 
 ---
 
-## 11 — `11_level_b_seasonal_analysis.py` — Seasonal Sensitivity (Level B)
+## 11 — `11_seasonal_pcm_sensitivity.py` — Seasonal PCM Sensitivity (post-Phase-6)
+
+> Renamed 2026-09-08 from `11_level_b_seasonal_analysis.py`. It is a *post-Phase-6* re-ranking, **not** a Phase-4 clustering step — that name now belongs to `05a_level_b_regime_shift_tamilnadu.py` (per-point-per-season GMM re-clustering, regime-shift fraction, season-tautology check), which runs in Phase-4 order.
 
 ### Method Chosen: **Seasonal TOPSIS Re-ranking with Per-Season L_required**
 
@@ -807,4 +832,8 @@ An alternative Level-B check would perturb the MCDM weights (increasing the weig
 
 ---
 
+<<<<<<< HEAD
 *This document covers all 13 primary scripts in the Tamil Nadu pipeline (Phase 1 through Phase 8). All algorithmic choices are made in conformance with `Objective1_PCM_Climate_Framework_Plan_v3.docx`. Critical bugs corrected in v3.1 (August 2026). Use **Part 0** for supervisor presentation; use per-script **Literature comparison** and **Reference Papers — Chosen vs Rejected** tables for thesis methodology section.*
+=======
+*This document covers the 16 algorithm-bearing scripts in the Tamil Nadu pipeline (`00a`, `00b`, `01`, `01b`, `02`, `02b`, `03`, `04`, `04b`, `05`, `06`, `07`, `08`, `10`, `09`, `11` — Phase 1 through Phase 8). Orchestration and QA/visualisation helpers (`run_all_tamilnadu.py`, `00_unzip_accum.py`, `03b_agreement_analysis.py`, `04c*`, `04d`, `05b`–`05d`, `plots/verify_0*`, `plots_tamilnadu_ppt/*`) are audited in the phase-audit docs and `23_PLOTS_GUIDE.md`, not here. (`07b_charging_feasibility.py` was retired 2026-09-08 — its charging-feasibility check is now Constraint 6 in `07`.) All algorithmic choices are made in conformance with `Objective1_PCM_Climate_Framework_Plan_v3.docx`. Critical bugs corrected in v3.1 (August 2026); config-symbol and PCM-input-path fixes 2026-09-07; Phase 5 unified with Rajasthan 2026-09-08 (see `20_IMPLEMENTATION_ISSUES.md` and the CHANGELOG). Use **Part 0** for supervisor presentation; use per-script **Literature comparison** and **Reference Papers — Chosen vs Rejected** tables for thesis methodology section.*
+>>>>>>> 935afa34a2c58bf28d0e38fac953d563fa476637

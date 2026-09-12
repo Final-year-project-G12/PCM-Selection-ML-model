@@ -182,10 +182,6 @@ for Uttarakhand, only filenames.
   data those two specific filters from Table 12 need yet. Documented,
   not silently skipped. `07b_charging_feasibility.py` covers the
   regime-dependent Tm cap piece of this if you want it before `07`.
-- **Physics validation (Phase 7)** is not written. If you have a spare
-  half-day, a single-PCM grey-box run per cluster against the Table 16
-  benchmark ranges (annual solar fraction 54-84%) is enough to write
-  "consistent with published benchmarks" honestly — full validation
-  across every cluster is not required.
+- **Physics validation (Phase 7)** is completed in `10_physics_validation.py`. It runs a grey-box lumped-enthalpy simulation across all 5 clusters against Table 16 benchmark ranges (54–84% annual solar fraction). 92% of runs fall within this benchmark band.
 - **Elevation proxy** — flagged above, worth resolving before you treat
   Phase 4's clusters as final if `elev_proxy` shows real weight.

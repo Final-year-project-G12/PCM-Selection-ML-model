@@ -2,40 +2,94 @@
 
 Script: `08_mcdm_ranking.py`.
 
-## Purpose
-Rank the surviving PCM candidates in each cluster using four independent multi-criteria decision-making (MCDM) methods under weight and property uncertainty.
+> **UNIFIED WITH RAJASTHAN (2026-09-08).** `era5-tamilnadu/08_mcdm_ranking.py` is now a
+> byte-for-byte port of `era5-rajasthan/08_mcdm_ranking.py` — same criteria set, same four
+> methods, same aggregation, same Monte Carlo, same provenance hard-fail — differing only in
+> `STATE_NAME`, the nested `data/processed/{pcm,clustering}/` layout, one `name → pcm_id`
+> column normalisation, and two hint strings. It **replaces** the earlier bespoke Tamil Nadu
+> script (5 criteria, PROMETHEE on the Gaussian `f_Tm`, 5000 draws, no Kendall's W /
+> pairwise-agreement diagnostics). Bug audit of that old script: **VIKOR sign was correct**
+> (denominator `max − min > 0`); its entropy function lacked the `<2 real values → weight 0`
+> guard but the bug was **latent** (its 5-criterion set never had an all-NaN column) — the
+> 8-criterion set here makes the guard load-bearing and this port carries it. Kappa
+> calibration lives in Phase 5 (`07_feasibility_filter.py`), whose ported
+> `calibrate_kappa_for_cluster()` uses the correct `>= k` direction.
+>
+> The pipeline has been run once against the unified engine (2026-09-08); a small residual bug
+> in the supercooling entropy cap was fixed after that run, so the numbers below are indicative
+> and a fresh run is still pending.
 
-## Processing Details
-1. **Target-Based Fitness**:
-   - Converts melting temperature to a Gaussian fitness score:
-     `f_Tm = exp( - (Tm - Tm_target)² / (2 * σ²) )`, where `σ = 4.0` K.
-2. **Criteria Evaluated**:
-   - `f_Tm` (melting point fitness) - benefit.
-   - `latent_heat_margin_ratio = latent_heat / L_required` (climate-relative benefit).
-   - `rho_H_MJ_m3` (volumetric latent heat) - benefit.
-   - `TC_W_mK` (thermal conductivity) - benefit.
-   - `cycles_confidence` (log-scaled cycling reliability) - benefit.
-3. **Four MCDM Methods**:
-   - **TOPSIS**: Closeness to Euclidean ideal/anti-ideal.
-   - **GRA**: Grey relational grade vs max reference.
-   - **PROMETHEE II**: Net outranking flow (V-shape, q=0.10, p=0.30).
-   - **VIKOR**: Compromise index Q (v=0.5) with acceptable-advantage check.
-4. **Weights**:
-   - Entropy weights (data-driven) blended with AHP prior weights (Table 13 priors) at `λ = 0.5`.
-5. **Consensus & Uncertainty**:
-   - Primary rank: Borda count across the 4 methods.
-   - Cross-check: Copeland pairwise majority.
-   - **Monte Carlo**: 5,000 Dirichlet weight draws + Gaussian property perturbations (Tm ±1K, latent heat ±5%, conductivity ±10%). Calculates Top-3 inclusion probability and Top-1 retention.
+## Criteria (8, exact — Table 13) and weights
 
-## Results
-- Ranks the current feasibility survivors for each cluster. The generated `mcdm_topk_by_cluster.csv` contains the Top-3 for each of the five clusters (15 rows total).
-- The current climate-relative latent-heat criterion is `latent_heat / L_required`, so the score retains cluster-specific demand information rather than treating raw latent heat as equally useful everywhere.
-- Do not describe the ranking as seven survivors per cluster; the feasibility file contains all 62 audited candidates per cluster and the number passing all filters varies by cluster.
-- Monte Carlo stability reports run-specific Top-3 inclusion and Top-1 retention probabilities; quote values from `monte_carlo_stability.csv` for the particular run being reported.
-- In the current run, `n-Octacosane (C28)` is the consensus rank-1 PCM in all five clusters. This is a statewide consensus result; it does not imply that all alternatives have equal stability or physical performance.
+| Criterion | Direction | AHP prior (Table 13) | Notes |
+|---|---|---|---|
+| `Tm_fitness` | benefit | 0.24 | Gaussian target fitness `exp(−(Tm−Tm_target)²/(2σ²))`, σ=4K |
+| `latent_heat` | benefit | 0.20 | **climate-relative**: `latent_heat_kJ_kg / L_required` for that cluster |
+| `vol_latent_heat` (ρL) | benefit | 0.12 | separate criterion, kept |
+| `thermal_conductivity` | benefit | 0.13 | |
+| `cycling` | benefit | 0.11 | **log-scaled** `cycles_confidence = log1p(cycles)/log1p(max_cycles)`, NaN-safe |
+| `supercooling` | cost | 0.08 | **entropy weight capped at 2× prior (0.16)** — see below |
+| `corrosion` | cost | 0.06 (cluster-rescaled 1×–2× by HSI) | structural proxy `2.0 if Inorganic else 1.0` — inert (0 salt hydrates) |
+| `cost` | cost | 0.06 | always NaN → entropy weight 0 via the `<2 real values` guard |
+
+Blend: `w_j = 0.5·w_entropy_j + 0.5·w_AHP_j`, per cluster, from that cluster's own filtered matrix.
+
+### Supercooling entropy-weight cap (the key Phase 6 correction)
+
+The Shannon-entropy formula overweights a near-zero-ideal cost criterion: supercooling has many
+candidates reporting ~0 K, so the column is near-degenerate and the formula reads that as low
+entropy ⇒ high information ⇒ spuriously large weight (0.48–0.64 in the first 8-criterion run).
+Rajasthan's Phase 7/8 diagnosed this as the cause of the negative physics-validation correlation
+(the Phase 8 supercooling-penalty sweep *worsening* agreement confirmed the direction:
+*over*-weighted, not under-weighted). Fix: any cost criterion whose ideal ≈ 0 (supercooling, plus
+corrosion/cost if they ever get real data) has its entropy-derived weight **held at ≤ 2× its
+Table-13 prior** (supercooling ≤ 0.16) and the remaining criteria rescaled to fill `1 − Σ caps`,
+*before* the 50/50 entropy-AHP blend. Applied identically in both states.
+
+## Methods, aggregation, diagnostics (all ported from Rajasthan)
+
+- **TOPSIS / PROMETHEE II / VIKOR / GRA**, missing values excluded-by-omission (not zero-filled).
+- **PROMETHEE II handles Tm natively**: `|Tm − Tm_target|` distance with q=2K / p=8K linear V-shape,
+  not the Gaussian `f_Tm` the other three consume — this is why PROMETHEE can be a structural outlier.
+- **Borda** (primary) + **Copeland** (cross-check), with a Top-3 disagreement flag.
+- **Kendall's W** with plan-doc thresholds (W>0.8 strong, W<0.6 ambiguous).
+- **Pairwise method-agreement** (Spearman ρ / Kendall τ per method pair) + outlier summary.
+- **λ=0 vs λ=0.5 Top-3 ablation** (is the entropy component load-bearing?).
+- **Provenance hard-fail**: `assert_fingerprint_match` on `upstream_cluster_profile_fingerprint`.
+- **Monte Carlo**: `N_DRAWS = 1000` (both states; raise both to 5000 for the final reported run),
+  Dirichlet weight draws + Gaussian property perturbation + family-distribution sampling for
+  imputed properties. Reports Top-3 inclusion %, Top-1 retention %, rank-reversal freq, mean ρ vs baseline.
+
+## Outputs
+
+`mcdm_full_rankings.csv` (full per-survivor audit trail — raw `crit_*` values, blended `weight_*`,
+all 4 method ranks + raw scores, Borda/consensus/Copeland, Kendall's W, entropy-dominant flag,
+λ-ablation flags, MC columns, plus legacy aliases so Phase 7/8 read it unchanged),
+`mcdm_topk_by_cluster.csv` (rows with `consensus_rank ≤ 3`), `monte_carlo_stability.csv`,
+`mcdm_method_agreement.csv`, `outputs/qc_montecarlo_inclusion.html`. All carry
+`upstream_cluster_profile_fingerprint`.
+
+## Results — 2026-09-08 run (3 clusters, 13/13/16 survivors, n=42; INDICATIVE — re-run pending)
+
+- **`Tm_fitness` is the dominant entropy criterion** (weight ≈ 0.54 / 0.71 / 0.70), all flagged by
+  the >40%-domination check. Supercooling blends to ≈ 0.16–0.20 (the run used a build with a residual
+  cap bug — the fixed cap holds it at 0.16).
+- **Kendall's W** ≈ 0.55 / 0.57 / 0.60 — no cluster "strong"; clusters 0–1 "ambiguous", cluster 2 "moderate".
+- **Structural outlier**: PROMETHEE II in Cluster 0 (consistent with its native-Tm handling);
+  **GRA in Clusters 1 and 2**.
+- **Borda ≠ Copeland Top-3** flagged in every cluster.
+- Consensus Top-1: `Myristic acid` (C0) / `n-Tetracosane (C24)` (C1) / `Palmitic-Stearic eutectic`
+  (C2). Several deterministic Top-3 picks have MC Top-3 inclusion < 50% (flagged).
 
 ## Status
+<<<<<<< HEAD
 **COMPLETE**
+=======
+
+**Unified with Rajasthan; fresh run pending** (the 2026-09-08 run predates the final supercooling
+cap fix). Re-run `08_mcdm_ranking.py` → `10_physics_validation.py` → `09_recommendation_cards.py`.
+Also raise `N_DRAWS` to 5000 for the reported numbers.
+>>>>>>> 935afa34a2c58bf28d0e38fac953d563fa476637
 
 ## Literature Support
 | Component | Reference | Source |
@@ -45,4 +99,5 @@ Rank the surviving PCM candidates in each cluster using four independent multi-c
 | PROMETHEE II | Brans & Mareschal (2005) | Standard MCDM literature |
 | VIKOR | Opricovic & Tzeng (2004) | Standard MCDM literature |
 | Monte Carlo uncertainty | Chopra et al. (2023) techno-economic MC | `sources/Chopra2023HPETC_MonteCarlo_TechnoEconomic_summary.md` |
-| Entropy+AHP weight blend | Framework doc Table 13 | `17_LITERATURE_MAPPING.md` |
+| Entropy+AHP weight blend | Framework doc Table 13 | `13_LITERATURE_MAPPING.md` |
+| Entropy pathology on near-zero-ideal cost criteria | project Phase 7/8 diagnostic (Rajasthan `10_PHASE_8_AUDIT.md`) | — |

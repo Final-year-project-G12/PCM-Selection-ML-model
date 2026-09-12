@@ -1,8 +1,25 @@
 # 09 — Phase 7 Audit: Physics-Based Validation of MCDM Rankings
 
-Script: `09_physics_validation_rajasthan.py` (650 lines). **Completed 2026-08-11, re-run 2026-08-14 against expanded 55-row PCM database. Phase 8 extends this with supercooling penalty sensitivity testing.**
+> **This doc keeps the number 09 for continuity, but the SCRIPT was renumbered
+> 2026-09-08 to `10_physics_validation.py`** (matching Tamil Nadu: physics = 10,
+> recommendation cards = 09). References to `10_physics_validation.py`
+> below mean `10_physics_validation.py`.
 
-⚠️ **CRITICAL UPDATE (2026-08-31): L_required Methodology Correction** — Phase 7's entire result set is now STALE. Phase 3's L_required was corrected 2026-08-31 to use SHARE_PCM=0.5 (literature-anchored fractional share) instead of all-latent assumption, halving L_required values. This cascades through Phase 5 (κ calibrations), Phase 6 (survivor set), and Phase 7 (validation rankings). **All Phases 5–8 must be re-run** against updated signatures before these results are valid. See CLAUDE.md §3.1 for full methodology detail.
+Script: `10_physics_validation.py` (was `10_physics_validation.py`). Phase 8
+(`08_phase8_supercooling_sweep.py`) extends this with supercooling-penalty sensitivity testing.
+
+⚠️ **UNIFICATION UPDATE (2026-09-08): Phase 6 unified with Tamil Nadu — this Phase 7 result set is
+STALE, re-run pending.** The unified `08_mcdm_ranking.py` now **caps supercooling's entropy weight
+at 2× its Table-13 prior (0.16)**, directly addressing the overweighting this Phase 7/8 pair
+diagnosed. The "supercooling dominates at 48–64% but the model can't simulate it" finding below was
+the *evidence* for that cap; after the cap, supercooling blends to ≈0.12–0.16, and Tm_fitness is the
+dominant criterion. Re-run `10_physics_validation.py` against the new `mcdm_full_rankings.csv` — the
+post-cap Spearman rho vs the pre-cap `-0.385 / +0.125 / -0.097` is the actual test of whether the
+fix helped.
+
+⚠️ **CRITICAL UPDATE (2026-08-31): L_required Methodology Correction** — also folded into the pending
+re-run. Phase 3's L_required uses SHARE_PCM=0.5 (combined sensible+latent), halving it. See
+CLAUDE.md §3.1.
 
 ## Purpose
 
@@ -61,24 +78,32 @@ Draw-profile integration (365 days):
 
 ## Results: Per-Cluster Spearman ρ Against MCDM Borda Rank
 
-| Cluster | n_candidates | Borda vs. Solar Fraction | Notes |
-|---------|---|---|---|
-| **0** | 9 | **ρ = −0.385** | Weak negative agreement. Cluster flagged undersized (n<8 in Phase 5); rerun Phase 5/6 after database expansion changed n to 9 (now healthy), yet W remains low (0.388 <0.6). Suggests genuine method disagreement, not sample-size artifact. |
-| **1** | 14 | **ρ = +0.125** | Weak positive agreement. Best outcome. Kendall's W = 0.635 (moderate). |
-| **2** | 16 | **ρ = −0.097** | Weak negative agreement. Largest cluster. |
+**⚠️ The ρ values below are PRE-unification (raw, uncapped supercooling entropy weight). A partial
+re-run 2026-09-08 against the still-buggy first cap gave `+0.092 / -0.086 / +0.166`; the fully
+corrected cap (supercooling entropy held at 0.16, free criteria rescaled) has not been re-run yet.
+Treat this table as the diagnostic baseline, not the current result.**
 
-**Overall finding**: No cluster exceeds ρ=0.4 threshold for meaningful agreement. Physics simulation does not validate MCDM rankings.
+| Cluster | n_candidates | Borda vs. Solar Fraction (PRE-cap) | Notes |
+|---------|---|---|---|
+| **0** | 9 | **ρ = −0.385** | Weak negative. Kendall's W ≈ 0.34–0.39 (<0.6) — genuine method disagreement (GRA is the structural outlier in the unified run). |
+| **1** | 15 | **ρ = +0.125** | Weak positive. Kendall's W ≈ 0.65 (moderate). |
+| **2** | 17 | **ρ = −0.097** | Weak negative. Largest cluster. |
+
+**Overall (pre-cap) finding**: no cluster exceeds ρ=0.4. The unified Phase 6's supercooling entropy
+cap is the intervention aimed at this — re-run required to see its effect.
 
 ## Dominant Entropy-Weighted Criterion Per Cluster
 
-Phase 6 identified:
-- Cluster 0: **supercooling** 63.8%
-- Cluster 1: **supercooling** 48.6%
-- Cluster 2: **supercooling** 57.0%
+**PRE-unification Phase 6** identified supercooling as dominant (63.8% / 48.6% / 57.0%) — an
+artifact of the Shannon-entropy formula overweighting a near-zero-ideal cost criterion.
 
-**Critical caveat noted in code**: "This physics model does NOT simulate supercooling at all (Barqawi's 3-phase model assumes ideal solid–liquid transition at Tm with no nucleation delay). A disagreement concentrated on supercooling cannot be resolved by this simulation."
-
-Phase 7 flags this explicitly as a **scoped limitation of the validator**, not evidence the MCDM weighting is wrong. Phase 8 extends this to test the supercooling hypothesis directly.
+**POST-unification (2026-09-08)** `08_mcdm_ranking.py` caps supercooling's entropy weight at 2× its
+Table-13 prior (0.16); it blends to ≈0.12–0.16, and **`Tm_fitness` is the dominant criterion**
+(entropy weight 54–70%, flagged by the >40%-domination check). The "model can't simulate
+supercooling" caveat still holds for the residual supercooling weight, but supercooling is no longer
+the driver of the MCDM ranking. Phase 8's penalty sweep — which *worsened* physics/MCDM agreement as
+k rose — is the empirical evidence that supercooling was over-weighted, i.e. that the cap is the
+right direction.
 
 ## PCM-vs-Plain-Tank Comparator (Honest Negative Result)
 
@@ -162,4 +187,9 @@ See `10_PHASE_8_AUDIT.md` for the full Phase 8 findings.
 
 ---
 
-**Status**: Phase 7 complete. Physics validation found weak to negative correlation with MCDM, driven primarily by supercooling's dominant MCDM weight (48–64%) that cannot be simulated in this model architecture. Phase 8 directly tests this hypothesis.
+**Status**: Phase 7 script renumbered to `10_physics_validation.py` (2026-09-08). Pre-unification
+physics validation found weak-to-negative correlation with MCDM, attributed to supercooling's
+entropy-inflated MCDM weight (48–64%). The unified Phase 6 caps that weight at 0.16; a fresh
+`10_physics_validation.py` run against the post-cap `mcdm_full_rankings.csv` is pending and is the
+actual test of whether the cap improves agreement. Phase 8's k-sweep (agreement worsens as the
+supercooling penalty rises) is the supporting evidence that the cap direction is correct.

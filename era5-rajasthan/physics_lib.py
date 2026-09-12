@@ -1,7 +1,7 @@
 """
 physics_lib.py
 =============================================================================
-Shared PHASE 7 physics-simulation core for 09_physics_validation_rajasthan.py.
+Shared PHASE 7 physics-simulation core for 10_physics_validation.py.
 A separate module (not inlined in the Phase 7 script) so the numerical core
 and its citations sit in one reviewable place, matching this project's
 signature_lib.py precedent (04/05 already share code the same way).
@@ -50,7 +50,7 @@ i.e. what TRNSYS Type 860 implements) traces to:
   for the MODEL CLASS justification only; this script does not claim to
   reproduce TRNSYS Type 860's own numerics, which additionally resolve
   hysteresis/subcooling and internal PCM convection that a single lumped
-  node cannot represent. See 09_physics_validation_rajasthan.py's
+  node cannot represent. See 10_physics_validation.py's
   docstring for why a literal TRNSYS Type 860 replication was not
   attempted in this session — no TRNSYS license/install and no published
   Type 860 case with enough reported parameter detail to replicate was
@@ -82,7 +82,7 @@ scope to modify) but it does mean this formula should NOT be assumed
 correct by inheritance in any future state's copy of this file without
 re-running this same self-test first.
 
-CALIBRATION (run via 09_physics_validation_rajasthan.py's calibration
+CALIBRATION (run via 10_physics_validation.py's calibration
 section, 2026-08-11, using a representative real survivor PCM — RT47's
 actual manufacturer-datasheet properties — against all three cluster
 medoids' real hourly weather):

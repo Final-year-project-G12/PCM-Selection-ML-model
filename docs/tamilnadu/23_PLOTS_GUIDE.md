@@ -152,7 +152,7 @@ Location: `data/plots/tamilnadu_objective1/`. Each numbered plot has a static PN
 | `07_bump_chart_ranks` | **(v3.3 fix)** Rank of the top-5-per-cluster PCMs (by consensus rank, from the full `mcdm_full_scores_by_cluster.csv`, not just the top-3 shortlist) across TOPSIS, GRA, PROMETHEE, VIKOR, and consensus, one line per (PCM, cluster) pair — color keyed to PCM name, line style keyed to cluster, so a PCM that appears in multiple clusters at different ranks no longer zigzags into one misleading line. | Agreement or rank reversal between decision methods, and how much candidate diversity exists once all 5 clusters' shortlists are pooled (previously under-counted at 4 unique PCMs because the source file only carried the top 3 per cluster and candidates were merged by name alone). |
 | `07_bump_chart_ranks_cluster{0..4}` | **(v3.3, new)** Same bump chart as above but filtered to one cluster's own top-5 candidates per file — 5 separate, uncluttered charts. | Read a single cluster's method agreement without the combined chart's multi-cluster line density. |
 | `08_method_rank_correlation_heatmap` | Spearman and Kendall correlations among method ranks. | Whether methods produce broadly consistent orderings. |
-| `09_monte_carlo_top3_probability` | Top-3 inclusion probability from 5,000 uncertainty draws. | Ranking stability under perturbed weights and PCM properties. |
+| `09_monte_carlo_top3_probability` | Top-3 inclusion probability from Monte Carlo uncertainty draws (N_DRAWS=1000; 5000 for the final reported run). | Ranking stability under perturbed weights and PCM properties. `08_mcdm_ranking.py` also writes `outputs/qc_montecarlo_inclusion.html` directly. |
 | `10_rank_reversal_violin_bar` | Rank distributions and rank spread across methods. | Which candidates are sensitive to the MCDM method. |
 | `11_agreement_plot` | **(v3.3 fix)** Simulated performance rank versus consensus rank, points jittered a small deterministic amount per cluster so that clusters sharing identical integer (rank, rank) coordinates no longer render as a single hidden point (hover/tooltip still shows the true, un-jittered rank values). | Whether higher MCDM rank tends to correspond to better simulated performance, with all 5 clusters actually visible instead of some being drawn on top of others. |
 | `11b_physics_vs_mcdm_all_clusters` | **(v3.3, new)** One HTML/PNG page, one subplot panel per cluster, plotting each candidate's simulated annual solar fraction against its MCDM consensus rank, with a shaded 54–84% benchmark band, green markers for in-band candidates and red for out-of-band, and that cluster's Spearman ρ shown in the panel title. | A single-page view of whether MCDM-favoured candidates actually land in the realistic physics-validated performance band, per cluster, without switching between files. |
@@ -176,6 +176,24 @@ Location: `data/plots/comparison/`
 | `07_comparison_cross_cluster_top_pcm.png` | Properties of each cluster's consensus rank-1 PCM. | Whether recommended material properties change across regimes. |
 | `08_comparison_rank_sensitivity.png` | Rank response to selected weight shifts. | How sensitive the result is to weighting assumptions. |
 
+<<<<<<< HEAD:docs/tamilnadu/23_PLOTS_GUIDE.md
+=======
+---
+
+## 8. Step-by-Step Verification: `plots/verify_01…04_*.py`
+
+Standalone verification scripts run manually after each stage. They re-read stage inputs/outputs and emit PNG figures.
+
+| Script | Run after | Reads | Output Dir | Key Plots |
+|---|---|---|---|---|
+| `verify_01_preprocessing_tamilnadu.py` | `04_preprocess_tamilnadu.py` | `climate_tamilnadu_points.csv`, `tamilnadu_cleaned_physical.csv` | `data/plots/verify_preprocessing/` | Distributions, data completeness (>95% target), statistical summary, correlation, pass/fail card |
+| `verify_02_clustering_tamilnadu.py` | `05_cluster_tamilnadu.py` | `climate_signature_tamilnadu.csv`, `cluster_assignments_tamilnadu.csv` | `data/plots/verify_clustering/` | Elbow curves (silhouette/BIC/DB/CH), PCA projection, geographic map, cluster profiles |
+| `verify_03_feasibility_tamilnadu.py` | `07_feasibility_filter.py` | `pcm_database_tamilnadu.csv`, `feasibility_survivors_by_cluster.csv` | `data/plots/verify_feasibility/` | Survival rate per cluster, feasible Tm–L property space, constraint pass/fail |
+| `verify_04_ranking_tamilnadu.py` | `08_mcdm_ranking.py` | `mcdm_topk_by_cluster.csv`, `mcdm_full_rankings.csv` (renamed 2026-09-08 from `mcdm_full_scores_by_cluster.csv`), `mcdm_method_agreement.csv` | `data/plots/verify_ranking/` | Method correlation heatmap, Top-3 inclusion probability, rank distributions |
+
+---
+
+>>>>>>> 935afa34a2c58bf28d0e38fac953d563fa476637:docs/tamilnadu/11_PLOTS_GUIDE.md
 ## Reading Rules
 
 1. Use the plot and its source CSV together. Plots summarize the data and may hide rows, use samples, or show only Top-3 records.

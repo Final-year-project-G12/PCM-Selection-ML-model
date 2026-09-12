@@ -60,13 +60,13 @@ PHASE 5 — PCM DATABASE + FEASIBILITY FILTERING
 PHASE 6 — MULTI-CRITERIA RANKING
   08_mcdm_ranking.py              →  data/processed/pcm/mcdm_topk_by_cluster.csv
 
+PHASE 7 — PHYSICS-BASED VALIDATION
+  10_physics_validation.py        →  data/processed/pcm/physics_validation_results.csv
+                                     data/processed/pcm/physics_validation_spearman.csv
+
 PHASE 8 — FINAL OUTPUT
   09_recommendation_cards.py      →  data/processed/pcm/recommendation_cards.md
 ```
-
-(Phase 7 — physics-based validation via a grey-box lumped enthalpy tank
-model — has no script in this repo yet; see "What's genuinely still open"
-at the bottom.)
 
 ## Run Order
 
@@ -682,13 +682,7 @@ random-forest imputation).
   across 6 brands, meeting the 40-60 candidate target (see `06`'s section
   above). Corrosion veto and 5th-percentile-day charging feasibility aren't
   fully wired into `07` yet either (see `07`'s section above).
-- **Phase 7 (physics-based validation) has no script here.** A minimal
-  single-PCM grey-box lumped-enthalpy-tank simulation per cluster,
-  compared against published annual-solar-fraction benchmarks (54-84%),
-  is enough to defensibly write "consistent with published benchmarks" —
-  but it isn't required for Objective 1 to stand as a working framework,
-  and is explicitly an accepted "future work" outcome if you don't get to
-  it. See `NEXT_STEPS.md` for more on this.
+- **Phase 7 (physics-based validation) is implemented** in `10_physics_validation.py`. It runs a single-PCM grey-box lumped-enthalpy-tank simulation per cluster, comparing simulated annual solar fraction against published benchmarks (54–84%). 92% of simulated runs land within this benchmark band.
 
 ## Further reading in this repo
 

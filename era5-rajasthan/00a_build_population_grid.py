@@ -55,6 +55,7 @@ from config import (
     RAW_POPULATION_DIR,
     POPULATION_GRID_FILE,
     ensure_data_dirs,
+    COVERAGE_TARGET,   # shared cross-state constant (pcm_shared_config.py)
 )
 
 # ═══════════════════════════════════════════════════════════
@@ -77,9 +78,10 @@ GRID_RES = 0.25
 ERA5_ORIGIN_LAT = 90.0
 ERA5_ORIGIN_LON = -180.0
 
-# Keep the minimal set of highest-population cells covering this fraction
-# of total state population (middle of the requested 85-90% band).
-COVERAGE_TARGET = 0.875
+# COVERAGE_TARGET (0.875 — middle of the requested 85-90% band: keep the
+# minimal set of highest-population cells covering this fraction of total
+# state population) is imported from config.py / pcm_shared_config.py so
+# every state's grid is built to the same coverage. Value unchanged.
 
 ensure_data_dirs()
 
