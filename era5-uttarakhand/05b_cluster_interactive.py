@@ -22,8 +22,11 @@ warnings.filterwarnings("ignore")
 
 import numpy as np
 import pandas as pd
+# pyrefly: ignore [missing-import]
 import plotly.express as px
+# pyrefly: ignore [missing-import]
 import plotly.graph_objects as go
+# pyrefly: ignore [missing-import]
 import folium
 
 from config import PROCESSED_DIR
@@ -58,7 +61,7 @@ print(f"  Points: {len(assign)}  |  Clusters: {n_clusters}")
 print("\n[A] Cluster map (Folium, hover for full membership probability vector) ...")
 
 fmap = folium.Map(location=[assign["lat"].mean(), assign["lon"].mean()],
-                   zoom_start=7, tiles="CartoDB positron")
+                   zoom_start=7, tiles="OpenStreetMap")
 prob_cols = [c for c in assign.columns if c.startswith("prob_cluster")]
 
 for r in assign.itertuples():

@@ -24,12 +24,22 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 print("Loading data...")
 try:
-    survivors = pd.read_csv(INPUT_SURVIVORS)
-    print(f"  Survivors: {survivors.shape}")
+    survivors_full = pd.read_csv(INPUT_SURVIVORS)
+    print(f"  Survivors file (all candidates x all clusters, with pass/fail flags): {survivors_full.shape}")
 except FileNotFoundError:
     print(f"ERROR: {INPUT_SURVIVORS} not found")
     print("Make sure you have run 07_feasibility_filter.py first.")
     raise SystemExit(1)
+
+# The file is named "feasibility_survivors_by_cluster.csv" but actually contains
+# EVERY candidate for EVERY cluster with a passes_all True/False flag, not just
+# the ones that survived. Sections 1-3 below need the actual survivors only;
+# section 4 (constraint pass/fail breakdown) needs the full unfiltered table,
+# so both variables are kept.
+if "passes_all" in survivors_full.columns:
+    survivors = survivors_full[survivors_full["passes_all"]].copy()
+else:
+    survivors = survivors_full
 
 try:
     all_candidates = pd.read_csv(INPUT_ALL_CANDIDATES)
@@ -111,14 +121,14 @@ plt.close()
 print('  ✓ Saved: 03_top_candidates_per_cluster.png')
 
 print('[4/6] Generating constraint analysis...')
-constraint_cols = [c for c in survivors.columns if 'pass_' in c.lower() or 'constraint' in c.lower()]
+constraint_cols = [c for c in survivors_full.columns if 'pass_' in c.lower() or 'constraint' in c.lower()]
 if constraint_cols:
     fig, ax = plt.subplots(figsize=(10, 6))
     summary = []
     for c in constraint_cols:
-        if c in survivors.columns:
-            pass_count = (survivors[c] == True).sum() if pd.api.types.is_bool_dtype(survivors[c]) else survivors[c].sum()
-            summary.append({'Constraint': c, 'Pass': pass_count, 'Fail': len(survivors) - pass_count})
+        if c in survivors_full.columns:
+            pass_count = (survivors_full[c] == True).sum() if pd.api.types.is_bool_dtype(survivors_full[c]) else survivors_full[c].sum()
+            summary.append({'Constraint': c, 'Pass': pass_count, 'Fail': len(survivors_full) - pass_count})
     if summary:
         constraint_df = pd.DataFrame(summary).set_index('Constraint')
         constraint_df[['Pass', 'Fail']].plot(kind='barh', stacked=True, ax=ax, color=['green', 'red'], edgecolor='black')
