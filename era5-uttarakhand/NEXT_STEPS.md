@@ -21,8 +21,8 @@ table below is kept for phase-by-phase context, not as an open TODO list.
 | 3. Climate Signature | 2-tier ~18-index vector per point, Tm_target/L_required, PCA, standardization | **Done.** `04b_climate_signature.py` run (Tier1+Tier2 merge, 45/45 Tier-2 coverage). PCA: 2 components, 90.7%/6.8% variance, `elevation_m` loads a balanced ~0.37 on PC1. |
 | 4. Climate Regime Clustering | GMM, BIC-selected K, silhouette sanity | **Done.** `05_cluster_uttarakhand.py` run, K_FINAL=5, silhouette=0.28 (in the expected 0.15-0.40 band for 45 points — see `README_PREPROCESSING.md` for why higher isn't better here). Cluster sizes: 7/3/9/10/16. |
 | 5. Feasibility Filtering | Hard-filter PCM database per cluster | **Done.** `06_build_pcm_database.py` (55 candidates: 31 manufacturer + 24 literature) + `07_feasibility_filter.py` — all 5 clusters HIGH survivor count (27-29 each). |
-| 6. Multi-Criteria Ranking | TOPSIS + GRA minimum, entropy+AHP weights, Gaussian Tm fitness transform, Borda consensus | **Done.** `08_mcdm_ranking.py` run — Kendall's W 0.72-0.80 per cluster; PureTemp 58 is the consensus #1 in every cluster (a real finding, not a bug — see the script's own printed explanation). |
-| 7. Physics-Based Validation | Grey-box lumped enthalpy tank model, Spearman rho vs. MCDM rank | **Done.** `10_physics_validation.py` — 92% of simulations land in the published 54-84% solar-fraction benchmark band. |
+| 6. Multi-Criteria Ranking | TOPSIS + GRA minimum, entropy+AHP weights, Gaussian Tm fitness transform, Borda consensus | **Done.** `08_mcdm_ranking.py` run — Kendall's W 0.71-0.84 per cluster. After the 2026-09 bug-fix round below, clusters genuinely differentiate: Cluster 1's regime-capped Tm_target (55.2C) makes PureTemp 53 its consensus #1, not PureTemp 58 (the pick everywhere else) — the earlier "same PCM everywhere" was a real bug (07b's regime cap), not a finding. |
+| 7. Physics-Based Validation | Grey-box lumped enthalpy tank model, Spearman rho vs. MCDM rank | **Done, but see the RESOLVED note below — the "92% in benchmark band" figure was itself a bug artifact and is no longer accurate.** Current, bug-fixed result: 0% of simulations land in the published 54-84% solar-fraction band (actual: ~15-19% across clusters). |
 | 8. Explanation & Output | Recommendation card per cluster | **Done.** `09_recommendation_cards.py` run — `recommendation_cards.md`, 5 cluster cards. |
 
 ---
@@ -186,7 +186,76 @@ for Uttarakhand, only filenames.
   data those two specific filters from Table 12 need yet. Documented,
   not silently skipped. `07b_charging_feasibility.py` covers the
   regime-dependent Tm cap piece of this if you want it before `07`.
-- **Physics validation (Phase 7)** is completed in `10_physics_validation.py`. It runs a grey-box lumped-enthalpy simulation across all 5 clusters against Table 16 benchmark ranges (54–84% annual solar fraction). 92% of runs fall within this benchmark band.
+- **Physics validation (Phase 7)** is completed in `10_physics_validation.py`. It runs a grey-box lumped-enthalpy simulation across all 5 clusters against Table 16 benchmark ranges (54-84% annual solar fraction). **Result changed materially by the 2026-09 bug-fix round below — see that note.** Current result: 0% of runs fall within the benchmark band (actual solar fraction ~15-19% across clusters), down from a previously-reported 92% that was itself inflated by the tank-model bug.
+
+- **Second correctness audit round — 10 bugs found and fixed, RESOLVED
+  (2026-09).** After the elevation/GHI fixes below were confirmed working,
+  four independent audits of the MCDM ranking, feasibility filter, climate
+  signature, and physics-validation code found and fixed:
+  - `08_mcdm_ranking.py`: `vikor_compromise_check()` only tested VIKOR's
+    "acceptable advantage" condition, never the "acceptable stability"
+    condition (needs S/R, which weren't even passed in) — could report a
+    single winner where standard VIKOR requires a compromise set. Fixed to
+    check both; now correctly flags Clusters 1 and 2 as compromise sets.
+  - `08_mcdm_ranking.py` / `09b_monte_carlo_stability.py`: `topsis()`
+    applied its own vector normalization on top of a matrix the caller had
+    already min-max normalized (the same basis GRA/PROMETHEE/VIKOR and the
+    entropy+AHP weights use) — put TOPSIS on a different effective
+    normalization basis than the other three methods, manufacturing
+    spurious method disagreement. Fixed to use the shared basis directly.
+  - `07b_charging_feasibility.py`: the regime-dependent Tm cap divided
+    `poor_day_kt` by `kt_mean`, collapsing to a coefficient-of-variation
+    measure that erases the absolute clearness signal the heuristic needs
+    — this is exactly why it printed "0/5 clusters where the regime cap
+    actually lowers Tm_target" every time it ran. Fixed to use
+    `poor_day_kt` directly; now 2/5 clusters get a real, physically
+    meaningful lower cap (Cluster 1: 55.2C, Cluster 2: 56.5C), which is
+    **why Cluster 1's MCDM #1 is now PureTemp 53, not PureTemp 58** — the
+    "same PCM in every cluster" pattern reported earlier was this bug, not
+    a genuine finding.
+  - `10_physics_validation.py`: the backward-Euler tank-temperature solve
+    (phases 1 and 3) had a spurious extra term, verified by hand-deriving
+    the linear system AND cross-checking against `scipy.integrate.
+    solve_ivp` (representative case: correct answer 59.98C, fixed formula
+    59.25C, buggy formula 91.04C — a ~32C error). The phase-2 latent-heat
+    accumulator (`Qp`) was also clamped to never decrease, so the tank
+    could draw unlimited heat from the PCM overnight without the tracked
+    stored energy ever depleting, and there was no way back to phase 1 for
+    a PCM that started melting but never finished. Both fixed. This is why
+    the physics-validation benchmark-band result changed from 92% to 0% —
+    the old result was inflated by a compounding, hour-by-hour overheating
+    bug active for essentially the whole simulated year, not a real match
+    to the literature benchmark. The 15-19% solar fraction this produces
+    now reflects the model's *stated* collector/tank assumptions
+    (2.5m^2 collector, 0.70 efficiency, 150kg tank, 2.0 W/K ambient loss)
+    computed correctly — those assumptions themselves were not changed and
+    may be worth an independent look, but that is a methodology question,
+    not a bug.
+  - `04b_climate_signature.py`: `RH_mean`/`wind_mean` were the only two
+    Tier-1 indices stored without a `_proxy` suffix, so their canonical
+    (true-else-proxy) fallback silently resolved to NaN instead of the
+    Tier-1 value whenever Tier-2 coverage was missing — currently latent
+    (100% Tier-2 coverage here) but fixed for future runs.
+  - `02b_build_daily_aggregates.py`: the `>=20 hours/day` coverage gate
+    counted timestamps present, not valid (non-NaN) values — NASA POWER
+    returns a fixed 24-timestamp grid even when a reading is missing, so
+    this was effectively a no-op. Currently harmless (verified zero actual
+    missing values across all 450 point-year files) but fixed for any
+    future re-download or new state with real gaps.
+  - `02b_build_daily_aggregates.py`: `CCI_true` (longest consecutive
+    cloudy-day run) computed positionally over `daily_df`'s existing rows,
+    which could bridge a real missing-data gap into one inflated run.
+    Fixed to reindex onto a contiguous calendar-day range first (mirroring
+    the safeguard Tier-1's `CCI_proxy` already had) — verified with a
+    synthetic gap test.
+  - `07_feasibility_filter.py` / `11_level_b_seasonal_analysis.py`: both
+    hardcoded a local `LATENT_HEAT_FRACTION = 0.7` instead of importing
+    it from `config.py` (which defines the same value) — currently
+    numerically identical, fixed to remove the future drift risk.
+  All ten verified individually (hand-derivation, scipy cross-check, or a
+  synthetic test case, not just "ran without erroring"). Full pipeline
+  rerun from `02b` through recommendation cards and all plots against
+  every fix.
 - **Elevation proxy — RESOLVED (2026-09).** `00c_attach_elevation.py` now
   attaches real per-point elevation from ERA5 geopotential (196m-2510m
   across the 45 points, replacing both the flat 1200m solar-geometry

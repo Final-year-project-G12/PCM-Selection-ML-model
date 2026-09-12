@@ -698,6 +698,25 @@ random-forest imputation).
   ERA5's time-invariant geopotential field; `elevation_m` carries a
   balanced ~0.37 PCA loading on PC1 in `04b`, not an outsized artifact
   (see `README_PREPROCESSING.md` for more).
+- **MCDM/physics-validation correctness bugs — RESOLVED (2026-09)**: a
+  second audit round found and fixed 10 real bugs across
+  `08_mcdm_ranking.py` (VIKOR's compromise check only tested one of its
+  two standard conditions; TOPSIS applied an inconsistent extra
+  normalization vs. the other three methods), `07b_charging_feasibility.py`
+  (the regime-dependent Tm cap divided away the exact signal it needed,
+  making it a permanent no-op — this is why every cluster used to get the
+  same #1 PCM), `10_physics_validation.py` (a backward-Euler solve error
+  verified against `scipy.integrate.solve_ivp` to cause ~32C spurious
+  overheating per step, plus a latent-heat accumulator that never
+  decreased), and `04b_climate_signature.py`/`02b_build_daily_aggregates.py`
+  (a canonical-column naming mismatch, a coverage gate that checked the
+  wrong thing, and a cloudy-run-counting contiguity gap — all three
+  currently latent given this dataset's 100% Tier-2 coverage and zero
+  missing hours, but real defects fixed for future runs). Consequences:
+  Cluster 1 now gets a genuinely different consensus PCM (PureTemp 53, not
+  PureTemp 58), and the physics-validation benchmark match dropped from a
+  bug-inflated 92% to a bug-fixed 0% (see `NEXT_STEPS.md` for the full
+  writeup and exact numbers).
 - **WorldPop download size**: ~1.5-2GB, one-time, cached in
   `data/raw/population/`. The download auto-retries (up to 5 attempts) and
   resumes from where it left off via HTTP Range requests if the connection
@@ -716,7 +735,7 @@ random-forest imputation).
   across 6 brands, meeting the 40-60 candidate target (see `06`'s section
   above). Corrosion veto and 5th-percentile-day charging feasibility aren't
   fully wired into `07` yet either (see `07`'s section above).
-- **Phase 7 (physics-based validation) is implemented** in `10_physics_validation.py`. It runs a single-PCM grey-box lumped-enthalpy-tank simulation per cluster, comparing simulated annual solar fraction against published benchmarks (54–84%). 92% of simulated runs land within this benchmark band.
+- **Phase 7 (physics-based validation) is implemented** in `10_physics_validation.py`. It runs a single-PCM grey-box lumped-enthalpy-tank simulation per cluster, comparing simulated annual solar fraction against published benchmarks (54-84%). **A backward-Euler solve bug and a latent-heat-accumulator bug were fixed here 2026-09** (see "Notes / known limitations" below) — the corrected result is 0% of simulated runs landing within the benchmark band (actual ~15-19% across clusters); a previously-reported 92% was itself an artifact of the bug.
 
 ## Further reading in this repo
 

@@ -52,7 +52,7 @@ warnings.filterwarnings("ignore")
 import numpy as np
 import pandas as pd
 
-from config import PROCESSED_DIR, latent_heat_floor_kj_kg
+from config import PROCESSED_DIR, LATENT_HEAT_FRACTION, latent_heat_floor_kj_kg
 
 PCM_FILE = PROCESSED_DIR / "pcm" / "pcm_database_uttarakhand.csv"
 PROFILE_FILE = PROCESSED_DIR / "clustering" / "cluster_profiles_uttarakhand.csv"
@@ -60,7 +60,6 @@ OUT_FILE = PROCESSED_DIR / "pcm" / "feasibility_survivors_by_cluster.csv"
 
 ABSOLUTE_TM_MIN, ABSOLUTE_TM_MAX = 42.0, 70.0
 WINDOW_LOWER_OFFSET, WINDOW_UPPER_OFFSET = 5.0, 8.0
-LATENT_HEAT_FRACTION = 0.7
 CYCLES_FLOOR = 300
 SUPERCOOLING_MAX_K = 8.0
 MIN_SURVIVORS, MAX_RELAX_STEPS, RELAX_STEP_K = 5, 4, 2.0
