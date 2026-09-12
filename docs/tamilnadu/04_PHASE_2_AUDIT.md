@@ -68,11 +68,15 @@ Cross-source agreement on 1,457,547 matched events **before v3.1 deaccumulation 
 | **Wind speed (m/s)** | 1,457,547 | −1.14 m/s | 1.67 m/s | 0.7332 | Moderate |
 
 ### 2. Post-Fix Cross-Source Decision Gate (`03b_agreement_analysis.py`)
-- **Decision Logic**:
-  - `BACKBONE`: Pearson $r \ge 0.85$ and $|\text{MBE}| \le 20\text{ W/m}^2$ $\rightarrow$ use ERA5 directly.
-  - `QUANTILE_MAP`: Pearson $r \ge 0.70$ but fails MBE threshold $\rightarrow$ apply Step 2b per-season quantile mapping.
-  - `MANUAL_REVIEW`: Pearson $r < 0.70$ $\rightarrow$ flag for review.
-- **Tamil Nadu Branch**: Post-fix GHI achieves $r > 0.80$, routing into **Step 2b Quantile Mapping** (`ghi_quantile_mapping_report.csv`).
+- **Decision Logic** (thresholds as coded — `CORR_GOOD=0.90`, `CORR_SEVERE=0.70`, `MBE_SMALL_FRAC=0.05`, `SEASON_SPREAD_FRAC=0.05`; evaluated on the **noon** GHI row only):
+  - `BACKBONE`: noon Pearson $r \ge 0.90$ **and** $|\text{MBE}|$ $\le 5\%$ of mean noon POWER GHI **and** the max−min season-to-season noon MBE spread $\le 5\%$ of that mean $\rightarrow$ ERA5 used directly, POWER kept as a reported cross-check.
+  - `QUANTILE_MAP`: noon $r \ge 0.70$ but one of the BACKBONE sub-conditions fails $\rightarrow$ per-season empirical quantile mapping of daytime ERA5 GHI onto the POWER distribution.
+  - `MANUAL_REVIEW`: noon $r < 0.70$ or undefined $\rightarrow$ flag, run merge-bug diagnostics, stop.
+  - Fixed-weight blending (e.g. `0.6·ERA5 + 0.4·POWER`) is explicitly rejected — no principled derivation for a fixed weight.
+- **This gate is advisory.** `03b_agreement_analysis.py` is read-only and never persists a correction. `04_preprocess_tamilnadu.py`'s Step 2b applies the per-season quantile map **unconditionally** (every season, every run) and writes the corrected `era5_GHI` + recomputed `era5_CSI` into `tamilnadu_cleaned_physical.csv` — it does not consult which branch `03b_agreement_analysis.py` reported.
+- **Tamil Nadu branch**: post-fix noon GHI clears the $\ge 0.70$ floor but not the full BACKBONE gate, i.e. `QUANTILE_MAP` (numbers in `bias_decision_tamilnadu.txt` / `era5_power_agreement_tamilnadu.csv`).
+
+> **Cross-state note (2026-09-08):** Rajasthan converged onto this same `04_preprocess` contract — its Phase 2.5 is now `04_preprocess_rajasthan.py` (was the leaner `03b_quality_check_rajasthan.py`), so **both** states now feed per-season quantile-mapped ERA5 GHI/CSI into Phase 3, with the same `BOUNDS` screen, `SZA ≥ 90°` night-mask, and 4-stage/MICE imputation. Uttarakhand already used this pattern; Assam uses a partial variant. See `docs/rajasthan/04_PHASE_2_AUDIT.md` Part B.
 
 ---
 
@@ -89,17 +93,17 @@ Cross-source agreement on 1,457,547 matched events **before v3.1 deaccumulation 
    - `era5_cloud_cover`: $[0, 1]$ fraction.
    - `era5_precipitation`: $[0, 200]\text{ mm}$.
    - *Step 2b (Quantile Mapping)*: Applies per-season empirical quantile mapping of daytime `era5_GHI` onto NASA POWER distribution.
-3. **Hampel Filter (Outlier Detection)**:
-   - Applied to `era5_T_amb`, `era5_RHum`, and `era5_W_spd` using rolling MAD (Median Absolute Deviation) window of 7 with $3\sigma$ threshold.
-   - **Crucial Rule**: **GHI and CSI are deliberately excluded from Hampel filtering** because cloud transients produce real physical spikes; filtering GHI corrupts solar intermittency statistics.
-4. **Imputation Cascade**:
-   - *Stage 1*: Linear interpolation along time index (gaps $\le 3$ days).
-   - *Stage 2*: Forward-fill (`ffill`) and backward-fill (`bfill`) for edge gaps.
-   - *Stage 3*: Spatial median imputation using `impute_zone` (K-Means spatial clusters).
-   - *Stage 4*: MICE fallback via `sklearn.impute.IterativeImputer`.
-5. **Feature Engineering**: Derives HSI, degree days (HDD18, CDD24), and wind power density.
-6. **Lag Generation**: Computes 1-day, 7-day, 30-day lags within point-event groups.
-7. **Scaling**: z-score scaling saved to `scaler_params.json`.
+3. **Hampel Filter (Outlier Detection)** — as coded in `04_preprocess_tamilnadu.py` (`HAMPEL_COLS`):
+   - Applied to `era5_GHI`, `era5_T_amb`, `era5_RHum`, `era5_W_spd`, **and** `era5_cloud_cover`, over a rolling MAD window of **15 occurrences each side** (31-wide, in event-occurrences of the same `(point_id, event)` series — not hours) at a $3\sigma$ threshold; flagged values → `NaN` → imputation (step 4).
+   - **Divergence from Rajasthan (worth resolving):** `03b_quality_check_rajasthan.py` deliberately **excludes** `era5_GHI` / `era5_CSI` from Hampel filtering after three documented empirical corrections (filtering them produced a uniform `GHI_noon_mean`↑ / `kt_noon_std`↓ shift across all points — real cloud-driven low-clearness signal, not sensor noise, and exactly what `cloudy_frac` / `CCI` / `kt_std` / `monsoon_index` are built to measure). `04_preprocess_tamilnadu.py` does **not** carry that exclusion. Now that Rajasthan runs `04_preprocess_rajasthan.py`, this exclusion is currently lost for it too — flagged as a regression risk to check against the regenerated signature.
+4. **Imputation Cascade** (`IMPUTE_COLS`, within `(point_id, event)` groups sorted by date):
+   - *Stage a*: Linear interpolation, interior gaps $\le 3$ occurrences (`limit_area="inside"`).
+   - *Stage b*: `ffill(limit=3)` then `bfill(limit=3)` for edge gaps.
+   - *Stage c*: `point_id` median → `impute_zone` median (`impute_zone` = an 8-way KMeans grouping of point lat/lon built here **only** as an imputation fallback, not the Phase 4 climate clustering) → global column median.
+   - *Stage d*: `sklearn.impute.IterativeImputer` (MICE) on any cells still missing after a–c (fit on up to a 300k-row sample, `random_state=42`).
+5. **Feature Engineering** (steps 6, 9 in-script): wind-direction sin/cos × speed, `cloud_opacity`, `T_depression`, `is_daytime`, IST decimal hour, solar hour angle. *(Not consumed by Phase 3 — `04b_climate_signature.py` rebuilds its own Tier-1/2 signature from the base physical columns.)*
+6. **Lag / Rolling / Delta** (steps 7–9): 1/7/30-occurrence lags, 7/30-occurrence rolling mean/std, 1-occurrence delta on `LAG_COLS`; step 9c drops the first 30 occurrences per `(point_id, event)` as lag warm-up. *(Also not read by Phase 3.)*
+7. **Scaling** (step 12): per-column `MinMaxScaler` fit on the first 70% of chronologically-sorted rows only (leakage-safe), written to `scalers.pkl` + `<state>_cleaned_scaled.csv`. **Phase 3 reads the *physical* file, never the scaled one.**
 8. **Hard PASS/FAIL Gate**:
    - Writes `qc_report.txt`.
    - Checks final missingness rate **$< 0.1\%$** for all features.
@@ -109,7 +113,7 @@ Cross-source agreement on 1,457,547 matched events **before v3.1 deaccumulation 
 ---
 
 ## Status
-**COMPLETE (v3.1 fixes applied)** — Re-run `02_combine` $\rightarrow$ `03b` $\rightarrow$ `04_preprocess` for updated outputs.
+**COMPLETE (v3.1 fixes applied)** — regenerate outputs by re-running `02_combine_tamilnadu.py` → `04_preprocess_tamilnadu.py` → `04b_climate_signature.py` → downstream. `03b_agreement_analysis.py` is an advisory read-only cross-check and can be run any time; it does not feed `04_preprocess`.
 
 ---
 

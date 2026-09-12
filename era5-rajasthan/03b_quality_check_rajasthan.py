@@ -1,6 +1,19 @@
 """
 03b_quality_check_rajasthan.py
 =============================================================================
+SUPERSEDED 2026-09-08 as Rajasthan's Phase 2.5. The pipeline converged onto
+the Tamil Nadu 04_preprocess contract: 04_preprocess_rajasthan.py is now the
+Phase 2.5 stage (BOUNDS physical screen + SZA>=90 night-mask + per-season
+ERA5->NASA-POWER quantile map PERSISTED + Hampel + 4-stage/MICE imputation),
+writing data/preprocessed/rajasthan_cleaned_physical.csv, which Phase 3
+(04b_climate_signature.py) now reads. This script is kept for provenance and
+as a standalone diagnostic — it still runs and still writes
+climate_rajasthan_points_clean.csv + quality_report_rajasthan.{md,json}, but
+NOTHING in run_all_rajasthan.py's core chain reads those outputs anymore.
+Notably, 04_preprocess DOES Hampel-filter era5_GHI/era5_cloud_cover, which
+this script deliberately excluded (see "THIRD CORRECTION" below) — re-check
+that trade-off against the regenerated climate signature.
+=============================================================================
 SCOPED DATA-QUALITY STEP — outlier flagging (Hampel filter) + missing-data
 handling and reporting, on climate_rajasthan_points.csv, run once between
 02_combine_rajasthan.py and 04_climate_signature_rajasthan.py.

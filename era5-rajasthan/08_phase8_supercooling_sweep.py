@@ -1,7 +1,7 @@
 """
 PHASE 8 — SUPERCOOLING PENALTY SENSITIVITY SWEEP
 =============================================================================
-Extends Phase 7 (09_physics_validation_rajasthan.py) to test whether
+Extends Phase 7 (10_physics_validation.py) to test whether
 accounting for supercooling brings the physics ranking closer to the MCDM
 ranking. Runs the full Phase 7 experiment across 4 sensitivity-sweep values
 of SUPERCOOLING_PENALTY_K: [0.0, 0.1, 0.2, 0.3].
@@ -35,8 +35,8 @@ ensure_data_dirs()
 
 STATE_NAME = "rajasthan"
 
-MCDM_RANKINGS_FILE = PROCESSED_DIR / f"mcdm_rankings_{STATE_NAME}.csv"
-SURVIVORS_FILE = PROCESSED_DIR / f"feasibility_survivors_{STATE_NAME}_kappa_calibrated.csv"
+MCDM_RANKINGS_FILE = PROCESSED_DIR / "mcdm_full_rankings.csv"                      # renamed 2026-09-08
+SURVIVORS_FILE = PROCESSED_DIR / "feasibility_survivors_by_cluster_kappa_calibrated.csv"  # renamed 2026-09-08
 PROFILE_FILE = PROCESSED_DIR / f"cluster_profiles_{STATE_NAME}.csv"
 ASSIGN_A_FILE = PROCESSED_DIR / f"cluster_assignments_{STATE_NAME}_levelA.csv"
 SIGNATURE_FILE = PROCESSED_DIR / f"climate_signature_{STATE_NAME}.csv"
@@ -297,7 +297,7 @@ def write_summary(sweep_df):
     lines.append("  [To be filled after inspection of the rho table above]")
     lines.append("")
 
-    with open(OUT_SWEEP_SUMMARY, "w") as f:
+    with open(OUT_SWEEP_SUMMARY, "w", encoding="utf-8") as f:
         f.write("\n".join(lines))
     print(f"\n  Saved: {OUT_SWEEP_SUMMARY}")
 

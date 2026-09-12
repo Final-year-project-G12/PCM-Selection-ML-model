@@ -75,7 +75,7 @@
 ---
 
 ## PHASE 4: CLIMATE REGIME CLUSTERING
-**Scripts:** `05_cluster_tamilnadu.py`, `05b_cluster_interactive.py`, `11_level_b_seasonal_analysis.py`
+**Scripts:** `05_cluster_tamilnadu.py`, `05a_level_b_regime_shift_tamilnadu.py`, `05b_cluster_interactive.py`, `11_seasonal_pcm_sensitivity.py` (post-Phase-6)
 
 ### Available Plots → Documentation Mapping
 

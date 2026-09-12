@@ -16,7 +16,10 @@ this script still works and just omits that section with a note.
 INPUT  : data/processed/clustering/cluster_profiles_tamilnadu.csv
          data/processed/clustering/cluster_assignments_tamilnadu.csv
          data/processed/pcm/mcdm_topk_by_cluster.csv
-         data/processed/pcm/feasibility_survivors_by_cluster.csv
+         data/processed/pcm/feasibility_survivors_by_cluster_kappa_calibrated.csv
+             (the calibrated survivor set Phase 6 actually ranked — the
+             fixed-kappa=0.7 baseline feasibility_survivors_by_cluster.csv
+             can legitimately be empty for a cluster)
          data/processed/pcm/physics_validation_results.csv    (optional)
          data/processed/pcm/physics_validation_spearman.csv   (optional)
 OUTPUT : data/processed/pcm/recommendation_cards.md
@@ -31,6 +34,9 @@ warnings.filterwarnings("ignore")
 import pandas as pd
 
 from config import PROCESSED_DIR
+# Cross-phase provenance check (wired in 2026-09-08, mirroring Rajasthan's
+# 10_recommendation_cards_rajasthan.py position at the end of the chain).
+from provenance_lib import file_fingerprint, fingerprint_id, assert_fingerprint_match
 
 CLUSTER_DIR = PROCESSED_DIR / "clustering"
 PCM_DIR = PROCESSED_DIR / "pcm"
@@ -38,13 +44,16 @@ PCM_DIR = PROCESSED_DIR / "pcm"
 PROFILE_FILE = CLUSTER_DIR / "cluster_profiles_tamilnadu.csv"
 ASSIGN_FILE = CLUSTER_DIR / "cluster_assignments_tamilnadu.csv"
 TOPK_FILE = PCM_DIR / "mcdm_topk_by_cluster.csv"
-SURVIVORS_FILE = PCM_DIR / "feasibility_survivors_by_cluster.csv"
+SURVIVORS_FILE = PCM_DIR / "feasibility_survivors_by_cluster_kappa_calibrated.csv"
 PHYSICS_RESULTS_FILE = PCM_DIR / "physics_validation_results.csv"
 PHYSICS_SPEARMAN_FILE = PCM_DIR / "physics_validation_spearman.csv"
 OUT_FILE = PCM_DIR / "recommendation_cards.md"
 
-SIGNATURE_DISPLAY = ["GHI_daily_kWh", "Ta_mean", "DTR", "kt_mean", "cloudy_frac",
-                      "CCI", "HDD18", "CDD24", "RH_mean", "HSI", "monsoon_index"]
+# Column names updated 2026-09-08 for the unified Phase 3 signature schema
+# (DTR -> DTR_true, kt_mean -> kt_daily_mean, RH_mean -> RH_sunrise_mean,
+# HSI -> HSI_sunrise) — the same names Rajasthan's cards use.
+SIGNATURE_DISPLAY = ["GHI_daily_kWh", "Ta_mean", "DTR_true", "kt_daily_mean", "cloudy_frac",
+                      "CCI", "HDD18", "CDD24", "RH_sunrise_mean", "HSI_sunrise", "monsoon_index"]
 
 
 def main():
@@ -62,11 +71,25 @@ def main():
     topk = pd.read_csv(TOPK_FILE)
     survivors = pd.read_csv(SURVIVORS_FILE)
 
+    # PROVENANCE HARD-FAIL: every upstream artefact these cards summarise
+    # must have been built from the cluster_profiles file currently on disk.
+    # These cards are the final deliverable — publishing one assembled from a
+    # mix of clustering runs is precisely the failure mode this guards.
+    current_profile_fp_id = fingerprint_id(file_fingerprint(PROFILE_FILE))
+    assert_fingerprint_match(current_profile_fp_id, survivors,
+                              PROFILE_FILE.name, SURVIVORS_FILE.name)
+    assert_fingerprint_match(current_profile_fp_id, topk,
+                              PROFILE_FILE.name, TOPK_FILE.name)
+    print(f"  Provenance check PASSED (fingerprint {current_profile_fp_id}).")
+
     physics_available = PHYSICS_RESULTS_FILE.exists() and PHYSICS_SPEARMAN_FILE.exists()
     if physics_available:
         physics_results = pd.read_csv(PHYSICS_RESULTS_FILE)
         physics_spearman = pd.read_csv(PHYSICS_SPEARMAN_FILE)
-        print("  Phase 7 physics validation results found — including in cards.")
+        assert_fingerprint_match(current_profile_fp_id, physics_results,
+                                  PROFILE_FILE.name, PHYSICS_RESULTS_FILE.name)
+        print("  Phase 7 physics validation results found (provenance OK) — "
+              "including in cards.")
     else:
         print("  [NOTE] Phase 7 outputs not found — run 10_physics_validation.py "
               "for a complete Objective 1 (physics validation is no longer "
@@ -91,13 +114,15 @@ def main():
     for _, prof in profiles.sort_values("cluster_id").iterrows():
         cid = int(prof["cluster_id"])
         members = assign[assign["cluster_id"] == cid]
-        n_survivors = int((survivors[survivors["cluster_id"] == cid]["passes_all"]).sum())
+        _sc = "survives_all" if "survives_all" in survivors.columns else "passes_all"
+        n_survivors = int((survivors[survivors["cluster_id"] == cid][_sc]).sum())
         cluster_top = topk[topk["cluster_id"] == cid].sort_values("consensus_rank")
 
         lines.append(f"\n## Cluster {cid}\n")
         lines.append(f"- **Points in regime:** {int(prof['n_points'])}")
-        if "total_population_covered" in prof and prof["total_population_covered"] == prof["total_population_covered"]:
-            lines.append(f"- **Population covered:** {prof['total_population_covered']:,.0f}")
+        # Column renamed 2026-09-08 to match Rajasthan: total_population.
+        if "total_population" in prof and prof["total_population"] == prof["total_population"]:
+            lines.append(f"- **Population covered:** {prof['total_population']:,.0f}")
         if "lat" in members.columns and "lon" in members.columns and len(members):
             medoid = members.loc[members["max_membership_prob"].idxmax()] \
                 if "max_membership_prob" in members.columns else members.iloc[0]

@@ -61,7 +61,7 @@ Phase 5 — FEASIBILITY FILTERING
   07_feasibility_filter.py      → feasibility_survivors_by_cluster.csv (8 Table-12 filters)
         ↓
 Phase 6 — MULTI-CRITERIA RANKING ENGINE
-  08_mcdm_ranking.py            → mcdm_topk_by_cluster.csv, monte_carlo_stability.csv
+  08_mcdm_ranking.py            → mcdm_full_rankings.csv, mcdm_topk_by_cluster.csv, monte_carlo_stability.csv, mcdm_method_agreement.csv, outputs/qc_montecarlo_inclusion.html  (UNIFIED with Rajasthan; 8 criteria + supercooling entropy cap)
         ↓
 Phase 7 — PHYSICS-BASED VALIDATION
   10_physics_validation.py      → physics_validation_results.csv (UA_TANK=2.0 W/K, v3.1)
@@ -77,7 +77,7 @@ Phase 8 — RECOMMENDATION CARDS
 | 3 — Climate Signature | `04b`, `04d` | **COMPLETE** | 300 L/day draw with `SHARE_PCM=0.5`; current generated cluster targets are approximately 301-326 kJ/kg. |
 | 4 — GMM Clustering | `05`, `05b`, `11` | **COMPLETE (v3.1 fixes applied)** | K=5 regimes, `covariance_type="diag"`. Level B seasonal re-rank uses corrected draw volume. |
 | 5 — Feasibility | `06`, `07` | **COMPLETE** | 62 PCM records are audited per cluster; current pass counts are 9-15 and vary by cluster. |
-| 6 — MCDM Ranking | `08` | **COMPLETE** | 4-method Borda + 5000-draw Monte Carlo. |
+| 6 — MCDM Ranking | `08` | **UNIFIED with Rajasthan 2026-09-08; re-run pending** | 8 Table-13 criteria; climate-relative latent heat; log-scaled cycling; supercooling entropy weight capped at 2× prior; PROMETHEE native Tm; Kendall's W + pairwise agreement; N_DRAWS=1000. |
 | 7 — Physics Validation | `10` | **COMPLETE (v3.1 fixes applied)** | Tank ambient heat loss active (`UA_TANK_W_K=2.0`). Re-run for updated Spearman ρ. |
 | 8 — Rec Cards | `09` | **COMPLETE** | Aggregates Phases 4–7 into `recommendation_cards.md`. |
 
@@ -324,29 +324,35 @@ COMPLETE (v3.1 fixes applied — re-run 05 and 11 after Phase 3 re-run)
 Source: 07_PHASE_5_AUDIT(1).md
 # 07 — Phase 5 Audit: Feasibility Filtering
 Scripts: 06_build_pcm_database.py, 07_feasibility_filter.py.
-## Purpose
-Hard-screen candidate PCMs from a database against each cluster's climate-adaptive targets (melting point and latent heat) to ensure only physically viable PCMs proceed to ranking.
+
+> UNIFIED 2026-09-08 with era5-rajasthan/07_feasibility_filter.py — same
+> 8-constraint set, constraint order, missing-value semantics,
+> kappa-calibration procedure and provenance stamping. 07b_charging_feasibility.py
+> RETIRED (folded into Constraint 6). Not re-run since the unification; the
+> survivor counts below are pre-unification and stale.
+
 ## The PCM Database
-- Imputes missing manufacturer properties (Rubitherm RT, Pluss savE) via MICE+RF+PMM blend.
-- Appends 7 literature PCMs (fatty acids, paraffins).
-- Total candidates: 62 PCMs: 55 manufacturer-derived records completed from the MICE+RF+PMM detailed input plus 7 literature records from Singh et al. Table 2. Manufacturer imputation flags and provenance are retained; genuinely unreported literature properties remain missing.
-## Screen Constraints (Table 12)
-1. Melting window: `Tm ∈ [Tm_target − 5, Tm_target + 8]°C` (relaxable ±2K, up to 4 steps).
-1. Absolute band: `Tm ∈ [42, 70]°C`.
-1. Latent heat floor: `L ≥ 0.7 × L_required` — now binding after v3.1 L_required fix.
-1. Cycling stability: `cycles ≥ 300` (flagged if NaN).
-1. Supercooling veto: `supercooling ≤ 8K` (flagged if NaN).
-1. Corrosion veto: excludes `check_manually` in high-HSI clusters.
-1. Safety exclusion: flammability keyword veto.
-## Current Finding
-- The feasibility output audits 62 candidates per cluster, with pass/fail detail for every filter. Despite its filename, `feasibility_survivors_by_cluster.csv` is not survivors-only.
-- Current actual survivors (`passes_all=True`) are 15, 9, 13, 13, and 9 for clusters 0-4 respectively.
-- Current cluster `L_required` values are approximately 301-326 kJ/kg. The latent-heat floor is `max(100, 0.7 × L_required)` and is achievable for a subset of candidates.
-## CRITICAL UPDATE: L_required Methodology Correction (2026-08-31, OPTION A)
-The v3.1 L_required fix documented above has been superseded by a more fundamental methodology correction (2026-08-31). Phase 3's all-latent assumption (PCM supplies 100% of night discharge alone) was replaced with a literature-anchored fractional-share model: SHARE_PCM = 0.5, meaning PCM supplies ~50% of delivery, tank sensible heat + concurrent charging supply the remainder (per Zhao 2022, Huang 2020, Abdelsalam 2020, Koželj 2021).
-Current interpretation: SHARE_PCM = 0.5 is active in the upstream sizing calculation. The older approximately 2500 kJ/kg all-latent value and the approximately 1250 kJ/kg planning estimate are superseded by the values written to the current signature and feasibility artifacts. See 04b_climate_signature.py and config.py for the active implementation.
+- 06_build_pcm_database.py is a THIN builder over the single canonical MICE+RF+PMM output (PCM_data/data/PCM_Properties_cleaned_mice_pmm_detailed.csv, from PCM_data/PCM_data/01_preprocess.py). It does NOT re-impute anything — one imputation pipeline, shared with Rajasthan. The old `is_rt_line` reference was replaced with `manufacturer` (matches Rajasthan).
+- Appends 7 literature PCMs (fatty acids, paraffins) from Singh et al. Table 2.
+- Total candidates: 62 PCMs = 55 manufacturer-derived records + 7 literature records. Row-for-row identical to Rajasthan's pool on all shared columns.
+## Screen Constraints (Table 12) — 8 constraints, exact order (matches Rajasthan)
+1. Melting window: `Tm ∈ [Tm_target − 5, Tm_target + 8]°C` (relaxable ±2K, up to 4 rounds).
+2. Absolute band: `Tm ∈ [42, 70]°C`.
+3. Latent heat floor: `L ≥ κ · L_required`, κ = 0.7 nominal. pass / fail / flag_unreported.
+4. Cycling stability: `cycles ≥ 300`; unreported → flag_unreported (never excludes).
+5. Supercooling: `≤ 8K`; unknown → flag_unknown (never excludes).
+6. Charging feasibility: `Tm ≤ Tm_target_capped_C` (Phase 3's kt_worst_month ceiling, referenced directly — the single charging-feasibility path; the old REFERENCE_GOOD_DAY_TEMP / MIN_ACHIEVABLE_TEMP heuristic in 07b is gone).
+7. Corrosion veto: bare salt hydrate + cluster `HSI_sunrise` > 75th percentile, unless encapsulated. Implemented but currently excludes zero candidates because the shared PCM database contains zero salt-hydrate candidates.
+8. Safety exclusion: flag-only; does not currently exclude any candidate.
+## Kappa calibration
+calibrate_kappa_for_cluster() (ported from Rajasthan) steps κ 0.7 → 0.0 in 0.1 increments, targeting 8–20 survivors per cluster, evaluated at each cluster's melting window from the primary run's final relaxation round. Produces feasibility_survivors_by_cluster_kappa_calibrated.csv, which Phase 6 (08) and Phase 8 (09) read. The Phase 5 report must state BOTH the nominal κ=0.7 survivor count per cluster and the final calibrated-κ survivor count per cluster.
+## Current Finding (STALE — pre-unification run, pending re-run)
+- The feasibility output audits 62 candidates per cluster; use `survives_all == True` / `passes_all == True` for actual survivors.
+- Pre-unification survivor counts were 15, 9, 13, 13, 9 for clusters 0-4 (7-constraint schema, no Constraint 6, no kappa calibration). These WILL change after the re-run.
+- `L_required` values ~301–326 kJ/kg (combined sensible+latent basis, Phase 3 OPTION A). Latent-heat floor `max(100, κ × L_required)`.
+- Path bug fixed: the `data/processed/processed/` duplication is resolved in config.py / 04b_climate_signature.py. The stale `data/processed/processed/` mirror tree was deleted.
 ## Status
-COMPLETE for the current generated artifacts. Re-run 06_build_pcm_database.py and 07_feasibility_filter.py whenever the PCM source or upstream climate signatures change.
+Code UNIFIED with Rajasthan (2026-09-08) — clean re-run PENDING. After the unified upstream chain (Phase 3 must produce Tm_target_capped_C via kt_worst_month): re-run 06_build_pcm_database.py → 07_feasibility_filter.py → 08_mcdm_ranking.py → 10_physics_validation.py → 09_recommendation_cards.py. 07b_charging_feasibility.py is deleted and no longer in run_all_tamilnadu.py.
 ## Literature Support
 
 | Component | Reference | Source |
@@ -361,37 +367,41 @@ COMPLETE for the current generated artifacts. Re-run 06_build_pcm_database.py an
 Source: 08_PHASE_6_AUDIT(1).md
 # 08 — Phase 6 Audit: Multi-Criteria Ranking Engine
 Script: 08_mcdm_ranking.py.
-## Purpose
-Rank the surviving PCM candidates in each cluster using four independent multi-criteria decision-making (MCDM) methods under weight and property uncertainty.
-## Processing Details
-1. Target-Based Fitness:
-- Converts melting temperature to a Gaussian fitness score:
-f_Tm = exp( - (Tm - Tm_target)² / (2 * σ²) ), where σ = 4.0 K.
-1. Criteria Evaluated:
-- `f_Tm` (melting point fitness) - benefit.
-- `latent_heat_margin_ratio = latent_heat / L_required` (climate-relative benefit).
-- `rho_H_MJ_m3` (volumetric latent heat) - benefit.
-- `TC_W_mK` (thermal conductivity) - benefit.
-- `cycles_confidence` (log-scaled cycling reliability) - benefit.
-1. Four MCDM Methods:
-- TOPSIS: Closeness to Euclidean ideal/anti-ideal.
-- GRA: Grey relational grade vs max reference.
-- PROMETHEE II: Net outranking flow (V-shape, q=0.10, p=0.30).
-- VIKOR: Compromise index Q (v=0.5) with acceptable-advantage check.
-1. Weights:
-- Entropy weights (data-driven) blended with AHP prior weights (Table 13 priors) at `λ = 0.5`.
-1. Consensus & Uncertainty:
-- Primary rank: Borda count across the 4 methods.
-- Cross-check: Copeland pairwise majority.
-- Monte Carlo: 5,000 Dirichlet weight draws + Gaussian property perturbations (Tm ±1K, latent heat ±5%, conductivity ±10%). Calculates Top-3 inclusion probability and Top-1 retention.
-## Results
-- Ranks the current feasibility survivors for each cluster. The generated `mcdm_topk_by_cluster.csv` contains the Top-3 for each of the five clusters (15 rows total).
-- The current climate-relative latent-heat criterion is `latent_heat / L_required`, so the score retains cluster-specific demand information rather than treating raw latent heat as equally useful everywhere.
-- Do not describe the ranking as seven survivors per cluster; the feasibility file contains all 62 audited candidates per cluster and the number passing all filters varies by cluster.
-- Monte Carlo stability reports run-specific Top-3 inclusion and Top-1 retention probabilities; quote values from `monte_carlo_stability.csv` for the particular run being reported.
-- In the current run, `n-Octacosane (C28)` is the consensus rank-1 PCM in all five clusters. This is a statewide consensus result; it does not imply that all alternatives have equal stability or physical performance.
+
+> UNIFIED with Rajasthan 2026-09-08 — byte-identical engine (differs only in state/paths/one
+> column normalisation). Replaces the earlier bespoke 5-criterion Tamil Nadu script. Bug audit
+> of the old script: VIKOR sign was CORRECT; entropy `<2 real values → weight 0` guard was
+> LATENT (not triggered by the 5-criterion set) and is now load-bearing with 8 criteria; kappa
+> calibration is Phase 5's, with the correct `>= k` direction.
+
+## Criteria (8, Table 13)
+`Tm_fitness` (Gaussian, σ=4K, benefit) · `latent_heat` = `latent_heat_kJ_kg / L_required`
+(climate-relative, benefit) · `vol_latent_heat` (ρL, benefit) · `thermal_conductivity` (benefit) ·
+`cycling` = log-scaled `cycles_confidence` (benefit) · `supercooling` (cost; **entropy weight
+capped at ≤ 2× its Table-13 prior = 0.16**, remaining criteria rescaled — corrects the
+entropy-formula overweighting Rajasthan's Phase 7/8 diagnosed) · `corrosion` (cost, structural
+proxy, inert) · `cost` (cost, always-NaN → weight 0).
+
+## Methods / aggregation / diagnostics
+TOPSIS + GRA + PROMETHEE II + VIKOR, missing values excluded-by-omission. **PROMETHEE handles Tm
+natively** (`|Tm − Tm_target|`, q=2K/p=8K), not the Gaussian `f_Tm`. Borda (primary) + Copeland
+(cross-check) + Top-3 disagreement flag. Kendall's W with plan-doc thresholds. Pairwise
+method-agreement + structural-outlier detection. λ=0 vs λ=0.5 Top-3 ablation. Provenance
+hard-fail. Monte Carlo `N_DRAWS = 1000` (raise both states to 5000 for the final reported run).
+
+## Outputs
+`mcdm_full_rankings.csv` (full per-survivor audit trail + legacy aliases for Phase 7/8),
+`mcdm_topk_by_cluster.csv` (`consensus_rank ≤ 3`), `monte_carlo_stability.csv`,
+`mcdm_method_agreement.csv`, `outputs/qc_montecarlo_inclusion.html`. All carry
+`upstream_cluster_profile_fingerprint`.
+
+## Results — 2026-09-08 run (k=3, 13/13/16 survivors; INDICATIVE, re-run pending)
+`Tm_fitness` is the dominant entropy criterion (0.54 / 0.71 / 0.70, all flagged >40%). Kendall's W
+≈ 0.55 / 0.57 / 0.60. Structural outlier: PROMETHEE (Cluster 0), GRA (Clusters 1–2). Consensus
+Top-1: `Myristic acid` / `n-Tetracosane (C24)` / `Palmitic-Stearic eutectic`.
+
 ## Status
-COMPLETE
+Unified with Rajasthan; fresh run pending (the 2026-09-08 run predates the final supercooling cap fix).
 ## Literature Support
 
 | Component | Reference | Source |
@@ -426,7 +436,7 @@ The Tamil Nadu pipeline has fully implemented both phases.
 ## Phase 8: Recommendation Cards (`09_recommendation_cards.py`)
 - Aggregates cluster profiles, MCDM rankings, physics validation, Monte Carlo stability into `recommendation_cards.md`.
 - Re-run `09` after `10` to include updated Spearman ρ and solar fractions.
-- The current cards were regenerated after the updated ranking and physics runs and contain five cluster recommendations.
+- After the unified Phase 4 (k=3) the cards contain three cluster recommendations; re-run pending against the unified Phase 5/6 outputs.
 ## Status
 COMPLETE for the current generated artifacts. Re-run 10 → 09 whenever the PCM database, climate signatures, or ranking outputs change.
 ## Literature Support

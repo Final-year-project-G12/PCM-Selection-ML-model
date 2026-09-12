@@ -1,7 +1,7 @@
 ﻿import pandas as pd
 from pathlib import Path
 
-survivors_file = Path('d:/Final Year Project/PCM-Selection-ML-model/era5-rajasthan/data/processed/feasibility_survivors_rajasthan_kappa_calibrated.csv')
+survivors_file = Path('d:/Final Year Project/PCM-Selection-ML-model/era5-rajasthan/data/processed/feasibility_survivors_by_cluster_kappa_calibrated.csv')
 survivors = pd.read_csv(survivors_file)
 print('Columns in survivors CSV:')
 print(survivors.columns.tolist())

@@ -2,6 +2,23 @@
 
 ⚠️ **CRITICAL UPDATE (2026-08-31): L_required Methodology Correction** — Phase 3's methodology was corrected 2026-08-31, halving L_required values and cascading through Phases 4–8. All outputs from Phases 5–8 documented in this overview are now STALE and must be regenerated. Documented results (κ calibrations, Spearman rho validation values, rankings) below are superseded. See CLAUDE.md §3.1 and `04b_climate_signature.py` docstring for full detail.
 
+⚠️ **UNIFICATION UPDATE (2026-09-08): Phase 5 + Phase 6 unified with Tamil Nadu; scripts renumbered.**
+- **Phase 5** — `07_feasibility_filter.py` now runs the same 8-constraint set / order / missing-value
+  semantics / κ-calibration / provenance stamping as Tamil Nadu. Constraint 6 (charging feasibility,
+  `Tm ≤ Tm_target_capped_C`) replaced the retired heuristic `07b_charging_feasibility.py`. Outputs
+  renamed to Tamil Nadu's canonical names: `feasibility_survivors_by_cluster{,_kappa_calibrated}.csv`.
+- **Phase 6** — `08_mcdm_ranking.py` is now byte-identical to Tamil Nadu's engine (apart from
+  state/paths). 8 Table-13 criteria; latent-heat criterion is climate-relative
+  (`latent_heat / L_required`); cycling is log-scaled `cycles_confidence`; **supercooling's
+  entropy weight is capped at 2× its Table-13 prior (0.16)** to fix a known entropy-formula
+  overweighting pathology. Outputs renamed: `mcdm_full_rankings.csv`, `mcdm_topk_by_cluster.csv`,
+  `monte_carlo_stability.csv`, `mcdm_method_agreement.csv`, `qc_montecarlo_inclusion.html`.
+- **Script renumber** — to match Tamil Nadu exactly: `10_physics_validation.py` →
+  `10_physics_validation.py`; `09_recommendation_cards.py` → `09_recommendation_cards.py`.
+  Both state folders now share Phase 5–8 basenames `07`/`08`/`09`/`10`/`11` (cards = 09 but runs
+  LAST, after physics = 10).
+- Fresh run pending; every Phase 5–8 number below is pre-unification and stale.
+
 ---
 
 ## Project objective
@@ -60,16 +77,23 @@ Phase 2 — PREPROCESSING & CROSS-SOURCE VALIDATION
   03_verify_climate_csv.py       → stdout QA report (schema/coverage/nulls/range/agreement)
   03_qc_plots.py                 → outputs/qc_*.html (spatial + distributional QC)
   03b_agreement_analysis.py      → era5_power_agreement_rajasthan.csv, bias_decision_rajasthan.txt
-        ↓  [DECISION: QUANTILE_MAP — see 04_PHASE_2_AUDIT.md §A.8]
-Phase 2.5 — QUALITY CHECK (undocumented until 2026-08-11 — see 04_PHASE_2_AUDIT.md Part B)
+        ↓  [DECISION: QUANTILE_MAP — advisory; see 04_PHASE_2_AUDIT.md §A.8 / Part B]
+Phase 2.5 — PREPROCESSING & QUALITY CONTROL (restructured 2026-09-08 onto the Tamil Nadu
+            04_preprocess contract — see 04_PHASE_2_AUDIT.md Part B / §B.11)
+  04_preprocess_rajasthan.py            → data/preprocessed/rajasthan_cleaned_physical.csv
+                                          (BOUNDS physical screen + SZA>=90 solar night-mask +
+                                           per-season ERA5→POWER quantile map PERSISTED +
+                                           Hampel on GHI/T_amb/RHum/W_spd/cloud_cover +
+                                           4-stage/IterativeImputer(MICE) imputation;
+                                           also *_scaled.csv + scalers.pkl for later ML/DRL use)
+  (diagnostic only, not in the core chain:)
   03b_quality_check_rajasthan.py       → climate_rajasthan_points_clean.csv, quality_report_rajasthan.{md,json}
-                                          (Hampel-filter outlier winsorizing on T_amb/RHum/W_spd ONLY —
-                                           GHI/CSI deliberately excluded, see that script's docstring —
-                                           + missing-data imputation)
-  03b_validate_quality_fix_rajasthan.py → independent before/after re-verification (re-runs Phase 3)
+                                          (leaner: Hampel winsorize on T_amb/RHum/W_spd ONLY —
+                                           GHI/CSI excluded — + point-local imputation; SUPERSEDED,
+                                           follow-up: check the GHI-Hampel trade-off, 04_PHASE_2_AUDIT.md Part C/D)
   03c_plots_raw_rajasthan.py            → outputs/qc_raw_*.html (raw pre-QC visual sanity checks)
   03b_quality_check_plots_rajasthan.py  → outputs/qc_clean_*.html (post-QC visual sanity checks)
-        ↓  Phase 3 now reads climate_rajasthan_points_CLEAN.csv, not 02's raw output directly
+        ↓  Phase 3 now reads data/preprocessed/rajasthan_cleaned_physical.csv, not 02's raw output directly
 Phase 3 — CLIMATE SIGNATURE CONSTRUCTION
   signature_lib.py + 04b_climate_signature.py → climate_signature_rajasthan.csv
   (Tier 1 sun-event indices + Tier 2 daily indices + Tm_target/L_required + 5 interaction terms
@@ -85,31 +109,36 @@ Phase 4 — CLIMATE REGIME CLUSTERING
 Phase 5 — FEASIBILITY FILTERING  (+ shared PCM property database, run independently)
   01_preprocess.py (PCM_data/) → PCM_Properties_cleaned_mice_pmm{,_detailed}.csv (55 rows, MICE-RF-PMM —
                                    expanded 2026-08-12 from the prior 18-row database, see below)
-  07_feasibility_filter.py → feasibility_survivors_rajasthan{,_kappa_calibrated}.csv
+  07_feasibility_filter.py → feasibility_survivors_by_cluster{,_kappa_calibrated}.csv
         ↓  [Pre-expansion FINDING: 0 survivors at nominal kappa=0.7 — see 07_PHASE_5_AUDIT.md.
             NOT yet re-verified against the expanded 55-row database — outputs on disk are stale.]
 Phase 6 — MULTI-CRITERIA RANKING ENGINE
-  08_mcdm_ranking.py → mcdm_rankings_rajasthan.csv, mcdm_method_agreement_rajasthan.csv
-  (TOPSIS + PROMETHEE II + VIKOR + GRA, Borda/Copeland/Kendall's W, 1000-draw Monte Carlo)
+  08_mcdm_ranking.py → mcdm_full_rankings.csv, mcdm_topk_by_cluster.csv,
+    monte_carlo_stability.csv, mcdm_method_agreement.csv, outputs/qc_montecarlo_inclusion.html
+  (TOPSIS + PROMETHEE II + VIKOR + GRA, Borda/Copeland/Kendall's W, pairwise method-agreement,
+   1000-draw Monte Carlo; 8 Table-13 criteria; climate-relative latent heat; log-scaled cycling;
+   supercooling entropy weight capped at 2× prior; UNIFIED with Tamil Nadu 2026-09-08)
         ↓
-Phase 7 — PHYSICS-BASED VALIDATION (complete)
-  physics_lib.py + 09_physics_validation_rajasthan.py → physics_validation_rajasthan.csv,
-    spearman_rho_by_cluster_rajasthan.csv, outputs/qc_calibration_check_rajasthan.html
-  (lumped-enthalpy PCM+tank model, real hourly NASA POWER weather, cited draw profile, full calibration;
-   RESULT: genuine NEGATIVE validation, rho = -0.385 / +0.125 / -0.097 across 3 clusters;
-   dominant MCDM criterion is supercooling (48–64%) but model cannot simulate it — see 09_PHASE_7_AUDIT.md)
+Phase 7 — PHYSICS-BASED VALIDATION
+  physics_lib.py + 10_physics_validation.py (was 10_physics_validation.py) →
+    physics_validation_rajasthan.csv, spearman_rho_by_cluster_rajasthan.csv,
+    outputs/qc_calibration_check_rajasthan.html
+  (lumped-enthalpy PCM+tank model, real hourly NASA POWER weather, cited draw profile, full
+   calibration. Pre-unification RESULT: rho = -0.385 / +0.125 / -0.097; re-run pending against
+   the unified, entropy-capped Phase 6 output — see 09_PHASE_7_AUDIT.md)
         ↓
-Phase 8 — SUPERCOOLING PENALTY SENSITIVITY ANALYSIS (complete)
+Phase 8 — SUPERCOOLING PENALTY SENSITIVITY ANALYSIS
   08_phase8_supercooling_sweep.py → phase8_supercooling_sweep_rajasthan.csv
-  (implements proportional h_p reduction for supercooling_K, sensitivity sweep k ∈ [0.0,0.1,0.2,0.3];
-   RESULT: penalty WORSENS physics/MCDM agreement in Clusters 1-2 (rho degrades from +0.125→+0.059–0.077,
-   and from -0.097→-0.118–0.136); suggests supercooling's real effect <48% MCDM weight, or penalty
-   mechanism incorrect — see 10_PHASE_8_AUDIT.md for full analysis)
+  (proportional h_p reduction for supercooling_K, sweep k ∈ [0.0,0.1,0.2,0.3]; pre-unification
+   RESULT: penalty WORSENS physics/MCDM agreement — supporting evidence for the Phase 6 entropy
+   cap; re-run pending — see 10_PHASE_8_AUDIT.md)
         ↓
-Phase 9 — RECOMMENDATION CARDS (complete)
-  10_recommendation_cards_rajasthan.py → outputs/recommendation_cards_rajasthan.md
+Phase 8 deliverable — RECOMMENDATION CARDS
+  09_recommendation_cards.py (was 09_recommendation_cards.py) →
+    outputs/recommendation_cards_rajasthan.md
   (pure aggregation of Phases 4/6/7, one card per cluster + cross-cluster summary table, hard-fails
-   on any cross-phase cluster-identity mismatch via provenance_lib.py)
+   on any cross-phase cluster-identity mismatch via provenance_lib.py. Numbered 09 to match Tamil
+   Nadu; runs LAST, after 10_physics_validation.py)
 ```
 
 **Orchestration**: `run_all_rajasthan.py` runs the entire reproducible chain (Phase 2 through
@@ -121,15 +150,15 @@ failure — see "Current architecture" → Resumability below.
 | Phase | Script(s) | Status | Headline finding |
 |---|---|---|---|
 | 1 — Data Collection | `00a/00b/00c`, `01`, `01b`, `00_unzip_accum` | **COMPLETE** | 320 pts, 240/240 ERA5 files, 3200/3200 (1 retry) POWER files |
-| 2 — Preprocessing & Validation | `02`, `02b`, `03_verify`, `03_qc_plots`, `03b` | **COMPLETE — with a caught-and-fixed critical bug** | Deaccumulation bug found & fixed; QUANTILE_MAP branch applied |
-| 2.5 — Quality Check | `03b_quality_check`, `03b_validate_quality_fix` | **COMPLETE — 3 sequential corrections, see 04_PHASE_2_AUDIT.md Part B** | Hampel filter initially over-corrected genuine cloud-driven GHI/CSI variability; fixed by excluding those two variables from outlier detection entirely |
-| 3 — Climate Signature | `signature_lib.py`, `04b_climate_signature` | **COMPLETE — 5 documented corrections** | Tm_target=57°C fixed; Tm_target_capped varies by regime; now reads the Phase 2.5 CLEAN file |
+| 2 — Preprocessing & Validation | `02`, `02b`, `03_verify`, `03_qc_plots`, `03b` | **COMPLETE — with a caught-and-fixed critical bug** | Deaccumulation bug found & fixed; QUANTILE_MAP decision (advisory) — correction now persisted in Phase 2.5 |
+| 2.5 — Preprocessing & Quality Control | `04_preprocess_rajasthan` (core); `03b_quality_check`, `03b_validate_quality_fix` (diagnostic/deprecated) | **RESTRUCTURED 2026-09-08 — converged onto the Tamil Nadu `04_preprocess` contract; re-run pending** | Phase 2.5 is now `04_preprocess_rajasthan.py` (BOUNDS + SZA night-mask + per-season quantile map persisted + Hampel + 4-stage/MICE imputation → `rajasthan_cleaned_physical.csv`). Follow-up: it Hampel-filters GHI/cloud_cover, which the retired `03b_quality_check` excluded — verify against the regenerated signature (04_PHASE_2_AUDIT.md Part C/D) |
+| 3 — Climate Signature | `signature_lib.py`, `04b_climate_signature` | **COMPLETE — 5 documented corrections; re-run pending after the Phase 2.5 restructure** | Tm_target=57°C fixed; Tm_target_capped varies by regime; now reads `data/preprocessed/rajasthan_cleaned_physical.csv` |
 | 4 — Regime Clustering | `05` | **COMPLETE — with 2 caught-and-fixed bugs** | k=3 (GMM `diag` covariance, fixed from `full`); GMM cluster-index instability fixed via canonical relabeling (2026-08-11); Koppen-Geiger external validation wired in (ARI=0.19, NMI=0.32 vs GMM) |
-| 5 — Feasibility Filtering | `01_preprocess`, `07` | **PCM database prerequisite now COMPLETE (55 rows); Phase 5 output on disk is STALE, pending re-run** | Database expanded 18→55 rows (2026-08-12), inside the 40–60 target; `feasibility_survivors_rajasthan.csv` still reflects the pre-expansion 25-candidate pool and the old 0-survivors-at-κ=0.7 finding — re-run required, see "What remains" |
-| 6 — MCDM Ranking | `08` | **COMPLETE — with 3 caught-and-fixed bugs, 1 documented deviation** | Runs on κ-relaxed survivor pool; N_DRAWS=1000 not 5000 (documented); AHP pairwise elicitation still a TODO stub; now hard-fails on a provenance mismatch |
-| 7 — Physics Validation | `physics_lib.py`, `09` | **COMPLETE — 2 caught-and-fixed bugs, real calibration, genuine NEGATIVE result** | Spearman rho = -0.385 (Cluster 0) / +0.125 (Cluster 1) / -0.097 (Cluster 2); MCDM ranking weakly/negatively correlates with simulated solar fraction; dominant criterion is supercooling (48–64%) but model cannot simulate it — see `09_PHASE_7_AUDIT.md` |
-| 8 — Supercooling Penalty | `physics_lib.py`, `08_phase8_supercooling_sweep.py` | **COMPLETE — Sensitivity sweep k ∈ [0.0,0.1,0.2,0.3], honest negative result** | Penalty implementation is correct (energy conservation passes); but worsens physics/MCDM agreement instead of improving it — rho degrades Cluster 1 from +0.125 to +0.059, and Cluster 2 from -0.097 to -0.136; suggests supercooling weight is over-estimated or mechanism is incorrect — see `10_PHASE_8_AUDIT.md` |
-| 9 — Recommendation Cards | `10` | **COMPLETE** | Pure aggregation of Phases 4/6/7 into `recommendation_cards_rajasthan.md`, hard-fails on cross-phase cluster-identity mismatch |
+| 5 — Feasibility Filtering | `01_preprocess`, `07` | **UNIFIED with Tamil Nadu 2026-09-08; re-run pending** | 8 constraints in canonical order; Constraint 6 = `Tm ≤ Tm_target_capped_C` (replaces retired `07b_charging_feasibility.py`); κ-calibration; outputs `feasibility_survivors_by_cluster{,_kappa_calibrated}.csv`. 62-row shared PCM pool. |
+| 6 — MCDM Ranking | `08` | **UNIFIED with Tamil Nadu 2026-09-08 (byte-identical engine); re-run pending** | 8 Table-13 criteria; climate-relative latent heat (`L/L_required`); log-scaled cycling; **supercooling entropy weight capped at 2× prior (0.16)** — fixes the entropy-formula overweighting Phase 7/8 diagnosed as the negative-correlation cause. PROMETHEE handles Tm natively (q=2K/p=8K). N_DRAWS=1000 (both states). Provenance hard-fail. AHP pairwise elicitation still a TODO stub. |
+| 7 — Physics Validation | `physics_lib.py`, `10_physics_validation.py` | **RE-RUN PENDING (renumbered 09→10; unified Phase 6 input changed)** | Pre-unification Spearman rho = -0.385 / +0.125 / -0.097. The unified Phase 6's entropy cap should move these — the post-cap re-run is the actual test. SF ~65% (in the 54–84% benchmark band). |
+| 8 — Supercooling Penalty | `physics_lib.py`, `08_phase8_supercooling_sweep.py` | **RE-RUN PENDING** | Pre-unification sweep worsened physics/MCDM agreement as k rose — this is the evidence the Phase 6 entropy cap is based on (supercooling was *over*-weighted). Energy conservation passes. |
+| 8 (deliverable) — Recommendation Cards | `09_recommendation_cards.py` | **RE-RUN PENDING (renumbered 10→09)** | Pure aggregation of Phases 4/6/7 into `recommendation_cards_rajasthan.md`; hard-fails on cross-phase cluster-identity mismatch. Numbered 09 to match Tamil Nadu; runs LAST. |
 
 ## Current architecture
 
@@ -160,11 +189,13 @@ failure — see "Current architecture" → Resumability below.
 | `climate_signature_rajasthan.csv` | 320 | 1 row/point, 86 columns | `04` |
 | `cluster_assignments_rajasthan_levelA.csv` | 320 | 1 row/point | `05` |
 | `cluster_profiles_rajasthan.csv` | 3 | 1 row/cluster | `05` |
-| `feasibility_survivors_rajasthan.csv` | 75 (3 clusters × 25 candidates) | 1 row/cluster×PCM | `07` |
-| `mcdm_rankings_rajasthan.csv` | 20 (survivors across clusters) | 1 row/cluster×surviving PCM | `08` |
-| `physics_validation_rajasthan.csv` | 20 | 1 row/cluster×simulated PCM | `09` |
-| `spearman_rho_by_cluster_rajasthan.csv` | 3 | 1 row/cluster | `09` |
-| `recommendation_cards_rajasthan.md` | 3 cards + 1 summary table | 1 card/cluster | `10` |
+| `feasibility_survivors_by_cluster.csv` / `…_kappa_calibrated.csv` | 186 (3 clusters × 62 candidates) | 1 row/cluster×PCM | `07` |
+| `mcdm_full_rankings.csv` | survivors across clusters (n≈41) | 1 row/cluster×surviving PCM | `08` |
+| `mcdm_topk_by_cluster.csv` | 9 (3 clusters × Top-3) | 1 row/cluster×Top-3 PCM | `08` |
+| `monte_carlo_stability.csv` / `mcdm_method_agreement.csv` | — | MC / method-pair diagnostics | `08` |
+| `physics_validation_rajasthan.csv` | ≈41 | 1 row/cluster×simulated PCM | `10_physics_validation.py` |
+| `spearman_rho_by_cluster_rajasthan.csv` | 3 | 1 row/cluster | `10_physics_validation.py` |
+| `recommendation_cards_rajasthan.md` | 3 cards + 1 summary table | 1 card/cluster | `09_recommendation_cards.py` |
 
 ## Main algorithms
 
@@ -183,8 +214,9 @@ analysis with a pre-registered decision rule (backbone / quantile-map / manual-r
 Calinski-Harabasz for cluster count, Monte Carlo inclusion-probability for MCDM rank stability,
 Kendall's W for cross-method ranking agreement. A third layer — **external classification
 validation** (Köppen-Geiger, NBC/ECBC climate zones) — is specified and explicitly stubbed (`None`
-values, not fabricated), and a fourth — **physics-based simulation validation** (Phase 7) — is
-specified but not yet implemented.
+values, not fabricated), and a fourth — **physics-based simulation validation** (Phase 7,
+`10_physics_validation.py`) — is implemented and run (pre-unification result: rho ≈ -0.4/+0.1/-0.1;
+post-unification re-run pending).
 
 ## Current known issues
 
@@ -203,25 +235,22 @@ specified but not yet implemented.
 3. **[FIXED]** VIKOR compromise-index sign inversion (was `(Sb-Sw)/(Rb-Rw)`, silently reversed rankings).
 4. **[FIXED]** Entropy-weight inflation for sparse/all-NaN criteria (the `cost` criterion, always NaN
    in this database, was getting 64–75% entropy weight before the fix).
-5. **[OPEN]** Feasibility filter's latent-heat floor (`L ≥ 0.7×L_required`) is structurally unreachable
-   by every candidate in the current 18-row PCM database given the corrected `L_required` derivation
-   (~610–643 kJ/kg ceiling vs best-case ~252 kJ/kg latent heat) — **0 of 75 cluster×candidate rows
-   survive at the nominal κ=0.7**, and the pipeline currently relies on an ad hoc per-cluster
-   κ-relaxation pass to produce any MCDM input at all.
+5. **[RESOLVED]** Feasibility filter's latent-heat floor was structurally unreachable under the
+   *all-latent* `L_required` derivation. After the 2026-08-31 combined-sensible+latent correction
+   (`SHARE_PCM = 0.5`, `L_required ≈ 300–320 kJ/kg`) the fixed-κ=0.7 primary run now returns
+   4 / 7 / 5 survivors per cluster, and the κ-calibration companion pass (κ = 0.5 / 0.6 / 0.5)
+   yields 9 / 15 / 17 (n ≈ 41). κ-calibration is now a documented sensitivity step, not a rescue.
 6. **[RESOLVED, prerequisite met 2026-08-12 — pipeline re-run still pending]** PCM property database
    expanded from 18 rows (25 counting literature-only rows in the vestigial TN-branch script) to
    **55 rows** (14 Rubitherm RT-line + 7 Pluss savE + 4 PCM Products Ltd/PlusICE + 5 PureTemp +
    1 CrodaTherm + 24 literature-sourced n-alkane/fatty-acid/composite rows), now inside the framework
-   doc's 40–60-row target for the 42–70°C band. The row-count/manufacturer-diversity gap the user's
-   parallel PCM-database-expansion task targeted is closed. **What is still true**: zero rows in the
-   expanded database are salt-hydrate/inorganic-typed, so the corrosion-veto constraint remains
-   structurally inert regardless, and the framework doc's 55–63°C salt-hydrate-specific coverage gap
-   is not closed (though that melting-point band is now densely covered by organics — RT54HC/RT55/
-   RT57HC/PureTemp 58/CrodaTherm 60/RT60/RT62HC/PureTemp 63). **What has NOT yet happened**:
-   `PCM_Properties_cleaned_mice_pmm_detailed.csv` — the exact file `07_feasibility_filter.py`
-   and `08_mcdm_ranking.py` read — is currently absent from disk and must be regenerated
-   (`python PCM_data/PCM_data/01_preprocess.py`), and Phases 5–8's outputs on disk are all still from
-   the pre-expansion run. See `07_PHASE_5_AUDIT.md` for full detail.
+   doc's 40–60-row target for the 42–70°C band. The row-count/manufacturer-diversity gap is closed.
+   `PCM_Properties_cleaned_mice_pmm_detailed.csv` now exists on disk and is read by both
+   `07_feasibility_filter.py` and `08_mcdm_ranking.py` (the 2026-09-08 runs used it). **What is still
+   true**: zero rows are salt-hydrate/inorganic-typed, so the corrosion-veto (Constraint 7) is
+   structurally inert. Both states now build the candidate pool from this one canonical file — 62
+   rows (55 manufacturer + 7 Singh2025 literature), row-for-row identical between Rajasthan and
+   Tamil Nadu. See `07_PHASE_5_AUDIT.md`.
 7. **[OPEN, minor]** Inconsistent Monsoon month definitions between `02_combine_rajasthan.py`
    (Jun–Aug) and `02b_build_daily_aggregates.py` (Jun–Sep), feeding different downstream indices.
 8. **[OPEN, minor]** `avg_sdirswrf` (direct-radiation surrogate) unit handling is inconsistent with
@@ -251,6 +280,19 @@ specified but not yet implemented.
     accounting bug (silently discarded the sensible-heat "overshoot" at melt onset). Energy
     conservation now holds to machine precision (~1e-13 relative residual) — see `physics_lib.py`'s
     own module docstring for the full diagnosis.
+13. **[RESTRUCTURED 2026-09-08 — full re-run of Phases 2.5→8 pending]** Phase 2.5 converged onto the
+    Tamil Nadu `04_preprocess` contract. `04_preprocess_rajasthan.py` replaces
+    `03b_quality_check_rajasthan.py` in `run_all_rajasthan.py`'s core chain; `04b_climate_signature.py`
+    now reads `data/preprocessed/rajasthan_cleaned_physical.csv`. This **resolves** the long-standing
+    open item that the ERA5→NASA-POWER quantile-map correction was computed but never persisted —
+    Step 2b of `04_preprocess_rajasthan.py` now writes the corrected `era5_GHI`/`era5_CSI` (applied
+    unconditionally per season). It also fixes a latent runner bug: the core chain's old
+    `04_climate_signature_rajasthan.py` entry named a nonexistent file, so `run_all` was silently
+    skipping Phase 3. **Follow-up:** `04_preprocess_rajasthan.py` Hampel-filters `era5_GHI` /
+    `era5_cloud_cover`, which `03b_quality_check_rajasthan.py` deliberately excluded after three
+    empirical corrections — regenerate `climate_signature_rajasthan.csv` and Phases 4–8, diff
+    against the pre-switch outputs, and confirm the GHI low-clearness tail is not being uniformly
+    eroded. See `04_PHASE_2_AUDIT.md` Parts B/C/D.
 
 ## Research gaps addressed (N1–N6 novelty mapping)
 
@@ -278,7 +320,7 @@ objectives.
 | 5 — Feasibility Filtering | N3 (partial) | Enforces the corrected 42–70°C band and SWH-specific constraints; **database-size gap closed 2026-08-12** (18–25 → 55 rows, inside the 40–60 target) — N3's practical value depended on having enough real in-band candidates to filter; that prerequisite is now met, but Phase 5 has not yet been re-run against the expanded database, so N3's demonstrated value in the current on-disk output is still the pre-expansion result |
 | 6 — MCDM Ranking | N4 | Four-method consensus + Monte Carlo, not a single TOPSIS winner; Kendall's W explicitly reports when consensus is *not* strong (Cluster 0, W=0.4375) rather than hiding disagreement — this honest reporting is itself part of N4's value proposition |
 | 7 — Physics Validation (COMPLETE) | N5 | Independently validated the MCDM ranking against simulated solar fraction — **the result is a genuine NEGATIVE validation (Spearman rho ≤0.4, all 3 clusters)**, not a confirmation. This is itself evidence for N5 as a methodology (the validation was performed rigorously and reported honestly, exactly per the framework doc's own "write it out plainly" instruction) even though it does not currently confirm the MCDM ranking's output — N5's claim should read "the ranking WAS physics-tested, honestly, with a negative result attributable in part to the still-undersized PCM database" not "the ranking IS physics-validated." See `09_PHASE_7_AUDIT.md`. |
-| 8 — Recommendation Cards (COMPLETE) | (packaging) | Aggregates N1–N5's evidence, including Phase 7's negative result and its caveats, into the final deliverable format — `10_recommendation_cards_rajasthan.py`'s own caveats section surfaces the physics-validation band per cluster, not just the MCDM Top-3 |
+| 8 — Recommendation Cards (COMPLETE) | (packaging) | Aggregates N1–N5's evidence, including Phase 7's negative result and its caveats, into the final deliverable format — `09_recommendation_cards.py`'s own caveats section surfaces the physics-validation band per cluster, not just the MCDM Top-3 |
 
 ### Phase → RG (broader project research gap) mapping — explicitly indirect
 
@@ -316,7 +358,7 @@ negative result means for the project's claims, not building more pipeline:
    database-expansion task itself (that part is done, see known issue 6 above). Every Phase 6/7/8
    output currently on disk is still tagged `pcm_database_status = "PROVISIONAL — ~25-row database, not
    yet expanded to 40-60"` because it predates the expansion, and Phase 7's own inherited-caveats
-   discussion (`09_physics_validation_rajasthan.py`'s docstring) explicitly flags that Cluster 0's
+   discussion (`10_physics_validation.py`'s docstring) explicitly flags that Cluster 0's
    negative rho may be better explained by its undersized candidate pool (n=5) than by a genuine
    MCDM/physics disagreement. **Re-running Phases 5-8 is not optional cleanup — it will likely change
    the result, not just the numbers.** Concretely: `python PCM_data/PCM_data/01_preprocess.py`
@@ -335,13 +377,12 @@ negative result means for the project's claims, not building more pipeline:
 
 ## Recommended next step
 
-The PCM database expansion (18→55 rows) is done — regenerate the missing
-`PCM_Properties_cleaned_mice_pmm_detailed.csv` (`python PCM_data/PCM_data/01_preprocess.py`), then
-re-run the full chain from Phase 5 (`python run_all_rajasthan.py --from
-07_feasibility_filter.py`) and see whether Phase 7's negative result changes. Phase 7 was
-deliberately run anyway against the *pre-expansion* provisional database — see `09_PHASE_7_AUDIT.md`
-("Completion Report") for the reasoning and the full completion report, including why running it now
-(rather than waiting) was itself informative. Every number currently in `feasibility_survivors_rajasthan.csv`,
-`mcdm_rankings_rajasthan.csv`, `physics_validation_rajasthan.csv`,
-`spearman_rho_by_cluster_rajasthan.csv`, and `recommendation_cards_rajasthan.md` still reflects the
-pre-expansion 18/25-row database and should be treated as superseded pending this re-run.
+Re-run the chain from Phase 5 against the **unified** Phase 5/6 engine (2026-09-08):
+`python 07_feasibility_filter.py` → `08_mcdm_ranking.py` → `10_physics_validation.py` →
+`09_recommendation_cards.py` → `11_seasonal_pcm_sensitivity.py` → `08_phase8_supercooling_sweep.py`
+(or `python run_all_rajasthan.py --from 07_feasibility_filter.py`). The key question is whether
+the Phase 6 **supercooling entropy-weight cap** (0.16, down from the ~0.48–0.64 the raw entropy
+formula produced) improves Phase 7's Spearman rho vs the pre-cap -0.385 / +0.125 / -0.097. Every
+number currently in `feasibility_survivors_by_cluster*.csv`, `mcdm_full_rankings.csv`,
+`physics_validation_rajasthan.csv`, `spearman_rho_by_cluster_rajasthan.csv`, and
+`recommendation_cards_rajasthan.md` is pre-unification and should be treated as superseded.

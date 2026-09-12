@@ -29,29 +29,41 @@ $$C_{\text{tank}} \frac{d T_{\text{tank}}}{dt} = Q_{\text{solar}} - Q_{\text{dra
 
 ---
 
-## Validation Findings (Completed 62-PCM Run)
+## Validation Findings — 2026-09-08 unified run (3 clusters, INDICATIVE — re-run pending)
 
-Read from `data/processed/processed/pcm/physics_validation_results.csv` and `physics_validation_spearman.csv` (59 survivor simulations across 5 clusters):
+> Ran against the unified Phase 5/6 outputs. Tamil Nadu's Phase 4 now yields **k=3** clusters
+> (13/13/16 survivors, n=42), not the earlier 5. The Phase 6 build used had a residual
+> supercooling-cap bug (fixed after); a fresh run is pending. Read cluster-by-cluster.
 
-### 1. Spearman Rank Concordance ($\rho$)
-Evaluates rank agreement between MCDM Borda consensus order and simulated 10-year solar fraction:
-- **Cluster 0**: $\rho = -0.016$ (near-zero agreement)
-- **Cluster 1**: $\rho = +0.717$ ($p \approx 0.03$, strong rank concordance)
-- **Cluster 2**: $\rho = +0.355$ (moderate positive agreement)
-- **Cluster 3**: $\rho = -0.171$ (weak inverse correlation)
-- **Cluster 4**: $\rho = -0.000$ (no correlation)
-- **Statewide Mean Concordance**: **Mean Spearman $\rho = +0.177$** across all five clusters.
+### 1. Spearman Rank Concordance ($\rho$) — MCDM consensus rank vs simulated annual solar fraction
+- **Cluster 0**: $\rho = +0.791$ (partial-to-strong agreement)
+- **Cluster 1**: $\rho = +0.680$ (partial agreement)
+- **Cluster 2**: $\rho = +0.478$ (partial agreement)
+- **Statewide mean**: $\rho \approx +0.65$ — the highest concordance the pipeline has produced.
 
-### 2. Benchmark Band & Thermal Performance
-- **Solar Fraction Range**: Annual solar fraction spans **31% to 80%**.
-- **Benchmark Inclusion**: **24 out of 59 simulations** fall within the published 54%–84% literature benchmark band (Singh et al. 2025) (per cluster: 6/15, 6/9, 5/13, 4/13, 3/9).
-- **Statewide Winner (`n-Octacosane (C28)`)**: Simulated solar fraction is 0.71 / 0.65 / 0.69 / 0.51 / 0.31 for clusters 0–4 (in band for clusters 0–2, below band for 3–4).
-- **Annual Cycling Stability**: Thermal cycling spans **3 to 260 complete cycles/year** (rank-1: 47 / 65 / 61 / 71 / 24 cycles/yr), confirming that adding $U A_{\text{tank}} = 2.0\text{ W/K}$ enabled realistic daily charge/discharge cycling.
+### 2. Benchmark Band — ⚠️ TANK/COLLECTOR CALIBRATION DIVERGES FROM RAJASTHAN
+
+- **Solar Fraction Range**: **30%–53%** across all simulations. **0 of 42 simulations land in the
+  published 54–84% benchmark band.** The script itself prints the warning: a systematically off
+  solar fraction usually traces to the tank/collector assumptions (`M_W_KG`, `A_C_M2`,
+  `COLLECTOR_EFF`, draw schedule), not the PCM choice.
+- **Rajasthan's Phase 7 sits at SF ≈ 63–66%, 100% in-band.** Tamil Nadu's `10_physics_validation.py`
+  is a **standalone model** (`M_W_KG = 150`, `DRAW_MASS_KG = 75 × 2 = 150 kg/day`); Rajasthan's
+  uses the shared `physics_lib.py` (`M_W_KG = 300`, `DRAW_TOTAL_KG_PER_DAY = 300`). Until these two
+  Phase 7 models are reconciled and Tamil Nadu is re-calibrated into the benchmark band, **the
+  positive $\rho$ above and Rajasthan's $\rho$ are not directly comparable** — this is the next
+  unification (Phase 7), separate from the Phase 5/6 unification.
+- **Annual cycling**: 144–329 complete cycles/year (rank-1 picks 167/144/206) — realistic daily
+  charge/discharge.
 
 ---
 
 ## Status
-**Analysis COMPLETE (62-PCM run)** — Re-run `10_physics_validation.py` (after `08_mcdm_ranking.py`) to regenerate results in the canonical location. Interpret findings cluster-by-cluster rather than assuming a single global pass/fail.
+**Ran against the unified Phase 5/6 engine 2026-09-08; fresh run pending** (Phase 6 supercooling
+cap had a residual bug fixed after). **Phase 7 itself is NOT yet unified** — Tamil Nadu uses a
+standalone tank model, Rajasthan uses `physics_lib.py`; they disagree on tank mass and daily draw
+and produce SF in different bands (TN 30–53%, RJ 63–66%). Reconciling them is the next unification
+step. Re-run `08_mcdm_ranking.py` → `10_physics_validation.py` → `09_recommendation_cards.py`.
 
 ---
 

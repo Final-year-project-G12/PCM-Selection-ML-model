@@ -1,5 +1,5 @@
 """
-08_mcdm_ranking_rajasthan.py
+08_mcdm_ranking.py  (Rajasthan)
 =============================================================================
 PHASE 6 — MULTI-CRITERIA RANKING ENGINE (Objective1_PCM_Climate_Framework_
 Plan_v3, Section 9). Four-method stack (TOPSIS, PROMETHEE II, VIKOR, GRA)
@@ -10,11 +10,42 @@ it, matching 05_cluster_rajasthan.py's discipline. Criteria/methods/Monte
 Carlo procedure are state-independent; only the input feasibility-survivor
 table changes per state (per phases.md's own note on this).
 
+UNIFIED 2026-09-08 with era5-tamilnadu/08_mcdm_ranking.py. Both states now
+run byte-for-byte the same engine; only STATE_NAME, the cluster-profile
+path and the processed-dir layout differ. What changed this pass:
+  * OUTPUT NAMES — canonical Tamil-Nadu convention for BOTH states, no
+    state suffix: mcdm_full_rankings.csv (full per-survivor audit trail),
+    mcdm_topk_by_cluster.csv (Top-3 subset), monte_carlo_stability.csv
+    (MC columns only), mcdm_method_agreement.csv, and the inclusion plot
+    qc_montecarlo_inclusion.html. (Was mcdm_rankings_rajasthan.csv etc.)
+  * LATENT-HEAT CRITERION — now climate-relative: latent_heat / L_required
+    for THAT cluster (Tamil Nadu's formulation). vol_latent_heat (rho*L)
+    stays a separate criterion. Raw latent heat carried no climate signal
+    because L_required cleared it 3-5x over in every cluster.
+  * CYCLING CRITERION — now the log-scaled cycles_confidence transform
+    (Tamil Nadu's), log1p(cycles)/log1p(max_cycles), NaN-safe, instead of
+    raw cycle counts.
+  * SUPERCOOLING ENTROPY-WEIGHT CAP — the entropy formula has a known
+    pathology on near-zero-ideal cost criteria (supercooling: many
+    candidates report ~0 K, so the column is near-degenerate; the formula
+    reads that as low entropy => high information => spuriously large
+    weight, 48-64% in the first 8-criterion Rajasthan run). Phase 7/8's
+    own diagnosis identified this overweighting as the cause of the
+    negative physics-validation correlation, and Phase 8's calibrated
+    supercooling-penalty sweep WORSENING physics agreement confirmed the
+    direction (overweight, not underweight). Fix: any cost criterion whose
+    ideal value is at/near zero (supercooling, plus cost/corrosion if they
+    ever get real data) has its entropy-derived weight clipped to at most
+    2x its Table-13 prior BEFORE the 50/50 entropy-AHP blend, then the
+    entropy vector is renormalised. supercooling's entropy weight is thus
+    capped at 0.16, not left free to reach 0.64+. Supercooling is NOT
+    removed — all 8 Table-13 criteria are retained.
+
 INPUT FILE — READ THIS FIRST
 -----------------------------
-Reads ONLY feasibility_survivors_{state}_kappa_calibrated.csv, never the
-fixed-kappa=0.7 baseline (feasibility_survivors_{state}.csv) — that file
-has ZERO survivors in every cluster (see 07's docstring/run log) and
+Reads ONLY feasibility_survivors_by_cluster_kappa_calibrated.csv, never the
+fixed-kappa=0.7 baseline (feasibility_survivors_by_cluster.csv) — that file
+can have ZERO survivors in a cluster (see 07's docstring/run log) and
 cannot be ranked. On load, asserts survives_all==True rows exist for
 EVERY cluster in cluster_profiles_{state}.csv — fails loudly (raises, does
 not proceed with a partial/empty ranking) if any cluster has none.
@@ -29,14 +60,13 @@ reliability across clusters with very different survivor counts. Same
 principle already applied to kappa and to Tm_target_capped_C in this
 pipeline: flag heuristics and small-sample results explicitly.
 
-PCM DATABASE STATE (as of this run — check before treating output as final)
--------------------------------------------------------------------------
-Still ~25 candidates (18 manufacturer + 7 literature), not the 40-60 target
-(see 07_feasibility_filter_rajasthan.py's docstring point A). This directly
-caps what the Monte Carlo/ranking layer can discover — the console output
-and mcdm_rankings_{state}.csv both flag every cluster's Top-3 as
-PROVISIONAL pending that expansion. Do not quote a Top-3 in the paper
-without that caveat until the database pass is done.
+PCM DATABASE STATE
+------------------
+62 candidates (55 manufacturer + 7 literature), inside the 40-60-row
+manufacturer target — the same shared canonical pool Tamil Nadu uses (see
+07_feasibility_filter.py). Every cluster's Top-3 is still tagged
+candidate_pool_status ("healthy" 8-20 / "undersized" <8) per cluster so
+survivor-count differences between clusters stay visible.
 
 TARGET-BASED Tm HANDLING — sigma=4K and PROMETHEE q=2K/p=8K PROVENANCE
 --------------------------------------------------------------------------
@@ -142,13 +172,18 @@ ensure_data_dirs()
 
 STATE_NAME = "rajasthan"
 
-SURVIVORS_FILE = PROCESSED_DIR / f"feasibility_survivors_{STATE_NAME}_kappa_calibrated.csv"
+SURVIVORS_FILE = PROCESSED_DIR / "feasibility_survivors_by_cluster_kappa_calibrated.csv"
 PROFILE_FILE = PROCESSED_DIR / f"cluster_profiles_{STATE_NAME}.csv"
 PCM_MANUFACTURER_CSV = BASE_DIR.parent / "PCM_data" / "data" / "PCM_Properties_cleaned_mice_pmm_detailed.csv"
 
-OUT_FILE = PROCESSED_DIR / f"mcdm_rankings_{STATE_NAME}.csv"
-OUT_FIGURE = OUTPUTS_DIR / f"qc_montecarlo_inclusion_{STATE_NAME}.html"
-OUT_METHOD_AGREEMENT = PROCESSED_DIR / f"mcdm_method_agreement_{STATE_NAME}.csv"
+# Canonical Tamil-Nadu output naming — same for both states, no suffix.
+OUT_FULL = PROCESSED_DIR / "mcdm_full_rankings.csv"          # full per-survivor audit trail
+OUT_TOPK = PROCESSED_DIR / "mcdm_topk_by_cluster.csv"        # Top-3 per cluster subset
+OUT_MC = PROCESSED_DIR / "monte_carlo_stability.csv"         # Monte Carlo columns only
+OUT_METHOD_AGREEMENT = PROCESSED_DIR / "mcdm_method_agreement.csv"
+OUT_FIGURE = OUTPUTS_DIR / "qc_montecarlo_inclusion.html"
+# Back-compat alias kept so anything still importing OUT_FILE keeps working.
+OUT_FILE = OUT_FULL
 
 RANDOM_STATE = 42
 CANDIDATE_POOL_LO, CANDIDATE_POOL_HI = 8, 20   # plan doc Table 12 "healthy" band
@@ -161,8 +196,19 @@ PROMETHEE_P_K = 8.0   # preference threshold
 
 # --- Weights (plan doc §9.1 Table 13, §9.3) -----------------------------
 LAMBDA_BLEND = 0.5
+# NOTE: the "latent_heat" criterion is computed climate-relative
+# (latent_heat_kJ_kg / L_required for that cluster) and "cycling" is the
+# log-scaled cycles_confidence transform — see build_criteria_matrix().
+# The dict keys are kept stable so downstream column names don't shift.
 CRITERIA = ["Tm_fitness", "latent_heat", "vol_latent_heat", "thermal_conductivity",
             "cycling", "supercooling", "corrosion", "cost"]
+
+# Cost criteria whose IDEAL value sits at or near zero — the entropy
+# formula overweights these (see module docstring). Their entropy-derived
+# weight is capped at ENTROPY_CAP_MULT x their Table-13 prior before the
+# entropy/AHP blend. Applied identically in both states.
+NEAR_ZERO_IDEAL_COST_CRITERIA = ["supercooling", "corrosion", "cost"]
+ENTROPY_CAP_MULT = 2.0
 CRITERIA_TYPE = {   # "benefit" (higher better) or "cost" (lower better) —
                      # Tm_fitness is a target criterion but is ALREADY a
                      # benefit-oriented score after the Gaussian transform
@@ -201,13 +247,16 @@ RI_TABLE = {1: 0.0, 2: 0.0, 3: 0.58, 4: 0.90, 5: 1.12, 6: 1.24, 7: 1.32, 8: 1.41
 RUN_COCOSO = False   # optional 5th ranker, plan doc §9.4 — never a replacement for the 4 core methods
 
 # --- Monte Carlo -----------------------------------------------------------
-N_DRAWS = 1000        # plan doc default is 5000; DROPPED TO 1000 (documented,
-                      # literature-precedented fallback per module docstring)
-                      # 2026-08-11 after the first 5000-draw run took 606s
-                      # total wall-clock (183-232s/cluster) — impractical for
-                      # iteration. Raise back to 5000 for the final run once
-                      # the pipeline is otherwise settled; the plan doc notes
-                      # inclusion probabilities converge well before 5000.
+N_DRAWS = 1000        # plan doc default is 5000; 1000 is the documented,
+                      # literature-precedented fallback (module docstring).
+                      # SET IDENTICALLY IN BOTH STATES (2026-09-08 Phase 6
+                      # unification): the first 5000-draw Rajasthan run took
+                      # 606s wall-clock (183-232s/cluster); Tamil Nadu has 5
+                      # clusters of 9-16 survivors, so 5000 there is ~500-900s
+                      # — impractical for iteration in both. The plan doc
+                      # notes inclusion probabilities converge well before
+                      # 5000. Raise BOTH to 5000 (this one constant) for the
+                      # final reported run once the pipelines are settled.
 DIRICHLET_CONCENTRATION = 25.0   # chosen to give roughly +/-20% variation around
                                    # nominal weights — see main()'s printed check
 GAUSS_NOISE_PCT = {"latent_heat": 0.05, "thermal_conductivity": 0.10,
@@ -254,8 +303,8 @@ def load_survivors():
             f"ERROR: cluster(s) {missing_clusters} have ZERO survives_all==True rows in "
             f"{SURVIVORS_FILE.name}. Refusing to rank an empty set for any cluster — "
             f"this is exactly the failure mode the fixed-kappa=0.7 baseline file "
-            f"(feasibility_survivors_{STATE_NAME}.csv) has for EVERY cluster; if you "
-            f"passed that file by mistake, use the _kappa_calibrated one instead.")
+            f"(feasibility_survivors_by_cluster.csv) can have; if you passed that "
+            f"file by mistake, use the _kappa_calibrated one instead.")
 
     print(f"  Loaded {len(survivors)} survivor rows across {survivors['cluster_id'].nunique()} "
           f"clusters from {SURVIVORS_FILE.name}")
@@ -354,17 +403,35 @@ def reweight_corrosion_for_cluster(base_weights, cluster_hsi, hsi_min, hsi_max):
     return {k: v / total for k, v in w.items()}
 
 
-def build_criteria_matrix(cand_df, tm_target):
+def cycles_confidence(cycles, max_cycles=None):
+    """Log-scaled cycling-endurance confidence in [0, 1] (Tamil Nadu's
+    transform, used in both states): log1p(cycles) / log1p(max_cycles).
+    NaN-safe — unreported cycling stays NaN (excluded-by-omission
+    downstream, never zero-filled)."""
+    c = np.asarray(cycles, dtype=float)
+    if max_cycles is None:
+        finite = c[np.isfinite(c)]
+        max_cycles = finite.max() if finite.size else np.nan
+    if not (max_cycles and max_cycles > 0):
+        return np.full_like(c, np.nan, dtype=float)
+    return np.log1p(c) / np.log1p(max_cycles)
+
+
+def build_criteria_matrix(cand_df, tm_target, l_required):
     """cand_df: rows for ONE cluster's surviving candidates, already
-    joined with rich properties. Returns a DataFrame indexed by pcm_id
-    with the 8 CRITERIA columns (raw, pre-normalization; NaN preserved,
-    never zero-filled — see module docstring on missing-value handling)."""
+    joined with rich properties. l_required: that cluster's
+    L_required_kJ_per_kg (climate-relative latent-heat criterion). Returns
+    a DataFrame indexed by pcm_id with the 8 CRITERIA columns (raw,
+    pre-normalization; NaN preserved, never zero-filled — see module
+    docstring on missing-value handling)."""
     m = pd.DataFrame(index=cand_df["pcm_id"])
     m["Tm_fitness"] = gaussian_tm_fitness(cand_df["Tm_C"].values, tm_target)
-    m["latent_heat"] = cand_df["latent_heat_kJ_kg"].values
+    # Climate-relative: margin of latent heat over what THIS cluster needs.
+    lr = l_required if (l_required and l_required == l_required and l_required > 0) else np.nan
+    m["latent_heat"] = cand_df["latent_heat_kJ_kg"].values / lr
     m["vol_latent_heat"] = (cand_df["density_kg_m3"] * cand_df["latent_heat_kJ_kg"] / 1000.0).values  # MJ/m3
     m["thermal_conductivity"] = cand_df["TC_W_mK"].values
-    m["cycling"] = cand_df["cycles_tested"].values
+    m["cycling"] = cycles_confidence(cand_df["cycles_tested"].values)
     m["supercooling"] = cand_df["supercooling_K"].values
     m["corrosion"] = cand_df["corrosion_score"].values
     m["cost"] = cand_df["cost"].values
@@ -418,6 +485,32 @@ def entropy_weights(matrix):
     d = np.clip(1 - e, 0, None)
     w_valid = d / d.sum() if d.sum() > 0 else np.ones(n) / n
     weights.update(dict(zip(valid_cols, w_valid)))
+
+    # Entropy-formula pathology correction (2026-09-08): a near-zero-ideal
+    # cost criterion (supercooling especially — many candidates report ~0 K,
+    # so the column is near-degenerate and the formula reads that as low
+    # entropy => high information => spuriously large weight, 0.48-0.64 for
+    # supercooling in the first 8-criterion Rajasthan run). HOLD each such
+    # criterion's entropy weight EXACTLY at ENTROPY_CAP_MULT x its Table-13
+    # prior (supercooling: 2 x 0.08 = 0.16) and rescale ONLY the remaining
+    # (uncapped) criteria to fill 1 - sum(caps). A plain cap-then-
+    # renormalise does NOT work here: dividing the whole vector by the
+    # reduced total pushes the capped criterion straight back above its cap.
+    # See module docstring for the Phase 7/8 evidence that this is
+    # overweighting, not underweighting. Corrosion/cost are covered too so
+    # the fix still holds if either ever gets real, non-degenerate data.
+    caps = {c: ENTROPY_CAP_MULT * LITERATURE_WEIGHTS_TABLE13[c]
+            for c in NEAR_ZERO_IDEAL_COST_CRITERIA
+            if c in weights and weights[c] > ENTROPY_CAP_MULT * LITERATURE_WEIGHTS_TABLE13[c]}
+    if caps:
+        fixed_mass = sum(caps.values())
+        free = {k: v for k, v in weights.items() if k not in caps}
+        free_sum = sum(free.values())
+        target_free = max(0.0, 1.0 - fixed_mass)
+        if free_sum > 0:
+            weights = {**caps, **{k: v / free_sum * target_free for k, v in free.items()}}
+        else:
+            weights = {**caps, **{k: 0.0 for k in free}}
     return weights
 
 
@@ -734,12 +827,12 @@ def sample_property_for_montecarlo(rng, cand_df, col, family_lookup):
     return out
 
 
-def run_pipeline_once(cand_df, weights, tm_target, matrix=None):
+def run_pipeline_once(cand_df, weights, tm_target, l_required, matrix=None):
     """One full deterministic pass: builds (or reuses) the criteria matrix,
     runs all 4 core methods (+CoCoSo if enabled), aggregates via Borda.
     Returns (borda_series, rank_dict) for downstream use."""
     if matrix is None:
-        matrix = build_criteria_matrix(cand_df, tm_target)
+        matrix = build_criteria_matrix(cand_df, tm_target, l_required)
 
     tm_lookup = {pid: (cand_df.set_index("pcm_id").loc[pid, "Tm_C"], tm_target) for pid in matrix.index}
 
@@ -762,15 +855,15 @@ def run_pipeline_once(cand_df, weights, tm_target, matrix=None):
     return borda, ranks, {"TOPSIS": ci, "PROMETHEE_II": phi, "VIKOR": q, "GRA": gamma}
 
 
-def monte_carlo(cand_df, base_weights, tm_target, n_draws, rng):
+def monte_carlo(cand_df, base_weights, tm_target, l_required, n_draws, rng):
     ids = list(cand_df["pcm_id"])
     top3_count = pd.Series(0, index=ids)
     top1_count = pd.Series(0, index=ids)
     rank_reversals = 0
     spearman_rhos = []
 
-    base_matrix = build_criteria_matrix(cand_df, tm_target)
-    base_borda, _, _ = run_pipeline_once(cand_df, base_weights, tm_target, base_matrix)
+    base_matrix = build_criteria_matrix(cand_df, tm_target, l_required)
+    base_borda, _, _ = run_pipeline_once(cand_df, base_weights, tm_target, l_required, base_matrix)
     base_order = base_borda.rank(ascending=False, method="min")
     family_lookup = cand_df.set_index("pcm_id")["family"].to_dict()
 
@@ -794,8 +887,8 @@ def monte_carlo(cand_df, base_weights, tm_target, n_draws, rng):
             1 + rng.normal(0, GAUSS_NOISE_PCT["cost"], len(cand_df)))
         pert["density_kg_m3"] = cand_df["density_kg_m3"]
 
-        matrix = build_criteria_matrix(pert, tm_target)
-        borda, ranks, _ = run_pipeline_once(pert, w, tm_target, matrix)
+        matrix = build_criteria_matrix(pert, tm_target, l_required)
+        borda, ranks, _ = run_pipeline_once(pert, w, tm_target, l_required, matrix)
         order = borda.rank(ascending=False, method="min")
 
         top3_ids = order[order <= 3].index
@@ -860,6 +953,7 @@ def main():
         cid = prof.cluster_id
         tm_target = prof.Tm_target_C
         cluster_hsi = prof.HSI_sunrise
+        l_required = float(prof.L_required_kJ_per_kg)   # climate-relative latent-heat criterion
 
         cand_df = survivors[survivors["cluster_id"] == cid].reset_index(drop=True)
         n_survivors = len(cand_df)
@@ -870,7 +964,7 @@ def main():
 
         log_header(f"Cluster {cid} — {n_survivors} candidates ({status})")
 
-        matrix = build_criteria_matrix(cand_df, tm_target)
+        matrix = build_criteria_matrix(cand_df, tm_target, l_required)
         ent_w = entropy_weights(matrix)
         cluster_prior_w = reweight_corrosion_for_cluster(prior_w, cluster_hsi, hsi_min, hsi_max)
         blend_w = blended_weights(ent_w, cluster_prior_w)
@@ -886,8 +980,8 @@ def main():
                   f"near-total-domination threshold (cf. Oluah 2020's 72.12% thermal-conductivity fixture, "
                   f"the plan doc's own cautionary example for why entropy alone is untrustworthy).")
 
-        borda_05, ranks_05, _ = run_pipeline_once(cand_df, blend_w, tm_target, matrix)
-        borda_00, ranks_00, _ = run_pipeline_once(cand_df, cluster_prior_w, tm_target, matrix)
+        borda_05, ranks_05, scores_05 = run_pipeline_once(cand_df, blend_w, tm_target, l_required, matrix)
+        borda_00, ranks_00, _ = run_pipeline_once(cand_df, cluster_prior_w, tm_target, l_required, matrix)
         top3_05 = set(borda_05.sort_values(ascending=False).head(3).index)
         top3_00 = set(borda_00.sort_values(ascending=False).head(3).index)
         print(f"  Top-3 at lambda=0.5: {sorted(top3_05)}")
@@ -933,7 +1027,7 @@ def main():
 
         rng = np.random.default_rng(RANDOM_STATE)
         mc_t0 = time.time()
-        mc = monte_carlo(cand_df, blend_w, tm_target, N_DRAWS, rng)
+        mc = monte_carlo(cand_df, blend_w, tm_target, l_required, N_DRAWS, rng)
         mc_elapsed = time.time() - mc_t0
         print(f"  Monte Carlo: {N_DRAWS} draws in {mc_elapsed:.1f}s "
               f"({'OK' if mc_elapsed < 120 else '[SLOW — consider N_DRAWS=1000, plan doc documented fallback]'})")
@@ -947,18 +1041,63 @@ def main():
             print(f"    {pid}: deterministic Borda={deterministic_top3[pid]:.2f}  "
                   f"MC Top-3 inclusion={mc_incl:.1f}%{flag}")
 
+        borda_rank_05 = borda_05.rank(ascending=False, method="min")
+        copeland_rank_05 = copeland_scores.rank(ascending=False, method="min")
+        borda_copeland_agree_cluster = bool(borda_rank_05.idxmin() == copeland_rank_05.idxmin())
+
+        cand_lookup = cand_df.set_index("pcm_id")
+
+        # Legacy column-name map: old Tamil Nadu 5-criterion names -> the
+        # unified CRITERIA keys, so Phase 7/8 / seasonal / cards keep
+        # resolving crit_<name> and weight_<name> off this single file.
+        LEGACY_CRIT = {"f_Tm": "Tm_fitness",
+                       "latent_heat_margin_ratio": "latent_heat",
+                       "rho_H_MJ_m3": "vol_latent_heat",
+                       "cycles_confidence": "cycling"}
+
         for pid in cand_df["pcm_id"]:
             row = {
-                "cluster_id": cid, "pcm_id": pid, "candidate_pool_status": status,
+                "cluster_id": cid, "pcm_id": pid, "name": pid,   # `name` alias for downstream
+                "candidate_pool_status": status,
                 "n_survivors_in_cluster": n_survivors,
+                "L_required_kJ_per_kg": l_required,
             }
+            # Raw PCM properties passed through for Phase 7/8 / seasonal
+            # (which otherwise re-load them) — keeps those scripts working
+            # off this single file.
+            for prop in ("Tm_C", "latent_heat_kJ_kg", "density_kg_m3", "Cp_kJ_kgK",
+                         "TC_W_mK", "cycles_tested", "supercooling_K"):
+                if prop in cand_lookup.columns:
+                    v = cand_lookup.loc[pid, prop]
+                    row[prop] = float(v) if pd.notna(v) else np.nan
+            # Raw criterion values (pre-normalisation) + blended weights.
+            for c in CRITERIA:
+                v = matrix.loc[pid, c]
+                row[f"crit_{c}"] = float(v) if pd.notna(v) else np.nan
+                row[f"weight_{c}"] = float(blend_w[c])
+            for legacy, src in LEGACY_CRIT.items():
+                row[f"crit_{legacy}"] = row[f"crit_{src}"]
+                row[f"weight_{legacy}"] = float(blend_w[src])
+                row[legacy] = row[f"crit_{src}"]            # bare-name alias (f_Tm, rho_H_MJ_m3, ...)
+            row["weight_TC_W_mK"] = float(blend_w["thermal_conductivity"])
+            # Method ranks + raw scores (raw scores are the old
+            # topsis_score / gra_grade / promethee_flow / vikor_Q columns
+            # Phase 8 cards read directly).
             row["TOPSIS_rank"] = int(ranks_05["TOPSIS"][pid])
             row["PROMETHEE_II_rank"] = int(ranks_05["PROMETHEE_II"][pid])
             row["VIKOR_rank"] = int(ranks_05["VIKOR"][pid])
             row["GRA_rank"] = int(ranks_05["GRA"][pid])
+            row["topsis_score"] = float(scores_05["TOPSIS"][pid])
+            row["gra_grade"] = float(scores_05["GRA"][pid])
+            row["promethee_flow"] = float(scores_05["PROMETHEE_II"][pid])
+            row["vikor_Q"] = float(scores_05["VIKOR"][pid])
             row["borda_score"] = float(borda_05[pid])
+            row["consensus_rank"] = int(borda_rank_05[pid])
             row["copeland_score"] = int(copeland_scores[pid])
+            row["copeland_rank"] = int(copeland_rank_05[pid])
             row["kendalls_w_cluster"] = float(W)
+            row["kendall_w"] = float(W)                     # legacy alias
+            row["borda_copeland_agree"] = borda_copeland_agree_cluster
             row["entropy_weight_dominant_criterion"] = dominant
             row["entropy_weight_dominant_value"] = float(ent_w[dominant])
             row["top3_at_lambda05"] = pid in top3_05
@@ -967,6 +1106,10 @@ def main():
             row["mc_top1_retention_pct"] = float(mc["top1_pct"].get(pid, 0.0))
             row["mc_rank_reversal_freq_cluster"] = float(mc["rank_reversal_freq"])
             row["mc_mean_spearman_vs_baseline_cluster"] = float(mc["mean_spearman_vs_baseline"])
+            # Legacy 0-1 aliases (old Tamil Nadu / cards convention).
+            row["top3_inclusion_probability"] = row["mc_top3_inclusion_pct"] / 100.0
+            row["top1_retention_rate"] = row["mc_top1_retention_pct"] / 100.0
+            row["mean_spearman_rho_vs_baseline"] = row["mc_mean_spearman_vs_baseline_cluster"]
             row["pcm_database_status"] = ("COMPLETE — 55-row manufacturer database "
                                            "(+7 literature rows = 62 candidates total) as of "
                                            "2026-08-12, inside the 40-60-row target "
@@ -975,7 +1118,21 @@ def main():
 
     out_df = pd.DataFrame(all_output_rows)
     out_df["upstream_cluster_profile_fingerprint"] = profile_fp_id
-    out_df.to_csv(OUT_FILE, index=False)
+    # Full per-survivor audit trail.
+    out_df.to_csv(OUT_FULL, index=False)
+
+    # Top-3 per cluster subset (consensus_rank <= 3), for Phase 8 cards.
+    topk_df = (out_df[out_df["consensus_rank"] <= 3]
+               .sort_values(["cluster_id", "consensus_rank"])
+               .reset_index(drop=True))
+    topk_df.to_csv(OUT_TOPK, index=False)
+
+    # Monte Carlo stability columns only.
+    mc_cols = ["cluster_id", "pcm_id", "n_survivors_in_cluster", "candidate_pool_status",
+               "consensus_rank", "mc_top3_inclusion_pct", "mc_top1_retention_pct",
+               "mc_rank_reversal_freq_cluster", "mc_mean_spearman_vs_baseline_cluster",
+               "upstream_cluster_profile_fingerprint"]
+    out_df[[c for c in mc_cols if c in out_df.columns]].to_csv(OUT_MC, index=False)
 
     pairwise_out = pd.concat(all_pairwise_rows, ignore_index=True)
     pairwise_out.to_csv(OUT_METHOD_AGREEMENT, index=False)
@@ -997,16 +1154,17 @@ def main():
     fig.write_html(str(OUT_FIGURE))
 
     log_header("SUMMARY")
-    print(f"  Saved: {OUT_FILE}  ({len(out_df)} rows)")
+    print(f"  Saved: {OUT_FULL}  ({len(out_df)} rows — full per-survivor audit trail)")
+    print(f"  Saved: {OUT_TOPK}  ({len(topk_df)} rows — Top-3 per cluster)")
+    print(f"  Saved: {OUT_MC}  (Monte Carlo stability columns)")
     print(f"  Saved: {OUT_METHOD_AGREEMENT}  ({len(pairwise_out)} method-pair rows across "
           f"{pairwise_out['cluster_id'].nunique()} clusters)")
     print(f"  Saved: {OUT_FIGURE}")
     print(f"\n  candidate_pool_status: undersized clusters = {undersized_clusters or 'none'}")
-    print(f"\n  [DATABASE STATUS] All clusters' Top-3 in this run rest on the 55-row PCM database "
-          f"(+7 literature rows, expanded 2026-08-12 from the prior ~25-row database), inside the "
-          f"40-60-row target — see PCM_data/01_preprocess.py and 07_PHASE_5_AUDIT.md. This run "
-          f"still reflects only ONE MCDM pass against that database, not yet re-validated by "
-          f"Phase 7 physics simulation — re-run 09_physics_validation_rajasthan.py next.")
+    print(f"\n  [DATABASE STATUS] All clusters' Top-3 rest on the shared 62-row PCM database "
+          f"(55 manufacturer + 7 literature) — see PCM_data/01_preprocess.py and "
+          f"07_PHASE_5_AUDIT.md. This run reflects only ONE MCDM pass against that database, "
+          f"not yet re-validated by Phase 7 physics simulation — re-run 10_physics_validation.py next.")
     print(f"\n  Total wall-clock time: {time.time() - t0:.1f}s")
     print("=" * 68)
 

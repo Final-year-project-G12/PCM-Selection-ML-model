@@ -2,7 +2,7 @@
 provenance_lib.py
 =============================================================================
 Shared cross-phase provenance stamping, added 2026-08-11 after Phase 7
-(09_physics_validation_rajasthan.py) caught Phase 5's and Phase 6's outputs
+(10_physics_validation.py) caught Phase 5's and Phase 6's outputs
 disagreeing on which PCMs belonged to which cluster_id — traced to
 05_cluster_rajasthan.py's GMM cluster labels not being stable across
 separate re-runs (fixed there via canonical relabeling by mean latitude,
@@ -101,4 +101,4 @@ def assert_fingerprint_match(current_fp_id, upstream_df, source_file_name, upstr
             f"files are no longer describing the same clustering run. Re-run the full Phase "
             f"4->5->6->7 chain back-to-back from the CURRENT {source_file_name} before trusting "
             f"any result downstream of this point. (This is exactly the class of bug caught in "
-            f"Phase 7 on 2026-08-11 — see 09_physics_validation_rajasthan.py's docstring.)")
+            f"Phase 7 on 2026-08-11 — see 10_physics_validation.py's docstring.)")

@@ -55,6 +55,7 @@ from config import (
     SUNTIMES_FILE,
     COMBINED_POINTS_FILE,
     ensure_data_dirs,
+    MAX_MATCH_HOURS,   # shared cross-state constant (pcm_shared_config.py)
 )
 
 # ═══════════════════════════════════════════════════════════
@@ -68,16 +69,21 @@ ensure_data_dirs()
 YEARS  = [str(y) for y in range(2016, 2026)]
 MONTHS = [f"{m:02d}" for m in range(1, 13)]
 
-# Population points don't carry elevation data. Tamil Nadu's population is
-# concentrated on the coastal plain and interior plateau (unlike Rajasthan's
-# 200-500m band), so a lower flat-terrain approximation is used here —
-# still just an approximation for solar-geometry (SZA/azimuth/clearsky)
-# calculations, not a hard physical constraint.
+# Fallback only — real per-point elevation now comes from population_df's
+# `elevation_m` column (attached by 00c_attach_elevation.py from ERA5's
+# invariant geopotential field). This flat-terrain constant is used only if
+# that column is missing or NaN for a given point (e.g. 00c hasn't been run
+# yet). Tamil Nadu's population is mostly on the coastal plain and interior
+# plateau, but the Nilgiris belt (~1,800-2,600m) is well outside any single
+# flat value — so the flat fallback is materially wrong for those points and
+# 00c should always be run first here. See also the README caveat about ERA5
+# orography being a grid-cell mean in high-relief regions.
 DEFAULT_ALT_M = 150
 
-# Reject an ERA5/POWER nearest-hour match if it's farther than this from
-# the true sun-event time.
-MAX_MATCH_HOURS = 3
+# MAX_MATCH_HOURS (3 — reject an ERA5/POWER nearest-hour match farther than
+# this from the true sun-event time) is imported from config.py /
+# pcm_shared_config.py so both states match sun-events identically. Value
+# unchanged.
 
 SEASON_MAP = {
     12: ("Winter", 1),  1: ("Winter", 1),  2: ("Winter", 1),
@@ -377,7 +383,7 @@ def nearest_row(series_df, target_time, max_hours=MAX_MATCH_HOURS):
 # PROCESS ONE POINT
 # ═══════════════════════════════════════════════════════════
 
-def process_point_era5(lat, lon, instant_ds, accum_ds):
+def process_point_era5(lat, lon, instant_ds, accum_ds, alt_m=DEFAULT_ALT_M):
     """Nearest-neighbor snap to the ERA5 grid, concatenate the full
     instant+accum hourly series across all years, accum_to_flux, compute
     solar geometry. Returns (era5_df, grid_lat, grid_lon)."""
@@ -417,7 +423,7 @@ def process_point_era5(lat, lon, instant_ds, accum_ds):
 
     df = df[~df.index.duplicated(keep="first")]
     df = apply_unit_conversions(df)
-    df = compute_solar(df, lat, lon, alt=DEFAULT_ALT_M)
+    df = compute_solar(df, lat, lon, alt=alt_m)
 
     # ERA5 time index decoded tz-naive UTC (see decode_time) — localize so
     # it compares against suntimes.csv's tz-aware time_utc.
@@ -427,8 +433,11 @@ def process_point_era5(lat, lon, instant_ds, accum_ds):
 
 def process_point(point_row, instant_ds, accum_ds, sun_df):
     point_id = point_row.point_id
+    alt_m = getattr(point_row, "elevation_m", DEFAULT_ALT_M)
+    if alt_m is None or (isinstance(alt_m, float) and np.isnan(alt_m)):
+        alt_m = DEFAULT_ALT_M
     era5_df, grid_lat, grid_lon = process_point_era5(
-        point_row.lat, point_row.lon, instant_ds, accum_ds)
+        point_row.lat, point_row.lon, instant_ds, accum_ds, alt_m=alt_m)
     power_df = load_power_series(point_id)
 
     if era5_df is None and power_df is None:
@@ -447,6 +456,7 @@ def process_point(point_row, instant_ds, accum_ds, sun_df):
             "point_id": point_id,
             "lat": point_row.lat, "lon": point_row.lon,
             "population": point_row.population, "weight": point_row.weight,
+            "elevation_m": alt_m,
             "date": r.date, "event": r.event, "time_utc": target,
             "grid_lat": grid_lat, "grid_lon": grid_lon,
         }

@@ -1,7 +1,20 @@
 # 05 — Phase 3 Audit: Climate Signature Construction
 
-Scripts: `signature_lib.py`, `04b_climate_signature.py`, `04f_signature_interactive.py`
-(visualization — audit stub at the end of this file).
+Scripts: `signature_lib.py`, `04b_climate_signature.py`.
+
+**Unified with Tamil Nadu (2026-09-08).** `signature_lib.py` is now also
+present, unchanged, in `era5-tamilnadu/`, and Tamil Nadu's `04b` is a
+state-parameterised mirror of this one — same Tier-1 code, same curated
+column list, same five sun-event interaction terms, same 8-column PCA block,
+same derived-quantity formulas. `climate_signature_rajasthan.csv` and
+`climate_signature_tamilnadu.csv` are verified to have the identical
+88-column schema (names, order, dtypes). The Phase 2/3 numeric design basis
+(`SHARE_PCM`, `ASSUMED_PCM_MASS_KG`, `T_DELIVERY_C`, `DT_APPROACH_C`,
+`TM_TARGET_C`, `COVERAGE_TARGET`, `MAX_MATCH_HOURS`, `PCA_N_COMPONENTS`) now
+lives once in `PCM-Selection-ML-model/pcm_shared_config.py` and is
+re-exported by each state's `config.py`. The read-only
+`04f_signature_interactive.py` explorer was deleted in the same pass
+(non-core, no downstream dependents).
 
 ## Purpose
 
@@ -29,14 +42,16 @@ Tier 2's `DTR_true` exists as a companion), `kt_noon_mean/std`, `GHI_noon_mean`,
 first, then aggregated), `daylength_mean`, `daylength_amplitude` (half the seasonal swing, standard
 oscillation-amplitude convention).
 
-**`HSI_sunrise` is literally Thom's (1959) Temperature-Humidity Index (THI)**, not a bespoke
-"humidity stress index":
+**`HSI_sunrise` is literally Thom's (1959) Discomfort Index / Temperature-Humidity Index**, not a
+bespoke "humidity stress index":
 ```
 HSI_sunrise = T_sunrise_mean − 0.55·(1 − RH_sunrise_mean/100)·(T_sunrise_mean − 14.5)
 ```
-Cited in-code to Thom, E.C., "The Discomfort Index," *Weatherwise* 12(2), 1959 — the name in the
-project's own variable naming ("humidity stress index") is a relabeling of an established index, not
-an original derivation; this should be cited as Thom's THI in any write-up, not presented as novel.
+Cited in-code to Thom, E.C., "The Discomfort Index," *Weatherwise* 12(2), 1959. The
+`compute_hsi_sunrise` docstring in `signature_lib.py` was updated 2026-09-08 to call this
+**"Thom's (1959) Discomfort Index (HSI)"** (matching Tamil Nadu's clearer framing) — a
+citation/naming fix only, the formula is unchanged. Cite it as Thom's Discomfort Index in any
+write-up, not as an original derivation; the `HSI_sunrise` column name is kept for continuity.
 
 ## Processing — Tier 2 (daily-integral join)
 
@@ -110,11 +125,14 @@ int_CCI_x_1minusSAI           = CCI × (1 − SAI)                        (combi
 ## PCA block
 
 `PCA_BLOCK = [Ta_mean, Ta_p95, Ta_p05, T_sunrise_mean, T_noon_mean, HDD18, CDD24, elevation_m]` (8
-columns — note the section's own internal label calling this "the correlated temperature/*pressure*
-block" is inaccurate; there is no pressure variable in the actual list, likely a leftover label from
-a template). `StandardScaler` → `PCA(n_components=0.95, random_state=42)` — retains **4 components**
-for the Rajasthan run (not a fixed integer; data-determined). Loadings and explained-variance ratio
-are printed for interpretation, not silently discarded.
+columns). The stale "temperature/*pressure* block" label (there is no pressure variable in the list)
+was corrected to **"temperature/elevation block"** in the code 2026-09-08. `StandardScaler` →
+`PCA(n_components=PCA_N_COMPONENTS, random_state=42)` — **component count is now PINNED to 4**
+(`pcm_shared_config.PCA_N_COMPONENTS`), not a data-determined `n_components=0.95` threshold, so
+`climate_signature_rajasthan.csv` and `climate_signature_tamilnadu.csv` carry the same `PC1..PC4`
+columns and `05_cluster_regions.py` can concatenate them. 4 was Rajasthan's own 95%-variance count
+(cumulative variance retained ≈ 0.967), so this leaves Rajasthan's PC columns numerically unchanged.
+Loadings and explained-variance ratio are printed for interpretation, not silently discarded.
 
 **Elevation is a resolved design ambiguity, not excluded**: the brief's "STATIC ATTRIBUTES...NOT
 included in the clustering feature matrix" instruction and its "elevation_m" PCA-block membership
@@ -186,16 +204,21 @@ collinearity from PCA-absorbed collinearity.
 solar-variability, humidity, and cycling-relevant indices, which carry the actual discriminating
 signal for regime separation). This is a correctly-scoped dimensionality reduction: it removes
 *within-block* redundancy specifically without compressing away the features that actually separate
-the clusters.
+the clusters. As of 2026-09-08 the retained component count is fixed at 4 (`PCA_N_COMPONENTS`) for
+cross-state schema parity rather than chosen per-run by a variance threshold — see the PCA block
+section above.
 
 ## Outputs
 
-`climate_signature_rajasthan.csv` — 320 rows × 86 columns. Plus, added 2026-08-11: `outputs/
+`data/processed/climate_signature_rajasthan.csv` — **320 rows × 88 columns** (87 as counted by the
+script, which carries `point_id` as the index). Schema name/order/dtype-identical to
+`climate_signature_tamilnadu.csv` (133 rows × 88 columns). Plus `outputs/
 signature_distributions_rajasthan.html` (histogram of every clustering-input column across all 320
 points — a bimodal column here previews a possible Level-A cluster split on that feature alone) and
 `outputs/signature_point_map_rajasthan.html` (geographic view of `GHI_daily_kWh` and `monsoon_index`)
 — both pure visualization of data this script already computes, in addition to the pre-existing
-`outputs/signature_correlation_heatmap_rajasthan.html`.
+`outputs/signature_correlation_heatmap_rajasthan.html`. Correlation `|r| > 0.9` flags on the final
+feature set: **37 pairs** (vs. 16 for Tamil Nadu), printed only, not auto-acted-upon.
 
 ## Dependencies
 
@@ -222,15 +245,15 @@ Feeds Phase 4 (clustering) and Phase 5 (feasibility targets `Tm_target_C`, `Tm_t
   unconditionally true (PRECTOTCORR never downloaded), correctly self-flagged in a printed warning,
   but should be stated as a limitation in any methodology write-up that reports `monsoon_index`.
 
-## Visualization script (`04f_signature_interactive.py`) — audit stub
+## Visualization script (`04f_signature_interactive.py`) — DELETED 2026-09-08
 
-Read-only interactive (Folium + Plotly) explorer for `climate_signature_rajasthan.csv` — the 1:1
-port of the Tamil Nadu pipeline's `04d_signature_interactive.py`: a variable-toggle Folium map, an
-interactive correlation heatmap, index distributions, and a scatter matrix of the PCM-facing
-indices. It applies a Tamil-Nadu→Rajasthan column remap (`DTR`→`DTR_true`, `kt_mean`→`kt_daily_mean`,
-`kt_std`→`kt_daily_std`, `RH_mean`→`RH_sunrise_mean`, `HSI`→`HSI_sunrise`). Not in the core chain;
-produces no data. (Static signature QC HTML — `outputs/signature_*_rajasthan.html` — is emitted by
-`04b_climate_signature.py` itself, see Outputs above.)
+The read-only interactive (Folium + Plotly) explorer for
+`climate_signature_rajasthan.csv` was deleted alongside its Tamil Nadu twin
+`04d_signature_interactive.py` — non-core, no downstream dependents, consistent with the earlier
+decision to drop plotting scripts from the core chain. Its entry was removed from
+`run_all_rajasthan.py`'s `OPTIONAL_SCRIPTS`. The static signature QC HTML
+(`outputs/signature_*_rajasthan.html`) is still emitted by `04b_climate_signature.py` itself — see
+Outputs above.
 
 ## Status
 

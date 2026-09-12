@@ -51,9 +51,13 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.mixture import GaussianMixture
 from sklearn.metrics import silhouette_score
 
-from config import PROCESSED_DIR
+from config import PROCESSED_DIR, BASE_DIR
 
 SIGNATURE_DIR = PROCESSED_DIR / "signatures"
+# Repo root (PCM-Selection-ML-model/) — parent of every per-state pipeline
+# folder. Used to reach OTHER states' signature outputs for cross-region
+# clustering.
+REPO_ROOT = BASE_DIR.parent
 OUT_DIR = PROCESSED_DIR / "clustering"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -64,9 +68,12 @@ OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 REGION_FILES = {
     "TamilNadu": SIGNATURE_DIR / "climate_signature_tamilnadu.csv",
-    "Rajasthan": SIGNATURE_DIR.parent.parent / "era5-rajasthan" / "data" / "processed" / "signatures" / "climate_signature_rajasthan.csv",
-    # "Region3": SIGNATURE_DIR.parent.parent / "..." / "climate_signature_region3.csv",
-    # "Region4": SIGNATURE_DIR.parent.parent / "..." / "climate_signature_region4.csv",
+    # NOTE: Rajasthan's 04b writes the signature FLAT in data/processed/
+    # (no signatures/ sub-folder), unlike Tamil Nadu — hence no "signatures"
+    # path segment here. Tamil Nadu: data/processed/signatures/...
+    "Rajasthan": REPO_ROOT / "era5-rajasthan" / "data" / "processed" / "climate_signature_rajasthan.csv",
+    # "Region3": REPO_ROOT / "era5-assam" / "data" / "processed" / "signatures" / "climate_signature_assam.csv",
+    # "Region4": REPO_ROOT / "era5-uttarakhand" / "data" / "processed" / "signatures" / "climate_signature_uttarakhand.csv",
 }
 
 K_CANDIDATES = list(range(3, 13))

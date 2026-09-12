@@ -37,22 +37,41 @@ failure since every later stage reads an earlier stage's output):
                                            raw NASA POWER directly — but
                                            sequenced after it for a single
                                            linear log to read)
-  3. 03b_quality_check_rajasthan.py     — Hampel-filter + impute ->
-                                           climate_rajasthan_points_clean.csv
-  4. 04_climate_signature_rajasthan.py  — Phase 3: two-tier signature ->
+  3. 04_preprocess_rajasthan.py         — Phase 2.5: BOUNDS screen + SZA>=90
+                                           night-mask + per-season quantile
+                                           map (ERA5->POWER, persisted) +
+                                           Hampel + 4-stage/MICE impute ->
+                                           data/preprocessed/
+                                           rajasthan_cleaned_physical.csv
+                                           (converged onto the Tamil Nadu
+                                           04_preprocess contract; replaces
+                                           03b_quality_check_rajasthan.py,
+                                           now diagnostic-only)
+  4. 04b_climate_signature.py           — Phase 3: two-tier signature ->
                                            climate_signature_rajasthan.csv
+                                           (real filename — the former
+                                           "04_climate_signature_rajasthan.py"
+                                           entry named a nonexistent file,
+                                           so Phase 3 was silently SKIPped
+                                           by this runner)
   5. 05_cluster_rajasthan.py            — Phase 4: GMM clustering ->
                                            cluster_profiles_rajasthan.csv
                                            (canonical-relabeled, see that
                                            script's 2026-08-11 fix)
-  6. 07_feasibility_filter_rajasthan.py — Phase 5: 8-constraint filter ->
+  6. 07_feasibility_filter.py           — Phase 5: 8-constraint filter ->
                                            feasibility_survivors_*.csv
-  7. 08_mcdm_ranking_rajasthan.py       — Phase 6: 4-method MCDM + Monte
+  7. 08_mcdm_ranking.py                 — Phase 6: 4-method MCDM + Monte
                                            Carlo -> mcdm_rankings_*.csv
-  8. 09_physics_validation_rajasthan.py — Phase 7: physics simulation ->
+  8. 10_physics_validation.py           — Phase 7: physics simulation ->
                                            physics_validation_*.csv
-  9. 10_recommendation_cards_rajasthan.py — Phase 8: pure aggregation ->
+                                           (RENUMBERED 2026-09-08 to match
+                                           Tamil Nadu — was
+                                           09_physics_validation_rajasthan.py)
+  9. 09_recommendation_cards.py         — Phase 8: pure aggregation ->
                                            recommendation_cards_*.md
+                                           (was 10_recommendation_cards_rajasthan.py;
+                                           numbered 09 but runs LAST, after
+                                           Phase 7 — same as Tamil Nadu)
 
   Steps 6-9 (Phase 5-8) each independently hard-fail via provenance_lib.py
   if their input was built from a DIFFERENT on-disk cluster_profiles_
@@ -65,13 +84,16 @@ OPTIONAL / DIAGNOSTIC stages (run AFTER the core chain succeeds, by
 default — none of steps 1-8 read their output, so they cannot break the
 core chain; each one's failure is logged and does NOT stop the run,
 unlike the core chain above):
-  03_verify_climate_csv.py, 03_qc_plots.py, 03b_agreement_analysis.py,
-  03b_coverage_viz_rajasthan.py, 03c_plots_raw_rajasthan.py,
-  03b_quality_check_plots_rajasthan.py,
-  03b_validate_quality_fix_rajasthan.py (LAST among optionals — it
-  re-runs 04_climate_signature_rajasthan.py a SECOND time internally as
-  part of its own before/after diff, which is expected, not a bug in
-  this runner)
+  03_verify_climate_csv.py, 03_plots_raw.py, 03b_agreement_analysis.py,
+  03b_interactive_raw_qa.py,
+  03b_quality_check_rajasthan.py (SUPERSEDED as Phase 2.5 — kept here as a
+  standalone diagnostic that writes its own climate_rajasthan_points_
+  clean.csv + quality_report_rajasthan.{md,json}; nothing in the core
+  chain reads them),
+  03b_quality_check_plots_rajasthan.py
+  (03b_validate_quality_fix_rajasthan.py was removed from this list — its
+  clean-vs-raw signature diff and its internal re-run of a nonexistent
+  "04_climate_signature_rajasthan.py" no longer apply)
 
 HOW TO RUN:
   python run_all_rajasthan.py                 # core pipeline only (default)
@@ -120,34 +142,83 @@ SETUP_SCRIPTS = [
 CORE_SCRIPTS = [
     # "02_combine_rajasthan.py",
     "02b_build_daily_aggregates.py",
-    "03b_quality_check_rajasthan.py",
-    "04_climate_signature_rajasthan.py",
+    "04_preprocess_rajasthan.py",       # Phase 2.5 — was 03b_quality_check_rajasthan.py;
+                                         # converged onto the Tamil Nadu 04_preprocess contract
+                                         # (BOUNDS + SZA night-mask + per-season quantile map
+                                         # persisted + 4-stage/MICE imputation).
+    "04b_climate_signature.py",         # Phase 3 — real filename; the old
+                                         # "04_climate_signature_rajasthan.py" entry named a file
+                                         # that does not exist, so run_script() silently SKIPped
+                                         # Phase 3 in the core chain.
     "05_cluster_rajasthan.py",
-    "07_feasibility_filter_rajasthan.py",
-    "08_mcdm_ranking_rajasthan.py",
-    "09_physics_validation_rajasthan.py",
-    "10_recommendation_cards_rajasthan.py",
+    "05a_level_b_regime_shift_rajasthan.py",   # Phase 4 Level B — regime
+                                         # shift. Extracted 2026-09-08 from
+                                         # 05_cluster_rajasthan.py. Rebuilds
+                                         # its own per-point-per-season Tier-1
+                                         # signature, so it does not read
+                                         # Level A's output and nothing below
+                                         # reads its output.
+    "07_feasibility_filter.py",          # real filename — the old
+                                         # "07_feasibility_filter_rajasthan.py" entry named a file
+                                         # that does not exist, so run_script() silently SKIPped
+                                         # Phase 5 (same bug class as the former Phase 3 entry).
+    "08_mcdm_ranking.py",               # real filename — ditto; the old
+                                         # "08_mcdm_ranking_rajasthan.py" entry was silently SKIPped.
+    # Phase 7 then Phase 8 — RENUMBERED 2026-09-08 to match Tamil Nadu's
+    # convention exactly (physics validation = 10, recommendation cards =
+    # 09; cards still run AFTER physics because they aggregate its output).
+    "10_physics_validation.py",         # was 09_physics_validation_rajasthan.py
+    "09_recommendation_cards.py",       # was 10_recommendation_cards_rajasthan.py
 ]
+
+# Post-Phase-6 supplementary analysis — run after the core chain, non-
+# blocking (a late failure must not invalidate the completed deliverables).
+# Mirrors exactly how run_all_tamilnadu.py sequences its counterpart
+# (11_seasonal_pcm_sensitivity.py) last and non-blocking.
+POST_PHASE6_SCRIPTS = [
+    "11_seasonal_pcm_sensitivity.py",
+]
+
+# Core scripts that run IN core order but must NOT abort the chain on
+# failure. 05a (Level B regime shift) is a supplementary temporal analysis
+# sequenced in Phase 4 order; nothing downstream reads its output, so a
+# failure there must not cost the completed Phase 5-8 deliverables. Matches
+# how run_all_tamilnadu.py marks its equivalent required=False.
+NON_BLOCKING_CORE = {"05a_level_b_regime_shift_rajasthan.py"}
 
 # QC/plotting/diagnostic — run after the core chain, continue-on-failure,
 # nothing in CORE_SCRIPTS reads any of these scripts' output.
 OPTIONAL_SCRIPTS = [
     "03_verify_climate_csv.py",
-    "03_qc_plots.py",
+    "03_plots_raw.py",                          # raw-data QA (static PNG) — direct port of
+                                                 # era5-tamilnadu/03_plots_raw.py; output to PLOTSV2/raw/
     "03b_agreement_analysis.py",
-    "03b_coverage_viz_rajasthan.py",
-    "03c_plots_raw_rajasthan.py",
+    "03b_quality_check_rajasthan.py",           # SUPERSEDED as Phase 2.5 by
+                                                 # 04_preprocess_rajasthan.py; kept here as a
+                                                 # standalone diagnostic (writes its own
+                                                 # climate_rajasthan_points_clean.csv + quality
+                                                 # report; nothing in the core chain reads them).
     "03b_quality_check_plots_rajasthan.py",
-    # Tamil-Nadu plot-script ports (Group A) — output to PLOTSV2/<subfolder>/.
-    # 05f_explore_interactive.py is excluded here: it is a Streamlit app, run
-    # with `streamlit run 05f_explore_interactive.py`, not plain `python`.
-    "03d_interactive_raw_qa.py",
-    "04d_postprocess_plots.py",
-    "04e_interactive_postprocess_qc.py",
-    "04f_signature_interactive.py",
-    "05e_cluster_interactive.py",
-    "05g_plots_comprehensive.py",
-    "03b_validate_quality_fix_rajasthan.py",   # last: re-runs 04 internally
+    # Tamil-Nadu plot-script ports (Group A) — direct ports of
+    # era5-tamilnadu/{03_plots_raw,03b_interactive_raw_qa,04c_postprocess_plots,
+    # 04c_interactive_postprocess_qc}.py, output to PLOTSV2/<subfolder>/.
+    # 05c_explore_interactive.py is excluded here: it is a Streamlit app, run
+    # with `streamlit run 05c_explore_interactive.py`, not plain `python`.
+    "03b_interactive_raw_qa.py",
+    "04c_postprocess_plots.py",
+    "04c_interactive_postprocess_qc.py",
+    # 04f_signature_interactive.py deleted 2026-09-08 — non-core read-only
+    # signature explorer, no downstream dependents (same call as dropping the
+    # other plotting scripts from the core chain). Its 1:1 Tamil Nadu twin
+    # (04d_signature_interactive.py) was deleted in the same pass.
+    "05b_cluster_interactive.py",
+    "05d_plots_comprehensive.py",
+    # 03b_validate_quality_fix_rajasthan.py removed: it diffed a climate
+    # signature built from climate_rajasthan_points_clean.csv against the
+    # pre-quality-check version and internally re-ran a script name
+    # ("04_climate_signature_rajasthan.py") that does not exist. Neither
+    # premise holds now that Phase 3 reads 04_preprocess_rajasthan.py's
+    # output. Kept on disk with a deprecation banner; not run here.
 ]
 
 
@@ -210,6 +281,10 @@ def main():
             print(f"    {s}")
     print("\n  CORE (required, stop-on-first-failure):")
     for s in core:
+        tag = "  (non-blocking)" if s in NON_BLOCKING_CORE else ""
+        print(f"    {s}{tag}")
+    print("\n  POST-PHASE-6 (supplementary, continue-on-failure):")
+    for s in POST_PHASE6_SCRIPTS:
         print(f"    {s}")
     if optional:
         print("\n  OPTIONAL / DIAGNOSTIC (continue-on-failure):")
@@ -233,11 +308,21 @@ def main():
             sys.exit(1)
 
     for name in core:
-        status, elapsed = run_script(name, stop_on_failure=True)
+        status, elapsed = run_script(name, stop_on_failure=name not in NON_BLOCKING_CORE)
         log.append((name, status, elapsed))
+        if status == "failed" and name in NON_BLOCKING_CORE:
+            print(f"\n  [NON-BLOCKING] {name} failed but is not required by any later "
+                  f"stage — continuing.")
+            continue
         if status == "failed":
             print_summary(log, time.time() - t_start)
             sys.exit(1)
+
+    # Post-Phase-6 supplementary analysis, non-blocking — mirrors how
+    # run_all_tamilnadu.py sequences 11_seasonal_pcm_sensitivity.py last.
+    for name in POST_PHASE6_SCRIPTS:
+        status, elapsed = run_script(name, stop_on_failure=False)
+        log.append((name, status, elapsed))
 
     for name in optional:
         status, elapsed = run_script(name, stop_on_failure=False)

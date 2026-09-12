@@ -54,7 +54,7 @@ All paths relative to `era5-rajasthan/`:
 | Climate signature (per point) | `data/processed/climate_signature_rajasthan.csv` |
 | Cluster assignments (**Level A**, annual GMM, k=3) | `data/processed/cluster_assignments_rajasthan_levelA.csv` |
 | Cluster profiles | `data/processed/cluster_profiles_rajasthan.csv` |
-| Feasibility evaluation (kappa-calibrated) | `data/processed/feasibility_survivors_rajasthan_kappa_calibrated.csv` |
+| Feasibility evaluation (kappa-calibrated) | `data/processed/feasibility_survivors_by_cluster_kappa_calibrated.csv` (renamed 2026-09-08 from `feasibility_survivors_rajasthan_kappa_calibrated.csv`; the `PLOTSV2/*.py` scripts still use the old literal path and need updating before regeneration) |
 | MCDM rankings | `data/processed/mcdm_rankings_rajasthan.csv` |
 | Physics validation | `data/processed/physics_validation_rajasthan.csv` |
 | PCM property database | `../PCM_data/data/PCM_Properties_cleaned_mice_pmm_detailed.csv` |

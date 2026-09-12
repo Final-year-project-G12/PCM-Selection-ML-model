@@ -13,9 +13,29 @@ CDS credentials are read from the local .cdsapirc file, with environment
 variable fallback for convenience.
 """
 
+import sys as _sys
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent
+
+# Cross-state numeric constants (Phase 2/3 design basis) live in ONE place —
+# PCM-Selection-ML-model/pcm_shared_config.py, one level up — so Tamil Nadu
+# and Rajasthan cannot silently disagree on them. Re-exported here so
+# existing `from config import SHARE_PCM` (etc.) in the scripts keeps working
+# unchanged. Paths below stay per-state; only these scalars are shared.
+if str(BASE_DIR.parent) not in _sys.path:
+    _sys.path.insert(0, str(BASE_DIR.parent))
+from pcm_shared_config import (  # noqa: E402
+    COVERAGE_TARGET,
+    MAX_MATCH_HOURS,
+    T_DELIVERY_C,
+    DT_APPROACH_C,
+    TM_TARGET_C,
+    ASSUMED_PCM_MASS_KG,
+    SHARE_PCM,
+    PCA_N_COMPONENTS,
+    T_MAINS_EST_C_TODO,
+)
 
 DATA_DIR = BASE_DIR / "data"
 RAW_ERA5_DIR = DATA_DIR / "raw" / "era5"
@@ -32,6 +52,18 @@ POINTS_DOWNLOAD_STATUS_FILE = RAW_ERA5_DIR / "download_status_points.csv"
 
 RAW_POPULATION_DIR = DATA_DIR / "raw" / "population"
 RAW_BOUNDARY_DIR = DATA_DIR / "raw" / "boundary"
+
+# Beck et al. 2018 Koppen-Geiger present-climate classification, 1-km
+# resolution GeoTIFF ("present" = 1980-2016 climatology), used by
+# 05_cluster_tamilnadu.py for external validation of the Level A GMM
+# clusters. DOI:10.1038/sdata.2018.214; source ZIP (Beck_KG_V1.zip)
+# downloaded from https://ndownloader.figshare.com/files/12407516 (figshare
+# article 6396959). The raster is global, so the same cached file serves
+# every state pipeline — mirrors era5-rajasthan/config.py exactly.
+RAW_KOPPEN_DIR = DATA_DIR / "raw" / "koppen"
+KOPPEN_RASTER_FILE = RAW_KOPPEN_DIR / "Beck_KG_V1_present_0p0083.tif"
+KOPPEN_LEGEND_FILE = RAW_KOPPEN_DIR / "legend.txt"
+
 RAW_POWER_DIR = DATA_DIR / "raw" / "nasapower"
 POWER_DOWNLOAD_STATUS_FILE = RAW_POWER_DIR / "download_status_power.csv"
 
@@ -51,42 +83,13 @@ OUTPUTS_DIR = BASE_DIR / "outputs"
 CDSAPI_RC = BASE_DIR / ".cdsapirc"
 
 
-# ---------------------------------------------------------------------------
-# PCM sizing constants (Phase 3 / Phase 5)
-# ---------------------------------------------------------------------------
-# Imported by 04b_climate_signature.py, 07_feasibility_filter.py and
-# 11_level_b_seasonal_analysis.py. These live here (not inside each script)
-# so Phase 3, Phase 5 and Level B all size the latent-heat requirement the
-# same way. Values are the ones already documented in this pipeline:
-#   - SHARE_PCM: OPTION A (2026-08-31) combined sensible+latent basis — the
-#     PCM supplies this fraction of overnight delivery, tank sensible heat +
-#     concurrent charging supply the rest (Zhao 2022, Huang 2020,
-#     Abdelsalam 2020, Koželj 2021; literature range 0.4–0.78). Central
-#     estimate 0.5. See CLAUDE.md §3.1 and docs/tamilnadu/07_PHASE_5_AUDIT.md.
-#   - latent_heat_floor_kj_kg(): Table 12 latent-heat floor,
-#     L >= max(100 kJ/kg, fraction × L_required), with fraction κ = 0.7.
-SHARE_PCM = 0.5
-
-
-def latent_heat_floor_kj_kg(l_required, fraction=0.7, absolute_min_kj_kg=100.0):
-    """Table 12 latent-heat floor for PCM feasibility screening.
-
-    Returns ``max(absolute_min_kj_kg, fraction * l_required)`` — both the
-    absolute 100 kJ/kg floor and the climate-relative ``κ · L_required``
-    floor apply, whichever is larger. ``l_required`` may be a scalar or an
-    array-like (elementwise).
-    """
-    import numpy as _np
-
-    return _np.maximum(absolute_min_kj_kg, _np.asarray(fraction, dtype=float) * _np.asarray(l_required, dtype=float))
-
-
 def ensure_data_dirs():
     for directory in (
         RAW_GRID_DIR,
         RAW_POINTS_DIR,
         RAW_POPULATION_DIR,
         RAW_BOUNDARY_DIR,
+        RAW_KOPPEN_DIR,
         RAW_POWER_DIR,
         PROCESSED_NAMED_DIR,
         PROCESSED_GRID_DIR,
@@ -151,10 +154,13 @@ def get_cdsapi_client():
 
 
 # PCM sizing shared across Phase 3 (04b), Phase 5 (07), and Level B (11).
-# SHARE_PCM: literature-anchored fraction of overnight delivery supplied by PCM
-# latent heat (remainder from tank sensible heat + concurrent charging).
-# See docs/era5_tamilnadu/07_PHASE_5_AUDIT.md (OPTION A, 2026-08-31).
-SHARE_PCM = 0.5
+# SHARE_PCM (literature-anchored fraction of overnight delivery supplied by
+# PCM latent heat — remainder from tank sensible heat + concurrent charging;
+# OPTION A, 2026-08-31) is imported at the top of this file from
+# pcm_shared_config.py so Rajasthan and Tamil Nadu cannot disagree on it.
+# LATENT_HEAT_FRACTION / LATENT_HEAT_ABSOLUTE_MIN_KJ_KG are the Table 12
+# feasibility-gate parameters (Phase 5 only, not part of the cross-state
+# Phase 2/3 basis) — kept here.
 LATENT_HEAT_FRACTION = 0.7
 LATENT_HEAT_ABSOLUTE_MIN_KJ_KG = 100.0
 

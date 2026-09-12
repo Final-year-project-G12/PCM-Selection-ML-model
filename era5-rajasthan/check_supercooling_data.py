@@ -3,7 +3,7 @@ from pathlib import Path
 
 # Load survivors and manufacturer data
 base = Path('d:/Final Year Project/PCM-Selection-ML-model/era5-rajasthan')
-survivors_file = base / 'data' / 'processed' / 'feasibility_survivors_rajasthan_kappa_calibrated.csv'
+survivors_file = base / 'data' / 'processed' / 'feasibility_survivors_by_cluster_kappa_calibrated.csv'
 manuf_file = Path('d:/Final Year Project/PCM-Selection-ML-model/PCM_data/data/PCM_Properties_cleaned_mice_pmm_detailed.csv')
 
 survivors = pd.read_csv(survivors_file)
