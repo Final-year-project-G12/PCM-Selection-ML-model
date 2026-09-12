@@ -28,6 +28,9 @@ RAW_BOUNDARY_DIR = DATA_DIR / "raw" / "boundary"
 RAW_POWER_DIR = DATA_DIR / "raw" / "nasapower"
 POWER_DOWNLOAD_STATUS_FILE = RAW_POWER_DIR / "download_status_power.csv"
 
+RAW_INVARIANT_DIR = RAW_ERA5_DIR / "invariant"
+GEOPOTENTIAL_FILE = RAW_INVARIANT_DIR / "era5_UK_geopotential.nc"
+
 PROCESSED_DIR = DATA_DIR / "processed"
 PROCESSED_NAMED_DIR = PROCESSED_DIR / "by_location"
 PROCESSED_GRID_DIR = PROCESSED_DIR / "grid"
@@ -51,6 +54,7 @@ def ensure_data_dirs():
         RAW_POPULATION_DIR,
         RAW_BOUNDARY_DIR,
         RAW_POWER_DIR,
+        RAW_INVARIANT_DIR,
         PROCESSED_NAMED_DIR,
         PROCESSED_GRID_DIR,
         PREPROCESSED_DIR,

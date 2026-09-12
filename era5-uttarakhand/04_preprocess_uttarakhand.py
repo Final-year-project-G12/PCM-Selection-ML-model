@@ -230,7 +230,7 @@ log("  Saved: yeo_johnson_skew.csv  (diagnostic only — no columns transformed)
 log("\n[4/13] Hierarchical imputation (interpolate -> ffill/bfill -> zone/global median -> MICE) ...")
 
 IMPUTE_COLS = [c for c in numeric_cols_all if c in df.columns and c not in
-               ("lat", "lon", "population", "weight", "grid_lat", "grid_lon",
+               ("lat", "lon", "elevation_m", "population", "weight", "grid_lat", "grid_lon",
                 "month", "DOY", "year", "season_code")]
 
 missing_pre_impute = df[IMPUTE_COLS].isna().sum().sum()
@@ -498,7 +498,7 @@ log(f"\n  Saved (physical units, for Phase 3): {physical_path}")
 # ═══════════════════════════════════════════════════════════
 log("\n[12/13] MinMax scaling (train-only fit, leakage-safe) ...")
 
-SKIP_SCALE = {"point_id", "lat", "lon", "population", "weight", "date", "event",
+SKIP_SCALE = {"point_id", "lat", "lon", "elevation_m", "population", "weight", "date", "event",
               "time_utc", "grid_lat", "grid_lon", "month", "DOY", "year",
               "season", "season_code", "impute_zone", "is_daytime"}
 scale_cols = [c for c in df_sorted.select_dtypes(include=[np.number]).columns

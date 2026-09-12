@@ -183,5 +183,29 @@ for Uttarakhand, only filenames.
   not silently skipped. `07b_charging_feasibility.py` covers the
   regime-dependent Tm cap piece of this if you want it before `07`.
 - **Physics validation (Phase 7)** is completed in `10_physics_validation.py`. It runs a grey-box lumped-enthalpy simulation across all 5 clusters against Table 16 benchmark ranges (54–84% annual solar fraction). 92% of runs fall within this benchmark band.
-- **Elevation proxy** — flagged above, worth resolving before you treat
-  Phase 4's clusters as final if `elev_proxy` shows real weight.
+- **Elevation proxy — RESOLVED (2026-09).** `00c_attach_elevation.py` now
+  attaches real per-point elevation from ERA5 geopotential (196m-2510m
+  across the 45 points, replacing both the flat 1200m solar-geometry
+  default and the pressure-ratio `elev_proxy`). PCA loading is now a
+  balanced ~0.37 on PC1 alongside temperature/humidity, not an outsized,
+  unexplained weight. Clusters, feasibility, MCDM ranking, seasonal
+  analysis, physics validation, and all plots have been regenerated
+  against this.
+- **ERA5 GHI/LW/precipitation were deflated ~10x — RESOLVED (2026-09).**
+  `02_combine_uttarakhand.py`'s `deaccumulate()` assumed ERA5's old
+  cumulative-since-forecast-reset convention and diffed consecutive hours.
+  The CDS/cfgrib pipeline actually delivers `ssrd`/`strd`/`tp` already as
+  per-step (hourly) values — confirmed by inspecting raw NetCDF across
+  2016/2020/2025 (a diurnal curve that rises then falls and returns to
+  exactly 0 at night is impossible under the old cumulative convention).
+  Noon GHI went from averaging ~60 W/m^2 (CSI ~0.09 on a documented
+  zero-cloud-cover day — physically impossible) to ~683 W/m^2 (CSI ~1.0 on
+  the same day). Cross-source agreement with NASA POWER went from
+  MBE=-602 W/m^2, r=-0.03 (branch: MANUAL_REVIEW) to MBE=+20 W/m^2,
+  r=0.76 (branch: QUANTILE_MAP). The radiation-based signature indices
+  (GHI_daily_kWh, kt_mean, SAI, cloudy_frac, CCI, seasonality) were
+  already sourced from NASA POWER via Tier-2 (100% coverage) and were
+  NOT affected by this bug; `monsoon_index` (ERA5 precipitation-based)
+  and the Tier-1 proxy fallbacks were. Full pipeline rerun (04 through 12)
+  against the fix; seasonal PCM flips went from 4/20 to 8/20
+  (cluster, season) combinations — a stronger version of the same finding.

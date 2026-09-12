@@ -21,10 +21,11 @@ PIPELINE
 1. For each point in population_grid_points.csv: nearest-neighbor snap to
    the ERA5 grid (extract_nearest, unchanged from the original pipeline),
    concatenate its full instant+accum hourly series across all years,
-   deaccumulate (deaccumulate(), unchanged — see its docstring for why the
-   hour-1/hour-13 reset special-case generalizes correctly to the new
-   sun-event-aligned, non-fixed hour set downloaded by
-   01_download_era5_uttarakhand.py), and compute solar geometry.
+   convert accumulated fields (ssrd/strd/tp) to physical units — see
+   deaccumulate()'s docstring for why this is now a straight per-step
+   conversion, not a diff() (the old hour-1/hour-13 reset-diffing logic
+   was silently deflating GHI ~10x; fixed 2026-09) — and compute solar
+   geometry.
 2. For each (point_id, date, event) row in suntimes.csv, pick the ERA5
    hourly value nearest in time to that event's exact UTC timestamp
    (space-matching already happened in step 1 — one nearest-grid-cell
@@ -217,27 +218,35 @@ def compute_rh(T_c, Td_c):
 
 def deaccumulate(s):
     """
-    ERA5 hourly reanalysis: accumulated values reset every 12 h.
-    Resets happen at hours 1 and 13 UTC (start of each forecast run).
-    diff() gives increments between consecutive downloaded hours; at reset
-    hours the raw value is used directly since there's no valid predecessor.
+    NOT a diff anymore — kept as a pass-through for call-site compatibility.
 
-    This generalizes correctly to ANY hour set (not just a fixed
-    01/02/07/08/13/14 pattern) as long as every non-reset target hour's
-    immediate predecessor was also downloaded — which
-    01_download_era5_uttarakhand.py's ACCUM_HOURS construction guarantees
-    (INSTANT_HOURS ∪ {h-1 for h in INSTANT_HOURS}). The reset-hour
-    special-case is mathematically required, not just an optimization:
-    hour 13's predecessor (hour 12) belongs to a *different* 12-hour
-    accumulation cycle, so diffing against it would produce garbage
-    (a large 12-hour total minus the start of the next cycle) — using the
-    raw value directly at hours 1 and 13 sidesteps that.
+    This code originally assumed the old CDS convention where ssrd/strd/tp
+    accumulate since the start of each 00Z/12Z forecast (resetting at hours
+    1 and 13 UTC), requiring a manual diff() against the immediately
+    preceding hour to recover a per-hour value. That's not what this
+    pipeline's cached NetCDF files actually contain: inspecting the raw
+    ssrd field directly (data/raw/era5/points/*_accum.nc) shows a smooth
+    diurnal bell curve that RISES THEN FALLS across the day and returns to
+    exactly 0 at night — a monotonically-accumulating-since-reset series can
+    never decrease, so this is physically impossible under the old
+    convention. What's actually being delivered (via the current
+    cfgrib/CDS pipeline, GRIB_stepType='accum') is already the per-step
+    (1-hour) accumulated value — i.e. already deaccumulated.
+
+    Applying the old diff()-based logic on top of already-per-hour data
+    computed a "delta of hourly totals" instead of the hourly totals
+    themselves, silently deflating GHI by roughly 10x (verified: noon GHI
+    averaged ~60 W/m^2 against an independently pvlib-computed clear-sky
+    GHI of ~894 W/m^2 for the same rows, including exact-zero GHI on a
+    documented zero-cloud-cover day — physically impossible). Confirmed
+    consistent across 2016, 2020, and 2025 source files, so this isn't a
+    one-off; every ssrd/strd/tp value processed through the old diff()
+    path was wrong the same way.
+
+    Fix: return the raw per-step value as-is; the caller divides by 3600
+    (or multiplies by 1000 for tp) exactly as before.
     """
-    s = pd.Series(np.asarray(s, dtype=float), index=s.index).copy()
-    diff = s.diff()
-    reset_mask = s.index.hour.isin([1, 13])
-    diff[reset_mask] = s[reset_mask]
-    return diff.clip(lower=0)
+    return pd.Series(np.asarray(s, dtype=float), index=s.index).clip(lower=0)
 
 
 def compute_solar(df, lat, lon, alt):

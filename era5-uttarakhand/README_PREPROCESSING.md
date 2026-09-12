@@ -195,22 +195,35 @@ is what `05` clusters), `pca_loadings.csv`, correlation heatmap, per-index
 distribution plot, an Uttarakhand map colored by true daily GHI / monsoon
 index.
 
-**elevation note — this is a real limitation here, not a footnote:**
-`02_combine_uttarakhand.py` uses a flat **1200m** proxy for every point's
-solar-geometry calculations, not real per-point elevation. Unlike Tamil
-Nadu (coastal plain to the Nilgiris at ~2,600m, a limitation the parallel
-Tamil Nadu doc explicitly downgrades to "matters less here"), Uttarakhand's
-populated terrain genuinely spans roughly 200m (Terai plains near
-Udham Singh Nagar/Haridwar) to 2000m (hill towns), and elevation drives
-both solar-geometry inputs (air mass, clear-sky irradiance) and the
-temperature-based indices (HDD18/CDD24, Ta_mean) directly. This is
-plan v3.0's "Repair 2," written with Uttarakhand specifically in mind —
-if `elev_proxy`/`HSI` show up carrying real weight in `pca_loadings.csv`
-or the correlation heatmap, that's a signal this proxy is doing real work
-and worth replacing with actual per-point elevation (e.g. from the SRTM
-tile you likely already have cached locally, or a quick lookup against
-the GADM/WorldPop rasters `00a_build_population_grid.py` already
-downloaded) before finalizing clusters, rather than after.
+**elevation note — RESOLVED (2026-09), was a real limitation here:**
+`elev_proxy` did show real weight (PCA loading -0.33/0.59 on PC1/PC2
+before the fix), confirming this mattered as predicted. `00c_attach_
+elevation.py` now downloads ERA5's time-invariant geopotential field
+(one CDS request, cached under `data/raw/era5/invariant/`) and attaches
+real per-point `elevation_m` (196m-2510m across the 45 points — matching
+the expected Terai-to-hill-town range) to `population_grid_points.csv`.
+`02_combine_uttarakhand.py` now uses this for solar-geometry (air mass,
+clear-sky irradiance) instead of the flat 1200m default, and
+`04b_climate_signature.py` uses it directly as `elevation_m` in the PCA
+block instead of deriving `elev_proxy` from mean surface pressure. Post-fix
+loading is a balanced ~0.37 on PC1 alongside temperature/humidity — real
+signal, not an outsized artifact. Clusters were regenerated against this.
+
+**ERA5 GHI/longwave/precipitation deaccumulation bug — RESOLVED (2026-09):**
+`02_combine_uttarakhand.py`'s `deaccumulate()` assumed ERA5's accumulated
+fields (`ssrd`, `strd`, `tp`) reset every 12h and diffed consecutive hours
+to recover a per-hour value — the old CDS convention. The current
+CDS/cfgrib delivery pipeline actually returns these fields already
+per-step (hourly): raw `ssrd` rises and falls smoothly through the day and
+returns to exactly 0 at night, which a true cumulative-since-reset series
+can never do. Diffing already-per-hour data silently deflated GHI ~10x
+(noon GHI averaged ~60 W/m^2 against an independently-computed clear-sky
+GHI of ~894 W/m^2 for the same rows — CSI~0.09 on a zero-cloud-cover day).
+Fixed by using the raw per-step value directly. Cross-source agreement
+with NASA POWER went from MBE=-602 W/m^2, r=-0.03 to MBE=+20 W/m^2,
+r=0.76. The Tier-2 "true daily integral" indices were sourced from NASA
+POWER, not ERA5, so they were unaffected; `monsoon_index` and Tier-1 proxy
+fallbacks were. Full pipeline rerun against the fix.
 
 ---
 
