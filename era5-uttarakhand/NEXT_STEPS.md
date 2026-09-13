@@ -181,11 +181,20 @@ for Uttarakhand, only filenames.
   MICE+RF+PMM-imputed to full coverage across 42-70C) — the earlier ~25-row
   count is stale; `06_build_pcm_database.py`'s docstring has the current
   breakdown.
-- **Corrosion veto and 5th-percentile-day charging feasibility** are not
-  applied in `07` — the database and cluster profiles don't carry the
-  data those two specific filters from Table 12 need yet. Documented,
-  not silently skipped. `07b_charging_feasibility.py` covers the
-  regime-dependent Tm cap piece of this if you want it before `07`.
+- **Corrosion veto — implemented (2026-09).** `07_feasibility_filter.py`
+  now compares each cluster's HSI against the 75th percentile across all 5
+  clusters and vetoes any `corrosion_class="check_manually"` candidate in
+  a high-humidity cluster. Currently a documented no-op — all 55 database
+  candidates are organic (`low_organic`), so nothing is vetoed with the
+  current database — but it will bind automatically once an inorganic
+  candidate is added. `NEXT_STEPS.md`'s earlier anticipation that "the
+  corrosion veto will bite for high-monsoon-humidity Uttarakhand clusters"
+  still can't be realized until the database gains an inorganic row.
+- **5th-percentile-day charging feasibility** is still not applied in
+  `07` — the cluster profiles don't carry a daily GHI percentile (just the
+  mean), which this specific Table-12 filter needs. Documented, not
+  silently skipped. `07b_charging_feasibility.py` covers the
+  regime-dependent Tm cap piece of Table 12 (a different filter).
 - **Physics validation (Phase 7)** is completed in `10_physics_validation.py`. It runs a grey-box lumped-enthalpy simulation across all 5 clusters against Table 16 benchmark ranges (54-84% annual solar fraction). **Result changed materially by the 2026-09 bug-fix round below — see that note.** Current result: 0% of runs fall within the benchmark band (actual solar fraction ~15-19% across clusters), down from a previously-reported 92% that was itself inflated by the tank-model bug.
 
 - **Second correctness audit round — 10 bugs found and fixed, RESOLVED

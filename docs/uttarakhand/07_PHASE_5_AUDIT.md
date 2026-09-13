@@ -457,13 +457,15 @@ v3.0 Table 12. The MICE + RF + PMM method is described at length with **no** cit
    making the cap a no-op regardless of how the script was run). Fixed; Clusters 1 (Tm_target=55.16C)
    and 2 (56.51C) now get real, differentiated survivor sets (30 and 29 respectively, vs. 29/27/29
    for Clusters 0/3/4).
-2. **Three of the five plan Table-12 filters are not implemented**, and the script says so in its
-   own docstring rather than hiding it: 5th-percentile-day charging feasibility, corrosion veto,
-   safety exclusion.
-3. **The corrosion veto could not activate even if implemented** — every one of the 55 candidates
-   is organic, so `corrosion_class` is `low_organic` for all of them. `NEXT_STEPS.md`'s expectation
-   that the veto would "bite for high-monsoon-humidity Uttarakhand clusters" cannot be realised
-   with this database.
+2. **~~Three of the five plan Table-12 filters are not implemented~~ — now two.** Corrosion veto
+   is implemented (2026-09, see item 3); 5th-percentile-day charging feasibility and safety
+   exclusion remain unimplemented, and the script says so in its own docstring rather than hiding it.
+3. **The corrosion veto is implemented but cannot activate with the current database** — every one
+   of the 55 candidates is organic, so `corrosion_class` is `low_organic` for all of them (verified
+   directly against the database), leaving nothing for the veto to reject. `NEXT_STEPS.md`'s
+   expectation that the veto would "bite for high-monsoon-humidity Uttarakhand clusters" still
+   cannot be realised with this database — but the veto will fire automatically the moment an
+   inorganic candidate (e.g. a salt hydrate) is added, without any further code change.
 4. **`07`'s low-survivor warning string is stale**: it prints "your database (25 rows) is thin for
    this" while the database is 55 rows. It would not have fired in this run anyway (29 > 5).
 5. **Auto-relaxation never triggered** (29 >= 5 in every cluster), so `window_relax_applied` is 0

@@ -589,11 +589,17 @@ that cluster's HSI is above its own 75th percentile, supercooling veto
 >8K, safety exclusion. Reports survivor counts per cluster.
 
 - Output: `data/processed/pcm/feasibility_survivors_by_cluster.csv`
-- **Known limitation, stated in its own docstring**: the corrosion veto
-  and a 5th-percentile-day charging-feasibility check from the plan
-  doc's Table 12 aren't fully applied yet — the database/cluster profiles
-  don't carry the data those two specific filters need. Documented, not
-  silently skipped.
+- **Corrosion veto — implemented (2026-09).** Compares each cluster's HSI
+  against the 75th percentile across all 5 clusters, vetoing any
+  `corrosion_class="check_manually"` (inorganic) candidate in a
+  high-humidity cluster. Currently a documented no-op: all 55 database
+  candidates are organic (`corrosion_class="low_organic"`), so nothing is
+  vetoed yet — it will start binding automatically once an inorganic
+  candidate is added to the database.
+- **Still not applied**: the 5th-percentile-day charging-feasibility check
+  from the plan doc's Table 12 — the cluster profiles don't carry a daily
+  GHI percentile (just the mean), which that specific filter needs.
+  Documented, not silently skipped.
 
 ### `08_mcdm_ranking.py`
 Phase 6 — the headline deliverable. For each cluster's feasibility
@@ -634,8 +640,9 @@ population covered, approximate medoid point, population-weighted climate
 signature table, `Tm_target`/`L_required`, survivor count, Top-3 PCM
 candidates with per-method scores and the Kendall's W agreement note, and
 a caveats section (thermal conductivity/density/specific heat not
-reported for the literature-added candidates; cycling/corrosion vetoes
-only partially applied — see `07`'s docstring).
+reported for the literature-added candidates; corrosion veto implemented
+but currently a no-op given an all-organic database, 5th-percentile-day
+charging feasibility still not applied — see `07`'s docstring).
 
 - Output: `data/processed/pcm/recommendation_cards.md` — this is your
   results section; reformat the tables to your target format (e.g. IEEE

@@ -39,10 +39,18 @@ if 'topsis_rank' not in topk.columns and 'topsis_score' in topk.columns:
     topk['topsis_rank'] = topk.groupby('cluster_id')['topsis_score'].rank(ascending=False, method='min').astype(int)
 if 'gra_rank' not in topk.columns and 'gra_grade' in topk.columns:
     topk['gra_rank'] = topk.groupby('cluster_id')['gra_grade'].rank(ascending=False, method='min').astype(int)
+# PROMETHEE II (higher net flow = better) and VIKOR (lower Q = better) were
+# added to 08_mcdm_ranking.py after this script was first written -- these
+# two blocks close that gap so the method-agreement analysis below actually
+# covers all four ranking methods, not just the original two.
+if 'promethee_rank' not in topk.columns and 'promethee_flow' in topk.columns:
+    topk['promethee_rank'] = topk.groupby('cluster_id')['promethee_flow'].rank(ascending=False, method='min').astype(int)
+if 'vikor_rank' not in topk.columns and 'vikor_Q' in topk.columns:
+    topk['vikor_rank'] = topk.groupby('cluster_id')['vikor_Q'].rank(ascending=True, method='min').astype(int)
 if 'consensus_rank' not in topk.columns and 'borda_score' in topk.columns:
     topk['consensus_rank'] = topk.groupby('cluster_id')['borda_score'].rank(ascending=False, method='min').astype(int)
 
-rank_cols = [c for c in ['topsis_rank', 'gra_rank', 'consensus_rank'] if c in topk.columns]
+rank_cols = [c for c in ['topsis_rank', 'gra_rank', 'promethee_rank', 'vikor_rank', 'consensus_rank'] if c in topk.columns]
 score_cols = [c for c in full.columns if c.endswith('_score') or c.endswith('_grade')]
 print(f"Ranking columns used: {rank_cols}")
 print(f"Score columns available: {score_cols[:10]}")
@@ -177,15 +185,15 @@ Number of clusters: {topk['cluster_id'].nunique()}
 
 Method agreement (Spearman rho):
 """
-if 'topsis_rank' in topk.columns and 'gra_rank' in topk.columns:
-    corr, _ = spearmanr(topk['topsis_rank'].dropna(), topk['gra_rank'].dropna())
-    summary += f"  TOPSIS vs GRA: {corr:.3f}\n"
-if 'topsis_rank' in topk.columns and 'consensus_rank' in topk.columns:
-    corr, _ = spearmanr(topk['topsis_rank'].dropna(), topk['consensus_rank'].dropna())
-    summary += f"  TOPSIS vs CONSENSUS: {corr:.3f}\n"
-if 'gra_rank' in topk.columns and 'consensus_rank' in topk.columns:
-    corr, _ = spearmanr(topk['gra_rank'].dropna(), topk['consensus_rank'].dropna())
-    summary += f"  GRA vs CONSENSUS: {corr:.3f}\n"
+# All pairwise combinations of rank_cols, not just the three original
+# TOPSIS/GRA/CONSENSUS pairs -- this now also covers PROMETHEE and VIKOR.
+for i, c1 in enumerate(rank_cols):
+    for c2 in rank_cols[i + 1:]:
+        valid = topk[[c1, c2]].dropna()
+        if len(valid) < 2:
+            continue
+        corr, _ = spearmanr(valid[c1], valid[c2])
+        summary += f"  {c1.replace('_rank', '').upper()} vs {c2.replace('_rank', '').upper()}: {corr:.3f}\n"
 summary += f"\nTop-3 consensus candidates:\n"
 if 'name' in topk.columns and 'consensus_rank' in topk.columns:
     top3 = topk[topk['consensus_rank'] <= 3][['name', 'consensus_rank']].drop_duplicates().sort_values('consensus_rank').head(3)

@@ -27,6 +27,10 @@ This document consolidates the complete, verified Uttarakhand audit documentatio
 
 ---
 
+---
+
+---
+
 # Source File 0: 00_MASTER_OVERVIEW.md
 Source: `docs/uttarakhand/00_MASTER_OVERVIEW.md`
 
@@ -317,7 +321,7 @@ what the Uttarakhand pipeline demonstrably does.
 | 2 — Combine + Tier-2 | Two independent sources cross-checked | ERA5 + NASA POWER at identical points/instants; full agreement statistics computed | **Delivered, but the disagreement is never acted upon** |
 | 3 — Climate Signature | Two-tier signature (sun-event + true daily integral) | 18 indices; Tier-2 canonical where available; PCA on the thermodynamic block only | **Delivered — and it insulated the clustering matrix from the pipeline's largest data defect** |
 | 4 — Regime Clustering | Discovered regimes, not hand-picked zones | GMM **diagonal** covariance, K = 5 by manual selection from a BIC/silhouette table; lat/lon excluded | **Delivered** — clusters are spatially coherent without clustering on geography (silhouette 0.28). **But** no bootstrap stability and no external classification |
-| 5 — Feasibility Filtering | Corrected 42–70 °C SWH-specific PCM band | Band enforced; melting window [52, 65] °C at `Tm_target = 57` (regime-capped to 55.16/56.51 for Clusters 1/2) | **Partially delivered** — the corrosion veto cannot activate (all 55 candidates organic, and the database doesn't yet carry corrosion-class data); other Table-12 filters still unimplemented. Regime-capping now genuinely differentiates survivor counts (29/30/29/27/29) |
+| 5 — Feasibility Filtering | Corrected 42–70 °C SWH-specific PCM band | Band enforced; melting window [52, 65] °C at `Tm_target = 57` (regime-capped to 55.16/56.51 for Clusters 1/2) | **Delivered, with one filter still a documented no-op.** Corrosion veto is now implemented (2026-09) — the database DOES carry `corrosion_class` data (assigned in `06`), it's just that all 55 current candidates are organic (`low_organic`), so the veto has nothing to reject yet; it activates automatically once an inorganic candidate is added. The 5th-percentile-day charging-feasibility filter is still unimplemented (needs a daily GHI percentile per cluster). Regime-capping genuinely differentiates survivor counts (29/30/29/27/29) |
 | 6 — MCDM Ranking | Top-3 with explicit method-agreement reporting | TOPSIS + GRA + PROMETHEE II + VIKOR, entropy/AHP weights, Gaussian Tm fitness, Borda, Kendall's W | **Delivered** — four independent methods, Kendall's W 0.708–0.842 per cluster, VIKOR now correctly reports compromise sets (Clusters 1 and 2) instead of false single winners |
 | 7 — Physics Validation | Physics-validated ranking | Backward-Euler grey-box lumped-enthalpy tank model (`10_physics_validation.py`), Spearman rho of consensus rank vs. simulated solar fraction per cluster | **Delivered, and an honest negative result** — 0% of simulations land in the 54–84% literature benchmark band (actual ~15–19%); per-cluster rho ranges −0.227 to +0.171, none significant. This is a genuine finding once two solver bugs were fixed, not evidence the model is broken |
 | 8 — Recommendation Cards | Per-regime explainable output | 5 cards; population-weighted profiles; Top-3 with per-method scores and Kendall's W | **Delivered**; regenerated against the current, corrected results; output still not committed (git-ignored) |
@@ -574,13 +578,15 @@ group") and step 11's VIF ("computed over fewer independent spatial samples"). I
 a high silhouette is "more likely to mean an over-simple signature than a genuinely crisp regime
 split" at this N, and that K should realistically be 2–4 rather than higher.
 
-**Corrosion mechanism.** `NEXT_STEPS.md` anticipates that "the corrosion veto [will] bite for
-high-monsoon-humidity Uttarakhand clusters (Terai/valley points during Jun-Sep) … same veto,
-different physical mechanism, worth noting in text." **This still has not happened** — the
-corrosion veto is not implemented in `07_feasibility_filter.py` at all (its docstring lists it
-under "NOT applied"), and every one of the 55 database candidates is organic, so the veto could
-not have activated even if it had been implemented. This remains a genuine, documented scope gap
-(not something the 2026-09 bug fixes touched).
+**Corrosion mechanism — implemented (2026-09), still can't activate yet.** `NEXT_STEPS.md`
+anticipates that "the corrosion veto [will] bite for high-monsoon-humidity Uttarakhand clusters
+(Terai/valley points during Jun-Sep) … same veto, different physical mechanism, worth noting in
+text." `07_feasibility_filter.py` now implements the veto logic (a `corrosion_class="check_manually"`
+candidate fails if that cluster's HSI exceeds the 75th percentile across all 5 clusters) — but it
+still can't bite for the reason this section originally gave: every one of the 55 database
+candidates is organic (`corrosion_class="low_organic"`), so there's nothing for the veto to reject.
+It will activate automatically once an inorganic candidate (e.g. a salt hydrate) is added to the
+database — a data-coverage gap now, not a missing-logic gap.
 
 **`Tm_target` — RESOLVED (2026-09), was the dominant cause of identical results, no longer is.**
 `04b_climate_signature.py` sets a baseline `Tm_target_C = 57` for every point by design
@@ -2715,7 +2721,7 @@ constraining a PCM property. The Uttarakhand implementation's mapping:
 |---|---|---|
 | `GHI_mean` | Mean solar irradiance at the charging instant | Charging-rate feasibility; upper bound on achievable `Tm` |
 | `RH_mean` | Annual mean relative humidity → condensation risk at the PCM container | Corrosion-resistance requirement; encapsulation choice |
-| `HSI` | `RH_mean × fraction(T_amb − T_dew < 3 K)` — combined humidity + near-saturation signal | Intended as the corrosion-veto trigger. **In this run it triggers nothing** — `07`'s corrosion veto is not implemented, and all 55 database candidates are organic. |
+| `HSI` | `RH_mean × fraction(T_amb − T_dew < 3 K)` — combined humidity + near-saturation signal | The corrosion-veto trigger — **implemented in `07` (2026-09)**, comparing each cluster's HSI against the 75th percentile across all clusters. **Still triggers nothing in this run** — all 55 database candidates are organic, so the veto has no inorganic candidate to reject yet, not because the logic is missing. |
 | `wind_mean` | Mean wind speed → convective loss from collector and tank | Tank/collector loss coefficient; indirectly the required storage margin |
 | `monsoon_index` | JJAS share of annual precipitation → seasonal charging gap | Storage sizing for the monsoon under-charging window (descriptive, not a ranking criterion) |
 | `elevation_m` | Real per-point elevation (ERA5 geopotential, 196-2510m) — **was** `mean(P_atm)/1013.25`, a pressure-ratio proxy, fixed 2026-09 | Air mass into the Ineichen clear-sky model (via `02`'s per-point altitude, also fixed); PCA thermodynamic block |
@@ -3679,13 +3685,15 @@ v3.0 Table 12. The MICE + RF + PMM method is described at length with **no** cit
    making the cap a no-op regardless of how the script was run). Fixed; Clusters 1 (Tm_target=55.16C)
    and 2 (56.51C) now get real, differentiated survivor sets (30 and 29 respectively, vs. 29/27/29
    for Clusters 0/3/4).
-2. **Three of the five plan Table-12 filters are not implemented**, and the script says so in its
-   own docstring rather than hiding it: 5th-percentile-day charging feasibility, corrosion veto,
-   safety exclusion.
-3. **The corrosion veto could not activate even if implemented** — every one of the 55 candidates
-   is organic, so `corrosion_class` is `low_organic` for all of them. `NEXT_STEPS.md`'s expectation
-   that the veto would "bite for high-monsoon-humidity Uttarakhand clusters" cannot be realised
-   with this database.
+2. **~~Three of the five plan Table-12 filters are not implemented~~ — now two.** Corrosion veto
+   is implemented (2026-09, see item 3); 5th-percentile-day charging feasibility and safety
+   exclusion remain unimplemented, and the script says so in its own docstring rather than hiding it.
+3. **The corrosion veto is implemented but cannot activate with the current database** — every one
+   of the 55 candidates is organic, so `corrosion_class` is `low_organic` for all of them (verified
+   directly against the database), leaving nothing for the veto to reject. `NEXT_STEPS.md`'s
+   expectation that the veto would "bite for high-monsoon-humidity Uttarakhand clusters" still
+   cannot be realised with this database — but the veto will fire automatically the moment an
+   inorganic candidate (e.g. a salt hydrate) is added, without any further code change.
 4. **`07`'s low-survivor warning string is stale**: it prints "your database (25 rows) is thin for
    this" while the database is 55 rows. It would not have fired in this run anyway (29 > 5).
 5. **Auto-relaxation never triggered** (29 >= 5 in every cluster), so `window_relax_applied` is 0
@@ -4710,13 +4718,17 @@ from all five clusters at once**, not per cluster. They are not the per-cluster 
 agreement statistic — that is Kendall's W, verified from `08_mcdm_ranking.py`'s current output:
 0.796/0.842/0.782/0.708/0.796 for Clusters 0-4.
 
-**Caveat 2 (newly identified, 2026-09) — this verify script's coverage hasn't kept up with `08`'s
-method count.** `08_mcdm_ranking.py` now computes four methods (TOPSIS+GRA+PROMETHEE+VIKOR), but
-`verify_04_ranking.py`'s `rank_cols` only ever looks at `['topsis_rank', 'gra_rank',
-'consensus_rank']` (confirmed by reading the current script) — `promethee_rank` and `vikor_rank`
-are silently absent from its method-agreement analysis. Not a pipeline-correctness bug (the actual
-MCDM ranking is unaffected), but a real gap in this specific verification script's coverage,
-left open.
+**Caveat 2 — RESOLVED (2026-09), same session it was identified in.** This verify script's
+coverage had fallen behind `08`'s method count: `08_mcdm_ranking.py` computes four methods
+(TOPSIS+GRA+PROMETHEE+VIKOR), but `verify_04_ranking.py`'s `rank_cols` only looked at
+`['topsis_rank', 'gra_rank', 'consensus_rank']`, silently omitting `promethee_rank`/`vikor_rank`
+from every downstream analysis (the correlation matrix, top-3 inclusion probability, rank
+reversal, and the summary panel). Fixed: `rank_cols` now includes all five columns
+(`topsis_rank, gra_rank, promethee_rank, vikor_rank, consensus_rank`), with fallback rank
+computation added for the two new methods (`promethee_flow` descending, `vikor_Q` ascending —
+matching `08`'s own conventions) and the summary panel's pairwise-agreement text generalized to
+loop over all pairs instead of three hardcoded ones. Confirmed by rerunning: `Methods:` now prints
+all five columns, `06_summary.png` shows all 10 pairwise Spearman values.
 
 ---
 

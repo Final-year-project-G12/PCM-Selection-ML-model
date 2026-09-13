@@ -145,13 +145,15 @@ group") and step 11's VIF ("computed over fewer independent spatial samples"). I
 a high silhouette is "more likely to mean an over-simple signature than a genuinely crisp regime
 split" at this N, and that K should realistically be 2–4 rather than higher.
 
-**Corrosion mechanism.** `NEXT_STEPS.md` anticipates that "the corrosion veto [will] bite for
-high-monsoon-humidity Uttarakhand clusters (Terai/valley points during Jun-Sep) … same veto,
-different physical mechanism, worth noting in text." **This still has not happened** — the
-corrosion veto is not implemented in `07_feasibility_filter.py` at all (its docstring lists it
-under "NOT applied"), and every one of the 55 database candidates is organic, so the veto could
-not have activated even if it had been implemented. This remains a genuine, documented scope gap
-(not something the 2026-09 bug fixes touched).
+**Corrosion mechanism — implemented (2026-09), still can't activate yet.** `NEXT_STEPS.md`
+anticipates that "the corrosion veto [will] bite for high-monsoon-humidity Uttarakhand clusters
+(Terai/valley points during Jun-Sep) … same veto, different physical mechanism, worth noting in
+text." `07_feasibility_filter.py` now implements the veto logic (a `corrosion_class="check_manually"`
+candidate fails if that cluster's HSI exceeds the 75th percentile across all 5 clusters) — but it
+still can't bite for the reason this section originally gave: every one of the 55 database
+candidates is organic (`corrosion_class="low_organic"`), so there's nothing for the veto to reject.
+It will activate automatically once an inorganic candidate (e.g. a salt hydrate) is added to the
+database — a data-coverage gap now, not a missing-logic gap.
 
 **`Tm_target` — RESOLVED (2026-09), was the dominant cause of identical results, no longer is.**
 `04b_climate_signature.py` sets a baseline `Tm_target_C = 57` for every point by design
