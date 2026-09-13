@@ -87,7 +87,10 @@ import sys
 import numpy as np
 import pandas as pd
 
-from config import PROCESSED_DIR, OUTPUTS_DIR, BASE_DIR, RAW_BOUNDARY_DIR, ensure_data_dirs
+from config import (
+    PROCESSED_DIR, OUTPUTS_DIR, BASE_DIR, RAW_BOUNDARY_DIR, ensure_data_dirs,
+    T_DELIVERY_C, DT_APPROACH_C,
+)
 from provenance_lib import file_fingerprint, fingerprint_id, assert_fingerprint_match
 import physics_lib as pl
 
@@ -650,7 +653,8 @@ def main():
         # 3. Derived targets
         lines.append("\n### 3. Derived targets\n")
         lines.append(f"- **Tm_target_C:** {cx['tm_target_c']:.1f} C — assumes an **INDIRECT** system "
-                      f"configuration (T_delivery=50C + heat-exchanger approach dT=7C, per "
+                      f"configuration (T_delivery={T_DELIVERY_C:.0f}C + heat-exchanger approach "
+                      f"dT={DT_APPROACH_C:.0f}C, per "
                       f"04_climate_signature_{STATE_NAME}.py's TM_TARGET_C definition, "
                       f"Objective1_PCM_Climate_Framework_Plan_v3 Section 6.3).")
         if cx["tm_capped_differs"]:

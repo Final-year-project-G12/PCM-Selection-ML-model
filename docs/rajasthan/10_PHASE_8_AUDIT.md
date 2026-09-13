@@ -17,6 +17,43 @@ Scripts: `08_phase8_supercooling_sweep.py`, the supercooling penalty implementat
 `check_supercooling_K.py` (audit stub at the end of this file). Sensitivity sweep
 k ∈ [0.0, 0.1, 0.2, 0.3]. Results below are PRE-unification (raw supercooling entropy weight).
 
+> ✅ **DELIVERY TEMPERATURE CORRECTION (2026-09-13): re-run complete.** `T_DELIVERY_C` corrected
+> 50→60°C to match Avargani et al. (2021)'s actual validated delivery temperature (see
+> `05_PHASE_3_AUDIT.md`); Phase 5's raised `L_required` ceiling shrank the survivor pool to
+> n=4/8/11 (was n=9/14/16). Current `phase8_supercooling_sweep_rajasthan.csv`:
+>
+> | k | Cluster 0 rho (n=4) | Cluster 1 rho (n=8) | Cluster 2 rho (n=11) |
+> |---|---|---|---|
+> | 0.0 | 0.105 | -0.095 | -0.091 |
+> | 0.1 | -0.632 | -0.333 | -0.236 |
+> | 0.2 | -0.949 | -0.333 | -0.264 |
+> | 0.3 | -0.949 | -0.333 | -0.264 |
+>
+> Agreement still *worsens* (rho drops further negative) as the supercooling penalty k rises in
+> every cluster — the same qualitative conclusion this audit already reached pre-fix, now doubly
+> true at the raised delivery temperature. Cluster 0's numbers are on an n=4 undersized pool and
+> swing hardest (0.105 → -0.949) — treat that cluster's k-sensitivity as noisier than clusters 1/2's.
+> 100% of medoids stay in-band across all four k values tested.
+
+> ✅ **TANK MASS RE-CALIBRATION (2026-09-13, same pass): re-run complete.** `M_W_KG` corrected
+> 300→200 kg (decoupled from Avargani's flow-through 300L figure, re-grounded in Eldokaishi et al.
+> 2022's 50-240L tank-volume literature — see `09_PHASE_7_AUDIT.md`), with `COLLECTOR_UL_WM2K`
+> and `NIGHT_ISOLATION_FRACTION` re-tuned to keep calibration in-band. Current
+> `phase8_supercooling_sweep_rajasthan.csv`:
+>
+> | k | Cluster 0 rho (n=4) | Cluster 1 rho (n=8) | Cluster 2 rho (n=11) |
+> |---|---|---|---|
+> | 0.0 | 0.105 | -0.190 | -0.091 |
+> | 0.1 | -0.949 | -0.333 | -0.264 |
+> | 0.2 | -0.949 | -0.333 | -0.264 |
+> | 0.3 | -0.949 | -0.333 | -0.264 |
+>
+> Same qualitative conclusion as before this fix: agreement still worsens (rho drops further
+> negative) as the supercooling penalty k rises in every cluster. Cluster 0's k=0.0 rho barely
+> moved (0.105, same as the pre-tank-fix reading) but swings even harder negative at k>=0.1
+> (-0.949, vs -0.632 pre-fix) — still an n=4 undersized-pool reading, noisier than clusters 1/2.
+> 100% of medoids stay in-band across all four k values.
+
 ## Purpose
 
 Phase 7 identified negative or near-zero Spearman ρ (−0.385, +0.125, −0.097 across clusters 0/1/2) between MCDM rankings and simulated solar fractions. The dominant entropy-weighted criterion in all three clusters is **supercooling** (48–64%), but the base physics model cannot simulate it (assumes ideal solid–liquid transition at Tm, no nucleation delay). **Phase 8 tests whether implementing a supercooling penalty improves physics/MCDM agreement.**

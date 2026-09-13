@@ -21,6 +21,108 @@ fix helped.
 re-run. Phase 3's L_required uses SHARE_PCM=0.5 (combined sensible+latent), halving it. See
 CLAUDE.md §3.1.
 
+✅ **DELIVERY TEMPERATURE CORRECTION (2026-09-13): re-run complete, this doc's numbers above are
+superseded again.** `T_DELIVERY_C` (used both in Phase 3's `Tm_target_C`/`L_required` and directly
+inside `physics_lib.py`'s grey-box simulator as the delivery-success threshold) was `50.0°C`;
+corrected to `60.0°C` to match Avargani et al. (2021)'s actual validated delivery temperature for
+the cited 300 L/7h figure — see `05_PHASE_3_AUDIT.md`. Full pipeline re-run, **current on-disk
+results:**
+
+- Calibration medoid solar fractions: **58.1% / 59.9% / 57.9%** (clusters 0/1/2, RT47 calibration
+  PCM) — down from the pre-fix ~64.9%/65.8%/63.8%, since the simulator now targets a harder-to-hit
+  60°C delivery threshold. Still 100% inside the 54–84% benchmark band (target ~69%).
+- PCM-mass sensitivity sweep: ranking of the top-5 candidates is **no longer stable across
+  50–800 kg PCM mass** (was stable pre-fix) — at 400 kg the #3/#4 positions (RT50, RT45HC) swap
+  order. Report `hours_target_met_per_year` or `mean_melt_fraction` as a supplementary rank target
+  per this script's own printed conclusion, rather than treating 50 kg solar-fraction ranking alone
+  as fully discriminating.
+- Per-cluster Spearman rho (MCDM Borda rank vs. simulated solar-fraction rank): **0.105 / -0.095 /
+  -0.091** (clusters 0/1/2) — cluster 0's reading now sits on an n=4 undersized candidate pool
+  (Phase 5's raised L_required ceiling shrank it from 9 to 4 survivors), so read it with that
+  caveat rather than as a like-for-like comparison against clusters 1/2's healthy pools.
+- See `physics_validation_summary_rajasthan.txt` for the full caveat-aware per-cluster
+  interpretation and `outputs/recommendation_cards_rajasthan.md` for the aggregated Phase 8 view.
+
+✅ **TANK MASS DECOUPLED FROM AVARGANI + RE-CALIBRATED (2026-09-13, same pass as the delivery-
+temperature fix above, re-run complete).** `M_W_KG` (the simulator's static tank water mass) had
+been set to 300.0 kg as "the same volume as Avargani's 300L design basis" — but re-reading
+Avargani et al. (2021) directly confirms their system is continuous-FLOW (water passes through
+the collector and PCM bed while a draw is ongoing; there is no static tank in the sense `M_W_KG`
+represents), so their 300L/7h figure is cumulative throughput, not a tank's resting capacity — a
+different physical quantity that happened to share a number with this pipeline's own
+`NIGHT_DRAW_TOTAL_L`. Re-derived from Eldokaishi et al. (2022)'s hybrid-PCM-SWH design study
+(building on Abdelsalam et al. 2020, already cited in this pipeline's SHARE_PCM basis): a
+literature-validated 50–240 L tank-volume range for a 1–8 m² collector, with an explicit A_c=4 m²
+design case matching this script's own `A_C_M2` exactly. **`M_W_KG` corrected 300→200 kg**
+(comfortably above this pipeline's own 46.3 L/hour peak draw — a naive 40–50L guess would not have
+been). Dropping `M_W_KG` alone pushed calibration solar fraction out of the 54–84% band (45–52%);
+re-calibrated by jointly sweeping `COLLECTOR_UL_WM2K` (2.5→2.0 W/m²K) and
+`NIGHT_ISOLATION_FRACTION` (0.05→0.03), selecting the smallest joint adjustment that restored all
+3 medoids in-band. **Current results:**
+- Calibration medoid solar fractions: **64.3% / 65.8% / 64.0%** (clusters 0/1/2) — closer to the
+  69% target than the pre-recalibration T_DELIVERY_C-only numbers (58.1/59.9/57.9%).
+- 5-candidate spread at PCM_MASS_KG=50 kg: **~1.25 pp** (was ~0.9pp at the original M_W_KG=300 —
+  differentiation did not degrade from the smaller tank).
+- Energy-conservation self-test still passes (residual fraction ~9e-14, threshold 1e-3).
+- Per-cluster Spearman rho: **0.105 / -0.190 / -0.091** (clusters 0/1/2) — still negative-band;
+  cluster 1's magnitude grew slightly (was -0.095).
+- PCM-vs-plain-tank comparator: still ~0.0% (tank-dominated finding unchanged in kind — M_W_KG=200
+  is still 4x PCM_MASS_KG=50).
+See `physics_lib.py`'s CALIBRATION docstring section (correction #4) for the full sweep numbers
+and citation detail.
+
+⚠️➡️✅ **DOWNSTREAM CONSEQUENCE, THEN FIXED (2026-09-13) — Level B seasonal PCM sensitivity was
+DEGENERATE, root cause found and corrected.** The raised `L_required` (from the T_DELIVERY_C fix)
+pushed seasonal `L_required` to 375–556 kJ/kg — but the REAL cause of "< 2 survivors" everywhere
+was a separate bug: `11_seasonal_pcm_sensitivity.py` re-filtered each cluster's already-calibrated
+survivor pool using a hardcoded `LATENT_HEAT_FRACTION=0.7`, stricter than every cluster's own Phase
+5 calibrated kappa (0.0/0.5/0.3) and inconsistent with the pool it drew from. **Fixed:** the
+seasonal floor now uses each cluster's own `calibrated_kappa` instead of a shared fixed 0.7.
+
+**Result: no longer degenerate — and this is a genuine POSITIVE finding, not a loss.** All 11
+(cluster, season) cells now have healthy survivor counts (4–11) and rank cleanly — **0/11 flip
+from the annual #1 pick** (was the "6-7/9 flip" finding pre-Fix-1, briefly "0/0/0 empty tables"
+between Fix 1 and this correction). Rajasthan's delivery-temperature-anchored `Tm_target` rule is
+seasonally robust: the #1 PCM recommendation per cluster does not change across Winter/Summer/
+Monsoon/Retreat.
+
+**Re-examined against the DRL literature (2026-09-13): this null result is the RIGHT outcome for
+Objective 1, and does not weaken Objective 3's case.** The original plan motivated O3's DRL
+controller by "the optimal PCM ranking flips across seasons" — but that is not actually how this
+class of paper motivates a learned controller. **Emami et al. (2025/2026)** (already in this
+project's bibliography — `sources/Emami2026DRL_Solar_ORC_TES_summary.md`) motivates their DDPG
+supervisory controller purely by real-time weather stochasticity: year-long solar irradiance
+variability (transient/low-flux regimes, steep ramps up to ±100 W/m²/min) that a fixed-flow
+passive baseline cannot track, with no PCM-material-selection instability involved at all. Heidari
+et al. (2022) is reported (by the reviewing party, not yet independently verified against a source
+extract in this repo — see caveat below) to motivate a comparable controller by stochastic
+occupant hot-water-demand behavior plus weather variability, again with no PCM-ranking-flip
+argument. **Neither precedent needs "the optimal material changes" to justify a learned
+controller** — the controller's actual job is real-time charge/discharge/bypass decisions under
+weather/demand variability that a fixed PCM choice and a fixed rule-based controller cannot react
+to. That is a stronger and better-precedented justification for O3 than a PCM-ranking-flip story
+would have been.
+
+**Recommended framing for the paper:** "Objective 1's climate-region-aware PCM recommendation is
+stable across seasons within a climatic regime (Section X) — the *material selection* decision
+does not need to be adaptive. What DOES need to be adaptive is the *operating* decision: how much
+to charge/discharge/bypass at a given hour, in response to real-time weather and demand
+stochasticity the climate-cluster-level analysis cannot capture (Objective 3)." This cleanly
+separates O1's job (climate-region-level material selection, done once per region) from O3's job
+(hour-by-hour operational control, running continuously) — matching how Emami et al. and (reported)
+Heidari et al. motivate their own controllers.
+
+**Caveat — Heidari et al. (2022) is not yet a verified project source.** Per this project's own
+grounding rule (CLAUDE.md §0), no claim from it should be cited in the actual paper until it has
+been read directly and extracted to `sources/` — the characterization above is relayed from an
+external reviewer's summary, not independently confirmed in this session. Emami et al., by
+contrast, IS already an extracted project source and its framing above was checked directly against
+that extract.
+
+**Status:** not yet applied to the actual literature-review/methodology write-up — this is guidance
+for that write-up, not a code or doc-numbers change. See `Objective1_Fixes_SourceVerified.md` Fix 6
+for the full decision trail.
+
 ## Purpose
 
 Phase 6 produces a consensus MCDM ranking (four methods, two aggregators, Monte Carlo stability). Phase 7 asks the critical question: **does a higher-MCDM-rank PCM actually deliver better simulated thermal performance under this cluster's real climate?** This validation makes the ranking falsifiable, not deferrable to future work.

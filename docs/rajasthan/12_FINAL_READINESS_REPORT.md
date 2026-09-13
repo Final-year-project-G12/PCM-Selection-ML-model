@@ -19,6 +19,64 @@ see "Prerequisites for a FINAL (non-provisional) result" and "Recommended next i
 
 ⚠️ **CRITICAL UPDATE (2026-08-31): L_required Methodology Correction** — Phase 3's L_required methodology was corrected 2026-08-31, halving L_required values (600–650 kJ/kg → 300–325 kJ/kg) and cascading through Phases 5–8. **All results documented in this report (κ calibrations, Spearman rho values, recommendations) are now STALE.** Phases 5–8 must be re-run against updated signatures. This supersedes the "regenerate preprocessing output and re-run" item above; the NEWER prerequisite is "re-run Phases 3 (climate signature only), 4, 5–8 in sequence." See CLAUDE.md §3.1 and `04b_climate_signature.py` docstring for full methodology detail.
 
+✅ **CRITICAL UPDATE #2 (2026-09-13): Delivery temperature corrected to match Avargani, full re-run
+COMPLETE.** `T_DELIVERY_C` was `50.0°C` throughout the pipeline (Phase 3's `Tm_target_C`/`L_required`
+formulas AND `physics_lib.py`'s simulator), but Avargani et al. (2021)'s cited 300 L/7h benchmark is
+validated at 60±2°C — corrected to `60.0°C` in the shared `pcm_shared_config.py`. **This
+supersedes every number in this report from before 2026-09-13, including the 2026-08-31 update's
+own (stale) figures above.** Current state (04b → 05 → 05a → 07 → 08 → 10 → 09 re-run complete):
+- `Tm_target_C`: 57.0 → **67.0°C**; `L_required`: 285–344 → **410–469 kJ/kg**.
+- Phase 5 fixed-κ=0.7 survivors: back to **0/0/0** (raised ceiling); κ-calibrated survivors
+  **4/8/11** (n=23 total, down from 39) — cluster 0 bottoms out `insufficient_even_at_kappa_0`.
+- Phase 7 Spearman rho: **0.105 / -0.095 / -0.091** (clusters 0/1/2) — still negative-band;
+  cluster 0's reading is on an undersized n=4 pool.
+- Phase 8 supercooling sweep: agreement still worsens as the penalty k rises at every cluster,
+  same qualitative finding as pre-fix, now on the smaller n=4/8/11 pool.
+- Top-1 picks changed: Palmitic-stearic acid/Expanded graphite / PureTemp 60 / n-Heptacosane (C27)
+  (clusters 0/1/2) — see `outputs/recommendation_cards_rajasthan.md` for the full cards.
+See `05_PHASE_3_AUDIT.md`, `07_PHASE_5_AUDIT.md`, `08_PHASE_6_AUDIT.md`, `09_PHASE_7_AUDIT.md`, and
+`10_PHASE_8_AUDIT.md` for each phase's detailed superseding section.
+
+✅ **CRITICAL UPDATE #3 (2026-09-13, same session): Tank mass decoupled from Avargani + re-run
+COMPLETE.** `M_W_KG` (simulator's static tank mass) was also wrongly reused from Avargani's 300L
+figure — but that figure is a continuous-FLOW throughput volume, not a static tank capacity, in a
+system that has no tank in the sense `M_W_KG` represents. Corrected 300→200 kg, grounded instead in
+Eldokaishi et al. (2022)'s hybrid-PCM-SWH tank-sizing literature (50–240L for a 1–8 m² collector,
+matching this pipeline's own 4 m² design case). Required re-tuning `COLLECTOR_UL_WM2K` (2.5→2.0)
+and `NIGHT_ISOLATION_FRACTION` (0.05→0.03) to keep calibration in the 54–84% benchmark band (now
+64.0/65.8/64.3%, closer to the 69% target than before). Phase 7 rho: 0.105/-0.190/-0.091. See
+`09_PHASE_7_AUDIT.md` and `10_PHASE_8_AUDIT.md`.
+
+✅ **CRITICAL UPDATE #4 (2026-09-13, same session): seasonal PCM sensitivity degeneracy — root
+cause found and fixed; result reframed as a POSITIVE finding.** The "< 2 survivors everywhere"
+result above traced to a real bug in `11_seasonal_pcm_sensitivity.py`: it re-filtered each
+cluster's already-calibrated survivor pool with a hardcoded `LATENT_HEAT_FRACTION=0.7` instead of
+that cluster's own Phase 5 calibrated kappa (0.0/0.5/0.3). Fixed to use the per-cluster calibrated
+kappa. Re-run result: no longer degenerate (all 11 cluster-season cells rank cleanly, 4-11
+survivors each) — **0/11 flip from the annual #1 pick**, a genuine null finding, not censored data:
+Rajasthan's delivery-anchored `Tm_target` rule is seasonally robust.
+
+**This does NOT weaken Objective 3's case.** Re-checked against how comparable DRL-for-solar-
+thermal papers actually motivate their controllers: Emami et al. (2025/2026) — already an extracted
+project source (`sources/Emami2026DRL_Solar_ORC_TES_summary.md`) — motivates their DDPG controller
+purely by real-time weather stochasticity (year-long irradiance variability a fixed-flow baseline
+cannot track), not by any PCM-selection instability. The corrected framing: **O1's material
+selection is stable per climate region (this finding); O3's job is the hour-by-hour operating
+decision under weather/demand variability that a fixed rule-based controller cannot react to** —
+a stronger, better-precedented motivation than the original "PCM ranking flips" plan. Heidari et
+al. (2022), cited by the reviewing party as a second precedent (stochastic demand + weather), is
+NOT yet a verified project source — do not cite its specific claims in the paper until it has been
+read and extracted per CLAUDE.md §0. Full detail and the recommended paper framing in
+`09_PHASE_7_AUDIT.md` and `Objective1_Fixes_SourceVerified.md` Fix 6.
+
+✅ **Fix 5 disclosures applied (2026-09-13):** `physics_lib.py`'s tank-mass/collector-calibration
+documentation was rewritten to state plainly that (a) `M_W_KG=200` is chosen WITHIN Eldokaishi et
+al. (2022)'s validated range, not a value that paper tests; (b) only the tank-VOLUME range is
+borrowed from Eldokaishi, not its PCM material, backup heater, or climate/demand context; (c) the
+`COLLECTOR_UL_WM2K=2.0` retune is calibration to restore the benchmark band, no longer
+Duffie-Beckman-justified; (d) the tank-mass fix and the UL/night-isolation retune are documented as
+one linked calibration event. No numeric change from this disclosure pass.
+
 ## Completed phases
 
 Phase 1 (Data Collection) — complete, 320/320 points, 240/240 ERA5 files, 3200/3200 POWER files.

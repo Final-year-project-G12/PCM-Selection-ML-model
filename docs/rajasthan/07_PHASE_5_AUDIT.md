@@ -22,7 +22,71 @@ illustrated is summarised in `12_FINAL_READINESS_REPORT.md`, "Reproducibility ri
 database against every cluster's physical/safety/economic requirements before any ranking happens,
 so the MCDM stage never has to implicitly discover an infeasible candidate through its scores.
 
-## ✅ VALIDATED (2026-08-31 re-run complete)
+## ✅ SUPERSEDES THE BELOW — delivery temperature corrected to match Avargani (2026-09-13 re-run complete)
+
+The `T_DELIVERY_C` used throughout Phase 3's `L_required` formula was `50.0°C`, but Avargani et
+al. (2021)'s cited 300 L/7h night-discharge capability is specifically validated **at 60±2°C
+delivery** — using it at 50°C silently borrowed a number the cited paper never validated at that
+temperature (see `05_PHASE_3_AUDIT.md`, "Delivery temperature corrected to match Avargani"). Fixed
+in `pcm_shared_config.py`: `T_DELIVERY_C = 50.0 → 60.0`, so `Tm_target_C` rises 57.0→67.0°C and
+`L_required` rises with it. **This makes every number in the "✅ VALIDATED (2026-08-31 re-run
+complete)" section below stale** — that section is left in place as history, not deleted, per this
+doc's own convention (see how it already treats the 2026-08-14 all-latent numbers as superseded
+history rather than rewriting them).
+
+**Validation results (2026-09-13 re-run):**
+
+| Metric | 2026-08-31 (SHARE_PCM=0.5, T_delivery=50°C) | 2026-09-13 (SHARE_PCM=0.5, T_delivery=60°C) | Status |
+|---|---|---|---|
+| L_required range | 285–344 kJ/kg | **410–469 kJ/kg** | Raised (higher T_delivery → higher Q_night) |
+| Primary run (κ=0.7 fixed) survivors | 4 / 7 / 5 (varies by which re-run cited above) | **0 / 0 / 0** | Back to zero — `excluded_c3_latent_heat=62` in every cluster confirms the raised ceiling, not a melting-window regression |
+| Calibrated κ per cluster | 0.5 / 0.6 / 0.5 | **0.0 / 0.5 / 0.3** | Cluster 0 now bottoms out at κ=0.0 |
+| Calibrated survivors | 9 / 14 / 16 (n=39 total) | **4 / 8 / 11 (n=23 total)** | Roughly halved |
+| Candidate pool status | all healthy (8–20 band) | **cluster 0 `insufficient_even_at_kappa_0` (n=4, undersized), clusters 1/2 `in_band`** | Cluster 0's Top-3 now needs an explicit undersized-pool caveat |
+
+**Key finding:** unlike the 2026-08-31 fix (which *resolved* the zero-survivor problem), this
+correction *reintroduces* it at the fixed κ=0.7 threshold — expected, since raising T_delivery
+raises the L_required ceiling the fixed-κ gate compares against. The κ-calibration companion pass
+still recovers a usable pool for 2 of 3 clusters (in-band at κ=0.5 and κ=0.3), but cluster 0 no
+longer reaches the healthy 8-survivor floor at any κ down to 0.0 — report this as a genuine
+finding about that cluster's demand profile relative to its available candidates, not something to
+paper over by loosening another constraint.
+
+**Fingerprint:** 2557_3_1789246270.557 (changed from 2554_3_*; Phase 6/7/8 re-run and consistent with this fingerprint)
+
+**Investigated 2026-09-13: is Cluster 0's `calibrated_kappa=0.0` a genuine near-zero night-heating
+load, or a calibration artifact?** Checked directly rather than assumed. `L_required` for Cluster 0
+is 438 kJ/kg — NOT near zero, and comparable to (in fact slightly above) Clusters 1 and 2 (427 and
+443 kJ/kg). Manually re-derived: `T_mains_est_C = Ta_mean(27.13) - 2.0 = 25.13C`,
+`Q_night_kJ = 300*4.186*(60-25.13) ≈ 43,800 kJ`, `L_required = 0.5*43,800/50 ≈ 438 kJ/kg` — matches
+the reported value exactly, confirming Cluster 0's night-discharge load is real and substantial,
+not a degenerate near-zero case.
+
+**So why does `calibrated_kappa` bottom out at 0.0?** `calibrate_kappa_for_cluster()`'s own
+`rescuable_by_kappa` flag (07_feasibility_filter.py) identifies candidates blocked ONLY by the
+latent-heat constraint (c3) — i.e., candidates that already pass every OTHER constraint (melting
+window, absolute band, cycling, supercooling, charging feasibility, corrosion, safety). For
+Cluster 0, only **4 of 62** candidates are `rescuable_by_kappa` at all. Fully disabling c3
+(kappa=0, floor collapses to the absolute minimum) can only ever rescue candidates already in that
+4-candidate rescuable set — it cannot rescue the other 58, which fail on OTHER constraints
+regardless of kappa. Cross-checking the exclusion breakdown: of 62 candidates, **30 fail the
+melting window** (c1) and **28 fail charging feasibility** (c6, `Tm <= Tm_target_capped_C=55.5C` —
+the TIGHTEST capped target of the three clusters, vs. 61.1C and 59.2C for Clusters 1/2). **This is
+the real bottleneck** — Cluster 0's climate profile yields the lowest achievable worst-month
+delivery temperature of the three clusters, which combined with the (Tm_target±5/+8) melting-window
+rule anchored to the raised 67C `Tm_target_C` leaves very few candidates with a melting point low
+enough to satisfy c6 while still falling inside the melting window. `calibrated_kappa=0.0` is
+therefore **not** a calibration boundary artifact and **not** evidence of a near-zero night load —
+it correctly reports that the latent-heat constraint was never the actual bottleneck for this
+cluster once the other constraints are accounted for. State this explicitly in the write-up:
+"Cluster 0's Top-3 rests on a genuinely narrow candidate pool driven by its low achievable
+worst-month delivery temperature (melting-window + charging-feasibility overlap), not by a
+latent-heat shortfall — relaxing the latent-heat floor to zero does not materially help this
+cluster, which is itself informative about where this cluster's real design constraint lies."
+
+---
+
+## ✅ VALIDATED (2026-08-31 re-run complete) — SUPERSEDED 2026-09-13, see section above
 
 **L_required Methodology Correction (OPTION A) validated with strong results.** Phase 3's L_required derivation was corrected 2026-08-31 to use SHARE_PCM=0.5 (literature-anchored fractional-share) instead of all-latent assumption. Phase 5 re-run shows the fix resolved the prior "0 survivors at κ=0.7" problem.
 

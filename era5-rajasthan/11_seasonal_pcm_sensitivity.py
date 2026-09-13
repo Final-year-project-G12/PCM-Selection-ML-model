@@ -30,8 +30,26 @@ It is then held CONSTANT across all four seasons, so any rank change is
 attributable to the seasonal L_required alone and not to the weights moving
 underneath the comparison. Only the latent-heat floor (and hence which
 candidates survive) and the latent-heat criterion column change per season.
-Tm_target_C is the constant 57 C design rule — the same value Phase 6 ranks
+Tm_target_C is the constant 67 C design rule — the same value Phase 6 ranks
 against — so the melting-window criterion does not move either.
+
+CORRECTED 2026-09-13 (Fix 6, Objective1_Fixes_SourceVerified.md): the seasonal
+latent-heat floor used to be pinned at a hardcoded LATENT_HEAT_FRACTION=0.7
+for every cluster, regardless of that cluster's own Phase 5 CALIBRATED kappa
+(0.0/0.5/0.3 per cluster, from feasibility_survivors_by_cluster_kappa_
+calibrated.csv's calibrated_kappa column) — inconsistent with the pool this
+script's own cand_df is drawn from (survives_all==True, i.e. already filtered
+at each cluster's CALIBRATED kappa, not 0.7). After T_DELIVERY_C was raised
+to 60C (raising L_required, see 04b's correction #6), fixed-0.7 stopped
+producing ANY survivors even at the ANNUAL level (matches Phase 5's own
+fixed-kappa=0.7 diagnostic run: 0/0/0), so re-applying it per season on top
+of an already-thinned calibrated pool zeroed out every (cluster, season)
+cell. FIX: the seasonal floor now uses each cluster's OWN calibrated_kappa
+(held fixed across that cluster's 4 seasons, so a season-to-season flip is
+still attributable to L_required alone — the original design intent — but
+kappa now legitimately varies BETWEEN clusters, matching what Phase 5/6/7/8
+actually rank/simulate/report for that cluster, not an arbitrary shared
+constant that no cluster's own calibration actually uses).
 
 INPUTS:
   data/processed/climate_rajasthan_points.csv                   (season +
@@ -96,12 +114,14 @@ CP_WATER = 4.186
 # latent_heat_floor_kj_kg(); Rajasthan's Phase 5 calibrates kappa per cluster,
 # but for a like-for-like SEASONAL comparison the nominal kappa is held fixed
 # so that only L_required moves between seasons.
-LATENT_HEAT_FRACTION = 0.7
+# CORRECTED 2026-09-13 (Fix 6): was a single fixed 0.7 for every cluster —
+# see the module docstring's dated correction. Kept as the fallback only if
+# a cluster's calibrated_kappa is somehow unavailable.
+LATENT_HEAT_FRACTION_FALLBACK = 0.7
 LATENT_HEAT_ABSOLUTE_MIN_KJ_KG = 100.0
 
 
-def latent_heat_floor(l_required, fraction=LATENT_HEAT_FRACTION,
-                       absolute_min=LATENT_HEAT_ABSOLUTE_MIN_KJ_KG):
+def latent_heat_floor(l_required, fraction, absolute_min=LATENT_HEAT_ABSOLUTE_MIN_KJ_KG):
     return max(absolute_min, fraction * l_required)
 
 
@@ -272,7 +292,7 @@ def main():
         if prof_rows.empty:
             continue
         prof = prof_rows.iloc[0]
-        tm_target = prof["Tm_target_C"]   # constant 57 C rule — same as Phase 6
+        tm_target = prof["Tm_target_C"]   # constant 67 C rule — same as Phase 6
 
         mcdm_sub = mcdm[mcdm["cluster_id"] == cid]
         if not len(mcdm_sub):
@@ -287,6 +307,14 @@ def main():
             print(f"\n  Cluster {cid}: only {len(cand_df)} survivor(s) — skipping.")
             continue
 
+        # This cluster's OWN Phase 5 calibrated kappa — see the module
+        # docstring's 2026-09-13 correction for why this replaced a fixed
+        # 0.7 shared across all clusters.
+        cluster_kappa_vals = survivors_rich.loc[
+            survivors_rich["cluster_id"] == cid, "calibrated_kappa"].dropna().unique()
+        cluster_kappa = (float(cluster_kappa_vals[0]) if len(cluster_kappa_vals)
+                          else LATENT_HEAT_FRACTION_FALLBACK)
+
         # Weight vector: computed ONCE from the annual pool and held constant
         # across seasons, so a rank flip is attributable to L_required alone.
         cluster_prior_w = mcdm_mod.reweight_corrosion_for_cluster(
@@ -298,7 +326,8 @@ def main():
 
         member_points = assign[assign["cluster_id"] == cid]["point_id"].unique()
 
-        md_lines.append(f"\n## Cluster {cid}  (annual/Phase-6 #1: **{annual_top1}**)\n")
+        md_lines.append(f"\n## Cluster {cid}  (annual/Phase-6 #1: **{annual_top1}**, "
+                        f"latent-heat floor at calibrated kappa={cluster_kappa})\n")
         md_lines.append("| Season | Ta_mean | L_required | #1 PCM | #2 PCM | #3 PCM | Flips? |")
         md_lines.append("|---|---|---|---|---|---|---|")
 
@@ -312,7 +341,7 @@ def main():
             q_total_kj = DRAW_MASS_KG * CP_WATER * (T_DELIVERY_C - t_mains_season)
             l_required_season = (q_total_kj * SHARE_PCM) / ASSUMED_PCM_MASS_KG
 
-            floor = latent_heat_floor(l_required_season)
+            floor = latent_heat_floor(l_required_season, cluster_kappa)
             seasonal = cand_df[cand_df["latent_heat_kJ_kg"] >= floor].reset_index(drop=True)
             if len(seasonal) < 2:
                 md_lines.append(f"| {season} | {ta_mean_season:.1f} C | "
@@ -345,7 +374,8 @@ def main():
                             f"{l_required_season:.0f} | {top3[0]} | {top3[1]} | "
                             f"{top3[2]} | {flips} |")
 
-        print(f"\n  Cluster {cid} (annual #1: {annual_top1}):")
+        print(f"\n  Cluster {cid} (annual #1: {annual_top1}, "
+              f"calibrated_kappa={cluster_kappa}):")
         for r in [r for r in all_rows if r["cluster_id"] == cid]:
             flag = "  <-- FLIPS" if r["flips_from_annual"] else ""
             print(f"    {r['season']:8s}  Ta_mean={r['Ta_mean_season']:.1f}C  "

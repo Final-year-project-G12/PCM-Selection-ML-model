@@ -60,17 +60,17 @@ cloudy_frac, CCI, HDD18, CDD24, DTR_true, seasonality, monsoon_index`.
 
 ## Processing — derived PCM-facing quantities
 
-**`Tm_target_C = T_delivery + ΔT_approach = 50 + 7 = 57.0°C`**, constant across all 320 points by
-design (indirect-system assumption; T_delivery is the Indian-domestic SWH delivery target per
-framework doc §6.3, ΔT_approach is the midpoint of the doc's stated 5–8 K heat-exchanger approach
-range).
+**`Tm_target_C = T_delivery + ΔT_approach = 60 + 7 = 67.0°C`**, constant across all 320 points by
+design (indirect-system assumption; ΔT_approach is the midpoint of the doc's stated 5–8 K
+heat-exchanger approach range). **T_delivery corrected 50→60°C on 2026-09-13** — see "Delivery
+temperature corrected to match Avargani (2026-09-13)" below for why.
 
 **`Tm_target_capped_C`** — the per-point regime-adjusted upper bound, capturing "Tm must lie below
 the collector delivery temperature achievable on a poor-insolation period":
 ```
 kt_worst_month = min over 12 calendar months of (mean kt_daily for that month, pooled 2016-2025)
 kt_ratio = clip(kt_worst_month / kt_daily_mean, upper=1.0)
-Tm_target_capped_C = min(57.0, Ta_mean + kt_ratio·(57.0 − Ta_mean))
+Tm_target_capped_C = min(67.0, Ta_mean + kt_ratio·(67.0 − Ta_mean))
 ```
 **This formula was revised on 2026-08-11**, replacing an original `kt_p05` (5th-percentile single
 *day*) basis with `kt_worst_month` (lowest of 12 calendar-month *means*), after the single-day basis
@@ -86,9 +86,12 @@ citation for this kind of cap.
 **`L_required_kJ_per_kg`** — the latent-heat floor:
 ```
 T_mains_est_C = Ta_mean − 2.0          [documented as NOT a published correlation — see below]
-Q_night_kJ = 300.0 · 4.186 · (50.0 − T_mains_est_C)     [Avargani et al. 2021: 300 L @ 60±2°C, 7h]
+Q_night_kJ = 300.0 · 4.186 · (60.0 − T_mains_est_C)     [Avargani et al. 2021: 300 L @ 60±2°C, 7h]
 L_required_kJ_per_kg = Q_night_kJ / 50.0                [ASSUMED_PCM_MASS_KG = 50 kg placeholder]
 ```
+(Shown here already corrected — see "Delivery temperature corrected to match Avargani (2026-09-13)"
+below; this box used `50.0` in place of `60.0` before that fix, i.e. it computed Q_night at a
+delivery temperature Avargani's own paper never validated the cited 300 L/7h figure at.)
 This formula was itself corrected in-place: an earlier version fed a **60 L/min sustained rate for
 7 hours** (25,200 L total) into the same formula — traced to a units confusion where Avargani et
 al.'s cited figure ("300 L of hot water at 60±2°C for 7 h of operation") is a **total volume over
@@ -111,6 +114,38 @@ L_required = (SHARE_PCM * Q_night) / ASSUMED_PCM_MASS_KG    [SHARE_PCM = 0.5, li
 - Output message: "L_required_kJ_per_kg  : 285 - 344 kJ/kg  (literature-anchored, PCM 50% of total night delivery, with tank sensible heat + concurrent charging supplying the rest)"
 - Clustering stability: bootstrap-ARI improved from 0.8137 to 0.8272 (robust to methodology change)
 - Downstream impact: Phase 5 κ-calibrated survivors increased from 20 to 39 candidates (9/14/16 per cluster)
+
+**✅ Delivery temperature corrected to match Avargani (2026-09-13, re-run complete):** `T_DELIVERY_C`
+was `50.0°C` in every formula above, but Avargani et al. (2021)'s cited 300 L/7h night-discharge
+capability is specifically validated **at 60±2°C delivery** (their Fig. 5/10 show the deliverable
+volume/duration shrinking at other target temperatures) — using it at 50°C silently borrowed a
+number the cited paper never validated at that temperature. Corrected in `pcm_shared_config.py`
+(shared by every state pipeline that imports it — currently Rajasthan and Tamil Nadu) so
+`T_DELIVERY_C = 60.0`, matching what Avargani actually tested.
+```
+TM_TARGET_C = T_DELIVERY_C + DT_APPROACH_C   [57.0 -> 67.0 C]
+Q_night_kJ  = 300.0 * 4.186 * (60.0 - T_mains_est_C)   [was (50.0 - T_mains_est_C)]
+```
+**Validation results (2026-09-13 re-run):**
+- `Tm_target_C`: 57.0 → **67.0°C** (constant, all 320 points)
+- `Tm_target_capped_C`: 45.5–56.9°C (old, `kt_p05`-basis reference only) → **53.2–64.5°C** (worst-month
+  basis, all 320/320 points now below the raised base target — previously many points sat at or
+  above it)
+- `L_required_kJ_per_kg`: 285–344 kJ/kg → **410–469 kJ/kg** (higher T_delivery raises Q_night, so
+  the SHARE_PCM=0.5 floor rises with it — same formula, larger ceiling)
+- Downstream impact (Phase 5): the fixed κ=0.7 diagnostic run now yields **0 survivors in all 3
+  clusters** (was non-zero pre-fix) — `excluded_c3_latent_heat=62` in every cluster confirms the
+  raised `L_required` ceiling is again the sole cause, not a melting-window issue. The
+  κ-calibrated companion pass still recovers a usable pool: cluster 0 lands at κ=0.0 with only
+  4 survivors (`status=insufficient_even_at_kappa_0` — flagged, not silently accepted), clusters 1
+  and 2 land in-band at κ=0.5 (8 survivors) and κ=0.3 (11 survivors) respectively. See
+  `07_PHASE_5_AUDIT.md` for the full breakdown.
+- Physics validation (Phase 7): calibration medoid solar fractions shifted down (~58–60% vs. the
+  pre-fix ~64–66%, still inside the 54–84% benchmark band) since the simulator now targets a
+  harder-to-hit 60°C delivery threshold. Per-cluster Spearman rho (MCDM rank vs. simulated
+  solar-fraction rank) moved to 0.105 / -0.095 / -0.091 (cluster 0/1/2) — still NEGATIVE-band per
+  the existing interpretation convention; cluster 0's reading is on an n=4 undersized pool and
+  should be read with that caveat. See `physics_validation_summary_rajasthan.txt`.
 
 ## The five interaction terms (exact, with in-code physical justification)
 

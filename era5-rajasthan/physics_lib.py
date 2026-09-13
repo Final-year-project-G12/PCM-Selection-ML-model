@@ -130,6 +130,84 @@ medoids' real hourly weather):
      PCM-vs-plain-tank sensitivity should NOT be over-interpreted; the
      PCM-vs-PCM comparison (this phase's actual purpose) remains
      meaningful independent of this specific comparator's outcome.
+  4. TANK MASS DECOUPLED FROM AVARGANI'S DELIVERED-VOLUME FIGURE, AND
+     RE-CALIBRATED — ONE LINKED CALIBRATION EVENT, NOT TWO INDEPENDENT
+     LITERATURE-GROUNDED CHOICES (2026-09-13). M_W_KG had been set to
+     300.0 kg as "the same total volume as Avargani et al. (2021)'s 300L
+     design basis" — but Avargani's system is CONTINUOUS-FLOW (water
+     flows through the collector and PCM bed while a draw is ongoing;
+     re-reading the paper directly confirms it has no static tank at all
+     in the sense this model's M_W_KG represents), so its 300L/7h figure
+     is a cumulative THROUGHPUT volume, not a resting tank's capacity — a
+     different physical quantity that happened to share this pipeline's
+     own NIGHT_DRAW_TOTAL_L number.
+
+     STEP A — M_W_KG re-grounded (literature-anchored, independent
+     choice). Eldokaishi et al. (2022)'s hybrid-PCM-SWH ANN-surrogate
+     study (itself building on Abdelsalam et al. 2020, already cited in
+     this pipeline's SHARE_PCM basis) reports a literature-validated
+     TANK-VOLUME range of 50-240 L across collector areas 1-8 m^2, with
+     an illustrative A_c=4 m^2 case (matching this script's own A_C_M2)
+     appearing in that paper's own contour plots at 90L and 150L —
+     NEITHER of which is 200L. M_W_KG=200.0 kg is chosen WITHIN
+     Eldokaishi's validated range, not a value the paper itself reports
+     or tests — a reader who opens that PDF looking for "200L" will not
+     find it there. Only the 50-240L TANK-VOLUME range is being borrowed
+     from Eldokaishi; nothing else about that paper's system transfers:
+     its PCM is capric acid (Tm 25-35C, latent heat 182 kJ/kg), not
+     paraffin; it includes an AUXILIARY HEATER and tempering valve on the
+     load side (this pipeline's stated design has no backup heater); and
+     its climate/demand context is Toronto, ~189 L/day, 8C mains — not
+     Rajasthan's 300 L/day design basis used everywhere else in this
+     pipeline. 200 kg comfortably clears this pipeline's own 46.3 L/hour
+     peak draw (a naive 40-50L "domestic tank" guess would not have —
+     see the module-level M_W_KG comment).
+
+     STEP B — COLLECTOR_UL_WM2K / NIGHT_ISOLATION_FRACTION re-tuned AS
+     CALIBRATION, NOT AS AN INDEPENDENTLY LITERATURE-JUSTIFIED CHANGE.
+     Dropping M_W_KG alone (holding everything else fixed) pushed all 3
+     medoids' calibration solar fraction OUT of the 54-84% band (45-52%,
+     contrary to this module's own naive expectation that a
+     smaller/faster-responding tank would raise SF — empirically it does
+     the opposite here, because each hourly draw now represents a larger
+     fraction of the tank, "shocking" it with cold mains water more per
+     draw). Swept COLLECTOR_UL_WM2K and NIGHT_ISOLATION_FRACTION jointly
+     (same two levers as the original calibration) and selected the
+     smallest joint adjustment that restored all 3 medoids to in-band,
+     close to the 69% target: COLLECTOR_UL_WM2K 2.5->2.0 W/m^2K and
+     NIGHT_ISOLATION_FRACTION 0.05->0.03 (still nonzero — not perfect
+     isolation). STATED PLAINLY: the original 2.5 W/m^2K was already
+     justified as "within Duffie & Beckman's 3-8 W/m^2K range" while
+     itself sitting BELOW that range's low end (2.5 < 3) — an
+     approximate justification even before this change. Moving to 2.0
+     moves FURTHER from that cited range, not closer. This retune is
+     CALIBRATION TO MATCH THE 54-84% BENCHMARK BAND AFTER STEP A CHANGED
+     M_W_KG, not an independent Duffie & Beckman-justified value — the
+     citation no longer supports 2.0 W/m^2K and should not be quoted as
+     if it still does.
+
+     RESULT: calibration PCM (RT47) lands at 64.0/65.8/64.3% across the
+     three medoids (was 58.1/59.9/57.9% at the OLD M_W_KG=300 under the
+     T_DELIVERY_C=60 basis); re-checked across 5 real survivor candidates
+     (savE OM42/OM50, RT45HC, RT47, RT50) at all 3 medoids — all land
+     64.0-67.1%, in-band, with candidate spread ~1.3 percentage points
+     (was ~0.9pp at M_W_KG=300, so PCM-vs-PCM differentiation did not
+     degrade). The energy-conservation self-test still passes at these
+     new parameter values (residual fraction ~9e-14, threshold 1e-3).
+     The PCM-vs-plain-tank comparator remains ~0.0% (tank-dominated
+     finding unchanged in kind, just at the new tank size) — expected,
+     since M_W_KG=200 is still 4x PCM_MASS_KG=50.
+
+COLLECTOR TECHNOLOGY CAVEAT: Avargani et al. (2021)'s system uses a
+CIRCULAR-TROUGH (concentrating) collector, not the flat-plate collector
+this script's own model assumes. The 300L/7h night-discharge figure this
+pipeline reuses (via NIGHT_DRAW_TOTAL_L) is a demand-SCALE reference only,
+not a flat-plate-collector performance benchmark — a concentrating
+collector's higher achievable PCM-bed inlet temperature is part of why
+that system reaches 60C in the first place, and a flat-plate system
+feeding the same PCM bed may not reach the same night-discharge capability
+at the same flow rate. State this explicitly wherever the citation is used
+as a benchmark, not just a demand-scale number.
 
 DEVIATIONS FROM THE TAMIL NADU PRECEDENT SCRIPT (both explicit, both
 strengthen this version rather than just port it):
@@ -165,16 +243,38 @@ not a measured value, same convention as every other assumption already
 flagged elsewhere in this pipeline (Tm_target's sigma=4K, T_mains_est_C,
 etc.). Report them as such if results from this script are cited.
 --------------------------------------------------------------------------
-  Tank water mass M_W_KG          300.0 kg   Same total volume as the
-                                              Avargani et al. (2021) "300 L
-                                              at 60+-2C for 7h" design basis
-                                              already used throughout this
-                                              pipeline (NIGHT_DRAW_TOTAL_L
-                                              in 04_climate_signature_
-                                              rajasthan.py) — reused here as
-                                              the storage tank's own static
-                                              capacity for continuity, not
-                                              an independently chosen number.
+  Tank water mass M_W_KG          200.0 kg   CORRECTED 2026-09-13 (was
+                                              300.0 kg, wrongly reused from
+                                              Avargani et al. (2021)'s "300L
+                                              at 60+-2C for 7h" DELIVERED-
+                                              VOLUME figure — a flow-through
+                                              quantity, not a static tank
+                                              capacity; see CALIBRATION
+                                              correction #4). Chosen WITHIN
+                                              Eldokaishi et al. (2022)'s
+                                              literature-validated 50-240L
+                                              tank-volume range for a 4 m^2
+                                              collector (matching this
+                                              script's A_C_M2=4.0) — NOT a
+                                              value that paper itself tests
+                                              (its own A_c=4 m^2 illustrative
+                                              cases use 90L/150L); only the
+                                              tank-VOLUME range is borrowed,
+                                              not Eldokaishi's PCM material,
+                                              backup heater, or climate/
+                                              demand context (see CALIBRATION
+                                              correction #4, Step A).
+  Collector overall loss coeff.   2.0 W/m^2K CALIBRATED 2026-09-13 (was 2.5)
+    COLLECTOR_UL_WM2K                        to restore the 54-84% benchmark
+                                              band after M_W_KG dropped
+                                              300->200 kg — see CALIBRATION
+                                              correction #4, Step B. NOT
+                                              independently Duffie & Beckman-
+                                              justified at this value (2.0 is
+                                              further from their 3-8 W/m^2K
+                                              range than the original 2.5
+                                              already was); report as
+                                              calibration, not citation.
   Collector-tank coil area A_c    2.5 m^2    Barqawi (2025) Table 1.
   Water-coil HTC h_c              1500 W/m^2K   Barqawi (2025).
   Collector efficiency parameter  0.70       Barqawi (2025) / the Tamil
@@ -217,9 +317,14 @@ etc.). Report them as such if results from this script are cited.
                                               cited paper, not an
                                               independently invented
                                               default.
-  Target delivery temperature     50.0 C     T_DELIVERY_C, same constant
+  Target delivery temperature     60.0 C     T_DELIVERY_C, same constant
                                               used throughout this
-                                              pipeline since 04.
+                                              pipeline since 04. Raised from
+                                              50.0 (2026-09-13) to match
+                                              Avargani et al. (2021)'s actual
+                                              60+-2C validated delivery temp
+                                              for the 300L/7h night-discharge
+                                              figure Phase 3 reuses.
   Draw total volume/day           300.0 kg   Avargani et al. (2021),
                                               reused (see note above) — NOTE
                                               this reuses the SAME cited
@@ -281,7 +386,24 @@ import pandas as pd
 
 # ─── Water ────────────────────────────────────────────────────────────────
 C_W_JKGK = 4186.0
-M_W_KG = 300.0                      # Avargani et al. 2021 (see docstring)
+# CORRECTED 2026-09-13 (was 300.0, "same volume as Avargani's 300L design
+# basis" — see docstring's CALIBRATION section, correction #4, for why that
+# was wrong: Avargani's system is continuous-FLOW-THROUGH, not a static
+# tank, so 300L there is cumulative delivered volume, not a tank's resting
+# capacity — a different physical quantity that happened to share a number).
+# 200.0 kg is instead grounded in Eldokaishi et al. (2022)'s hybrid-PCM-SWH
+# design study (itself building on Abdelsalam et al. 2020, already cited in
+# this pipeline's SHARE_PCM basis): they study collector areas 1-8 m^2 and
+# TANK VOLUMES 50-240 L, with an explicit A_c=4 m^2 design case (matching
+# this script's own A_C_M2=4.0 exactly) tested at 90L and 150L tanks. 200 kg
+# sits inside that literature-validated 50-240L range for a 4 m^2 collector,
+# comfortably above this pipeline's own 46.3 L/hour peak draw (see
+# demand_profile_rajasthan.csv) — 300 kg was NOT (it just happened to be big
+# enough not to matter) and a naive 40-50L "domestic tank" guess would have
+# gone negative during that peak hour under this model's tank/draw mixing
+# step. See CALIBRATION note below for the re-tuned collector-loss/night-
+# isolation parameters this change required.
+M_W_KG = 200.0
 
 # ─── Collector — CALIBRATED, see CALIBRATION note below ────────────────────
 # A_C_M2 raised from Barqawi's own 2.5 m^2 to 4.0 m^2. Barqawi's rig had
@@ -301,25 +423,30 @@ COLLECTOR_EFF = 0.70
 # Barqawi Eq.(3), Tc(t)=Tamb+eff*Isolar/COLLECTOR_UL_WM2K, is a stagnation-
 # temperature-style relation; Barqawi's own implicit value (20 W/m^2K) is
 # specific to THEIR 33N/44E isolated-PCM-test rig, not a universal
-# constant — CALIBRATED down to 2.5 W/m^2K here, still within Duffie &
+# constant — CALIBRATED down to 2.5 W/m^2K originally, still within Duffie &
 # Beckman's typical flat-plate overall-loss-coefficient range (~3-8
 # W/m^2K for a well-insulated collector, this value sitting just below
 # that range's low end) so the calibrated collector isn't claiming
 # implausible physical insulation quality, just the better end of it.
-# See CALIBRATION note below for why/how this was tuned.
-COLLECTOR_UL_WM2K = 2.5
+# RE-CALIBRATED 2026-09-13 to 2.0 W/m^2K (still below-but-adjacent to the
+# same Duffie & Beckman range) after M_W_KG dropped 300->200 kg — see
+# CALIBRATION note below for the re-tuning this required and the sweep
+# that produced this value.
+COLLECTOR_UL_WM2K = 2.0
 
 # NIGHT COLLECTOR ISOLATION — see the in-loop comment in
 # simulate_pcm_swh_year() for the full reasoning. A real solar water
 # heater's thermosiphon check valve / controller-gated pump stops
 # collector-loop circulation whenever the collector is colder than the
 # tank, preventing the tank's stored heat from draining back out
-# overnight. 0.05 (5% of the daytime collector-coupling strength) is a
-# documented, reasoned representative value for a well-insulated idle
-# tank's residual ambient/jacket loss — not independently measured for
-# any specific product, flagged the same way every other stated
-# assumption in this module is.
-NIGHT_ISOLATION_FRACTION = 0.05
+# overnight. 0.05 (5% of the daytime collector-coupling strength) was the
+# originally-documented, reasoned representative value for a well-insulated
+# idle tank's residual ambient/jacket loss — not independently measured for
+# any specific product, flagged the same way every other stated assumption
+# in this module is. RE-CALIBRATED 2026-09-13 to 0.03 (a marginally tighter
+# idle-loss assumption, still nonzero — NOT perfect isolation) after M_W_KG
+# dropped 300->200 kg; see CALIBRATION note below.
+NIGHT_ISOLATION_FRACTION = 0.03
 
 # ─── PCM bed geometry (Barqawi 2025 P05 ratio, applied to a fixed mass) ────
 PCM_MASS_KG = 50.0                  # ASSUMED_PCM_MASS_KG, 04 script (reuse)
@@ -334,7 +461,12 @@ DEFAULT_CP_SOLID_JKGK = 2100.0
 DEFAULT_CP_LIQUID_JKGK = 2300.0
 DEFAULT_TC_SOLID_WMK = 0.2
 
-T_DELIVERY_C = 50.0                 # pipeline-wide constant, reused
+T_DELIVERY_C = 60.0                 # pipeline-wide constant, reused
+                                     # (must match pcm_shared_config.T_DELIVERY_C;
+                                     # raised 2026-09-13 to match Avargani et al.
+                                     # (2021)'s actual 60+-2C validated delivery
+                                     # temperature for the 300L/7h figure — see
+                                     # pcm_shared_config.py's comment for detail)
 
 # ─── Draw profile ───────────────────────────────────────────────────────────
 DRAW_TOTAL_KG_PER_DAY = 300.0       # Avargani et al. 2021 total (see docstring)
