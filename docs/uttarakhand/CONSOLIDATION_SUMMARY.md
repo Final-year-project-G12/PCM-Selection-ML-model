@@ -141,8 +141,12 @@ Content:
 Content:
 - N1–N6 vs RG1–RG5 disambiguation
 - Phase -> novelty-claim mapping with a delivered/partial/not-delivered verdict per phase
-- **The central finding against the novelty claim**: this run does not demonstrate
-  regime-differentiated PCM recommendation, and why
+- **UPDATED (2026-09):** the original finding here — "this run does not demonstrate
+  regime-differentiated PCM recommendation" — was itself a symptom of a real bug in
+  `07b_charging_feasibility.py` (its regime-dependent Tm cap was a mathematical no-op, dividing away
+  its own signal). Fixed: Cluster 1 now gets a genuinely lower `Tm_target` (55.2C vs the constant
+  57C) and a different consensus PCM (PureTemp 53). See `00_MASTER_OVERVIEW.md`'s novelty-mapping
+  section for the corrected verdict.
 - Phase -> broader-project mapping
 - What the mapping explicitly does not claim
 
@@ -244,7 +248,7 @@ tree**, by one of four methods:
 | Decoding embedded Plotly base64 payloads | Top-3 PCM ranks and properties from `13_recommended_pcm_summary_interactive.html` |
 | Parsing Folium popup HTML | 45 point IDs, coordinates, populations and cluster assignments |
 | Reading a rendered summary panel | 493,155 -> 489,105 rows; silhouette 0.279; Spearman −0.930 |
-| Reproducing a computation against a committed source CSV | The 29-survivor feasibility count, from the committed PCM database |
+| Reproducing a computation against a committed source CSV | The feasibility survivor counts (29/30/29/27/29 per cluster, post-2026-09 fix — no longer identical across clusters), from the committed PCM database |
 
 Values recovered from a rendered chart rather than parsed from a file are marked **approximate** at
 the point of use. Values that could not be recovered are marked **"not available in the source

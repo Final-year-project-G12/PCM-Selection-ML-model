@@ -67,18 +67,40 @@ Per plan v3.0 Section 10:
 ## Validation Results & Findings
 
 ### 1. Benchmark Calibration Check (Plan v3.0 Table 16)
-**92% of all simulated PCM-cluster pairs** land within the published **54%–84%** annual solar fraction benchmark band for domestic solar water heating systems in India.
+**0% of all simulated PCM-cluster pairs** land within the published **54%–84%** annual solar fraction
+benchmark band for domestic solar water heating systems in India. The simulated annual solar
+fraction is, in fact, roughly **12%–19%** across all five clusters and all candidate PCMs
+(`data/processed/pcm/physics_validation_results.csv`) — an order-of-magnitude-scale shortfall
+against the benchmark, not a near-miss.
+
+This is a **corrected** result, not a regression. An earlier version of `10_physics_validation.py`
+had two bugs in the backward-Euler tank-temperature solve and the phase-2 latent-heat accumulator
+that together let the tank artificially overheat every hour of the simulated year, which is what
+previously produced the (wrong) 92%-in-band figure. Both bugs are fixed (see the in-code comments
+at the phase-1/phase-2/phase-3 branches of `simulate_pcm_swh_year()`), and 0% in-band is the correct
+output of the de-bugged model given the script's stated tank/collector assumptions (150 kg tank,
+2.5 m² collector, 0.70 collector efficiency, 2.0 W/K ambient loss, 07:00/19:00 draws). Whether those
+*assumptions themselves* need revisiting to bring the model's absolute solar fraction into a more
+realistic range is a separate, still-open **methodology** question — not evidence that the code is
+still broken.
 
 ### 2. Cluster-by-Cluster Physics vs. MCDM Rank Concordance
 
-| Cluster | Medoid Point | Typical Solar Fraction Band | Spearman $\rho$ | $p$-value | Interpretation |
+| Cluster | Medoid Point | Annual Solar Fraction (all candidates) | Spearman $\rho$ | $p$-value | Interpretation |
 |:---:|:---:|:---:|:---:|:---:|:---|
-| **Cluster 0** | UKP_0019 | 68.7% – 75.2% | **−0.454** | 0.044 | Statistically significant inverse rank correlation |
-| **Cluster 1** | UKP_0036 | 68.7% – 75.2% | **+0.555** | 0.011 | Statistically significant positive agreement |
-| **Cluster 2** | UKP_0023 | 51.1% – 62.6% | **+0.228** | 0.334 | Weak correlation (high elevation / low solar gains) |
-| **Cluster 3** | UKP_0001 | 78.2% – 81.3% | **+0.138** | 0.561 | Weak correlation (high insolation plateau) |
-| **Cluster 4** | UKP_0007 | 71.0% – 75.8% | **+0.155** | 0.514 | Weak correlation |
-| **Mean** | — | — | **+0.124** | — | Overall weak positive correlation across regimes |
+| **Cluster 0** | UKP_0007 | ≈15.9% | **−0.097** | 0.684 | Weak, non-significant inverse correlation |
+| **Cluster 1** | UKP_0023 | ≈12.0% | **−0.168** | 0.480 | Weak, non-significant inverse correlation |
+| **Cluster 2** | UKP_0002 | ≈15.9% | **−0.227** | 0.337 | Weak, non-significant inverse correlation |
+| **Cluster 3** | UKP_0001 | ≈19.1% | **+0.171** | 0.471 | Weak, non-significant positive correlation |
+| **Cluster 4** | UKP_0015 | ≈16.7% | **−0.140** | 0.556 | Weak, non-significant inverse correlation |
+| **Mean** | — | — | **≈−0.092** | — | Overall weak/no correlation across regimes; **no cluster reaches p < 0.05** |
+
+Exact values are recorded in `data/processed/pcm/physics_validation_spearman.csv`. Within a given
+cluster, the simulated annual solar fraction barely varies across the ~20 candidate PCMs actually
+simulated (typically agreeing to 3–4 significant figures, e.g. Cluster 0's 20 candidates all land
+between 15.9434% and 15.9436%) — at this model's current parameterization, which PCM is installed
+has almost no effect on annual solar fraction next to the effect of the cluster's own weather driving
+data. That is itself a diagnostic finding, not a data error.
 
 ---
 

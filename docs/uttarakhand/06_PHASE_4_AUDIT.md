@@ -30,11 +30,11 @@ assign district names to clusters, and no committed artefact labels a cluster ge
 
 ## Processing
 
-### Algorithm choice: Gaussian Mixture, full covariance
+### Algorithm choice: Gaussian Mixture, diagonal covariance — RESOLVED (was full, before this session)
 
 ```python
-GaussianMixture(n_components=k, covariance_type="full", random_state=42, n_init=5)   # selection
-GaussianMixture(n_components=k, covariance_type="full", random_state=42, n_init=10)  # final fit
+GaussianMixture(n_components=k, covariance_type="diag", random_state=42, n_init=5)   # selection
+GaussianMixture(n_components=k, covariance_type="diag", random_state=42, n_init=10)  # final fit
 ```
 
 The justification (repeated in `05_cluster_regions.py` and `README_PREPROCESSING.md`) is that
@@ -44,7 +44,15 @@ climate is a continuous gradient:
 > near that boundary genuinely has partial membership in both. Soft membership probabilities are
 > kept and are what Phase 5/6 should read for boundary points.
 
-`covariance_type="full"` is used without a separate justification in the Uttarakhand script.
+**RESOLVED — `covariance_type` changed from `"full"` to `"diag"`, WITH a documented justification
+now present in the script.** The code's own comment: a full covariance matrix needs
+`D*(D+1)/2` parameters per component; with the number of standardized signature dimensions and only
+45 points total, full covariance is severely overdetermined — "exactly what caused every point's
+`max_membership_prob` to saturate at 1.000 in the original run (soft clustering silently degenerating
+to hard clustering)," per the in-code comment. Diagonal covariance assumes feature independence
+after PCA and needs only `D` parameters per component — "the standard fix for high-dimensional,
+low-sample-count GMM, and Tamil Nadu's own 133-point run made the same correction for the same
+reason." See "Soft membership" below for what this fixes in practice.
 
 ### Model-selection configuration
 
@@ -102,7 +110,7 @@ run. (`05b_cluster_interactive.py` would render them, but its output directory i
 
 ```python
 k_final_safe = min(K_FINAL, len(X) - 1)      # = 5
-gmm_final    = GaussianMixture(5, covariance_type="full", random_state=42, n_init=10)
+gmm_final    = GaussianMixture(5, covariance_type="diag", random_state=42, n_init=10)
 hard_labels  = gmm_final.fit_predict(X)
 soft_probs   = gmm_final.predict_proba(X)
 ```
@@ -188,33 +196,43 @@ elevation/latitude gradient.
 > anomaly** documented in `04_PHASE_2_AUDIT.md` Part A.3. Their *relative* ordering across clusters
 > is still informative; their absolute magnitudes are not usable.
 
-### Soft membership
+### Soft membership — PARTIALLY IMPROVED by the covariance fix, not fully resolved
 
-Every one of the 45 popups reports `Prob: 1.000` — `max_membership_prob` rounds to 1.000 at three
-decimal places for **every point**. The soft-clustering rationale in the docstring ("a point near
-that boundary genuinely has partial membership in both") therefore did **not** materialise in
-practice.
+This section originally reported that every one of the 45 popups showed `Prob: 1.000` —
+`max_membership_prob` rounding to 1.000 at three decimal places for **every point** — under the old
+`covariance_type="full"` fit, and attributed it to overdetermination (D*(D+1)/2 parameters per
+component vs. only 45 points).
 
-This is the expected behaviour of a full-covariance GMM fitted to 45 samples in a high-dimensional
-standardised space — each component can shape itself tightly around its members. It means the
-`prob_cluster0…4` columns carry no usable boundary information for this run, and
-`05b_cluster_interactive.py`'s boundary-point feature (a faint ring where `max prob < 1.5/K`) would
-have highlighted nothing.
+**After switching to `covariance_type="diag"`, checked directly against the current
+`cluster_assignments_uttarakhand.csv`:** `max_membership_prob` now ranges 0.9978-1.0000 (mean
+0.9999), with 43 of 45 points still rounding to 1.000 at three decimals and only 2 points showing a
+genuinely sub-1.000 value. So the fix is real (probabilities are no longer numerically pinned to
+exactly 1.000, which they likely were under `full`) but the **practical** finding stands: this run's
+5 climate regimes are similar to a hard partition regardless of covariance type, because they are
+well-separated relative to only 45 points, not primarily because of an overdetermined model. The
+soft-clustering rationale in the docstring ("a point near that boundary genuinely has partial
+membership in both") still does not materialise in practice for this specific run — `prob_cluster0…4`
+still carries little usable boundary information, and `05b_cluster_interactive.py`'s boundary-point
+feature (a faint ring where `max prob < 1.5/K`) would highlight at most 2 points.
 
 ### Silhouette
 
-`data/plots/verify_clustering/02_silhouette_plot.png` reports, for the **saved K = 5 labels**:
+`data/plots/verify_clustering/02_silhouette_plot.png` reports, for the **saved K = 5 labels, current
+post-2026-09-fix run** (sizes 7/3/9/10/16 for Clusters 0-4, not the earlier 12/9/3/7/14):
 
 | Metric | Value |
 |---|---|
-| Average silhouette | **0.279** |
+| Average silhouette (`verify_02_clustering.py`, its own feature matrix — see caveat below) | **0.234** |
+| `05_cluster_uttarakhand.py`'s own reported silhouette (its `_z`-only matrix) | **0.28** |
 | Reference threshold drawn on the plot | 0.400 |
-| Per-cluster spread (approximate) | C0 0 – 0.35, C1 0 – 0.41, C2 0 – 0.61, C3 0 – 0.47, C4 −0.15 – 0.37 |
+| Per-cluster avg/min silhouette | C0: avg −0.01, min −0.20; C1: avg 0.53, min 0.31; C2: avg 0.39, min 0.22; C3: avg 0.26, min −0.02; C4: avg 0.20, min −0.11 |
 
-0.279 falls inside `05_cluster_uttarakhand.py`'s stated accept band of **0.15–0.40** and below the
-0.4 "good" threshold used by `VERIFICATION_METHODOLOGY.md`. Cluster 4 (the largest, n = 14)
-contains the only points with **negative** silhouette values, indicating a few points closer to a
-neighbouring cluster's centroid than to their own.
+~0.23-0.28 falls inside `05_cluster_uttarakhand.py`'s stated accept band of **0.15–0.40** — the
+script's own guidance is that a HIGHER silhouette at only 45 points would suggest an over-simplified
+signature, not a better result, so this is the expected/preferred range, not a shortfall. Clusters
+0, 3, and 4 all show some negative min-silhouette points in the current run (not only Cluster 4 as
+in the earlier 12/9/3/7/14 run this section originally described) — Cluster 1 (n=3) and Cluster 2
+(n=9) are the most cleanly separated.
 
 > **Caveat on this number.** `verify_02_clustering.py` computes silhouette on **its own** feature
 > matrix — every numeric column of `climate_signature_uttarakhand.csv` except

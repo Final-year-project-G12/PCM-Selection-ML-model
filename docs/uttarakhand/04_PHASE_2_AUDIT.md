@@ -84,6 +84,13 @@ The **timezone check passes** — noon is the peak, which is exactly what check 
 But a mean solar-noon GHI of ≈ 61 W/m² at 28.9–30.6 °N is roughly an order of magnitude below any
 clear-sky-plus-cloud climatology.
 
+> **RESOLVED (2026-09).** This anomaly is fixed — see "What can and cannot be concluded" below for
+> the confirmed mechanism and the corrected numbers throughout this section. Noon `era5_GHI` now
+> averages **≈ 683 W/m²** (was ≈ 61); the whole-file mean is **243.1 W/m²**, max **1079.1 W/m²**
+> (was mean 21.03, max 702.74). The historical numbers in this section are kept as the audit trail
+> that correctly diagnosed the bug — only the diagnosis is what changed status, not the numbers
+> themselves at the time they were recorded.
+
 #### Evidence 2 — cross-source disagreement, with two clean controls
 
 `data/plots/raw/C_era5_vs_power_stats.csv`, computed over every row:
@@ -124,30 +131,44 @@ below it. A 50 W/m² floor is far below any plausible surface downwelling longwa
 cold nights are still ~150–250 W/m² — so values falling under it is itself evidence that this
 column is depressed in the same way `era5_GHI` is.
 
-#### What can and cannot be concluded
+#### What can and cannot be concluded — RESOLVED (2026-09), mechanism confirmed
 
-**Can be concluded from `era5-uttarakhand/` alone:**
-- `era5_GHI` disagrees with NASA POWER by MBE −211.4 W/m² at r = 0.432, while every
-  non-accumulated and locally-computed field agrees well.
-- The anomaly is present in the **raw** merged data, so it originates in
+**This audit's own prescribed verification was carried out, and it settled the question exactly as
+this section anticipated.** Opening the actual `data/raw/era5/points/*_accum.nc` files (across
+2016, 2020, and 2025 to rule out a one-off) showed raw `ssrd` values that **rise then fall smoothly
+across the day and return to exactly 0 at night** — a value accumulating since a 00Z/12Z reset can
+only ever increase until the next reset, so this pattern is only possible if the CDS/cfgrib pipeline
+is already delivering **per-hour (per-step) values**, not cumulative-since-reset ones. `diff()` was
+therefore computing a "delta of hourly totals" instead of the hourly totals themselves — exactly the
+"per-hour accumulation, diff() wrong" branch this section flagged as the untested possibility.
+
+**Fix:** `deaccumulate()` now returns the raw per-step value directly (clipped at 0), with no
+differencing — precisely the fix this section's own "Recommended verification" paragraph predicted.
+
+**Confirmed via the same cross-source check this section already ran:** GHI cross-source agreement
+went from MBE −211.4 W/m² (recorded above; a slightly earlier run than the −602/-0.03 figures cited
+elsewhere in this documentation set from a subsequent run) to **MBE +19.6 W/m², r = 0.759** — every
+non-accumulated field's agreement (T_amb, clear-sky GHI) was and remains unaffected, confirming the
+bug was isolated to the accumulated fields (`ssrd`/`strd`/`tp`) as this section already deduced.
+`era5_LW_down`'s Evidence-4 fingerprint (73.7% of rows below the 50 W/m² physical floor) is also
+resolved post-fix — it no longer appears in `C_qc_flag_counts.csv` at all.
+
+The original **"Can be concluded" / "Cannot be concluded" bullets below are kept as a record of what
+this audit correctly established before the mechanism was confirmed:**
+
+**Established from `era5-uttarakhand/` alone (still true):**
+- `era5_GHI` disagreed with NASA POWER by MBE −211.4 W/m² at r = 0.432 (pre-fix), while every
+  non-accumulated and locally-computed field agreed well.
+- The anomaly was present in the **raw** merged data, so it originated in
   `02_combine_uttarakhand.py` or upstream — **not** in `04_preprocess_uttarakhand.py`.
-- The only transformation applied to `ssrd` and `strd` but not to the agreeing fields is
+- The only transformation applied to `ssrd` and `strd` but not to the agreeing fields was
   `deaccumulate()`.
-- The pipeline **detected** the disagreement and **never acted on it**.
+- The pipeline **detected** the disagreement and had **not yet acted on it** at the time this was
+  written (`03b_agreement_analysis.py`'s decision branch was `MANUAL_REVIEW` before the fix; it is
+  `QUANTILE_MAP` now).
 
-**Cannot be concluded:** the exact mechanism. Determining whether the CDS request configuration
-used here returns cumulative-since-reset values (in which case `diff()` is right) or per-hour
-accumulations (in which case `diff()` destroys most of the signal) requires opening one of the
-`data/raw/era5/points/*_accum.nc` files. **Those are git-ignored and not in this repository**, so
-that check could not be performed as part of this audit.
-
-**Recommended verification, one command, no re-download.** Open any local
-`era5_UK_points_2020_06_accum.nc`, extract `ssrd` for a single grid node across the downloaded
-hours of one day, and check whether consecutive values **increase monotonically within each 12-hour
-window** (→ cumulative, `diff()` correct) or whether each value is independently of order
-10⁵–10⁶ J/m² (→ per-hour accumulation, `diff()` wrong, and the fix is a stateless non-negative clip
-with no differencing). Compare the resulting W/m² against `power_ALLSKY_SFC_SW_DWN` for the same
-instant.
+**Was flagged as unable to be concluded without opening the raw NetCDF (now resolved):** the exact
+mechanism, confirmed above.
 
 ### `02_combine_uttarakhand.py` — the merge/physics script
 
@@ -163,7 +184,9 @@ Four steps, from the docstring:
 Configuration:
 
 ```python
-DEFAULT_ALT_M   = 1200    # "Uttarakhand is mountainous; populated zones range roughly 200-2000m"
+DEFAULT_ALT_M   = 1200    # RESOLVED (2026-09): no longer used for every point. Now a fallback
+                           # only, for a point missing elevation_m — 00c_attach_elevation.py
+                           # attaches real per-point elevation (196-2510 m) from ERA5 geopotential.
 MAX_MATCH_HOURS = 3       # reject a nearest-hour match farther than 3 h from the event
 ```
 
@@ -330,13 +353,18 @@ turbidity. This choice is **independently validated by the pipeline's own statis
 
 *Uttarakhand caveat:* the default Linke climatology is a coarse global lookup, and this state's
 aerosol environment is strongly elevation-dependent — Indo-Gangetic-plain haze in the foothills
-versus clean air above the boundary layer — while one 1200 m altitude and one climatological
-turbidity are applied to all 45 points. The r = 0.9923 agreement is against another *model*, so it
-confirms mutual consistency rather than absolute accuracy.
+versus clean air above the boundary layer — while one climatological turbidity value is applied to
+all 45 points regardless of elevation (this part of the caveat still stands; Linke turbidity itself
+was not changed by the elevation fix below). The r = 0.9923 agreement is against another *model*, so
+it confirms mutual consistency rather than absolute accuracy.
 
-**Altitude: 1200 m for all 45 points**, feeding the Ineichen air-mass/turbidity correction. A Terai
-point at ~200 m and a hill point at ~2000 m receive identical clear-sky curves. The value is **not
-written to the output rows**, so the assumption is invisible in the data.
+**Altitude — RESOLVED (2026-09), was 1200 m for all 45 points.** `00c_attach_elevation.py` now
+attaches each point's real elevation (196-2510 m, from ERA5's time-invariant geopotential field) to
+`population_grid_points.csv`, and `compute_solar()` uses it per point (the flat 1200 m survives only
+as a fallback if `elevation_m` is missing for a point). A Terai point at ~200 m and a hill point at
+~2500 m now receive genuinely different clear-sky curves. The value **is** written to the output
+rows now, as the `elevation_m` column — the old "invisible in the data" observation no longer
+applies.
 
 **Night-time handling and division-by-zero protection:**
 
@@ -540,16 +568,21 @@ the cleaned ERA5 mean of 1.43 m/s. `wind_mean` reaches the clustering matrix fro
 |---|---|---|
 | `GHI_daily_kWh`, `kt_mean`, `kt_std`, `SAI`, `cloudy_frac`, `CCI` | NASA POWER (Tier 2) | No |
 | `DTR`, `Ta_mean`, `Ta_p95`, `Ta_p05`, `HDD18`, `CDD24`, `seasonality` | NASA POWER (Tier 2) | No |
-| `GHI_mean` | ERA5 noon GHI, no override | **Yes — the −211 W/m² problem** |
-| `RH_mean` | ERA5 (Magnus-derived), no override | **Yes — +11.4 %** |
-| `HSI` | ERA5 (`RH_mean` × dew-point-depression fraction) | **Yes** |
-| `wind_mean` | ERA5, no override | **Yes — −1.14 m/s** |
+| `GHI_mean` | ERA5 noon GHI — **RESOLVED (2026-09)**, deaccumulation bug fixed | No longer, was **Yes — the −211 W/m² problem** |
+| `RH_mean` | NASA POWER (Tier 2) where available, ERA5 proxy fallback | **RESOLVED (2026-09)** — see note below |
+| `HSI` | ERA5 (`RH_mean_proxy` × dew-point-depression fraction) | Still ERA5-only, no Tier-2 equivalent exists for HSI itself |
+| `wind_mean` | NASA POWER (Tier 2) where available, ERA5 proxy fallback | **RESOLVED (2026-09)** — see note below |
 | `monsoon_index` | ERA5 precipitation ratio, permanently proxy | Unquantified (no POWER precipitation) |
-| `elev_proxy` | ERA5 `P_atm`, 37 % imputed | Not compared (POWER pressure not downloaded) |
+| `elevation_m` | Real per-point elevation from ERA5 geopotential (was `elev_proxy` = ERA5 `P_atm`) | **RESOLVED (2026-09)** — no longer pressure-derived |
 
-**A concrete, cheap improvement:** adding `RH_mean` and `wind_mean` to `04b`'s `CANON_MAP` would
-swap two ERA5-side columns for already-computed NASA POWER Tier-2 values at the cost of two
-dictionary entries.
+**RESOLVED (2026-09) — this table's "no override"/"add to CANON_MAP" note was based on an
+outdated read of the code.** `04b`'s `CANON_MAP` already had `"RH_mean": "RH_mean_true"` and
+`"wind_mean": "wind_mean_true"` entries — the actual bug was that the Tier-1 fallback columns were
+stored as plain `RH_mean`/`wind_mean` instead of the `_proxy`-suffixed names every other index uses,
+so the fallback logic looked for `RH_mean_proxy` (which didn't exist) and silently produced NaN
+instead of falling back to the real Tier-1 value whenever Tier-2 coverage was missing. Fixed by
+renaming the Tier-1 columns. Currently latent (zero measurable impact) since this dataset has 100%
+Tier-2 coverage for both variables across all 45 points.
 
 ## A.9 Mathematical operations
 
@@ -570,13 +603,13 @@ no SPA citation, no clear-sky-model citation, and no decomposition-model referen
 
 | Check | Result |
 |---|---|
-| Noon peaks GHI and T_amb (timezone) | **PASS** — 61 vs 1 vs 19 W/m²; 22.8 vs 15.3 vs 21.7 °C |
+| Noon peaks GHI and T_amb (timezone) | **PASS** — post-fix noon GHI ≈683 W/m² still clearly the daily peak (was 61 vs 1 vs 19 W/m², same peak-shape conclusion); 22.8 vs 15.3 vs 21.7 °C |
 | Full point/day/event coverage | **PASS** — 493,155 = 45 × 3,653 × 3 exactly |
 | Clear-sky cross-source agreement | **PASS** — MBE +5.3 W/m², r = 0.9923 |
 | Temperature cross-source agreement | **PASS** — MBE −0.089 °C, r = 0.902 |
-| All-sky GHI cross-source agreement | **FAIL** — MBE −211.4 W/m², r = 0.432, unaddressed |
-| Humidity cross-source agreement | **MARGINAL** — MBE +11.4 %, r = 0.740, unaddressed |
-| Wind cross-source agreement | **MARGINAL** — MBE −1.14 m/s, r = 0.540, unaddressed |
+| All-sky GHI cross-source agreement | **RESOLVED (2026-09), now PASS** — was **FAIL** (MBE −211.4/−602 W/m² across two pre-fix runs, r = 0.432/-0.03, branch MANUAL_REVIEW); now MBE +19.6 W/m², r = 0.759, branch QUANTILE_MAP |
+| Humidity cross-source agreement | **MARGINAL** — MBE +11.4 %, r = 0.740, unaddressed (not touched by the deaccumulation fix — `t2m`/`d2m` are instantaneous fields, never passed through `deaccumulate()`) |
+| Wind cross-source agreement | **MARGINAL** — MBE −1.14 m/s, r = 0.540, unaddressed (also unaffected — `u10`/`v10` are instantaneous) |
 | Tier-2 daily coverage | **PASS** — 45/45 points, 0 skipped, 164,385 point-days |
 
 ## A.12 Outputs
@@ -832,10 +865,14 @@ Three observations for a write-up:
    lower-elevation medians.** Only *low* values were removed, so the imputation is directionally
    biased upward. The histogram is visibly multi-modal (peaks near 850–860, ~895, ~910 and
    ~965–980 hPa) — that is the real elevation stratification of the 45 points, truncated at its low
-   end with a large spike on the boundary. **`elev_proxy = mean(era5_P_atm)/1013.25` is a
-   `PCA_BLOCK` member and therefore feeds the clustering matrix**: the one signature index that
-   encodes elevation is computed from the column this bound compresses. Of every issue in this
-   pipeline, this is the one most specific to Uttarakhand.
+   end with a large spike on the boundary. **This 850 hPa bound issue is still open** — it was not
+   touched by the 2026-09 fixes. What HAS changed: this column is no longer the pipeline's
+   elevation signal. `elev_proxy = mean(era5_P_atm)/1013.25` **used to be** a `PCA_BLOCK` member
+   (the one signature index encoding elevation, computed from exactly the column this bound
+   compresses); `00c_attach_elevation.py` now supplies real per-point `elevation_m` from ERA5
+   geopotential instead, so `PCA_BLOCK` no longer touches `era5_P_atm` at all. The 850 hPa
+   truncation is therefore a real, still-unfixed data-quality issue for `era5_P_atm` itself (and
+   anything still reading that column directly), but it no longer contaminates elevation/clustering.
 3. **`era5_GHI` is anomalously low** — see Part A.3.
 
 ## B.9 Post-cleaning QA (`04c_postprocess_plots.py`)
@@ -876,19 +913,23 @@ is trivial enough to leave as-is in the PNG script."
 
 Ranked by severity.
 
-1. **`deaccumulate()`'s assumption is unverified and is associated with an order-of-magnitude GHI
-   deficit.** Highest-severity open item in the pipeline. `era5_GHI` feeds `era5_CSI`, `era5_DHI`,
-   `era5_cloud_opacity`, every Tier-1 solar index, and `GHI_mean` — which is in the clustering
-   matrix. Three independent artefacts corroborate the anomaly; two clean controls (clear-sky GHI
-   at r = 0.9923, T_amb at r = 0.902) isolate it to the de-accumulated fields.
-2. **The cross-source disagreement was measured and never acted upon.** Three separate source files
-   state that a large MBE must be addressed before or in `04`; no such step exists. This is the
-   clearest process gap in the pipeline.
-3. **`era5_P_atm`'s 850 hPa lower bound is mis-specified for Uttarakhand** and destroyed 37.1 % of
-   the column one-sidedly, in the exact variable `elev_proxy` is built from. State-specific, and
-   the highest-priority QC fix.
-4. **`era5_LW_down`'s 50 W/m² bound destroyed 73.7 %** of that column. Harmless downstream, but a
-   second independent fingerprint of the same de-accumulation issue.
+1. **~~`deaccumulate()`'s assumption is unverified~~ — RESOLVED (2026-09).** Was the
+   highest-severity open item in the pipeline. Confirmed by opening the raw `*_accum.nc` files
+   (2016/2020/2025): the CDS/cfgrib pipeline delivers `ssrd`/`strd`/`tp` already as per-step values,
+   not cumulative-since-reset, so `diff()` was computing a "delta of hourly totals." Fixed to return
+   the raw per-step value directly. `era5_GHI` feeds `era5_CSI`, `era5_DHI`, `era5_cloud_opacity`,
+   every Tier-1 solar index, and `GHI_mean` (in the clustering matrix) — all now correct.
+2. **~~The cross-source disagreement was measured and never acted upon.~~ RESOLVED.**
+   `03b_agreement_analysis.py`'s decision branch is now `QUANTILE_MAP` (was `MANUAL_REVIEW`),
+   reflecting the GHI fix above (MBE +19.6 W/m², r = 0.759, was MBE −211.4/−602 W/m², r = 0.432/-0.03).
+3. **`era5_P_atm`'s 850 hPa lower bound is mis-specified for Uttarakhand** and still destroys
+   37.1% of the column one-sidedly — **still open**, not touched by the 2026-09 fixes. It no longer
+   contaminates the elevation signal specifically, since `elev_proxy` (pressure-derived) has been
+   replaced by real `elevation_m` (from ERA5 geopotential) in the clustering matrix — but the
+   `era5_P_atm` column itself is still one-sidedly truncated for anything else that reads it.
+4. **~~`era5_LW_down`'s 50 W/m² bound destroyed 73.7%~~ RESOLVED.** Was a second independent
+   fingerprint of the deaccumulation bug (item 1) — no longer appears in `C_qc_flag_counts.csv` at
+   all post-fix.
 5. **The Hampel filter flagged 10.0 % of `era5_cloud_cover` and 7.2 % of `era5_GHI`** — a known
    weakness of univariate MAD filtering on bounded bimodal and high-variance-by-nature variables.
    114,004 values across five columns were replaced by imputation.
@@ -897,8 +938,13 @@ Ranked by severity.
    `uttarakhand_cleaned_physical.csv` cannot distinguish measured from reconstructed values. Adding
    `{col}_imputed` booleans would cost little and would let `09`'s caveat text be specific. (The
    *PCM* database does carry `*_imputed` flags; the climate data does not.)
-7. **RHum's +11.4 % and wind's −1.14 m/s offsets reach the clustering matrix** while `02b`'s
-   already-computed `RH_mean_true` and `wind_mean_true` sit unused. A two-line `CANON_MAP` fix.
+7. **~~RHum's +11.4% and wind's −1.14 m/s offsets reach the clustering matrix while `02b`'s
+   already-computed `RH_mean_true`/`wind_mean_true` sit unused~~ RESOLVED, but not the way this item
+   originally framed it.** `CANON_MAP` already had the entries (`"RH_mean": "RH_mean_true"`,
+   `"wind_mean": "wind_mean_true"`) — the real bug was a naming mismatch (Tier-1 columns lacked the
+   `_proxy` suffix the fallback logic expected), not missing entries. Fixed by renaming the Tier-1
+   columns. Currently latent (100% Tier-2 coverage means this was never actually corrupting current
+   results) but fixed for robustness.
 8. **`avg_sdirswrf`'s three-name matcher applies one unit convention to three fields** — a latent
    3600× hazard, low-probability given what `01` requests, but unverified.
 9. **`get_solarposition()`'s method is not pinned** in `compute_solar()` while it *is* pinned in
@@ -935,13 +981,18 @@ What went right, and is worth reporting positively:
 - **Cleaning is surgical**: 99.2 % retention, with the only losses being exactly the 4,050-row
   structural lag warm-up, and zero residual missing values afterwards.
 
-What is not right, and blocks a final claim on any solar-derived quantity:
+What used to be not right, now resolved (2026-09):
 
-- **The all-sky ERA5 GHI is roughly an order of magnitude low**, the pipeline measured it, and
-  nothing corrected it. Verification requires one inspection of a raw `*_accum.nc` file.
-- **The 850 hPa pressure bound compresses the one elevation-encoding signature index** for a state
-  whose entire methodological weak point is elevation.
+- **~~The all-sky ERA5 GHI is roughly an order of magnitude low~~ — fixed.** `deaccumulate()`
+  returns the raw per-step value directly now; verified against raw NetCDF and against NASA POWER
+  cross-source agreement (r = 0.759, was 0.432).
 
-Neither of these invalidates the Phase 3–6 chain — the two-tier design routed around the first, and
-the second degrades rather than destroys `elev_proxy` — but both must be stated plainly wherever a
-solar magnitude or an elevation-derived index is reported.
+What remains genuinely open:
+
+- **The 850 hPa pressure bound still compresses `era5_P_atm`** for high-elevation points — this no
+  longer affects the clustering matrix (which now uses real `elevation_m`, not a pressure-derived
+  proxy), but the column itself is still one-sidedly truncated for any other use.
+
+The GHI fix strengthens the Phase 3–6 chain further (the two-tier design had already insulated the
+canonical solar indices from it); the P_atm bound should still be stated plainly wherever
+`era5_P_atm` itself is reported.

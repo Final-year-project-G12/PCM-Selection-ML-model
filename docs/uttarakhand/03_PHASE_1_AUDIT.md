@@ -118,8 +118,13 @@ Two CDS requests per month, by ERA5 convention:
 | `accum` | forecast (FC) | `surface_solar_radiation_downwards`, `mean_surface_direct_short_wave_radiation_flux`, `surface_thermal_radiation_downwards`, `total_precipitation` | `ACCUM_HOURS` |
 
 `ACCUM_HOURS = INSTANT_HOURS ∪ {(h − 1) mod 24 for h in INSTANT_HOURS}` — every target hour's
-immediate predecessor is downloaded so `deaccumulate()` in Phase 2 has something to difference
-against.
+immediate predecessor is downloaded. **Historical rationale, now stale**: this predecessor hour
+used to be needed so `deaccumulate()` in Phase 2 could difference against it, under the (wrong)
+assumption that `ssrd`/`strd`/`tp` accumulate since the last 00Z/12Z forecast reset.
+`02_combine_uttarakhand.py`'s `deaccumulate()` was fixed 2026-09 to return the raw per-step value
+directly with no differencing (see `04_PHASE_2_AUDIT.md` Part A.3), so the predecessor hour is
+still downloaded here but is no longer used by the fixed logic — harmless dead weight in the
+download, not re-triggering a re-download to remove it.
 
 Bounding box: `load_points_bbox(pad=0.5)` — the envelope of the population points padded 0.5°, not
 the full state boundary. With the observed point extents this is approximately
@@ -236,40 +241,51 @@ distinct ERA5 node. This follows from the alignment but is **not verified anywhe
 pipeline**; a `groupby(["grid_lat","grid_lon"]).ngroups == 45` check on the combined CSV would
 confirm it in one line.
 
-### Elevation handling — the pipeline's central spatial limitation
+### Elevation handling — RESOLVED (2026-09) via `00c_attach_elevation.py`
 
-**No per-point elevation exists anywhere in the pipeline.** `00a` writes only
-`point_id, lat, lon, population, weight`; there is no elevation-attachment script. Three different
-altitude assumptions coexist:
+**This was previously the pipeline's central spatial limitation, and is now fixed.** `00a` still
+writes only `point_id, lat, lon, population, weight`, but a new script,
+`00c_attach_elevation.py`, runs after it and attaches a real per-point `elevation_m` column to
+`population_grid_points.csv` — downloaded from ERA5's time-invariant geopotential field (`z`) over
+the same bounding envelope `01` uses, converted via `elevation_m = z / 9.80665` (WMO standard
+gravity). This is a single CDS request (geopotential is time-invariant, not a per-year field),
+cached separately under `data/raw/era5/invariant/` so it never touches the sun-event
+instant/accum cache. **Observed range across the 45 points: 196.3 m – 2509.6 m.**
+
+Downstream consumers now use it:
 
 | Where | Altitude | Effect |
 |---|---|---|
-| `00b_build_suntimes.py` | **0 m** | sunrise / transit / sunset times |
-| `02_combine_uttarakhand.py` | **1200 m** (`DEFAULT_ALT_M`) | pvlib `Location(altitude=…)` → Ineichen clear-sky and solar position |
-| `04b_climate_signature.py` | derived: `elev_proxy = mean(era5_P_atm) / 1013.25` | PCA block member → clustering matrix |
+| `00b_build_suntimes.py` | **0 m**, unchanged | sunrise / transit / sunset times |
+| `02_combine_uttarakhand.py` | **real per-point `elevation_m`**, `DEFAULT_ALT_M = 1200` kept only as a fallback if the column is missing/NaN for a point | pvlib `Location(altitude=…)` → Ineichen clear-sky and solar position |
+| `04b_climate_signature.py` | `row["elevation_m"] = point_df["elevation_m"].iloc[0]` — the real value, **no longer** a `mean(era5_P_atm)/1013.25` proxy | `PCA_BLOCK` member → clustering matrix |
 
-The `DEFAULT_ALT_M` comment states the reasoning: "Uttarakhand is mountainous; populated zones
-range roughly 200-2000m. Use 1200m as a representative default." The altitude value is **not**
-written to the output rows, so the assumption is invisible in the data and recoverable only from
-source.
+`elevation_m` is also now **written to the combined output rows** (`climate_uttarakhand_points.csv`
+gained a column, 36 → 37 raw columns; the preprocessed file gained one too, 89 → 90), so the
+assumption is no longer invisible in the data.
 
-`README_PREPROCESSING.md` is explicit that this is not a footnote:
+One inconsistency remains, now more pronounced in magnitude rather than resolved: `00b` still
+computes sun-event times at a flat **0 m** while `02` now uses the *real*, per-point altitude
+(196–2510 m) for solar geometry. The gap between the two assumptions is larger than before, but
+one side of it (`02`'s) is now physically correct rather than an arbitrary flat guess, and
+sunrise/sunset timing is comparatively insensitive to altitude at the minute scale (see the
+Temporal section below).
 
-> **elevation note — this is a real limitation here, not a footnote:** `02_combine_uttarakhand.py`
-> uses a flat **1200m** proxy for every point's solar-geometry calculations, not real per-point
-> elevation. … Uttarakhand's populated terrain genuinely spans roughly 200m (Terai plains near
-> Udham Singh Nagar/Haridwar) to 2000m (hill towns), and elevation drives both solar-geometry
-> inputs (air mass, clear-sky irradiance) and the temperature-based indices (HDD18/CDD24, Ta_mean)
-> directly. This is plan v3.0's "Repair 2," written with Uttarakhand specifically in mind.
+The pre-fix limitation is preserved here for context, since the surrounding docs
+(`README_PREPROCESSING.md`, `NEXT_STEPS.md`) still describe it as an open item in their own text:
+`README_PREPROCESSING.md` called this "a real limitation here, not a footnote" and `NEXT_STEPS.md`
+made an elevation fix one of only two "**Do**" items in an otherwise "don't do this now" list,
+suggesting an SRTM tile lookup or a lookup against the GADM/WorldPop rasters `00a` already
+downloads. The ERA5-geopotential approach `00c` actually took is a third option not mentioned in
+either file, and it is the one now implemented and run.
 
-`NEXT_STEPS.md` makes it one of only two "**Do**" items in an otherwise "don't do this now" list,
-and suggests two concrete fixes: an SRTM tile lookup, or a lookup against the GADM/WorldPop rasters
-`00a` already downloads.
-
-The consequence compounds in Phase 2: `04`'s physical-bounds table sets `era5_P_atm ≥ 850 hPa`
-(≈ 1,450 m in a standard atmosphere) and **37.1 % of pressure readings fell below it** and were
-NaN'd then imputed — one-sidedly, in the exact column `elev_proxy` is built from. See
-`04_PHASE_2_AUDIT.md` Part C.
+**A separate, still-open issue that used to be entangled with elevation:** `04`'s physical-bounds
+table sets `era5_P_atm ≥ 850 hPa` (≈ 1,450 m in a standard atmosphere) and **37.1 % of pressure
+readings (182,899 of 493,155) fall below it** and are NaN'd then imputed — one-sidedly. This bound
+issue is **unaffected by the elevation fix** and remains current (confirmed against the live
+`qc_report.txt`), but it no longer contaminates the elevation signal in the clustering matrix,
+because `elev_proxy`/`elevation_m` is no longer derived from `era5_P_atm` at all — it now comes
+directly from `00c`'s real per-point value. See `04_PHASE_2_AUDIT.md` Part C.
 
 ### Population weighting — where it is and is not applied
 
@@ -331,10 +347,13 @@ shown to a general audience needs an explicit UTC→IST note at presentation tim
 
 ### Sun-event times via pvlib SPA
 
-`method="spa"` is pinned explicitly in `00b`. **Altitude 0 m** is used here, which differs from the
-1200 m used for irradiance geometry in `02` — sunrise/sunset times are altitude-sensitive at the
-minute scale, so the two assumptions are inconsistent, though the magnitude is small relative to
-the ±1 h `HOUR_MARGIN` and the 3 h match tolerance.
+`method="spa"` is pinned explicitly in `00b`. **Altitude 0 m** is used here, which differs from `02`'s
+irradiance geometry — `02` now uses each point's real `elevation_m` (196-2510 m, from
+`00c_attach_elevation.py`, fixed 2026-09; a flat 1200 m survives only as a fallback for a point
+missing `elevation_m`). `00b` was not touched by that fix and still uses altitude 0 m for its own
+sunrise/sunset calculation — sunrise/sunset times are altitude-sensitive at the minute scale, so
+this remaining inconsistency between `00b` and `02` is real, though the magnitude is small relative
+to the ±1 h `HOUR_MARGIN` and the 3 h match tolerance.
 
 (By contrast, `compute_solar()` in `02` calls `get_solarposition(times)` with **no** `method=`
 argument — see `04_PHASE_2_AUDIT.md` Part A.6.)
@@ -357,19 +376,29 @@ day)."
 **The resolved hour lists for the actual run are not available in the source files** — they are
 computed at runtime from `suntimes.csv` and no log is committed.
 
-### De-accumulation predecessor logic and the 2016-01-01 edge case
+### De-accumulation predecessor logic and the 2016-01-01 edge case — RESOLVED, now historical
 
-Because ERA5 accumulated fields need `value(h) − value(h−1)`, `ACCUM_HOURS` includes every target
-hour's predecessor. One true edge case is documented: **2016-01-01 has no 2015-12-31 file** to
-supply hour 23 as hour 0's predecessor, so that single day's affected `era5_GHI` / `era5_LW_down` /
-`era5_precipitation` values come out as a natural `NaN`. Every other month boundary is bridged
-because `02` concatenates all months into one continuous sorted series per point *before* calling
-`deaccumulate()`.
+**This entire section describes logic that no longer runs.** The original `deaccumulate()`
+assumed ERA5's accumulated fields needed `value(h) − value(h−1)` against a reset-hour predecessor,
+which motivated downloading every target hour's predecessor in `ACCUM_HOURS`, the 2016-01-01
+boundary edge case below, and a `reset_mask = s.index.hour.isin([1, 13])` constant. Inspecting the
+raw NetCDF directly (across 2016/2020/2025 files) showed this was the wrong convention for what
+this pipeline's CDS/cfgrib delivery actually returns: `ssrd` already arrives as the per-step
+(hourly) value, not a since-reset cumulative total — confirmed because the raw field rises and
+falls through the day and returns to exactly 0 at night, which is impossible for a
+monotonically-accumulating-since-reset series. `deaccumulate()` was fixed 2026-09 to a straight
+`clip(lower=0)` pass-through with **no `diff()` and no `reset_mask`** (see
+`04_PHASE_2_AUDIT.md` Part A.3 for the full before/after evidence).
 
-`deaccumulate()`'s `reset_mask = s.index.hour.isin([1, 13])` is a **fixed** constant while the
-downloaded hour set is **dynamic**. That is mathematically safe (hours 1 and 13 either appear in
-`ACCUM_HOURS` or the mask selects nothing), and the docstring argues it correctly — but it is a
-coupling between a static constant and a runtime-computed hour set that a reader should know about.
+**Consequence for the two things this section used to document:**
+- The 2016-01-01-has-no-predecessor edge case is now moot — there is nothing to difference against,
+  so no row is NaN'd for lacking a predecessor. `01`'s `ACCUM_HOURS` still downloads the extra
+  predecessor hour (harmless, just unused) rather than triggering a re-download to remove it.
+- The `reset_mask`/hours-{1,13} coupling described here no longer exists in the code at all.
+
+This history is worth keeping in a write-up as an example of an assumption that was plausible,
+undocumented-as-verified, and wrong — but any current-state claim should say the fix is in place,
+not describe the old diff-based mechanism as active.
 
 ### Nearest-in-time matching (the 3-hour rejection window)
 
@@ -478,12 +507,18 @@ essentially every day of the 10-year span for every point.
 
 ## Problems / risks
 
-1. **Two inconsistent altitude assumptions.** `00b` computes sun-event times at 0 m; `02` computes
-   solar geometry at 1200 m. Neither file acknowledges the other.
-2. **No per-point elevation.** There is no elevation-attachment script. Consequences propagate to
-   the Ineichen clear-sky model, to `elev_proxy`, and to the 850 hPa physical bound that destroys
-   37 % of the pressure column in Phase 2. This is the single most Uttarakhand-specific weakness in
-   the pipeline.
+1. **Two inconsistent altitude assumptions — now one flat and one real.** `00b` still computes
+   sun-event times at a flat 0 m; `02` now computes solar geometry at the real per-point
+   `elevation_m` (196–2510 m) from `00c_attach_elevation.py` instead of a flat 1200 m default.
+   `00b` does not acknowledge `02`'s value, but `02`'s side of the inconsistency is no longer an
+   arbitrary guess.
+2. **No per-point elevation — RESOLVED (2026-09).** `00c_attach_elevation.py` now attaches a real
+   per-point `elevation_m` (from ERA5's invariant geopotential field) to
+   `population_grid_points.csv`. It feeds the Ineichen clear-sky model in `02` and replaces the old
+   `elev_proxy` pressure-ratio proxy in `04b_climate_signature.py`. The separate 850 hPa physical
+   bound that destroys 37 % of the `era5_P_atm` column in Phase 2 is a **different, still-open**
+   issue — it no longer contaminates the elevation signal (which comes from `00c` now, not from
+   pressure), but it is unresolved in its own right. See `04_PHASE_2_AUDIT.md` Part C.
 3. **Download completeness is not independently verifiable from the repository.** Both status CSVs
    are git-ignored and no run log is committed; the 493,155-row combined output is strong indirect
    evidence but there is no committed per-file count.
@@ -503,5 +538,7 @@ essentially every day of the 10-year span for every point.
 **COMPLETE.** 45 population-weighted points covering 10,475,711 people (87.5 % target), 10 years of
 ERA5 and NASA POWER at sun-event-aligned instants, with full point/day/event coverage confirmed
 downstream. The design decisions (population weighting, ERA5-lattice alignment, sun-event
-alignment, circular hour windows) are sound and well documented in-code. The open items are
-elevation and the two altitude assumptions.
+alignment, circular hour windows) are sound and well documented in-code. The per-point elevation
+gap is now **resolved** (`00c_attach_elevation.py`, 196–2510 m real values); the remaining open
+item is the residual 0 m vs. real-elevation inconsistency between `00b` and `02`, which is smaller
+in practical consequence now that one side of it is physically grounded.

@@ -44,7 +44,7 @@ of the audit trail:
 |---|---|
 | Other states' data | "Don't onboard Rajasthan/Assam/Tamil Nadu data. `05_cluster_regions.py` stays untouched and ready for later." |
 | TabTransformer/VAE encoder ablation | "Don't build" — "explicitly optional-only in the plan doc and adds nothing to Objective 1's core claim" |
-| Per-point real elevation | **"Do"** think about it — "unlike the Tamil Nadu build …, Uttarakhand's 200m-2000m populated elevation range is exactly the case this repair was written for" |
+| Per-point real elevation | **Done** — `00c_attach_elevation.py` now attaches real per-point elevation (196m-2510m) from ERA5 geopotential, replacing the flat 1200m default this item originally flagged |
 | 5,000-draw Monte Carlo | "Don't run … unless Phase 5/6 finishes with time spare … it is genuinely optional" |
 | Fixing `monsoon_index` via `PRECTOTCORR` | "Don't try" — "flag the proxy limitation in text instead, it costs no correctness in the ranking (monsoon_index isn't a ranking criterion, it's descriptive of the regime)" |
 
@@ -60,7 +60,7 @@ of the audit trail:
 | 4 | Climate Regime Clustering | `05_cluster_uttarakhand.py` (`05_cluster_regions.py` = multi-state, unrun) |
 | 5 | PCM database + Feasibility Filtering | `06`, `07`, `07b` |
 | 6 | Multi-Criteria Ranking Engine | `08_mcdm_ranking.py` |
-| 7 | Physics-Based Validation | **no script in `era5-uttarakhand/`** |
+| 7 | Physics-Based Validation | `10_physics_validation.py` (run; see finding below — a corrected result) |
 | 8 | Explanation and Final Output | `09_recommendation_cards.py` |
 
 Note the numbering quirk: the Uttarakhand `README.md` labels `02_combine_uttarakhand.py` as
@@ -70,33 +70,33 @@ files; neither is corrected here.
 
 ## Sprint status recorded in `NEXT_STEPS.md`
 
-The status table in `NEXT_STEPS.md` was written mid-sprint and is **older than the artefacts in
-`data/plots/`**. Reproduced in substance, with this audit's finding alongside:
+**Update:** `NEXT_STEPS.md`'s status table has since been rewritten (2026-09) to reflect the actual
+run state below — the "overtaken by the run" gap this section originally documented is closed.
+Kept here as a record of what the table used to say and why it was wrong at the time:
 
-| Phase | `NEXT_STEPS.md` status | What the committed artefacts show |
+| Phase | `NEXT_STEPS.md` status (as of early Sept 2026) | Current state (post 2026-09 fixes) |
 |---|---|---|
-| 1. Data Collection | "**Done.** Points confirmed …, ~87.5% population coverage" | Confirmed — 45 points, 10,475,711 population |
-| 2. Preprocessing & QC | "`02b` confirmed run (45/45 points, 0 skipped, 164,385 point-days). `04` code delivered — confirm it's actually been run" | `04` **has** been run: 489,105 output rows, 89 columns |
-| 3. Climate Signature | "Code delivered …, **not yet confirmed run**" | Has been run — Phase 4–6 artefacts downstream of it exist |
-| 4. Clustering | "Code delivered …, **not yet confirmed run**" | Has been run at **K = 5**; sizes 12/9/3/7/14 |
-| 5. Feasibility | "Code delivered, **not yet run**" | Has been run — 275-row survivors CSV |
-| 6. MCDM Ranking | "Code delivered, **not yet run**" | Has been run — 15-row Top-3 CSV |
-| 7. Physics Validation | "**Not written.**" | Still not written — no script exists |
-| 8. Recommendation Cards | "Code delivered, **not yet run**" | Cannot be confirmed — output is git-ignored |
+| 1. Data Collection | "**Done.** Points confirmed …, ~87.5% population coverage" | Confirmed — 45 points, 10,475,711 population; real per-point elevation attached |
+| 2. Preprocessing & QC | "`02b` confirmed run … `04` code delivered — confirm it's actually been run" | `04` run: 489,105 output rows, qc_report.txt 5/5 PASS |
+| 3. Climate Signature | "Code delivered …, **not yet confirmed run**" | Run — real `elevation_m` (~0.37 PCA loading on PC1), not the old pressure-derived `elev_proxy` |
+| 4. Clustering | "Code delivered …, **not yet confirmed run**" | Run at **K = 5**; sizes **7/3/9/10/16** (not 12/9/3/7/14 — that was from an earlier signature version) |
+| 5. Feasibility | "Code delivered, **not yet run**" | Run — survivor counts now **29/30/29/27/29** per cluster (not identical, since the regime-cap bug in `07b` is fixed) |
+| 6. MCDM Ranking | "Code delivered, **not yet run**" | Run — four methods (TOPSIS+GRA+PROMETHEE+VIKOR); Cluster 1 genuinely differs (PureTemp 53, not PureTemp 58) |
+| 7. Physics Validation | "**Not written.**" | Written and run (`10_physics_validation.py`) — two model bugs fixed; corrected result is 0% within the 54-84% benchmark band (~15-19% actual), down from a bug-inflated 92% |
+| 8. Recommendation Cards | "Code delivered, **not yet run**" | Run — `recommendation_cards.md` regenerated against all current fixes (still git-ignored, so not in this repo) |
 
-`NEXT_STEPS.md` should be treated as a **plan document that has been overtaken by the run**, not
-as a current status report.
+## Known internal inconsistency: PCM database size — RESOLVED in NEXT_STEPS.md (2026-09)
 
-## Known internal inconsistency: PCM database size
-
-Three source files in `era5-uttarakhand/` disagree about the PCM database:
+Three source files in `era5-uttarakhand/` used to disagree about the PCM database:
 
 - `06_build_pcm_database.py` (docstring, lines 1–21): **55 rows** — 24 Literature, 14 Rubitherm
   Technologies, 7 Pluss Advanced Technologies, 5 PureTemp, 4 PCM Products Ltd., 1 CrodaTherm.
-- `NEXT_STEPS.md` (line 17 and line 176): "**~25 candidates total**" and "PCM database is ~25
-  rows, not 40-60."
-- `07_feasibility_filter.py` (line 158) prints "your database (25 rows) is thin for this" in its
-  low-survivor warning message.
+- `NEXT_STEPS.md` used to say "**~25 candidates total**" and "PCM database is ~25 rows, not
+  40-60" — **this has since been corrected in `NEXT_STEPS.md` to state 55 rows**, matching `06`.
+- `07_feasibility_filter.py` (line 158) still prints "your database (25 rows) is thin for this" in
+  its low-survivor warning message — this string is stale (never triggers in practice since
+  survivor counts are 27-30/cluster, well above whatever threshold prompts that message) but has
+  not been edited.
 
 **Resolution from the artefacts:** the committed
 `PCM_data/PCM_data/data/PCM_Properties_cleaned_mice_pmm_detailed.csv` has exactly **55 rows** with
@@ -125,7 +125,7 @@ otherwise trip over them.
 
 ## Uttarakhand-specific contextual notes from the source files
 
-**Terrain is the defining constraint.** `README_PREPROCESSING.md` states it directly:
+**Terrain is the defining constraint.** `README_PREPROCESSING.md` used to state:
 
 > `02_combine_uttarakhand.py` uses a flat **1200m** proxy for every point's solar-geometry
 > calculations, not real per-point elevation. … Uttarakhand's populated terrain genuinely spans
@@ -133,6 +133,11 @@ otherwise trip over them.
 > drives both solar-geometry inputs (air mass, clear-sky irradiance) and the temperature-based
 > indices (HDD18/CDD24, Ta_mean) directly. This is plan v3.0's "Repair 2," written with
 > Uttarakhand specifically in mind.
+
+**RESOLVED (2026-09).** `00c_attach_elevation.py` now attaches real per-point elevation (196m-2510m,
+from ERA5's time-invariant geopotential field) to every point, and `02_combine_uttarakhand.py` uses
+it for solar geometry (the flat 1200m constant survives only as a fallback for a point missing
+`elevation_m`). `README_PREPROCESSING.md` has been updated accordingly.
 
 **Small N.** With only 45 points, `README_PREPROCESSING.md` flags two QC steps for extra
 scepticism: step 4's spatial-zone imputation fallback ("noticeably coarser zones with 45 points to
@@ -142,16 +147,26 @@ split" at this N, and that K should realistically be 2–4 rather than higher.
 
 **Corrosion mechanism.** `NEXT_STEPS.md` anticipates that "the corrosion veto [will] bite for
 high-monsoon-humidity Uttarakhand clusters (Terai/valley points during Jun-Sep) … same veto,
-different physical mechanism, worth noting in text." **This did not happen** — the corrosion veto
-is not implemented in `07_feasibility_filter.py` at all (its docstring lists it under "NOT
-applied"), and every one of the 55 database candidates is organic, so the veto could not have
-activated even if it had been implemented.
+different physical mechanism, worth noting in text." **This still has not happened** — the
+corrosion veto is not implemented in `07_feasibility_filter.py` at all (its docstring lists it
+under "NOT applied"), and every one of the 55 database candidates is organic, so the veto could
+not have activated even if it had been implemented. This remains a genuine, documented scope gap
+(not something the 2026-09 bug fixes touched).
 
-**Constant `Tm_target`.** `04b_climate_signature.py` sets `Tm_target_C = 57` for every point by
-design (`T_DELIVERY_C = 50` + `DT_APPROACH_C = 7`, "indirect-system assumption"). Because the
-melting-window filter and the Gaussian Tm-fitness criterion are both driven by `Tm_target`, this
-is the single largest reason the five regimes return identical survivor sets and an identical #1
-PCM. `08_mcdm_ranking.py` detects and prints this explicitly rather than letting it pass silently.
+**`Tm_target` — RESOLVED (2026-09), was the dominant cause of identical results, no longer is.**
+`04b_climate_signature.py` sets a baseline `Tm_target_C = 57` for every point by design
+(`T_DELIVERY_C = 50` + `DT_APPROACH_C = 7`, "indirect-system assumption"). This claim used to be
+accurate: the melting-window filter and Gaussian Tm-fitness criterion, both driven by `Tm_target`,
+made all five regimes return identical survivor sets and an identical #1 PCM (PureTemp 58/RT60,
+depending on which pre-fix run). The actual cause was a bug in `07b_charging_feasibility.py`: its
+regime-dependent Tm cap divided its own signal (`poor_day_kt`) by `kt_mean`, collapsing to a
+coefficient-of-variation measure that could never differentiate clusters — this is why it printed
+"0/5 clusters where the regime cap actually lowers Tm_target" on every run, not because the cap was
+disabled. Fixed to use `poor_day_kt` directly: Clusters 1 (55.16C) and 2 (56.51C) now get a real,
+lower `Tm_target`, and Cluster 1's MCDM consensus #1 is now genuinely different (PureTemp 53, not
+PureTemp 58). Clusters 0/3/4 still share `Tm_target=57C` and largely the same Top-1 pick — that part
+is a legitimate finding (those three climate regimes really don't need a different target), not a
+remaining bug. `08_mcdm_ranking.py` still detects and prints this explicitly.
 
 ## What this documentation set does not claim
 
