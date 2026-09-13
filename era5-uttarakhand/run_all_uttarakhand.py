@@ -179,7 +179,7 @@ SETUP_SCRIPTS = [
 # documented as optional but must be sequenced before 07 to take effect
 # (see module docstring). (name, required) pairs, in run order.
 CORE_SCRIPTS = [
-    # ("02_combine_uttarakhand.py", True),
+    ("02_combine_uttarakhand.py", True),
     ("02b_build_daily_aggregates.py", True),
     ("04_preprocess_uttarakhand.py", True),
     ("04b_climate_signature.py", True),
