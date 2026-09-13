@@ -126,11 +126,19 @@ def entropy_weights(matrix):
 
 
 def topsis(matrix, weights):
-    """matrix already benefit-normalised (higher=better), all columns
+    """matrix already benefit-normalised (higher=better) AND already
+    min-max scaled to [0,1] per column by the caller (rank_cluster()) —
+    same basis gra()/promethee_ii()/vikor() consume directly, and the
+    same basis w_final (entropy+AHP) was computed on. Deliberately does
+    NOT re-apply TOPSIS's classic vector (Euclidean) normalization on top
+    of that: doing so would rescale each column by a second,
+    data-dependent factor after w_final was already fixed, putting TOPSIS
+    on a different effective normalization basis than the other three
+    methods and manufacturing method disagreement (lower Kendall's W)
+    that isn't a real multi-criteria disagreement. All columns are
     treated as benefit criteria (true here since f_Tm/L/rho_H/TC/cycles
     are all benefit after the Gaussian transform)."""
-    norm = matrix / (np.sqrt((matrix ** 2).sum(axis=0)) + 1e-12)
-    weighted = norm * weights
+    weighted = matrix * weights
     v_plus = weighted.max(axis=0)
     v_minus = weighted.min(axis=0)
     s_plus = np.sqrt(((weighted - v_plus) ** 2).sum(axis=1))
@@ -184,20 +192,40 @@ def vikor(matrix, weights, v=VIKOR_V):
     return Q, S, R
 
 
-def vikor_compromise_check(Q, names):
-    """Acceptable-advantage + acceptable-stability conditions, standard
-    VIKOR post-check. Returns (is_valid_single_winner, note)."""
+def vikor_compromise_check(Q, S, R, names):
+    """Acceptable-advantage (C1) + acceptable-stability (C2) conditions,
+    standard VIKOR post-check (Opricovic & Tzeng). Returns
+    (is_valid_single_winner, note).
+
+    C1: Q(2nd) - Q(1st) >= DQ = 1/(n-1).
+    C2: the Q-best alternative must ALSO be best-ranked by S alone or by
+    R alone — otherwise the "winner" is an artifact of the v-weighted
+    blend, not a genuinely stable compromise. Both conditions must hold
+    for a single winner to be reported; if either fails, VIKOR itself
+    prescribes reporting a compromise set instead.
+    """
     order = np.argsort(Q)
     n = len(Q)
     if n < 2:
         return True, "only one candidate"
     dq = 1.0 / max(n - 1, 1)
+    winner = order[0]
+
     advantage_ok = (Q[order[1]] - Q[order[0]]) >= dq
     if not advantage_ok:
-        return False, (f"VIKOR acceptable-advantage FAILS "
+        return False, (f"VIKOR acceptable-advantage (C1) FAILS "
                         f"(Q gap {Q[order[1]]-Q[order[0]]:.4f} < {dq:.4f}) — "
                         f"report a compromise set {names[order[0]]}/{names[order[1]]}, "
                         f"not a single VIKOR winner")
+
+    stability_ok = (winner == np.argmin(S)) or (winner == np.argmin(R))
+    if not stability_ok:
+        return False, (f"VIKOR acceptable-stability (C2) FAILS "
+                        f"({names[winner]} is Q-best but not best-ranked by S "
+                        f"({names[np.argmin(S)]}) or by R ({names[np.argmin(R)]}) alone) — "
+                        f"report {names[winner]} and {names[np.argmin(S)]} as a compromise set, "
+                        f"not a single VIKOR winner")
+
     return True, "single VIKOR winner acceptable"
 
 
@@ -257,7 +285,7 @@ def rank_cluster(df):
     df["promethee_rank"] = df["promethee_flow"].rank(ascending=False, method="min").astype(int)
     df["vikor_rank"] = df["vikor_Q"].rank(ascending=True, method="min").astype(int)   # lower Q better
 
-    vikor_valid, vikor_note = vikor_compromise_check(vikor_q, df["name"].values)
+    vikor_valid, vikor_note = vikor_compromise_check(vikor_q, vikor_s, vikor_r, df["name"].values)
     df["vikor_compromise_note"] = vikor_note
 
     borda, kendall_w = borda_from_ranks([df.set_index("name")["topsis_rank"],

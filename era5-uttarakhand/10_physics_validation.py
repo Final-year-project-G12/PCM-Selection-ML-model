@@ -56,9 +56,14 @@ pipeline. Report them as such if you cite results from this script.
   Target delivery temperature  50 C      (same T_delivery used throughout
                                          this pipeline's Tm_target rule)
   Ambient temp                 daily sinusoid built from that day's real
-                                         Ta_min_true/Ta_max_true, peak 14:00
+                                         Ta_min_true/Ta_max_true, peak 17:00
                                          local, trough 05:00 local — a
                                          standard diurnal-cycle assumption
+                                         (a single sinusoid can't hit both a
+                                         05:00 trough and a 14:00 peak; 05:00
+                                         was kept as the better-justified
+                                         anchor, see simulate_pcm_swh_year's
+                                         inline comment)
 
 CALIBRATION CHECK (plan v3.0 Table 16)
 ------------------------------------------
@@ -293,7 +298,16 @@ def build_hourly_drivers(year_df, sun_df, point_id):
                 isolar = imax_wm2 * np.sin(np.pi * (h - sunrise_hr) / daylen_hr)
             else:
                 isolar = 0.0
-            # diurnal ambient sinusoid: peak 14:00, trough 05:00 local
+            # diurnal ambient sinusoid: trough 05:00 local (well-justified —
+            # pre-dawn minimum). A single sinusoid's peak is then
+            # necessarily 12h later, at 17:00, not 14:00 as an earlier
+            # version of this comment claimed — that combination is
+            # mathematically impossible for one sinusoid (peak-to-trough
+            # must be exactly half the period). 17:00 is itself a
+            # physically defensible afternoon-thermal-lag peak, especially
+            # for valley/mountainous terrain, so the trough anchor (05:00)
+            # was kept and the comment corrected instead of forcing an
+            # unrealistic ~02:00 trough to hit a 14:00 peak.
             tamb = (ta_min + ta_max) / 2 + (ta_max - ta_min) / 2 * np.sin(
                 2 * np.pi * (h - 5) / 24 - np.pi / 2) if (ta_max == ta_max and ta_min == ta_min) else ta_mean
             tc = tamb + COLLECTOR_EFF * isolar / 20.0    # Barqawi2025 Eq. 3 form
@@ -346,10 +360,21 @@ def simulate_pcm_swh_year(Tc, T_mains, hour_of_day, pcm_row, tamb_arr=None, dt=3
         loss_coeff = UA_TANK_W_K * dt / (M_W_KG * C_W_JKGK)   # dimensionless
 
         if phase == 1:
+            # Backward-Euler solve of the coupled tank/PCM-sensible system:
+            #   Tw_new = Tw + dt*[a*(tc-Tw_new) - loss*(Tw_new-tamb) + b*(Tp_new-Tw_new)]
+            #   Tp_new = Tp + dt*c*(Tw_new-Tp_new)  ->  Tp_new = (Tp + dt*c*Tw_new)/(1+dt*c)
+            # Substituting Tp_new into the first equation and solving for
+            # Tw_new gives a numerator term of dt*b*Tp alone (Tp at the OLD
+            # step, since it enters only via the Tp_new substitution above).
+            # An earlier version added a spurious extra dt*b*dt*c*Tw term
+            # here (verified by hand-deriving the 2x2 linear solve and by
+            # direct numerical comparison: for Tw=45, Tp=44, Tc=60, Tamb=20,
+            # 1hr step, the erroneous formula gave Tw_new=91.0C against the
+            # correct 59.3C) — fixed 2026-09.
             c = 1.0 / tau_ps
             denom1 = 1 + dt * a + dt * b + loss_coeff
             Tw_new = ((Tw + dt * a * tc + loss_coeff * tamb) * (1 + dt * c)
-                      + dt * b * (Tp + dt * c * Tw)) / \
+                      + dt * b * Tp) / \
                      (denom1 * (1 + dt * c) - dt * b * dt * c)
             Tp_new = (Tp + dt * c * Tw_new) / (1 + dt * c)
             Tw, Tp = Tw_new, Tp_new
@@ -358,18 +383,39 @@ def simulate_pcm_swh_year(Tc, T_mains, hour_of_day, pcm_row, tamb_arr=None, dt=3
         elif phase == 2:
             denom = 1 + dt * a + dt * b + loss_coeff
             Tw_new = (Tw + dt * a * tc + dt * b * Tm + loss_coeff * tamb) / denom
-            dQ = H_P_WM2K * A_P_M2 * max(0.0, Tw_new - Tm) * dt
+            # Signed exchange with the melting-plateau reservoir: Tw>Tm
+            # melts more PCM (Qp rises), Tw<Tm (e.g. overnight) refreezes
+            # already-melted PCM and releases stored latent heat back into
+            # the tank (Qp falls). An earlier version clamped this to
+            # max(0, ...), so Qp only ever rose — the tank could draw heat
+            # from the PCM node every night without the tracked stored
+            # energy ever depleting, and there was no way back to phase 1
+            # for a PCM that started melting but never fully melted in a
+            # day. Fixed 2026-09.
+            dQ = H_P_WM2K * A_P_M2 * (Tw_new - Tm) * dt
             Qp += dQ
             Tw = Tw_new
             if Qp >= Qp_max:
                 phase = 3
                 Tp = Tm + max(0.0, Qp - Qp_max) / (Mp * Cp_l + 1e-9)
                 was_liquid_this_day = True
+            elif Qp <= 0.0:
+                # Gave back all stored latent heat without ever finishing
+                # melting — PCM has fully refrozen; hand off to phase 1's
+                # sensible-solid model, carrying over any "excess" cooling
+                # below Tm the same way phase 2->3 carries over excess
+                # heating above Tm.
+                phase = 1
+                Tp = Tm - max(0.0, -Qp) / (Mp * Cp_s + 1e-9)
+                Qp = 0.0
         else:  # phase 3
+            # Same backward-Euler system as phase 1, with tau_pl (liquid)
+            # instead of tau_ps (solid) — see phase 1's comment for the
+            # numerator fix (dt*b*Tp alone, not dt*b*(Tp + dt*c*Tw)).
             c = 1.0 / tau_pl
             denom1 = 1 + dt * a + dt * b + loss_coeff
             Tw_new = ((Tw + dt * a * tc + loss_coeff * tamb) * (1 + dt * c)
-                      + dt * b * (Tp + dt * c * Tw)) / \
+                      + dt * b * Tp) / \
                      (denom1 * (1 + dt * c) - dt * b * dt * c)
             Tp_new = (Tp + dt * c * Tw_new) / (1 + dt * c)
             Tw, Tp = Tw_new, Tp_new

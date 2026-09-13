@@ -83,11 +83,22 @@ def main():
               "05_cluster_uttarakhand.py's population-weighted profile step.")
         return
 
-    poor_day_kt = (profiles["kt_mean"] - POOR_DAY_Z * profiles["kt_std"]).clip(lower=0.05)
-    reliability_ratio = (poor_day_kt / profiles["kt_mean"]).clip(0, 1)
+    # poor_day_kt is itself already a clearness index in [0,1] (kt_mean minus
+    # a ~5th-percentile day-to-day drop) — scale achievable_temp from THIS
+    # absolute value directly. The earlier version divided poor_day_kt by
+    # kt_mean first, which collapses to ~1 - Z*(kt_std/kt_mean): a
+    # coefficient-of-variation measure that depends only on each cluster's
+    # RELATIVE day-to-day scatter, not its absolute clearness — kt_mean's
+    # absolute level canceled out of the ratio almost entirely, so every
+    # cluster landed within ~1C of the same achievable_temp regardless of
+    # how sunny or cloudy it actually was (verified: this is exactly why
+    # the cap never bound for any cluster). Using poor_day_kt directly
+    # restores the intended physical meaning: cloudier clusters (lower
+    # kt_mean) get a lower achievable collector temperature.
+    poor_day_kt = (profiles["kt_mean"] - POOR_DAY_Z * profiles["kt_std"]).clip(0.0, 1.0)
 
     achievable_temp = (MIN_ACHIEVABLE_TEMP_C +
-                        reliability_ratio * (REFERENCE_GOOD_DAY_TEMP_C - MIN_ACHIEVABLE_TEMP_C))
+                        poor_day_kt * (REFERENCE_GOOD_DAY_TEMP_C - MIN_ACHIEVABLE_TEMP_C))
 
     profiles["poor_day_kt_estimate"] = poor_day_kt
     profiles["Tm_target_C_regime_capped"] = np.minimum(profiles["Tm_target_C"], achievable_temp)

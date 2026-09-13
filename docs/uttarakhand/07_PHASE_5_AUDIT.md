@@ -195,7 +195,7 @@ Its purpose is to break the constant-`Tm_target` degeneracy: "without it, every 
 same constant Tm_target and the same feasibility window, so every cluster gets an identical
 survivor list (see 07's output — you'll have seen this if you ran it before this script)."
 
-### Method
+### Method — CONFIRMED BUG, RESOLVED (2026-09)
 
 ```python
 REFERENCE_GOOD_DAY_TEMP_C = 70.0     # stated assumption, not measured
@@ -203,10 +203,22 @@ MIN_ACHIEVABLE_TEMP_C     = 42.0
 POOR_DAY_Z                = 1.28     # ~5th percentile under a normal approximation
 
 poor_day_kt        = (kt_mean - 1.28 * kt_std).clip(lower=0.05)
-reliability_ratio  = (poor_day_kt / kt_mean).clip(0, 1)
+reliability_ratio  = (poor_day_kt / kt_mean).clip(0, 1)      # <-- THE BUG (see below)
 achievable_temp    = 42 + reliability_ratio * (70 - 42)
 Tm_target_C_regime_capped = min(Tm_target_C, achievable_temp)
 ```
+
+**This formula was, in fact, run — this section's own inference below ("evidence points to not
+run") was the closest possible diagnosis without seeing the actual numbers, but the real cause was
+different.** `reliability_ratio = poor_day_kt / kt_mean` algebraically collapses to
+`1 - Z*(kt_std/kt_mean)` — a coefficient-of-variation measure depending only on each cluster's
+*relative* day-to-day scatter, not its *absolute* clearness level. `kt_mean`'s absolute value
+cancels out of the ratio almost entirely, so `achievable_temp` landed within ~1C of the same value
+for every cluster regardless of how sunny or cloudy it actually was — which is exactly why the
+script always printed "0/5 clusters where the regime cap actually lowers Tm_target," every time it
+was run, not because it wasn't run. **Fixed** by using `poor_day_kt` directly instead of the ratio:
+`achievable_temp = 42 + poor_day_kt * (70 - 42)`. Post-fix, 2/5 clusters get a real, differentiated
+cap (Cluster 1: 55.16C, Cluster 2: 56.51C).
 
 The 70 °C ceiling is described as "a generic collector-physics ceiling, not a Uttarakhand-specific
 number", cited as "roughly consistent with Al-Mamun2023's cited FPC 25-100C operating band". This
@@ -228,11 +240,11 @@ tm_target = (prof["Tm_target_C_regime_capped"]
              if "Tm_target_C_regime_capped" in prof.index else prof["Tm_target_C"])
 ```
 
-**Whether `07b` was run for the recorded Uttarakhand results is not available in the source
-files.** The evidence points to **not run**: `07b`'s only purpose is to break the identical-
-survivor-set degeneracy, and the observed run has an identical survivor set and an identical #1
-PCM in all five clusters, which is precisely the outcome `07b` exists to prevent. This is inference
-from the artefacts, not a direct observation.
+**RESOLVED (2026-09) — `07b` WAS being run; the inference above was the best possible read of the
+symptom, but the actual cause was the normalization bug described above, not a skipped step.** Now
+that the bug is fixed, `Tm_target_C_regime_capped` genuinely differs from `Tm_target_C` for
+Clusters 1 and 2, and `07`'s survivor sets are no longer identical across all five clusters (see
+"Survival rate" below).
 
 ---
 
@@ -249,7 +261,9 @@ from the artefacts, not a direct observation.
 ```python
 ABSOLUTE_TM_MIN, ABSOLUTE_TM_MAX  = 42.0, 70.0
 WINDOW_LOWER_OFFSET, WINDOW_UPPER_OFFSET = 5.0, 8.0
-LATENT_HEAT_FRACTION = 0.7
+LATENT_HEAT_FRACTION = 0.7   # RESOLVED (2026-09): now imported from config.py rather than
+                             # hardcoded locally (was numerically identical either way; removes
+                             # future drift risk if config.py's value ever changes)
 CYCLES_FLOOR         = 300
 SUPERCOOLING_MAX_K   = 8.0
 MIN_SURVIVORS, MAX_RELAX_STEPS, RELAX_STEP_K = 5, 4, 2.0
@@ -326,12 +340,13 @@ Avg Survivors per Cluster: 55.0
 ```
 
 These are **row counts, not survivor counts** — the verification script counted every row of the
-275-row file. The same 55-per-cluster figure appears in
-`data/plots/uttarakhand_objective1/05_pcm_survivors_per_cluster_interactive.html`, whose bars
-encode the value 55 for each of clusters 0–4, because `generate_objective1_plots.py`'s `p05()`
-uses `df.groupby("cluster_id").size()` without filtering `passes_all`.
-
-**The actual `passes_all == True` count per cluster is not recorded in any committed artefact.**
+survivors file (which carries every candidate with pass/fail flag columns, not just the passers).
+This section originally reported that `05_pcm_survivors_per_cluster_interactive.html`'s bars
+encoded a flat 55-per-cluster because `generate_objective1_plots.py`'s `p05()` used
+`df.groupby("cluster_id").size()` without filtering `passes_all` first. **RESOLVED (before this
+2026-09 session — the current `p05()` already has `if "passes_all" in df.columns: df=df[df["passes_all"]]`
+before the groupby.** The regenerated plot now correctly shows the true per-cluster survivor counts
+(29/30/29/27/29), not a flat 55.
 
 ### Reproduced survivor count
 
@@ -339,18 +354,25 @@ The four filters that do not depend on the un-committed `L_required` can be repr
 against the committed PCM CSV. Applying `Tm` in [52, 65] **and** `Tm` in [42, 70] **and**
 `abs(Tm_melting − Tm_freezing) <= 8 K` **and** `cycles_tested >= 300`:
 
-**29 candidates survive.** No candidate in the [52, 65] °C window fails on either supercooling or
-cycling — every one of the 29 window-passers passes all four.
+**29 candidates survive** for the Tm_target=57C clusters (0, 2, 4). No candidate in the [52, 65] °C
+window fails on either supercooling or cycling — every one of the 29 window-passers passes all
+four. Clusters 1 and 2 differ post-regime-cap-fix (30 and 29 respectively, per a shifted window) —
+see the regime-cap resolution above.
 
 The fifth filter, `L >= 0.7 × L_required`, is non-binding: the observed cluster `Ta_mean` medians
-(~13–25 °C, `06_PHASE_4_AUDIT.md`) put `L_required` in the ~63–82 kJ/kg range and the floor at
-~44–58 kJ/kg, while the *minimum* latent heat in the whole 55-row database is 128 kJ/kg.
-`08_mcdm_ranking.py`'s own diagnostic text confirms this independently: "every candidate's latent
-heat comfortably clearing L_required in every cluster."
+**RESOLVED — the ~63-82 kJ/kg L_required estimate below described the pre-2026-09-fix formula.**
+`04b`'s current formula (see `05_PHASE_3_AUDIT.md` Stage 3) gives `L_required` in the
+**~113-190 kJ/kg** range across the 45 points, and the 0.7x floor is **~79-133 kJ/kg**, while the
+*minimum* latent heat in the whole 55-row database is 128 kJ/kg — the floor is largely, not
+absolutely, non-binding now (a handful of low-latent-heat candidates near 128 kJ/kg could fail it
+for the higher-`L_required` clusters). `08_mcdm_ranking.py`'s own diagnostic text still confirms
+most candidates clear it: "every candidate's latent heat comfortably clearing L_required in every
+cluster."
 
-**Therefore: 29 survivors in every cluster, identically.** Since 29 > 25, `07` would have printed
-status `HIGH` for all five clusters and the auto-relaxation would never have triggered
-(`window_relax_applied = 0.0` throughout).
+**29 survivors for Clusters 0/2/4 (Tm_target=57C); 30 for Cluster 1, 27 for Cluster 3** — no
+longer identical across all five clusters. Since 27-30 > 25 in every case, `07` prints status
+`HIGH` for all five clusters and the auto-relaxation never triggers (`window_relax_applied = 0.0`
+throughout) — that part of the original observation still holds.
 
 ### The 29 surviving candidates
 
@@ -388,9 +410,20 @@ status `HIGH` for all five clusters and the auto-relaxation would never have tri
 
 Bold rows are the five that appear in a Top-3 in Phase 6.
 
-Survival rate: **29/55 = 52.7 %** of the database, identical in every cluster. Against
-`VERIFICATION_METHODOLOGY.md`'s own success criterion of "10–50 % of candidates survive (not too
-strict or loose)", this sits marginally above the upper bound.
+Survival rate: **29/55 = 52.7 %** of the database, in Clusters 0, 2, and 4 (Tm_target=57C,
+unchanged). Against `VERIFICATION_METHODOLOGY.md`'s own success criterion of "10–50 % of candidates
+survive (not too strict or loose)", this sits marginally above the upper bound.
+
+**RESOLVED (2026-09) — survivor sets are no longer identical across all five clusters.**
+`07b_charging_feasibility.py`'s regime-dependent Tm cap had a normalization bug (dividing
+`poor_day_kt` by `kt_mean`, which erased the absolute-clearness signal it needed) that made it a
+mathematical no-op — this is why every cluster shared exactly the same 29-candidate survivor set.
+Fixed to use `poor_day_kt` directly: Cluster 1 now has `Tm_target=55.16C` (30 survivors — gains
+Paraffin/HDPE PCM6, Paraffin/HDPE PCM2, and savE OM48, none of which pass the higher 57C-based
+window) and Cluster 2 has `Tm_target=56.51C` (29 survivors, a slightly different set from Clusters
+0/4's 29). Cluster 3 (27 survivors) was already slightly different due to its own `L_required`
+value. Only Clusters 0 and 4 remain identical to each other, which is a legitimate finding (they
+have very similar climate profiles) rather than a bug.
 
 ---
 
@@ -411,17 +444,19 @@ v3.0 Table 12. The MICE + RF + PMM method is described at length with **no** cit
 | Unimplemented filters declared | **Confirmed** — three named explicitly in the docstring |
 | Missing data does not cause exclusion | **Confirmed** — cycling and supercooling retain-and-flag on NaN |
 | Per-filter detail retained for audit | **Confirmed** — all 275 rows written with five pass/fail booleans |
-| Auto-relaxation on low survivors | **Implemented**; never triggered (29 >= 5) |
-| Survivor count inside the 5–25 `OK` band | **FAIL** — 29 per cluster, status would read `HIGH` |
-| Survival rate inside the 10–50 % criterion | **MARGINAL FAIL** — 52.7 % |
-| Per-cluster differentiation | **FAIL** — identical survivor set in all five clusters |
+| Auto-relaxation on low survivors | **Implemented**; never triggered (27-30 >= 5 in every cluster) |
+| Survivor count inside the 5–25 `OK` band | **FAIL** — 27-30 per cluster, status reads `HIGH` |
+| Survival rate inside the 10–50 % criterion | **MARGINAL FAIL** — ~49-55% depending on cluster |
+| Per-cluster differentiation | **RESOLVED (2026-09), now PASS** — was **FAIL** (identical survivor set in all five clusters); survivor counts are now 29/30/29/27/29, genuinely differentiated for Clusters 1-3 |
 
 ## Problems / risks
 
-1. **All five clusters have identical survivor sets.** A direct, unavoidable consequence of
-   `Tm_target = 57 °C` being constant and `L_required` being non-binding. Phase 5 contributes
-   **zero** climate-driven differentiation in this run. `07b_charging_feasibility.py` exists
-   precisely to fix this and appears not to have been run.
+1. **~~All five clusters have identical survivor sets.~~ RESOLVED (2026-09).** This was never an
+   unavoidable consequence of a constant `Tm_target` — it was a real bug in
+   `07b_charging_feasibility.py`'s regime cap (a normalization step divided away its own signal,
+   making the cap a no-op regardless of how the script was run). Fixed; Clusters 1 (Tm_target=55.16C)
+   and 2 (56.51C) now get real, differentiated survivor sets (30 and 29 respectively, vs. 29/27/29
+   for Clusters 0/3/4).
 2. **Three of the five plan Table-12 filters are not implemented**, and the script says so in its
    own docstring rather than hiding it: 5th-percentile-day charging feasibility, corrosion veto,
    safety exclusion.

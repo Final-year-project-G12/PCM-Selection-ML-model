@@ -99,12 +99,17 @@ Both versions are kept side by side "purely so you can report 'proxy vs. true ag
 methodology," and **both are excluded from the clustering matrix** so only the canonical version
 clusters.
 
-**Five signature columns have no Tier-2 counterpart** and remain sun-event/ERA5-derived:
-`RH_mean`, `HSI`, `wind_mean`, `monsoon_index`, `elev_proxy` — plus `GHI_mean` (mean noon
-`era5_GHI`), which carries no `_proxy` suffix at all and therefore enters the clustering matrix
-directly. Note that `02b` *does* compute `RH_mean_true` and `wind_mean_true`, but they have no
-`CANON_MAP` entry and are dropped by the `_true` suffix rule — so two already-available Tier-2
-values go unused. See `04_PHASE_2_AUDIT.md` Part A.8.
+**Three signature columns have no Tier-2 counterpart** and remain sun-event/ERA5-derived: `HSI`,
+`monsoon_index`, `elevation_m` (real per-point elevation, static per point — see the elevation note
+below) — plus `GHI_mean` (mean noon `era5_GHI`), which carries no `_proxy` suffix at all and
+therefore enters the clustering matrix directly. **RESOLVED (2026-09):** this used to also list
+`RH_mean`/`wind_mean` here, on the claim that `02b`'s `RH_mean_true`/`wind_mean_true` had no
+`CANON_MAP` entry. That was inaccurate — `CANON_MAP` already had both entries; the actual bug was
+that the Tier-1 fallback columns were named `RH_mean`/`wind_mean` instead of the `_proxy`-suffixed
+names the fallback logic expected, so the Tier-2 override silently resolved to NaN instead of the
+Tier-1 value whenever Tier-2 coverage was missing. Fixed by renaming the Tier-1 columns. Currently
+latent (100% Tier-2 coverage in this dataset) but fixed for robustness. See `04_PHASE_2_AUDIT.md`
+Part A.8.
 
 The script prints `Points with Tier-2 coverage: n/45` and warns for any point that fell back to a
 proxy. **The actual coverage number is not available in the source files**, but `02b`'s confirmed
@@ -112,18 +117,28 @@ proxy. **The actual coverage number is not available in the source files**, but 
 
 ### Stage 3 — derived PCM targets
 
+**RESOLVED — this block described a formula version predating the 2026-09 fixes** (the code's own
+comments record: "Previous code: DRAW_RATE_KG_PER_S = 60.0/1000/60 -> 0.001 kg/s (WRONG)" — that
+rate/volume formula was missing water's density factor, making `L_required` ~1000x too small). The
+CURRENT formula, verified against `04b_climate_signature.py` lines 63-93 and 262-276:
+
 ```python
 T_DELIVERY_C  = 50.0
 DT_APPROACH_C =  7.0
-TM_TARGET_C   = 57.0                                  # constant for every point, by design
+TM_TARGET_C   = 57.0                                  # constant baseline for every point, by design
+                                                       # (regime-capped for some clusters by
+                                                       # 07b_charging_feasibility.py — see
+                                                       # 07_PHASE_5_AUDIT.md)
 
-DRAW_RATE_KG_PER_S  = 60.0 / 1000 / 60                # = 0.001 kg/s
-CP_WATER            = 4.186                           # kJ/kg·K
-ASSUMED_PCM_MASS_KG = 50.0
+DRAW_VOLUME_L       = 300.0                           # litres/day (domestic household)
+DRAW_MASS_KG        = DRAW_VOLUME_L * 1.0             # kg (water density ~1 kg/L)
+CP_WATER            = 4.186                           # kJ/(kg*K)
+ASSUMED_PCM_MASS_KG = 150.0                           # raised from 50kg after the draw-sizing fix;
+                                                       # SHARE_PCM=0.5 imported from config.py
 
 sig["T_mains_est_C"]        = sig["Ta_mean"] - 2.0
-q_night_kw                  = 0.001 × 4.186 × (50 − T_mains_est_C)
-sig["L_required_kJ_per_kg"] = (q_night_kw × 3600 × 7) / 50
+q_total_kJ                  = DRAW_MASS_KG * CP_WATER * (T_DELIVERY_C - sig["T_mains_est_C"])
+sig["L_required_kJ_per_kg"] = (q_total_kJ * SHARE_PCM) / ASSUMED_PCM_MASS_KG
 ```
 
 `PREPROCESSING_STEPS.md` explains the sign convention:
@@ -131,50 +146,52 @@ sig["L_required_kJ_per_kg"] = (q_night_kw × 3600 × 7) / 50
 > the corrected v2.0 rule: `Tm_target = T_delivery + delta_T_approach` (PCM sits *above* delivery
 > temperature so heat flows PCM→water during discharge; the earlier subtract-based rule had the
 > sign backwards). Comes out to a constant 57 C here (50 + 7, indirect-system assumption) — held
-> constant across all points **by design, not tuned per cluster**.
+> constant across all points **by design, not tuned per cluster** (though regime-capped downward
+> for Clusters 1/2 — see `07_PHASE_5_AUDIT.md`).
 
-`04b` prints the resulting `L_required` range, but the values are **not available in the source
-files**. They can be bounded from the observed cluster `Ta_mean` medians (≈ 13–25 °C, see
-`06_PHASE_4_AUDIT.md`): **`L_required` ≈ 63–82 kJ/kg**, and the Phase 5 floor at 0.7× is
-**≈ 44–58 kJ/kg**. The minimum latent heat in the whole 55-row PCM database is 128 kJ/kg, so the
-floor is non-binding — which `08_mcdm_ranking.py`'s own diagnostic text confirms independently:
-"every candidate's latent heat comfortably clearing L_required in every cluster."
+`04b`'s current run prints an `L_required` range of **approximately 113-190 kJ/kg** across the 45
+points. The minimum latent heat in the whole 55-row PCM database is 128 kJ/kg, so the 0.7x floor
+(~79-133 kJ/kg) is largely non-binding — which `08_mcdm_ranking.py`'s own diagnostic text confirms
+independently: "every candidate's latent heat comfortably clearing L_required in every cluster."
 
-Two things to note about this formula, both material for a write-up:
+One thing still worth noting for a write-up:
 
-- **The `− 2.0` K mains-temperature offset is unsourced in-code.** No citation appears anywhere in
-  `era5-uttarakhand/`, and it drives `L_required` directly.
-- **There is no `SHARE_PCM` fractional-contribution factor.** This `04b` sizes `L_required` from a
-  7-hour draw at 0.001 kg/s against the full 50 kg PCM mass — i.e. the PCM alone is assumed to
-  supply the whole night load. The resulting values happen to be small enough that the filter never
-  binds, so the assumption does not affect this run's outcome, but it should be stated rather than
-  left implicit.
+- **The `− 2.0` K mains-temperature offset is still unsourced in-code.** No citation appears
+  anywhere in `era5-uttarakhand/`, and it drives `L_required` directly — a stated assumption, not a
+  bug.
+- **There IS now a `SHARE_PCM` fractional-contribution factor (0.5, from `config.py`)** — the
+  earlier claim that no such factor existed described the pre-fix formula. The PCM now supplies
+  ~50% of overnight delivery, with tank sensible heat covering the rest.
 
-### Stage 4 — 5 interaction terms
+### Stage 4 — 4 interaction terms (RESOLVED — a 5th was removed for exactly the reason described below)
 
 | Term | Definition |
 |---|---|
 | `int_GHI_x_ktstd` | `GHI_daily_kWh × kt_std` |
 | `int_DTR_x_cloudyfrac` | `DTR × cloudy_frac` |
 | `int_RH_x_TaMinusTm` | `RH_mean × (Ta_mean − Tm_target_C)` |
-| `int_wind_x_TaMinusTsoil` | `wind_mean × (Ta_mean − Tsoil_proxy_C)`, where `Tsoil_proxy_C = Ta_mean − 3.0` |
 | `int_CCI_x_1minusSAI` | `CCI × (1 − SAI)` |
 
-`Tsoil_proxy_C` exists **only** to feed the fourth term and is dropped from the clustering matrix.
-Note that `int_wind_x_TaMinusTsoil` therefore reduces algebraically to `3.0 × wind_mean` — it is a
-rescaled copy of `wind_mean`, not an independent interaction. Since `wind_mean` is also in the
-matrix, this effectively double-weights wind.
+A fifth term, `int_wind_x_TaMinusTsoil = wind_mean × (Ta_mean − Tsoil_proxy_C)` with
+`Tsoil_proxy_C = Ta_mean − 3.0`, used to exist here — this section originally flagged that it
+reduces algebraically to `3.0 × wind_mean` (a rescaled copy of `wind_mean`, not an independent
+interaction) and, since `wind_mean` is also in the matrix, effectively double-weighted wind. **This
+has since been fixed** (the code's own comment confirms: "REMOVED: int_wind_x_TaMinusTsoil" — only
+`Tsoil_proxy_C` itself was dropped from the clustering matrix before, not this whole term). The
+script now prints "Added 4 interaction terms (int_wind_x_TaMinusTsoil removed — see comment)."
 
 ### Stage 5 — PCA and clustering-matrix construction
 
 ```python
-PCA_BLOCK = ["Ta_mean", "Ta_p95", "Ta_p05", "HDD18", "CDD24", "RH_mean", "elev_proxy"]
+PCA_BLOCK = ["Ta_mean", "Ta_p95", "Ta_p05", "HDD18", "CDD24", "RH_mean", "elevation_m"]  # was elev_proxy
 StandardScaler → PCA(n_components=0.95, random_state=42)      # retain 95% variance
 loadings → pca_loadings.csv
 ```
 
-**The number of retained components for this run is not available in the source files** —
-`pca_loadings.csv` is git-ignored.
+The current run retains **2 components** (PC1 explains 90.7% of variance, PC2 6.8%). Loadings on
+PC1: `Ta_mean`(-0.394), `Ta_p95`(-0.395), `Ta_p05`(-0.385), `HDD18`(0.360), `CDD24`(-0.358),
+`RH_mean`(0.378), `elevation_m`(0.373) — a balanced contribution, not the outsized -0.33/0.59 the
+old `elev_proxy` carried.
 
 Columns removed from the clustering matrix (`DROP_FROM_CLUSTERING`):
 
@@ -207,7 +224,7 @@ constraining a PCM property. The Uttarakhand implementation's mapping:
 | `HSI` | `RH_mean × fraction(T_amb − T_dew < 3 K)` — combined humidity + near-saturation signal | Intended as the corrosion-veto trigger. **In this run it triggers nothing** — `07`'s corrosion veto is not implemented, and all 55 database candidates are organic. |
 | `wind_mean` | Mean wind speed → convective loss from collector and tank | Tank/collector loss coefficient; indirectly the required storage margin |
 | `monsoon_index` | JJAS share of annual precipitation → seasonal charging gap | Storage sizing for the monsoon under-charging window (descriptive, not a ranking criterion) |
-| `elev_proxy` | `mean(P_atm)/1013.25` → atmospheric column mass | Air mass into the Ineichen clear-sky model; PCA thermodynamic block |
+| `elevation_m` | Real per-point elevation (ERA5 geopotential, 196-2510m) — **was** `mean(P_atm)/1013.25`, a pressure-ratio proxy, fixed 2026-09 | Air mass into the Ineichen clear-sky model (via `02`'s per-point altitude, also fixed); PCA thermodynamic block |
 
 ### Tier 2 — true daily-integral indices
 
@@ -251,7 +268,7 @@ Neither tier alone is sufficient, and the Uttarakhand run demonstrates exactly w
 
 ### PCA scope — and why the solar block is kept out
 
-PCA is applied to `Ta_mean, Ta_p95, Ta_p05, HDD18, CDD24, RH_mean, elev_proxy` only — the mutually
+PCA is applied to `Ta_mean, Ta_p95, Ta_p05, HDD18, CDD24, RH_mean, elevation_m` (was `elev_proxy`) only — the mutually
 correlated thermodynamic block. The solar and variability indices (`GHI_daily_kWh`, `kt_mean`,
 `kt_std`, `SAI`, `CCI`, `cloudy_frac`, `DTR`, `seasonality`, `monsoon_index`, `HSI`, `wind_mean`)
 are deliberately **kept out**, because they carry the discriminating signal for regime separation
@@ -262,9 +279,9 @@ recommendation depends on.
 
 | Index | Problem | Severity |
 |---|---|---|
-| `GHI_mean` | ERA5 noon GHI, no Tier-2 override — carries the −211 W/m² anomaly | High |
-| `elev_proxy` | Built from `era5_P_atm`, 37.1 % of which was NaN'd one-sidedly by the 850 hPa bound and imputed | High for a montane state |
-| `RH_mean` | ERA5-side, +11.4 % MBE vs POWER, unused `RH_mean_true` available | Moderate |
+| `GHI_mean` | ERA5 noon GHI, no Tier-2 override — **RESOLVED (2026-09)**, the deaccumulation bug that deflated it ~10x is fixed | Was High, now resolved |
+| `elevation_m` | **RESOLVED (2026-09)** — no longer built from `era5_P_atm`; now real elevation from ERA5 geopotential, unaffected by the 850 hPa bound issue | Was High for a montane state, now resolved |
+| `RH_mean` | ERA5-side proxy fallback, used only when Tier-2 (`RH_mean_true`) is missing — **RESOLVED (2026-09)**, the fallback naming bug that could silently null this is fixed; currently 100% Tier-2 coverage so this row is canonical NASA POWER data, not ERA5, for every point in this run | Was Moderate, now resolved |
 | `wind_mean` | ERA5-side, −1.14 m/s MBE vs POWER, unused `wind_mean_true` available | Moderate |
 | `HSI` | Built on `RH_mean`, so inherits its offset | Moderate |
 | `monsoon_index` | Permanently a 3×/day ERA5 precipitation *fraction*; JJAS here vs JJA in `SEASON_MAP` | Low (a ratio; descriptive only) |
@@ -315,34 +332,44 @@ None of Phase 3's own outputs are committed. The only surviving evidence of the 
 
 ## Problems / risks
 
-1. **`Tm_target` is constant at 57 °C for every point.** A stated design decision, and the direct
-   cause of the identical survivor sets and identical #1 PCM in Phases 5 and 6. It means Phase 3
-   contributes no climate-driven differentiation to the PCM target itself — all differentiation
-   would have to come from `L_required`, which is non-binding.
-2. **`T_mains_est_C = Ta_mean − 2.0` is unsourced in-code** and drives `L_required` directly.
-3. **`L_required` has no `SHARE_PCM` fractional-contribution factor** — the PCM alone is implicitly
-   assumed to supply the whole night load. Non-binding in this run, but it should be stated.
-4. **`GHI_mean` enters the clustering matrix carrying the ERA5 GHI anomaly** — the one solar column
-   the Tier-2 repair does not cover.
-5. **`RH_mean` and `wind_mean` are taken from the ERA5 side despite Tier-2 equivalents existing**
-   (`RH_mean_true`, `wind_mean_true` are computed by `02b` and discarded). A two-entry `CANON_MAP`
-   addition would fix it.
-6. **`int_wind_x_TaMinusTsoil` is a rescaled duplicate of `wind_mean`** (`= 3.0 × wind_mean`), so
-   wind is effectively double-weighted in the clustering matrix.
+1. **`Tm_target` is constant at 57 °C for every point at the Phase-3 (`04b`) signature stage** — a
+   stated design decision. This section used to say this was "the direct cause of the identical
+   survivor sets and identical #1 PCM in Phases 5 and 6" — **RESOLVED (2026-09): that was actually a
+   downstream bug**, not an inevitable consequence of a constant Phase-3 `Tm_target`.
+   `07b_charging_feasibility.py`'s regime-dependent Tm cap (applied per-cluster, after clustering)
+   was supposed to differentiate `Tm_target` per cluster but had a normalization bug that made it a
+   no-op; fixed, and Clusters 1/2 now get a genuinely lower `Tm_target` (55.16C/56.51C). See
+   `07_PHASE_5_AUDIT.md`.
+2. **`T_mains_est_C = Ta_mean − 2.0` is unsourced in-code** and drives `L_required` directly. Still
+   an open, stated-but-uncited assumption, not a bug.
+3. **~~`L_required` has no `SHARE_PCM` fractional-contribution factor~~ RESOLVED** — this described
+   the pre-fix formula. The current formula imports `SHARE_PCM=0.5` from `config.py`; the PCM now
+   supplies ~50% of overnight delivery, tank sensible heat the rest. See Stage 3 above.
+4. **~~`GHI_mean` enters the clustering matrix carrying the ERA5 GHI anomaly~~ RESOLVED** — the
+   deaccumulation bug that caused the anomaly is fixed (see `04_PHASE_2_AUDIT.md` Part A.3).
+5. **~~`RH_mean` and `wind_mean` are taken from the ERA5 side despite Tier-2 equivalents existing~~
+   RESOLVED, but not by adding `CANON_MAP` entries (they already existed)** — the real bug was a
+   `_proxy`-suffix naming mismatch in the Tier-1 fallback columns, now fixed. Both are canonical
+   NASA POWER Tier-2 values for every point in this run (100% Tier-2 coverage).
+6. **~~`int_wind_x_TaMinusTsoil` is a rescaled duplicate of `wind_mean`~~ RESOLVED** — this term has
+   been removed entirely; only 4 interaction terms remain (see Stage 4 above).
 7. **`monsoon_index` uses JJAS while `SEASON_MAP` uses JJA** — unreconciled, and `monsoon_index` is
    in the clustering matrix.
 8. **`Tm_target_C` is a zero-variance column in the clustering matrix.** Harmless but untidy.
-9. **`elev_proxy` is built from the column most damaged by Phase 2's physical bounds** (37.1 % of
-   `era5_P_atm` NaN'd one-sidedly and imputed) — see `04_PHASE_2_AUDIT.md` Part B.8. For a state
-   whose central methodological weakness is elevation, this is the most consequential inherited
-   defect in the signature.
-10. **No Phase 3 output is committed**, so `pca_loadings.csv` — which `NEXT_STEPS.md` specifically
-    asks the student to inspect ("check how much weight `elev_proxy` carries") — cannot be examined
-    from this repository.
+9. **~~`elev_proxy` is built from the column most damaged by Phase 2's physical bounds~~ RESOLVED
+   (2026-09).** `elevation_m` (real, from ERA5 geopotential) has replaced `elev_proxy`
+   (pressure-derived) entirely — this signature index is no longer built from `era5_P_atm` at all,
+   so the 850 hPa bound issue documented in `04_PHASE_2_AUDIT.md` Part B.8 (still open for the raw
+   `era5_P_atm` column itself) no longer contaminates it.
+10. **No Phase 3 output is committed**, so `pca_loadings.csv` cannot be examined from this
+    repository. `NEXT_STEPS.md` used to ask the reader to "check how much weight `elev_proxy`
+    carries" — that check has since been done and the result recorded (a balanced ~0.37 PC1 loading,
+    not an outsized one) in this file and in `NEXT_STEPS.md` itself.
 
 ## Status
 
 **COMPLETE.** The two-tier merge works as designed and demonstrably protected the clustering matrix
-from the pipeline's largest data defect. The open items are the constant `Tm_target` (a design
-choice with large downstream consequences), the unsourced mains-temperature offset, and the four
-ERA5-side columns that could have used already-computed Tier-2 values.
+from the pipeline's largest data defect (the ERA5 GHI deaccumulation bug, since fixed). The
+remaining open item from this phase is the unsourced `T_mains_est_C` mains-temperature offset — the
+constant-`Tm_target`-causes-identical-results concern and the four "ERA5-side instead of Tier-2"
+columns are both resolved (2026-09), per the numbered list above.

@@ -99,11 +99,26 @@ def load_power_hourly(point_id):
 def daily_from_hourly(hourly):
     hourly = hourly.copy()
     hourly["date"] = hourly.index.date
-    counts = hourly.groupby("date").size()
     g = hourly.groupby("date")
 
-    out = pd.DataFrame(index=counts.index)
-    out["n_hours"] = counts
+    # Gate on genuine per-variable data validity, not timestamp presence.
+    # NASA POWER's hourly endpoint returns a fixed 24-timestamp grid per
+    # day even when a reading is missing (using -999, already replaced
+    # with NaN by load_power_hourly) — counting timestamps via
+    # groupby(...).size() would show 24 regardless of how many values are
+    # actually valid, making the >=20-hour coverage gate below a near
+    # no-op. Gate on the minimum count of non-NaN values across the
+    # variables this function actually aggregates instead (currently a
+    # non-issue for this cache — verified zero -999 values across all 450
+    # point-year files on disk — but a real latent risk for any future
+    # re-download or new state with genuine gaps).
+    value_cols = [c for c in ("ALLSKY_SFC_SW_DWN", "CLRSKY_SFC_SW_DWN",
+                               "T2M", "RH2M", "WS10M") if c in hourly.columns]
+    valid_hours = g[value_cols].apply(lambda d: d.notna().sum().min()) if value_cols \
+        else g.size()
+
+    out = pd.DataFrame(index=valid_hours.index)
+    out["n_hours"] = valid_hours
 
     if "ALLSKY_SFC_SW_DWN" in hourly.columns:
         out["GHI_daily_kWh"] = g["ALLSKY_SFC_SW_DWN"].sum() / 1000.0   # W/m^2 * 1h -> Wh -> kWh
@@ -142,9 +157,24 @@ def build_tier2_row(point_id, daily_df):
 
     is_cloudy = daily_df["kt_daily"] < KT_CLOUDY_THRESHOLD
     row["cloudy_frac_true"] = is_cloudy.mean()
-    run_id = (is_cloudy != is_cloudy.shift()).cumsum()
-    run_lengths = is_cloudy.astype(int).groupby(run_id).transform("sum")
-    row["CCI_true"] = int((run_lengths * is_cloudy.astype(int)).max()) if len(run_lengths) else 0
+
+    # Reindex onto a contiguous calendar-day range before run-length
+    # detection — daily_df already has non-qualifying/missing days dropped
+    # (the coverage gate above, or a whole missing year), so a naive
+    # positional shift().cumsum() over daily_df's existing rows would
+    # bridge two real cloudy runs across a gap into one inflated run.
+    # Mirrors the same safeguard 04b_climate_signature.py's Tier-1
+    # cloudy_frac_proxy/CCI_proxy already applies (see its reindex to
+    # pd.date_range there) — gap days become NaN here too, which compares
+    # False against KT_CLOUDY_THRESHOLD (i.e. gap days count as
+    # "not cloudy," a conservative undercount bias, not a fabricated
+    # streak — same documented tradeoff as the Tier-1 proxy).
+    date_idx = pd.to_datetime(daily_df["date"])
+    is_cloudy_full = is_cloudy.set_axis(date_idx).reindex(
+        pd.date_range(date_idx.min(), date_idx.max(), freq="D")).fillna(False).astype(bool)
+    run_id = (is_cloudy_full != is_cloudy_full.shift()).cumsum()
+    run_lengths = is_cloudy_full.astype(int).groupby(run_id).transform("sum")
+    row["CCI_true"] = int((run_lengths * is_cloudy_full.astype(int)).max()) if len(run_lengths) else 0
 
     row["DTR_true_mean"] = daily_df["DTR_true"].mean()
     row["Ta_mean_true"] = daily_df["Ta_mean_true"].mean()

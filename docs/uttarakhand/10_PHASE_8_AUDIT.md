@@ -154,6 +154,14 @@ offers — belongs in the cards, or at minimum in the paper section built from t
 > held constant across all clusters (plan v3.0 Section 6.3's design rule) combined with every
 > candidate's latent heat comfortably clearing `L_required` in every cluster. **It is NOT a bug.**
 
+**RESOLVED (2026-09) — this quote's own claim ("NOT a bug") was wrong.** It WAS a bug, just not in
+`Tm_target`'s constancy itself: `07b_charging_feasibility.py`'s regime-dependent Tm cap (designed
+specifically to break this degeneracy) had a normalization error that made it a no-op regardless of
+how it was run. Fixed — Cluster 1 now gets a genuinely different #1 (PureTemp 53, `Tm_target=55.2C`)
+while Clusters 0/3/4 legitimately share PureTemp 58 and Cluster 2 shares it with a differentiated
+Top-2/3. Current `recommendation_cards.md` reflects this corrected, partially-differentiated result,
+not a flat identical-#1 across all five cards.
+
 ## Dependencies
 
 `pandas` only. No numerical or plotting libraries — consistent with "pure aggregation script,
@@ -188,20 +196,26 @@ computes nothing new."
    MCDM criteria rest substantially on estimates.
 4. **`any_property_imputed`, `n_properties_imputed` and `cycles_confidence_imputed` are available
    per candidate and are not surfaced** on the cards.
-5. **The identical-#1 finding is not propagated** from `08`'s console output into the cards.
+5. **~~The identical-#1 finding is not propagated~~ from `08`'s console output into the cards** —
+   moot for Cluster 1 now (2026-09), which has a genuinely different #1; still applies to Clusters
+   0/3/4's legitimately shared pick, which the cards still don't explain.
 6. **Every recommended #1 is a Borda tie**, and the cards render `consensus_rank` without noting
    the tie — a reader sees "1" and "1" in clusters 0/2/4 without explanation.
 7. **No analytical criterion-contribution breakdown.** `mcdm_full_scores_by_cluster.csv` is written
    by `08` precisely so a card can show per-criterion contributions — `08`'s docstring says "keep
    this — it's what a recommendation card's 'criterion contributions' field needs" — but `09`
    never reads that file.
-8. **Phase 7 results have no slot on the card**, because Phase 7 does not exist
-   (`09_PHASE_7_AUDIT.md`).
+8. **~~Phase 7 results have no slot on the card, because Phase 7 does not exist.~~ RESOLVED —
+   Phase 7 exists and has been run** (`10_physics_validation.py`, see `09_PHASE_7_AUDIT.md`), but
+   `09_recommendation_cards.py` still doesn't read its output, so the physics-validation Spearman
+   rho and solar-fraction result still have no slot on the card — this specific gap (no Phase-7 slot
+   on the card) remains, just for a different reason than "Phase 7 doesn't exist."
 
 ## Status
 
-**CODE COMPLETE, OUTPUT UNVERIFIED.** The script is well constructed: it validates all inputs
-up-front, refuses to write partial output, correctly filters on `passes_all`, handles NaNs, and
-carries a recorded bug fix. Its shortcomings are all about what it does *not* say — the imputation
-scope, the tied ranks, the identical-#1 finding, and the per-criterion contributions it already has
-the data for.
+**CODE COMPLETE, OUTPUT REGENERATED (2026-09) against all current fixes.** The script is well
+constructed: it validates all inputs up-front, refuses to write partial output, correctly filters on
+`passes_all`, handles NaNs, and carries a recorded bug fix. Its shortcomings are still all about
+what it does *not* say — the imputation scope, the tied ranks in Clusters 0/3/4's legitimately
+shared pick, and the per-criterion/physics-validation contributions it has the data for but doesn't
+surface on the card.

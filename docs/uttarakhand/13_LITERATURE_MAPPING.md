@@ -45,13 +45,13 @@ a plan section/table, or is un-cited in the code.
 | Sun-event times (sunrise/noon/sunset) | `00b_build_suntimes.py` | Reda & Andreas (2004), *Solar Energy* (SPA) | Implementation uses `pvlib.solarposition.sun_rise_set_transit_spa` with `method="spa"` pinned. Method is standard; citation **not present in code** |
 | Clear-sky GHI | `02_combine_uttarakhand.py` | Ineichen & Perez (2002), *Solar Energy* | Implementation uses `pvlib.clearsky.ineichen` with default Linke turbidity. **Strong validation result** ($r = 0.9923$, MBE $+5.3\text{ W/m}^2$). Citation **not present in code** |
 | Sun-event-aligned sampling | `00b`, `02` | Project-original sampling design | Uncited; novel framing |
-| `elev_proxy` from surface pressure | `04b_climate_signature.py` | Barometric formula approximation | Uncited in code; standard physics |
+| `elevation_m` from ERA5 geopotential (was `elev_proxy` from surface pressure) | `00c_attach_elevation.py`, `04b_climate_signature.py` | Geopotential-to-height conversion (WMO standard gravity) | RESOLVED 2026-09 — real elevation replaced the pressure-ratio proxy. Uncited in code; standard physics |
 | 13-step preprocessing sequence | `04_preprocess_uttarakhand.py` | Standard ML/data-science pipeline | Plan-sourced ("Section 5"); no literature citations in script |
 | Hampel outlier filter | `04` step 4 | Pearson (2002) / Hampel (1974) | Standard method; uncited in code |
 | Hierarchical imputation chain | `04` step 5 | MICE (van Buuren & Groothuis-Oudshoorn 2011) | Implementation uses `sklearn.experimental.enable_iterative_imputer` + `IterativeImputer`. Citation **not present in code** |
 | Yeo-Johnson transform diagnostic | `04` step 8 | Yeo & Johnson (2000), *Biometrika* | Used as diagnostic only; uncited in code |
 | Savitzky-Golay filter diagnostic | `04` step 9 | Savitzky & Golay (1964), *Anal. Chem.* | Used as diagnostic only; uncited in code |
-| Gaussian Mixture Model clustering | `05_cluster_uttarakhand.py` | Standard GMM (Duda & Hart 1973; McLachlan & Peel 2000) | `sklearn.mixture.GaussianMixture` with `full` covariance, `n_init=5`/`n_init=10`. Uncited in code |
+| Gaussian Mixture Model clustering | `05_cluster_uttarakhand.py` | Standard GMM (Duda & Hart 1973; McLachlan & Peel 2000) | `sklearn.mixture.GaussianMixture` with `diag` covariance (changed from `full` — was overdetermined for 45 samples), `n_init=5`/`n_init=10`. Uncited in code |
 | BIC / Silhouette model selection | `05` | Schwarz (1978) / Rousseeuw (1987) | Standard heuristics; uncited in code |
 | MICE + PMM PCM database imputation | `PCM_data/01_preprocess.py` | van Buuren (2018) | Applied upstream on the 55-row PCM database; uncited |
 | Gaussian $T_m$-fitness transform | `08_mcdm_ranking.py` | Project-original fitness transformation | Plan-sourced ("Section 9.2"); uncited |
@@ -62,7 +62,7 @@ a plan section/table, or is un-cited in the code.
 | Borda-count consensus | `08` | Borda (1781) | Implemented; uncited in code |
 | Kendall's W | `08` | Kendall & Babington Smith (1939) | Plan v3.0 §9.5 cited for interpretation; statistic uncited |
 | Flat-plate collector 25–100 °C operating band | `07b` | **Al-Mamun 2023** | The pipeline's only substantive citation in Phase 5/7 |
-| Annual solar fraction 54–84 % benchmark | `10_physics_validation.py` | plan Table 16; Barqawi 2025 | 92% of simulated runs land within this benchmark band |
+| Annual solar fraction 54–84 % benchmark | `10_physics_validation.py` | plan Table 16; Barqawi 2025 | RESOLVED 2026-09: two solver bugs fixed (backward-Euler numerator error, one-directional latent-heat accumulator), verified against `scipy.integrate.solve_ivp`. Corrected result: 0% of simulated runs land within this benchmark band (actual ~15-19%) — the previously-cited 92% was inflated by those bugs |
 | Grey-box lumped-enthalpy tank model | `10_physics_validation.py` | Barqawi et al. (2025) dynamic simulation | Implemented with implicit Backward Euler integration; see `09_PHASE_7_AUDIT.md` |
 
 ---

@@ -176,7 +176,7 @@ Monsoon is **3 months (JJA)** in the season column. Note the inconsistency docum
 ```
 Ta_mean, Ta_p95, Ta_p05, DTR, GHI_daily_kWh, kt_mean, kt_std, SAI, CCI,
 cloudy_frac, HDD18, CDD24, RH_mean, HSI, wind_mean, seasonality,
-monsoon_index, elev_proxy
+monsoon_index, elevation_m
 ```
 
 ### Tier 1 — sun-event-only indices (computed in `build_signature_tier1`)
@@ -198,7 +198,7 @@ monsoon_index, elev_proxy
 | `wind_mean` | mean `era5_W_spd` (**no Tier-2 override**) |
 | `seasonality_proxy` | `std / mean` of monthly-mean noon `era5_GHI` |
 | `monsoon_index` | JJAS `era5_precipitation` sum / total precipitation sum — **proxy only, permanently** |
-| `elev_proxy` | `mean(era5_P_atm) / 1013.25` |
+| `elevation_m` | **RESOLVED (2026-09):** used to be `mean(era5_P_atm) / 1013.25` (a pressure-ratio proxy, PCA loading -0.33/0.59 on PC1/PC2 — outsized and unexplained). Now real per-point elevation (196m-2510m) from ERA5's time-invariant geopotential field, attached by `00c_attach_elevation.py`; post-fix loading is a balanced ~0.37 on PC1. |
 
 ### Tier 2 — true daily-integral indices (from `02b_build_daily_aggregates.py`)
 
@@ -206,12 +206,12 @@ Written to `tier2_signature_uttarakhand.csv`, one row per `point_id`:
 
 | Column | Derivation from the full NASA POWER hourly cache |
 |---|---|
-| `n_days_used` | days with >= `MIN_HOURS_PER_DAY = 20` of 24 hours present |
+| `n_days_used` | days with >= `MIN_HOURS_PER_DAY = 20` **valid (non-NaN) values**, not just 24 timestamps present — **fixed 2026-09**: the gate used to count timestamps via `groupby(...).size()`, which NASA POWER's hourly API always returns as 24 regardless of how many are actually valid (missing readings come back as -999, replaced with NaN, but the timestamp row itself still exists), making the check a near no-op. Currently harmless either way — verified zero actual -999 values across all 450 point-year files in this cache — but fixed for future re-downloads/new states with real gaps. |
 | `GHI_daily_kWh_mean` | mean of daily `sum(ALLSKY_SFC_SW_DWN) / 1000` |
 | `kt_daily_mean` / `kt_daily_std` | daily `GHI/GHIcs` clipped [0, 1.5], guarded at `GHIcs > 0.05` |
 | `SAI_true` | `sum(GHI_daily) / sum(GHIcs_daily)` |
 | `cloudy_frac_true` | fraction of days with `kt_daily < 0.35` |
-| `CCI_true` | longest consecutive cloudy-day run |
+| `CCI_true` | longest consecutive cloudy-day run — **fixed 2026-09** to reindex onto a contiguous calendar-day range first (matching Tier-1's `CCI_proxy` safeguard); the old version computed run-lengths positionally over existing rows only, which could bridge a real missing-data gap into one artificially inflated run |
 | `DTR_true_mean` | mean of daily `max(T2M) - min(T2M)` — **true diurnal range** |
 | `Ta_mean_true`, `Ta_p95_true`, `Ta_p05_true` | mean / q95 / q05 of daily-mean `T2M` |
 | `HDD18_true` / `CDD24_true` | degree-days from the true daily mean |
@@ -226,33 +226,54 @@ and falls back to the Tier-1 proxy otherwise. Both are kept side by side (`_prox
 suffixes) and both are **excluded from the clustering matrix** so only the canonical version
 clusters.
 
-`RH_mean`, `HSI`, `wind_mean`, `monsoon_index` and `elev_proxy` have **no** Tier-2 counterpart in
-`CANON_MAP` and remain sun-event-derived. `wind_mean_true` and `RH_mean_true` are computed by
-`02b` but are not mapped, so they are dropped from the clustering matrix by the `_true` suffix
-rule. `GHI_mean` has no `_proxy` suffix and no `CANON_MAP` entry, so it enters the clustering
-matrix directly as an ERA5 quantity.
+`HSI`, `monsoon_index` and `elevation_m` have **no** Tier-2 counterpart in `CANON_MAP` and remain
+sun-event-derived (`elevation_m` is real per-point elevation, not sun-event data, but has no daily
+Tier-2 version either way since it's static per point). `GHI_mean` has no `_proxy` suffix and no
+`CANON_MAP` entry, so it enters the clustering matrix directly as an ERA5 quantity.
+
+**RESOLVED (2026-09) — `RH_mean`/`wind_mean` canonical fallback bug.** This section used to say
+`RH_mean` and `wind_mean` had "no Tier-2 override" by design. That framing masked a real bug: `04b`
+DOES define `CANON_MAP` entries for both (`RH_mean_true`, `wind_mean_true`), but the Tier-1 columns
+were stored as plain `RH_mean`/`wind_mean` instead of `RH_mean_proxy`/`wind_mean_proxy` (every other
+index follows the `_proxy` convention). The fallback logic looked for a column literally named
+`RH_mean_proxy`, which didn't exist, so it silently resolved to NaN — overwriting the perfectly
+good Tier-1 value — whenever Tier-2 coverage was missing for a point. Fixed by renaming the Tier-1
+columns to the `_proxy` convention. Currently latent (zero actual impact) since this dataset has
+100% Tier-2 coverage for all 45 points; fixed for future robustness. `wind_mean_true` and
+`RH_mean_true` themselves are still correctly dropped from the clustering matrix by the `_true`
+suffix rule once the canonical `RH_mean`/`wind_mean` columns are set.
 
 ### Derived PCM-facing quantities
+
+**RESOLVED — this section described a formula version that predates even the 2026-09 fixes covered
+elsewhere in this doc set.** The code comments in `04b_climate_signature.py` itself record the
+history: "Previous code: DRAW_RATE_KG_PER_S = 60.0/1000/60 -> 0.001 kg/s (WRONG)" — that rate/volume
+formula was missing water's density factor, making `L_required` ~1000x too small. The CURRENT
+formula (verified against `04b_climate_signature.py` directly, lines 63-93 and 262-276):
 
 ```python
 T_DELIVERY_C  = 50.0
 DT_APPROACH_C =  7.0
-TM_TARGET_C   = T_DELIVERY_C + DT_APPROACH_C          # 57 °C, constant for every point
+TM_TARGET_C   = T_DELIVERY_C + DT_APPROACH_C          # 57 C, constant baseline for every point
+                                                       # (regime-capped downward for some clusters
+                                                       # by 07b_charging_feasibility.py — see
+                                                       # 07_PHASE_5_AUDIT.md)
 
-DRAW_RATE_KG_PER_S  = 60.0 / 1000 / 60                # = 0.001 kg/s
-CP_WATER            = 4.186                           # kJ/kg·K
-ASSUMED_PCM_MASS_KG = 50.0
+DRAW_VOLUME_L       = 300.0                           # litres/day (domestic household)
+DRAW_MASS_KG        = DRAW_VOLUME_L * 1.0             # kg (water density ~1 kg/L)
+CP_WATER            = 4.186                           # kJ/(kg*K)
+ASSUMED_PCM_MASS_KG = 150.0                           # raised from an earlier 50kg after the
+                                                       # draw-sizing fix above; SHARE_PCM=0.5 is
+                                                       # imported from config.py
 
 sig["T_mains_est_C"]        = sig["Ta_mean"] - 2.0
-q_night_kw                  = DRAW_RATE_KG_PER_S * CP_WATER * (T_DELIVERY_C - T_mains_est_C)
-sig["L_required_kJ_per_kg"] = (q_night_kw * 3600 * 7) / ASSUMED_PCM_MASS_KG
+q_total_kJ                  = DRAW_MASS_KG * CP_WATER * (T_DELIVERY_C - sig["T_mains_est_C"])
+sig["L_required_kJ_per_kg"] = (q_total_kJ * SHARE_PCM) / ASSUMED_PCM_MASS_KG
 ```
 
-Notes carried forward as caveats (see `05_PHASE_3_AUDIT.md`):
-- The `- 2.0` K mains-temperature offset is **unsourced in-code**.
-- There is **no `SHARE_PCM` factor** in this formula — the Uttarakhand `04b` sizes `L_required`
-  from a 7-hour draw at 0.001 kg/s against the full 50 kg PCM mass.
-- `Tsoil_proxy_C = Ta_mean - 3.0` is defined only to feed the `int_wind_x_TaMinusTsoil`
+Current `L_required` range across the 45 points: approximately 113-190 kJ/kg. Notes still current:
+- The `- 2.0` K mains-temperature offset is still unsourced in-code (a stated assumption, not a bug).
+- `Tsoil_proxy_C = Ta_mean - 3.0` is still defined only to feed the `int_wind_x_TaMinusTsoil`
   interaction term and is dropped from the clustering matrix.
 
 ### 5 interaction terms
@@ -262,10 +283,12 @@ Notes carried forward as caveats (see `05_PHASE_3_AUDIT.md`):
 
 ### PCA block
 
-`PCA_BLOCK = ["Ta_mean", "Ta_p95", "Ta_p05", "HDD18", "CDD24", "RH_mean", "elev_proxy"]`,
-`StandardScaler` then `PCA(n_components=0.95, random_state=42)`. Loadings written to
-`pca_loadings.csv`. The number of retained components for the Uttarakhand run is **not available
-in the source files** — `pca_loadings.csv` is under the git-ignored `data/processed/` tree.
+`PCA_BLOCK = ["Ta_mean", "Ta_p95", "Ta_p05", "HDD18", "CDD24", "RH_mean", "elevation_m"]` (was
+`elev_proxy`, see the elevation note above), `StandardScaler` then
+`PCA(n_components=0.95, random_state=42)`. Loadings written to `pca_loadings.csv`. The current run
+retains **2 components** (PC1 explains 90.7% of variance, PC2 6.8%); loadings: Ta_mean(-0.394),
+Ta_p95(-0.395), Ta_p05(-0.385), HDD18(0.360), CDD24(-0.358), RH_mean(0.378), elevation_m(0.373) on
+PC1 — a balanced contribution, not the outsized -0.33/0.59 the old `elev_proxy` carried.
 
 ## Physical bounds table (`BOUNDS` in `04_preprocess_uttarakhand.py`)
 

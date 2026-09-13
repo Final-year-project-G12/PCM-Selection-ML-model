@@ -56,7 +56,8 @@ Per draw, per cluster:
 OUTPUT
 --------
   data/processed/pcm/monte_carlo_stability.csv
-    columns: cluster_id, name, top3_inclusion_probability, mean_consensus_rank,
+    columns: cluster_id, name, top3_inclusion_probability,
+             top1_retention_probability, mean_consensus_rank,
              std_consensus_rank, n_draws
 
 HOW TO RUN:
@@ -119,8 +120,12 @@ def entropy_weights(matrix):
 
 
 def topsis(matrix, weights):
-    norm = matrix / (np.sqrt((matrix ** 2).sum(axis=0)) + 1e-12)
-    weighted = norm * weights
+    # matrix already min-max scaled to [0,1] by the caller, same basis
+    # gra()/promethee_ii()/vikor() use directly — deliberately not
+    # re-applying TOPSIS's classic vector normalization on top of that;
+    # see 08_mcdm_ranking.py's topsis() docstring for why (kept identical
+    # between the two scripts on purpose — 09b must match 08's math).
+    weighted = matrix * weights
     v_plus = weighted.max(axis=0)
     v_minus = weighted.min(axis=0)
     s_plus = np.sqrt(((weighted - v_plus) ** 2).sum(axis=1))
@@ -253,6 +258,7 @@ def run_cluster(cid, df, n_draws, rng):
         rank_draws[d, :] = one_draw(base_matrix_raw, w_nominal, rng)
 
     top3_prob = (rank_draws <= 3).mean(axis=0)
+    top1_prob = (rank_draws == 1).mean(axis=0)
     mean_rank = rank_draws.mean(axis=0)
     std_rank = rank_draws.std(axis=0)
 
@@ -260,6 +266,7 @@ def run_cluster(cid, df, n_draws, rng):
         "cluster_id": cid,
         "name": df["name"].values,
         "top3_inclusion_probability": top3_prob,
+        "top1_retention_probability": top1_prob,
         "mean_consensus_rank": mean_rank,
         "std_consensus_rank": std_rank,
         "n_draws": n_draws,

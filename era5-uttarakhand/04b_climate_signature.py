@@ -171,11 +171,11 @@ def build_signature_tier1(point_id, point_df):
     row["HDD18_proxy"] = np.maximum(0, 18 - d["Ta_daily_mean"]).sum()
     row["CDD24_proxy"] = np.maximum(0, d["Ta_daily_mean"] - 24).sum()
 
-    row["RH_mean"] = point_df["era5_RHum"].mean()
+    row["RH_mean_proxy"] = point_df["era5_RHum"].mean()
     t_dep = point_df["era5_T_amb"] - point_df["era5_T_dew"]
-    row["HSI"] = row["RH_mean"] * (t_dep < 3).mean()
+    row["HSI"] = row["RH_mean_proxy"] * (t_dep < 3).mean()
 
-    row["wind_mean"] = point_df["era5_W_spd"].mean()
+    row["wind_mean_proxy"] = point_df["era5_W_spd"].mean()
 
     monthly_ghi = noon.groupby(noon.index.month)["era5_GHI"].mean()
     row["seasonality_proxy"] = monthly_ghi.std() / monthly_ghi.mean() if monthly_ghi.mean() > 0 else np.nan
@@ -221,6 +221,13 @@ if n_missing_tier2 > 0:
           f"— their canonical columns below fall back to the Tier-1 proxy.")
 
 # Canonical columns: true value where available, else the sun-event proxy.
+# Every entry here needs a matching "<canon>_proxy" Tier-1 column for the
+# fallback to actually work (RH_mean/wind_mean used to be stored without
+# the _proxy suffix, so their fallback silently resolved to NaN instead of
+# the Tier-1 value whenever Tier-2 coverage was missing for a point — fixed
+# 2026-09 by renaming their Tier-1 columns to RH_mean_proxy/wind_mean_proxy
+# to match every other index's convention. Currently latent either way,
+# since this dataset has 100% Tier-2 coverage).
 CANON_MAP = {
     "GHI_daily_kWh": "GHI_daily_kWh_mean",
     "DTR": "DTR_true_mean",

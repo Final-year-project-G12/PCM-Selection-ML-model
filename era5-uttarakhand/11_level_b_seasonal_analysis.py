@@ -52,7 +52,8 @@ warnings.filterwarnings("ignore")
 import numpy as np
 import pandas as pd
 
-from config import PREPROCESSED_DIR, PROCESSED_DIR, SHARE_PCM, latent_heat_floor_kj_kg
+from config import (PREPROCESSED_DIR, PROCESSED_DIR, SHARE_PCM,
+                    LATENT_HEAT_FRACTION, latent_heat_floor_kj_kg)
 
 PHYSICAL_FILE = PREPROCESSED_DIR / "uttarakhand_cleaned_physical.csv"
 ASSIGN_FILE = PROCESSED_DIR / "clustering" / "cluster_assignments_uttarakhand.csv"
@@ -64,7 +65,6 @@ OUT_MD = PROCESSED_DIR / "pcm" / "level_b_seasonal_summary.md"
 
 ABSOLUTE_TM_MIN, ABSOLUTE_TM_MAX = 42.0, 70.0
 WINDOW_LOWER_OFFSET, WINDOW_UPPER_OFFSET = 5.0, 8.0
-LATENT_HEAT_FRACTION = 0.7
 SIGMA_TM = 4.0
 # Matches 04b_climate_signature.py's own L_required formula exactly (this
 # pipeline's actual assumption: a continuous overnight draw rate, not a
