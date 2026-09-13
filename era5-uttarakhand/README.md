@@ -740,9 +740,10 @@ random-forest imputation).
   traceable in a methodology write-up.
 - **PCM database coverage**: 55 rows (31 manufacturer + 24 literature)
   across 6 brands, meeting the 40-60 candidate target (see `06`'s section
-  above). Corrosion veto and 5th-percentile-day charging feasibility aren't
-  fully wired into `07` yet either (see `07`'s section above).
-- **Phase 7 (physics-based validation) is implemented** in `10_physics_validation.py`. It runs a single-PCM grey-box lumped-enthalpy-tank simulation per cluster, comparing simulated annual solar fraction against published benchmarks (54-84%). **A backward-Euler solve bug and a latent-heat-accumulator bug were fixed here 2026-09** (see "Notes / known limitations" below) — the corrected result is 0% of simulated runs landing within the benchmark band (actual ~15-19% across clusters); a previously-reported 92% was itself an artifact of the bug.
+  above). Corrosion veto is implemented (see `07`'s section above, currently
+  a documented no-op given an all-organic database); 5th-percentile-day
+  charging feasibility isn't fully wired into `07` yet.
+- **Phase 7 (physics-based validation) is implemented** in `10_physics_validation.py`. It runs a single-PCM grey-box lumped-enthalpy-tank simulation per cluster, comparing simulated annual solar fraction against published benchmarks (54-84%). **A backward-Euler solve bug and a latent-heat-accumulator bug were fixed here 2026-09** (see "Notes / known limitations" above) — the corrected result is 0% of simulated runs landing within the benchmark band (actual ~12-19% across clusters); a previously-reported 92% was itself an artifact of the bug. **A Phase 3/Phase 7 sizing inconsistency was found and fixed shortly after (2026-09)**: the tank/PCM/collector sizing here (150kg tank, 28kg PCM, 2.5m^2 collector) had been independently literature-cited rather than matched to `04b`'s own household sizing (300kg/day draw, 150kg PCM) that `L_required` is built around. Reconciled to 300kg tank, 150kg PCM, 5.0m^2 collector (scaled by the same source's own collector-to-tank ratio), 2x150kg/day draws. Solar fraction barely moved (still 12-19%, still 0% in-band) — proportional scaling of the whole system can't change a ratio-based metric, so this confirms the low result is a genuine climate-vs-design finding for Uttarakhand, not a residual sizing bug. See `NEXT_STEPS.md` for the full quantification.
 
 ## Further reading in this repo
 
