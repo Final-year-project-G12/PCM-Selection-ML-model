@@ -168,6 +168,16 @@ Two bugs caught and fixed **during this script's own self-tests** (mandatory ene
 | Daily draw total | 300 kg/day | Avargani et al. 2021; same citation as Phase 3 night-draw, but applied as full-day total here |
 | Target delivery temp | 50°C | Pipeline-wide constant |
 
+**⚠️ SUPERSEDED 2026-09-13 — this table reflects the original (pre-fix) calibration, not the
+current on-disk state.** As already detailed in the "✅ DELIVERY TEMPERATURE CORRECTION" and "✅ TANK
+MASS DECOUPLED..." banners near the top of this doc: `Target delivery temp` is now **60°C** (was
+50°C); `Tank water mass M_W` is now **200 kg** (was 300 kg, wrongly reused from Avargani's
+continuous-flow-through 300L/7h figure rather than a static tank capacity); `Collector overall loss
+U_L` is now **2.0 W/m²K** (was 2.5, re-tuned as calibration — no longer independently
+Duffie–Beckman-justified at this value); and `NIGHT_ISOLATION_FRACTION` is now **0.03** (was 0.05).
+Current calibration medoid solar fractions: 64.3%/65.8%/64.0% (clusters 0/1/2). See
+`physics_lib.py`'s CALIBRATION docstring for the full derivation and citation detail.
+
 ## Self-Tests: Both Pass
 
 ```
@@ -238,6 +248,8 @@ Two bugs were caught by Phase 7's own mandatory self-tests (`self_test_energy_co
 2. **Night-loss bug**: Barqawi's original bidirectional coupling term `a·(Tc−Tw)` allowed the tank to drain heat back through an idle collector overnight nearly as fast as it charged during the day — physically impossible (real systems have thermosiphon check valves or controller-gated pumps). **Fixed via `NIGHT_ISOLATION_FRACTION = 0.05`**, gating the collector coupling coefficient to 5% of its daytime value whenever Tc < Tw (collector colder than tank).
 
 **Result after both fixes**: All three medoids land in 54–84% benchmark solar-fraction band. Energy conservation holds to machine precision (~1.6e-13 J residual). This calibrated model is used as-is for Phase 7 real experiment and Phase 8 penalty sweep.
+
+**Historical note (2026-08-11 state) — superseded 2026-09-13.** `M_W_KG=300`/`NIGHT_ISOLATION_FRACTION=0.05` above were this calibration's ORIGINAL values; both were subsequently corrected (`M_W_KG`→200 kg, decoupled from Avargani's continuous-flow figure; `NIGHT_ISOLATION_FRACTION`→0.03, jointly re-tuned with `COLLECTOR_UL_WM2K`→2.0) — see the "✅ TANK MASS DECOUPLED..." banner near the top of this file and `physics_lib.py`'s CALIBRATION docstring. The pipeline still lands in the same 54–84% band post-fix (64.0–65.8%), just at the new parameter values.
 
 ## Cluster-Specific Interpretations
 

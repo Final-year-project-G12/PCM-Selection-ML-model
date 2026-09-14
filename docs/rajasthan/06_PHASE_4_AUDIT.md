@@ -90,6 +90,15 @@ is the year's highest (403–431 kJ/kg, lowest ambient → largest ΔT), which d
 `outputs/qc_seasonal_pcm_flip_heatmap_rajasthan.html` ((cluster × season) grid coloured by #1-PCM
 identity, flipped cells red-outlined).
 
+> **SUPERSEDED (2026-09-13).** The 7/9-flip result above was produced while
+> `11_seasonal_pcm_sensitivity.py` re-filtered each cluster's Phase-5 survivor pool with a hardcoded
+> `LATENT_HEAT_FRACTION=0.7`, stricter than every cluster's own Phase-5 calibrated kappa (0.0/0.5/0.3)
+> and inconsistent with the pool it drew from. Fixed to use each cluster's own calibrated kappa.
+> **Result: 0/11 cluster-season cells flip from the annual #1 pick** — Rajasthan's delivery-anchored
+> `Tm_target` rule is seasonally robust, a genuine null result, not a bug. This also reframes O3's
+> motivation to real-time weather/demand variability (Emami et al. 2025/2026), not PCM-ranking
+> instability. See `CLAUDE.md` §3.4 for the full writeup.
+
 ### External validation
 **Köppen-Geiger is now wired in for real (updated 2026-08-11)** — Beck et al. (2018),
 doi:10.1038/sdata.2018.214, 1-km raster, genuine per-point classification lookup (not a stub).
@@ -239,9 +248,11 @@ constraint is evaluated per cluster using `Tm_target_C`, `Tm_target_capped_C`,
 **COMPLETE (unified pipeline, re-run 2026-09-08).** Level A k=3 (bootstrap-ARI 0.8200, Köppen ARI
 0.2787 / NMI 0.3817); Level B regime-shift k=8 (100% shift, season-tautology ARI 0.691 — recovers
 "season"); seasonal PCM sensitivity 7/9 resolved cells flip (Winter unresolved — L_required
-ceiling). Downstream Phase 5→6 re-run on the new `cluster_profiles_rajasthan.csv` (fingerprint
-stamped through). Phase 7/8 not re-run in this pass — they hard-fail the provenance check until
-re-run against the current clustering. The two previously-documented bugs (GMM covariance type; GMM
+ceiling) — **superseded 2026-09-13, see note above: after fixing `11_seasonal_pcm_sensitivity.py`
+to use each cluster's own calibrated kappa instead of a hardcoded 0.7, the result is 0/11 flips
+(seasonally robust)**. Downstream Phase 5→6 re-run on the new `cluster_profiles_rajasthan.csv`
+(fingerprint stamped through). Phase 7/8 not re-run in this pass — they hard-fail the provenance
+check until re-run against the current clustering. The two previously-documented bugs (GMM covariance type; GMM
 cluster-index instability across re-runs) remain fixed; the canonical-relabeling fix now lives in
 `cluster_lib.canonical_relabel_by_latitude()` and is called by every state/level.
 

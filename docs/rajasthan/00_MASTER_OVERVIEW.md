@@ -19,6 +19,29 @@
   LAST, after physics = 10).
 - Fresh run pending; every Phase 5–8 number below is pre-unification and stale.
 
+⚠️ **FURTHER CORRECTIONS (2026-09-13), re-run COMPLETE — current on-disk state.** Two more fixes
+landed after the unification above, and this time the full Phase 5–9 chain WAS re-run (unlike the
+"re-run pending" unification banner above, which is now doubly stale):
+1. **Delivery temperature**: `T_DELIVERY_C` raised 50→60°C in `pcm_shared_config.py` to match
+   Avargani et al. (2021)'s actual validated 60±2°C delivery temperature for the 300L/7h
+   night-discharge figure `L_required` is derived from. `Tm_target_C` moved 57→**67°C**; `L_required`
+   rose from ~285–344 to **~410–469 kJ/kg**.
+2. **Tank mass**: `physics_lib.py`'s `M_W_KG` corrected 300→200 kg (decoupled from Avargani's
+   continuous-flow-through 300L figure, re-grounded in Eldokaishi et al. 2022's 50–240L tank-volume
+   range), with `COLLECTOR_UL_WM2K` (2.5→2.0 W/m²K) and `NIGHT_ISOLATION_FRACTION` (0.05→0.03)
+   jointly re-tuned to keep calibration in the 54–84% solar-fraction benchmark band.
+
+**Current (2026-09-13) numbers**, superseding both the pre-unification numbers below AND the
+2026-09-08 unification's own then-current numbers: κ-calibrated survivors **23 total (4/8/11 per
+cluster)**, down from the unification's 39 (9/14/16); calibration medoid solar fractions
+**64.0/65.8/64.3%**. Additionally, `11_seasonal_pcm_sensitivity.py` had a separate bug (hardcoded
+`LATENT_HEAT_FRACTION=0.7` instead of each cluster's own calibrated kappa) that was found and fixed
+in the same pass — the corrected result is **0/11 cluster-season cells flip** from the annual #1
+PCM pick, reframed as a positive finding (Rajasthan's PCM selection is seasonally robust; Objective
+3's DRL controller is now motivated by real-time weather/demand variability, not PCM-ranking
+instability — see `09_PHASE_7_AUDIT.md`). See `05_PHASE_3_AUDIT.md`, `07_PHASE_5_AUDIT.md`,
+`09_PHASE_7_AUDIT.md` and `10_PHASE_8_AUDIT.md` for full detail.
+
 ---
 
 ## Project objective
@@ -152,7 +175,7 @@ failure — see "Current architecture" → Resumability below.
 | 1 — Data Collection | `00a/00b/00c`, `01`, `01b`, `00_unzip_accum` | **COMPLETE** | 320 pts, 240/240 ERA5 files, 3200/3200 (1 retry) POWER files |
 | 2 — Preprocessing & Validation | `02`, `02b`, `03_verify`, `03_qc_plots`, `03b` | **COMPLETE — with a caught-and-fixed critical bug** | Deaccumulation bug found & fixed; QUANTILE_MAP decision (advisory) — correction now persisted in Phase 2.5 |
 | 2.5 — Preprocessing & Quality Control | `04_preprocess_rajasthan` (core); `03b_quality_check`, `03b_validate_quality_fix` (diagnostic/deprecated) | **RESTRUCTURED 2026-09-08 — converged onto the Tamil Nadu `04_preprocess` contract; re-run pending** | Phase 2.5 is now `04_preprocess_rajasthan.py` (BOUNDS + SZA night-mask + per-season quantile map persisted + Hampel + 4-stage/MICE imputation → `rajasthan_cleaned_physical.csv`). Follow-up: it Hampel-filters GHI/cloud_cover, which the retired `03b_quality_check` excluded — verify against the regenerated signature (04_PHASE_2_AUDIT.md Part C/D) |
-| 3 — Climate Signature | `signature_lib.py`, `04b_climate_signature` | **COMPLETE — 5 documented corrections; re-run pending after the Phase 2.5 restructure** | Tm_target=57°C fixed; Tm_target_capped varies by regime; now reads `data/preprocessed/rajasthan_cleaned_physical.csv` |
+| 3 — Climate Signature | `signature_lib.py`, `04b_climate_signature` | **COMPLETE — 5 documented corrections; re-run pending after the Phase 2.5 restructure** | Tm_target=**67°C** (raised from 57°C, 2026-09-13 — see banner above); Tm_target_capped varies by regime; now reads `data/preprocessed/rajasthan_cleaned_physical.csv` |
 | 4 — Regime Clustering | `05` | **COMPLETE — with 2 caught-and-fixed bugs** | k=3 (GMM `diag` covariance, fixed from `full`); GMM cluster-index instability fixed via canonical relabeling (2026-08-11); Koppen-Geiger external validation wired in (ARI=0.19, NMI=0.32 vs GMM) |
 | 5 — Feasibility Filtering | `01_preprocess`, `07` | **UNIFIED with Tamil Nadu 2026-09-08; re-run pending** | 8 constraints in canonical order; Constraint 6 = `Tm ≤ Tm_target_capped_C` (replaces retired `07b_charging_feasibility.py`); κ-calibration; outputs `feasibility_survivors_by_cluster{,_kappa_calibrated}.csv`. 62-row shared PCM pool. |
 | 6 — MCDM Ranking | `08` | **UNIFIED with Tamil Nadu 2026-09-08 (byte-identical engine); re-run pending** | 8 Table-13 criteria; climate-relative latent heat (`L/L_required`); log-scaled cycling; **supercooling entropy weight capped at 2× prior (0.16)** — fixes the entropy-formula overweighting Phase 7/8 diagnosed as the negative-correlation cause. PROMETHEE handles Tm natively (q=2K/p=8K). N_DRAWS=1000 (both states). Provenance hard-fail. AHP pairwise elicitation still a TODO stub. |

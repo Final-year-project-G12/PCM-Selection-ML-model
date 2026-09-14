@@ -60,7 +60,7 @@ renamed to match).
   `config.py` / `04b_climate_signature.py`; its stale mirror tree
   (`era5-tamilnadu/data/processed/processed/`, 35 files) was **deleted**.
 
-### `05_cluster_regions.py` (cross-region Phase 4, standalone — not in run_all)
+### `05_cluster_tamilnadu.py` (cross-region Phase 4, standalone — not in run_all)
 - Fixed `REGION_FILES["Rajasthan"]`: was `SIGNATURE_DIR.parent.parent /
   "era5-rajasthan" / … / "signatures" / …` which resolved to
   `era5-tamilnadu/data/era5-rajasthan/…` and used a `signatures/` segment

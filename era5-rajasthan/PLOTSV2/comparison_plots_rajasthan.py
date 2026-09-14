@@ -46,10 +46,10 @@ BASE    = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)
 # (Level B is seasonal and would duplicate every point once per season.)
 CLUSTERS= os.path.join(BASE,"data","processed","cluster_assignments_rajasthan_levelA.csv")
 SIG_CSV = os.path.join(BASE,"data","processed","climate_signature_rajasthan.csv")
-FEAS    = os.path.join(BASE,"data","processed","feasibility_survivors_rajasthan_kappa_calibrated.csv")
+FEAS    = os.path.join(BASE,"data","processed","feasibility_survivors_by_cluster_kappa_calibrated.csv")
 PCM_DB  = os.path.join(BASE,"..","PCM_data","data","PCM_Properties_cleaned_mice_pmm_detailed.csv")
-TOPK    = os.path.join(BASE,"data","processed","mcdm_rankings_rajasthan.csv")
-MC_CSV  = os.path.join(BASE,"data","processed","mcdm_rankings_rajasthan.csv")
+TOPK    = os.path.join(BASE,"data","processed","mcdm_full_rankings.csv")
+MC_CSV  = os.path.join(BASE,"data","processed","mcdm_full_rankings.csv")
 PHYS    = os.path.join(BASE,"data","processed","physics_validation_rajasthan.csv")
 CPROF   = os.path.join(BASE,"data","processed","cluster_profiles_rajasthan.csv")
 OUT     = os.path.join(os.path.dirname(os.path.abspath(__file__)),"comparison_plots")
@@ -73,7 +73,7 @@ def load(p,label=""):
     if not os.path.exists(p):
         print(f"  skip {label}: not found at {p}"); return None
     df = pd.read_csv(p)
-    return df.rename(columns={k:v for k,v in RENAME.items() if k in df.columns})
+    return df.rename(columns={k:v for k,v in RENAME.items() if k in df.columns and v not in df.columns})
 
 def sfig(n):
     plt.savefig(os.path.join(OUT,n),dpi=150,bbox_inches="tight"); plt.close(); print(f"  {n}")

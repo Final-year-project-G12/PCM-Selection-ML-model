@@ -163,6 +163,23 @@ medoids' real hourly weather):
      peak draw (a naive 40-50L "domestic tank" guess would not have —
      see the module-level M_W_KG comment).
 
+     CROSS-CHECKED AGAINST IS 12976:2023 (2026-09-13): Bureau of Indian
+     Standards, "Solar Water Heating Systems — Code of Practice" (the
+     actual governing Indian standard for this system class — verified
+     directly against PCM-Selection-ML-model/Sources/pdfs/IS12976_2023.pdf,
+     not a paraphrase). Sec 4.2/7.1 state tank capacity should generally
+     sit at 40-100 L per m^2 of collector area (its own f-chart reference
+     ratio 75 L/m^2, correction formula only defined between 37.5-300
+     L/m^2). This pipeline's M_W_KG=200 / A_C_M2=4.0 = 50 L/m^2 — INSIDE
+     the standard's 40-100 general range and comfortably inside its
+     37.5-300 valid-correction band, though below the 75 L/m^2 reference.
+     No numeric change needed here on this basis (unlike Objective 2's
+     Rajasthan pipeline, whose frozen 50L/1.5m^2 = 33.3 L/m^2 configuration
+     falls below every one of these thresholds — see that pipeline's own
+     fix6_standards_compliant_sizing_supplementary.csv for the resize
+     check). Noted for completeness, not as a fix: this script's ratio
+     was independently in-range before this standard was even checked.
+
      STEP B — COLLECTOR_UL_WM2K / NIGHT_ISOLATION_FRACTION re-tuned AS
      CALIBRATION, NOT AS AN INDEPENDENTLY LITERATURE-JUSTIFIED CHANGE.
      Dropping M_W_KG alone (holding everything else fixed) pushed all 3
@@ -263,7 +280,16 @@ etc.). Report them as such if results from this script are cited.
                                               not Eldokaishi's PCM material,
                                               backup heater, or climate/
                                               demand context (see CALIBRATION
-                                              correction #4, Step A).
+                                              correction #4, Step A). Also
+                                              cross-checked against IS
+                                              12976:2023 Sec 4.2/7.1: this
+                                              200/4.0 = 50 L/m^2 ratio sits
+                                              INSIDE the standard's 40-100
+                                              L/m^2 general range (unlike
+                                              Objective 2's Rajasthan
+                                              pipeline's 33.3 L/m^2, which
+                                              does not — see CALIBRATION
+                                              correction #4).
   Collector overall loss coeff.   2.0 W/m^2K CALIBRATED 2026-09-13 (was 2.5)
     COLLECTOR_UL_WM2K                        to restore the 54-84% benchmark
                                               band after M_W_KG dropped

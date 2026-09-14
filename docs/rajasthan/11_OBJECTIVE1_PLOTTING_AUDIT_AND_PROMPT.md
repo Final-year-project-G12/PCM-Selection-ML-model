@@ -10,6 +10,18 @@ directly (via `provenance_lib.py`'s fingerprinting, already used by Phases 6/7/9
 plot is watermarked rather than silently presented as final. Plots 2 (regime map) and anything
 upstream of Phase 4 are unaffected by this correction.
 
+**Further correction, 2026-09-13 (superseding the numbers this section still cites below):**
+`T_DELIVERY_C` was subsequently raised 50→60°C (matching Avargani et al. 2021's actual validated
+delivery temperature) and `physics_lib.py`'s tank mass `M_W_KG` was decoupled from that same figure
+and corrected 300→200 kg (with `COLLECTOR_UL_WM2K`/`NIGHT_ISOLATION_FRACTION` re-tuned to match).
+This raised `L_required` again, from the 285–344 kJ/kg this doc cites to **410–469 kJ/kg**, and
+shrank the κ-calibrated survivor pool from 39 (9/14/16) to **23 (4/8/11)**. Every specific number
+below dated 2026-08-31 (L_required ranges, survivor counts, Spearman ρ values) is a snapshot from
+before this second correction — the general plotting GUIDANCE (read the current value from the CSV,
+don't hardcode it, watermark stale figures) still applies unchanged and is the reason this section
+was not rewritten wholesale. See `05_PHASE_3_AUDIT.md`, `07_PHASE_5_AUDIT.md` and `09_PHASE_7_AUDIT.md`
+for the current, on-disk-verified numbers.
+
 ---
 
 ## 1. Status at a glance

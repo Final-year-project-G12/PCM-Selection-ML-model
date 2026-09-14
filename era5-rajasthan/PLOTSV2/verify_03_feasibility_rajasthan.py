@@ -28,7 +28,7 @@ except Exception:
 
 BASE    = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 ALL_CSV = os.path.join(BASE,"..","PCM_data","data","PCM_Properties_cleaned_mice_pmm_detailed.csv")
-SUR_CSV = os.path.join(BASE,"data","processed","feasibility_survivors_rajasthan_kappa_calibrated.csv")
+SUR_CSV = os.path.join(BASE,"data","processed","feasibility_survivors_by_cluster_kappa_calibrated.csv")
 OUT     = os.path.join(os.path.dirname(os.path.abspath(__file__)),"verify_feasibility")
 os.makedirs(OUT, exist_ok=True)
 

@@ -116,7 +116,7 @@ your 4 days trying to onboard another state's data.
 
 ## What to explicitly NOT do in these 4 days
 
-- Don't onboard Rajasthan/Assam/Uttarakhand data. `05_cluster_regions.py`
+- Don't onboard Rajasthan/Assam/Uttarakhand data. `05_cluster_tamilnadu.py`
   stays untouched and ready for later.
 - Don't build the TabTransformer/VAE encoder ablation — it's explicitly
   optional-only in the plan doc and adds nothing to Objective 1's core

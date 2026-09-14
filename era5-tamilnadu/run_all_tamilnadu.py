@@ -32,7 +32,7 @@ group below):
   it via subprocess the way every other stage here is run would not do
   anything useful. Launch it yourself, separately, whenever you want the
   live exploration app.
-  05_cluster_regions.py
+  05_cluster_tamilnadu.py
   — the original 4-state (TN + RJ + Assam + Uttarakhand) design, "not
   currently used", and does not exist in this folder. The single-state
   05_cluster_tamilnadu.py replaces it for Objective 1.

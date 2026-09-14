@@ -189,7 +189,7 @@ own regimes (Gaussian Mixture, BIC-selected K, K-Means reported as
 comparison) already gives you "different PCMs for different locations"
 within Tamil Nadu.
 
-`05_cluster_regions.py` (the original 4-state script) was in the plan but
+`05_cluster_tamilnadu.py` (the original 4-state script) was in the plan but
 **does not exist in this repo** — the other states have their own parallel
 `era5-<state>/` pipelines instead. This single-state version produces the
 output shapes downstream expects (`cluster_assignments_tamilnadu.csv` with

@@ -68,7 +68,7 @@ clusters, not the raw data.
 ## `05_cluster_tamilnadu.py` — Phase 4, Climate Regime Clustering (Tamil Nadu only)
 
 Clusters the 133 Tamil Nadu signature points on their own — a 4-state joint
-`05_cluster_regions.py` was in the original plan but does not exist in this
+`05_cluster_tamilnadu.py` was in the original plan but does not exist in this
 repo, and Objective 1 does not require cross-state regimes. Fits a **Gaussian
 Mixture Model** (soft/probabilistic — not K-Means; the plan rejects K-Means
 because climate is a continuous gradient), `covariance_type="diag"`, K = 2..10,

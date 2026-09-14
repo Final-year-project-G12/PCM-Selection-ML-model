@@ -347,3 +347,11 @@ Phase 9 imports Phase 6 as a module and calls its deterministic `entropy_weights
 ### Critical Caveat for Write-Up
 
 All recommendation outputs are tagged with the provisional-database flag (55-row database, 2026-08-12 expansion). **The 2026-08-31 L_required correction has made all Phase 5–9 outputs STALE** — they must be regenerated before final submission.
+
+**Update (2026-09-13): superseded again, and this time re-run.** The T_DELIVERY_C (50→60°C) and
+tank-mass (M_W_KG 300→200 kg) corrections documented in the "✅ DELIVERY TEMPERATURE CORRECTION" /
+"✅ TANK MASS RE-CALIBRATION" banners near the top of this file have already been propagated through
+a full Phase 5–9 re-run (n=4/8/11 survivors, calibration medoid solar fractions 64.0–65.8%) — the
+outputs on disk as of this date are current, not stale, against those two fixes. Re-check the
+banners at the top of this file (not this closing note) for the latest numbers before citing
+anything from the body of this document.

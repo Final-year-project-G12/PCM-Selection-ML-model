@@ -95,7 +95,7 @@ Two Rajasthan-specific things worth knowing:
 ### 3. Melting Point vs. Latent Heat
 `03_melting_point_vs_latent_heat.png` · `..._interactive.html`
 **Source:** kappa-calibrated survivors.
-**Verify:** the shaded band is the filter's *real* melting window. All three clusters exhausted the same 4 relaxation rounds (widen ±8 K on a `Tm_target` of 57 °C), so the window is **[44.0, 73.0] °C** for all three and the three bands coincide — that is correct, not a plotting bug. Every survivor sits above the 100 kJ/kg reference line.
+**Verify:** the shaded band is the filter's *real* melting window. All three clusters exhausted the same 4 relaxation rounds (widen ±8 K on a `Tm_target` of 57 °C), so the window is **[44.0, 73.0] °C** for all three and the three bands coincide — that is correct, not a plotting bug. Every survivor sits above the 100 kJ/kg reference line. **(Numbers pre-2026-09-13: `T_DELIVERY_C` was raised 50→60°C, so `Tm_target` is now 67°C and the window shifts to [54.0, 83.0] °C — regenerate this plot before citing it; see `docs/rajasthan/05_PHASE_3_AUDIT.md`.)**
 
 ### 4. Feasible Candidates Highlighted
 `04_feasible_candidates_highlighted.png`
@@ -157,7 +157,7 @@ quantifies.
 
 ### 12. Tank Temperature / Melt-Fraction Profile
 `12_tank_temperature_melt_fraction.png` · `..._interactive.html`
-**Source:** per-cluster `Tm_target_capped_C` (48.4 / 52.3 / 51.1 °C) driving an idealised representative diurnal cycle.
+**Source:** per-cluster `Tm_target_capped_C` (48.4 / 52.3 / 51.1 °C — pre-2026-09-13; the `T_DELIVERY_C` 50→60°C correction raised these to the 53.2–64.5°C range, see `docs/rajasthan/05_PHASE_3_AUDIT.md`) driving an idealised representative diurnal cycle.
 **Verify:** tank temperature crosses Tm during the solar window and the melt fraction runs 0 → 1 and back. This is an illustrative day-cycle schematic, **not** the enthalpy-porosity simulation — cite it as such.
 
 ### 13. Recommended PCM Summary per Cluster

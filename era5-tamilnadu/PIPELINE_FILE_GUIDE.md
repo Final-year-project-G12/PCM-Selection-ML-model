@@ -162,7 +162,7 @@ QA dashboards. Not on the critical path for Objective 1's ranking
 pipeline; use them whenever you want a closer interactive look at the
 raw or processed climate data.
 
-### `05_cluster_regions.py` (not currently used)
+### `05_cluster_tamilnadu.py` (not currently used)
 The ORIGINAL 4-state design (Tamil Nadu + Rajasthan + Assam +
 Uttarakhand combined). Untouched, still correct, still there for when/if
 you extend beyond Tamil Nadu — not part of the current TN-only run.

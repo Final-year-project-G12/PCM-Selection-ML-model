@@ -27,7 +27,7 @@ except Exception:
     pass
 
 BASE    = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
-TOPK    = os.path.join(BASE,"data","processed","mcdm_rankings_rajasthan.csv")
+TOPK    = os.path.join(BASE,"data","processed","mcdm_full_rankings.csv")
 OUT     = os.path.join(os.path.dirname(os.path.abspath(__file__)),"verify_ranking")
 os.makedirs(OUT, exist_ok=True)
 

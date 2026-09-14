@@ -150,8 +150,9 @@ EXPECTED_K_RANGE_SINGLE_STATE = (2, 4)
 
 # Optional manual override — leave None to use the auto-suggested k from
 # suggest_k(); set an int to force a specific k after reviewing
-# bic_selection_tamilnadu.csv. (The former hardcoded K_FINAL = 5 is gone.)
-LEVEL_A_K_OVERRIDE = None
+# bic_selection_tamilnadu.csv. Forced to 5 per student decision (2026-09-14),
+# overriding the cascade's auto-suggested k=3.
+LEVEL_A_K_OVERRIDE = 5
 
 
 def log_header(title):

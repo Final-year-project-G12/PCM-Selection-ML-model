@@ -35,10 +35,10 @@ PHYSICAL_CSV = os.path.join(BASE,"data","preprocessed","rajasthan_cleaned_physic
 CLUSTERS     = os.path.join(BASE,"data","processed","cluster_assignments_rajasthan_levelA.csv")
 PROFILES     = os.path.join(BASE,"data","processed","cluster_profiles_rajasthan.csv")
 PCM_DB       = os.path.join(BASE,"..","PCM_data","data","PCM_Properties_cleaned_mice_pmm_detailed.csv")
-FEASIBILITY  = os.path.join(BASE,"data","processed","feasibility_survivors_rajasthan_kappa_calibrated.csv")
-FEAS_PRIMARY = os.path.join(BASE,"data","processed","feasibility_survivors_rajasthan.csv")
-TOPK         = os.path.join(BASE,"data","processed","mcdm_rankings_rajasthan.csv")
-MC_STABILITY = os.path.join(BASE,"data","processed","mcdm_rankings_rajasthan.csv")
+FEASIBILITY  = os.path.join(BASE,"data","processed","feasibility_survivors_by_cluster_kappa_calibrated.csv")
+FEAS_PRIMARY = os.path.join(BASE,"data","processed","feasibility_survivors_by_cluster.csv")
+TOPK         = os.path.join(BASE,"data","processed","mcdm_full_rankings.csv")
+MC_STABILITY = os.path.join(BASE,"data","processed","mcdm_full_rankings.csv")
 PHYS_VAL     = os.path.join(BASE,"data","processed","physics_validation_rajasthan.csv")
 OUT          = os.path.join(os.path.dirname(os.path.abspath(__file__)),"rajasthan_objective1")
 os.makedirs(OUT, exist_ok=True)
@@ -86,7 +86,7 @@ def load_feasibility(survivors_only=True):
     cluster pair with a survives_all flag, so 'survivors' means filtering it."""
     df = load(FEASIBILITY,"feasibility")
     if df is None: return None
-    df = df.rename(columns=RENAME)
+    df = df.rename(columns={k:v for k,v in RENAME.items() if v not in df.columns})
     if survivors_only and "survives_all" in df.columns:
         df = df[df["survives_all"].astype(str).str.lower()=="true"].copy()
     prof = load(PROFILES,"cluster profiles")
@@ -106,12 +106,13 @@ def load_topk():
     thermophysical properties the summary/bump plots annotate with."""
     df = load(TOPK,"mcdm rankings")
     if df is None: return None
-    df = df.rename(columns=RENAME)
+    df = df.rename(columns={k:v for k,v in RENAME.items() if v not in df.columns})
     df = ensure_ranks(df)
     feas = load_feasibility()
     if feas is not None:
         props = [c for c in ["Tm_C","latent_heat_kJ_kg","cycles_tested","supercooling_K",
-                             "family","pcm_type","window_lo","window_hi"] if c in feas.columns]
+                             "family","pcm_type","window_lo","window_hi"]
+                 if c in feas.columns and c not in df.columns]
         df = df.merge(feas[["cluster_id","name"]+props].drop_duplicates(subset=["cluster_id","name"]),
                       on=["cluster_id","name"],how="left")
     return df
@@ -416,7 +417,14 @@ def p11():
     print("[11/13] Agreement plot: physics rank vs consensus rank")
     topk=load_topk(); phys=load(PHYS_VAL,"phys_val")
     if topk is None: return
-    if phys is not None: phys=phys.rename(columns=RENAME)
+    if phys is not None:
+        phys=phys.rename(columns={k:v for k,v in RENAME.items() if v not in phys.columns})
+        # Guard against a stale/mismatched physics_validation_rajasthan.csv (e.g. from
+        # a prior kappa/candidate-pool run) carrying a duplicate 'name'-labeled column,
+        # which makes the merge below raise "column label 'name' is not unique".
+        phys=phys.loc[:,~phys.columns.duplicated()]
+    if topk is not None:
+        topk=topk.loc[:,~topk.columns.duplicated()]
     if phys is not None and "hours_target_met_per_year" in phys.columns and "consensus_rank" in topk.columns:
         mg=topk.merge(phys[["cluster_id","name","hours_target_met_per_year"]].drop_duplicates(subset=["cluster_id","name"]),on=["cluster_id","name"],how="left")
         mg["sim_rank"]=mg.groupby("cluster_id")["hours_target_met_per_year"].rank(ascending=False,method="min")
