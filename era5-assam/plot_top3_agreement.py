@@ -8,8 +8,9 @@ Matches the exact visual style of 11_agreement_plot.png:
   - White background, red dashed 1:1 line
   - Per-cluster marker shapes with small horizontal dodge
   - No annotation boxes or arrows
-  - Absolute physics rank (within each cluster, across ALL PCMs)
-  - MCDM consensus rank as-is (1, 2, 3)
+  - Relative physics rank within the TOP-3 MCDM subset per cluster
+    (same approach as Tamil Nadu implementation — sim_rank ranked AFTER
+     merging into topk, so ranking pool = top-3 rows only, axis = 1–3)
 
 Data sources:
   - data/processed/pcm/mcdm_topk_assam.csv
@@ -56,25 +57,38 @@ phys = pd.read_csv(PHYS_CSV)
 # Keep only the MCDM-top-3 per cluster
 top3 = topk[topk["consensus_rank"] <= 3].copy()
 
-# ABSOLUTE physics rank within each cluster (across ALL PCMs in that cluster)
-phys = phys.copy()
-phys["sim_rank"] = phys.groupby("cluster_id")["hours_target_met_per_year"].rank(
-    ascending=False, method="min"
-)
-
-# Merge — only top-3 MCDM rows, but carrying their absolute physics rank
+# ── Merge FIRST (topk is left table — only 3 rows per cluster survive) ────────
+# Then rank AFTER merge so sim_rank is relative within the top-3 subset only.
+# This matches the Tamil Nadu implementation exactly (generate_tamilnadu_plots.py
+# line 392-393: mg = topk.merge(phys, ...) then mg["sim_rank"] = groupby().rank())
 mg = top3.merge(
-    phys[["cluster_id", "name", "hours_target_met_per_year", "sim_rank",
-          "annual_solar_fraction"]],
+    phys[["cluster_id", "name", "hours_target_met_per_year",
+          "annual_solar_fraction"]].drop_duplicates(subset=["cluster_id", "name"]),
     on=["cluster_id", "name"], how="left"
+)
+# sim_rank: 1 = best physics performer among these 3 MCDM-selected PCMs
+mg["sim_rank"] = mg.groupby("cluster_id")["hours_target_met_per_year"].rank(
+    ascending=False, method="min"
 )
 mg["cluster_id"] = mg["cluster_id"].astype(int)
 
-print("Top-3 MCDM PCMs with absolute physics ranks:")
+# Per-cluster jitter offset (applied to both x and y) to reveal overlapping
+# points — same deterministic approach as Tamil Nadu (line 412)
+cids_sorted = sorted(mg["cluster_id"].dropna().unique())
+n_c = max(len(cids_sorted), 1)
+jitter = {cid: (i - (n_c - 1) / 2) * 0.10 for i, cid in enumerate(cids_sorted)}
+mg["_x_j"] = mg.apply(
+    lambda r: r["sim_rank"] + jitter.get(r["cluster_id"], 0.0)
+              if pd.notna(r["sim_rank"]) else r["sim_rank"], axis=1)
+mg["_y_j"] = mg.apply(
+    lambda r: r["consensus_rank"] + jitter.get(r["cluster_id"], 0.0)
+              if pd.notna(r["consensus_rank"]) else r["consensus_rank"], axis=1)
+
+print("Top-3 MCDM PCMs with relative physics ranks (within top-3 subset):")
 print(mg[["cluster_id", "name", "consensus_rank", "sim_rank",
           "hours_target_met_per_year"]].to_string(index=False))
 
-# Spearman correlation
+# Spearman correlation (true integer ranks, not jittered)
 valid = mg.dropna(subset=["sim_rank", "consensus_rank"])
 rho, pval = spearmanr(valid["sim_rank"], valid["consensus_rank"])
 print(f"\nSpearman rho = {rho:.3f}  (p = {pval:.4f})  n = {len(valid)}")
@@ -84,29 +98,24 @@ print(f"\nSpearman rho = {rho:.3f}  (p = {pval:.4f})  n = {len(valid)}")
 # ═══════════════════════════════════════════════════════════════════════
 fig, ax = plt.subplots(figsize=(9.5, 7.2))
 
-# axis limits: x goes up to the max absolute physics rank among top-3 set
-# y always 1–3 (MCDM top-3)
-x_max = int(mg["sim_rank"].max())
+# Both axes 1–3 (sim_rank is now relative within the top-3 subset)
+x_max = 3
 y_max = 3
+ref_max = 3
 
-# 1:1 reference line (extend from 0.5 to the max of both axes)
-ref_max = max(x_max, y_max)
-ax.plot([0.5, ref_max + 0.5], [0.5, ref_max + 0.5],
+# 1:1 reference line
+ax.plot([1, ref_max], [1, ref_max],
         "r--", lw=1.5, alpha=0.8, label="Perfect agreement (1:1)")
 
-# Scatter per cluster with horizontal dodge
+# Scatter per cluster — use jittered x (_x_j) and y (_y_j)
 for cid, grp in mg.groupby("cluster_id"):
     cid = int(cid)
     v = grp[["sim_rank", "consensus_rank"]].notna().all(axis=1)
     marker = CLUSTER_MARKERS.get(cid, "o")
-    offset = CLUSTER_OFFSETS.get(cid, 0.0)
     color  = PAL[cid % len(PAL)]
 
-    x_vals = grp.loc[v, "sim_rank"] + offset
-    y_vals = grp.loc[v, "consensus_rank"]
-
     ax.scatter(
-        x_vals, y_vals,
+        grp.loc[v, "_x_j"], grp.loc[v, "_y_j"],
         color=color, marker=marker, s=120, alpha=0.9,
         edgecolors="white", linewidths=1.2,
         label=CLUSTER_LABELS.get(cid, f"Cluster {cid}"), zorder=4
@@ -148,14 +157,12 @@ COLOR_MAP  = {"Cluster 0 (Circle)": PAL[0],
               "Cluster 2 (Triangle)": PAL[2]}
 
 mg_px = mg.copy()
-mg_px["offset"]         = mg_px["cluster_id"].map(CLUSTER_OFFSETS).fillna(0)
-mg_px["sim_rank_dodged"] = mg_px["sim_rank"] + mg_px["offset"]
-mg_px["Cluster"]         = mg_px["cluster_id"].map(CLUSTER_LABELS).fillna("Cluster")
+mg_px["Cluster"] = mg_px["cluster_id"].map(CLUSTER_LABELS).fillna("Cluster")
 
 fig_px = go.Figure()
 
-# 1:1 reference line
-rng = [0.5, ref_max + 0.5]
+# 1:1 reference line — range 1–3
+rng = [1, ref_max]
 fig_px.add_trace(go.Scatter(
     x=rng, y=rng, mode="lines",
     line=dict(dash="dash", color="red", width=1.5),
@@ -171,15 +178,15 @@ for cl_label, grp in mg_px.groupby("Cluster"):
         hover_texts.append(
             f"<b>{row['name']}</b><br>"
             f"MCDM Rank: #{int(row['consensus_rank'])}<br>"
-            f"Physics Rank (absolute): #{int(row['sim_rank'])}<br>"
+            f"Physics Rank (within top-3): #{int(row['sim_rank'])}<br>"
             f"Hours Target Met: {int(row['hours_target_met_per_year'])} hrs/yr<br>"
             f"Solar Fraction: {row['annual_solar_fraction']:.4f}<br>"
             f"{cl_label}"
         )
 
     fig_px.add_trace(go.Scatter(
-        x=grp_v["sim_rank_dodged"].values,
-        y=grp_v["consensus_rank"].values,
+        x=grp_v["_x_j"].values,
+        y=grp_v["_y_j"].values,
         mode="markers",
         name=cl_label,
         marker=dict(
@@ -201,13 +208,13 @@ fig_px.update_layout(
     xaxis=dict(
         title="Simulated Performance Rank (Annual Solar Hours)",
         tickmode="linear", tick0=1, dtick=1,
-        range=[0.5, x_max + 0.5],
+        range=[0.5, ref_max + 0.5],
         tickfont=dict(size=12), zeroline=False, gridcolor="#e0e0e0"
     ),
     yaxis=dict(
         title="MCDM Consensus Rank (Borda)",
         tickmode="linear", tick0=1, dtick=1,
-        range=[0.5, y_max + 0.5],
+        range=[0.5, ref_max + 0.5],
         tickfont=dict(size=12), zeroline=False, gridcolor="#e0e0e0"
     ),
     template="plotly_white",
