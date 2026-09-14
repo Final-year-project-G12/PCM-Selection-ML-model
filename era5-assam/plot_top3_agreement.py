@@ -42,12 +42,12 @@ os.makedirs(OUT_DIR, exist_ok=True)
 
 # ── style constants matching original 11_agreement_plot.png ──────────────────
 PAL = ["#e6194b", "#3cb44b", "#4363d8"]
-CLUSTER_MARKERS = {0: "o", 1: "s", 2: "^"}
+CLUSTER_MARKERS = {0: "o", 1: "o", 2: "o"}   # same circle for all; color differentiates
 CLUSTER_OFFSETS = {0: -0.12, 1: 0.0, 2: 0.12}
 CLUSTER_LABELS  = {
-    0: "Cluster 0 (Circle)",
-    1: "Cluster 1 (Square)",
-    2: "Cluster 2 (Triangle)",
+    0: "Cluster 0",
+    1: "Cluster 1",
+    2: "Cluster 2",
 }
 
 # ── load data ─────────────────────────────────────────────────────────────────
@@ -149,12 +149,12 @@ print(f"\n[OK] PNG saved: {out_png}")
 # ═══════════════════════════════════════════════════════════════════════
 # PLOTLY INTERACTIVE HTML
 # ═══════════════════════════════════════════════════════════════════════
-SYMBOL_MAP = {"Cluster 0 (Circle)": "circle",
-              "Cluster 1 (Square)": "square",
-              "Cluster 2 (Triangle)": "triangle-up"}
-COLOR_MAP  = {"Cluster 0 (Circle)": PAL[0],
-              "Cluster 1 (Square)": PAL[1],
-              "Cluster 2 (Triangle)": PAL[2]}
+SYMBOL_MAP = {"Cluster 0": "circle",
+              "Cluster 1": "circle",
+              "Cluster 2": "circle"}   # same circle; color differentiates
+COLOR_MAP  = {"Cluster 0": PAL[0],
+              "Cluster 1": PAL[1],
+              "Cluster 2": PAL[2]}
 
 mg_px = mg.copy()
 mg_px["Cluster"] = mg_px["cluster_id"].map(CLUSTER_LABELS).fillna("Cluster")
