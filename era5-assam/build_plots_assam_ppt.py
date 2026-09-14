@@ -679,26 +679,66 @@ def build_all():
     mg_agr["sim_rank"] = mg_agr.groupby("cluster_id")["hours_target_met_per_year"].rank(ascending=False, method="min")
 
     # 11_agreement_plot.png & interactive
-    fig_agr, ax_ag = plt.subplots(figsize=(9, 7))
-    for cid, g in mg_agr.groupby("cluster_id"):
-        v = g[["sim_rank", "consensus_rank"]].notna().all(axis=1)
-        ax_ag.scatter(g.loc[v, "sim_rank"], g.loc[v, "consensus_rank"], color=PAL[int(cid)%len(PAL)], s=80, alpha=0.85, edgecolors="white", lw=0.5, label=f"Cluster {cid}")
+    # Assign unique marker shapes and small horizontal dodge offsets to prevent overlapping points
+    CLUSTER_MARKERS = {0: "o", 1: "s", 2: "^"}
+    CLUSTER_OFFSETS = {0: -0.12, 1: 0.0, 2: 0.12}
+    CLUSTER_LABELS = {0: "Cluster 0 (Circle)", 1: "Cluster 1 (Square)", 2: "Cluster 2 (Triangle)"}
+
+    fig_agr, ax_ag = plt.subplots(figsize=(9.5, 7.2))
     mx_val = max(mg_agr["sim_rank"].max(), mg_agr["consensus_rank"].max())
-    ax_ag.plot([1, mx_val], [1, mx_val], "r--", lw=1.5, label="Perfect agreement")
-    ax_ag.set(xlabel="Simulated Performance Rank (Annual Solar Hours)", ylabel="MCDM Consensus Rank (Borda)", title="Assam - Physics Simulation vs MCDM Consensus Rank\n(per Climate Regime)")
-    ax_ag.legend(fontsize=9); ax_ag.grid(alpha=0.25)
+    ax_ag.plot([0.5, mx_val + 0.5], [0.5, mx_val + 0.5], "r--", lw=1.5, alpha=0.8, label="Perfect agreement (1:1)")
+
+    for cid, g in mg_agr.groupby("cluster_id"):
+        int_cid = int(cid)
+        v = g[["sim_rank", "consensus_rank"]].notna().all(axis=1)
+        marker = CLUSTER_MARKERS.get(int_cid, "o")
+        offset = CLUSTER_OFFSETS.get(int_cid, 0.0)
+        color = PAL[int_cid % len(PAL)]
+
+        x_vals = g.loc[v, "sim_rank"] + offset
+        y_vals = g.loc[v, "consensus_rank"]
+
+        ax_ag.scatter(
+            x_vals, y_vals, color=color, marker=marker, s=120, alpha=0.9,
+            edgecolors="white", linewidths=1.2,
+            label=CLUSTER_LABELS.get(int_cid, f"Cluster {cid}"), zorder=4
+        )
+
+    ax_ag.set_xticks(range(1, int(mx_val) + 1))
+    ax_ag.set_yticks(range(1, int(mx_val) + 1))
+    ax_ag.set_xlim(0.5, mx_val + 0.5)
+    ax_ag.set_ylim(0.5, mx_val + 0.5)
+    ax_ag.set_xlabel("Simulated Performance Rank (Annual Solar Hours)", fontsize=11, fontweight="bold")
+    ax_ag.set_ylabel("MCDM Consensus Rank (Borda)", fontsize=11, fontweight="bold")
+    ax_ag.set_title("Assam - Physics Simulation vs MCDM Consensus Rank\n(per Climate Regime — Distinct Shapes & Dodged Ranks)", fontsize=12, fontweight="bold", pad=10)
+    ax_ag.legend(fontsize=9.5, loc="upper left", framealpha=0.9)
+    ax_ag.grid(True, linestyle="--", alpha=0.35, zorder=1)
     plt.tight_layout()
     save_fig(fig_agr, os.path.join(dir_p6, "11_agreement_plot.png"))
 
+    mg_agr_px = mg_agr.copy()
+    mg_agr_px["offset"] = mg_agr_px["cluster_id"].map(CLUSTER_OFFSETS).fillna(0)
+    mg_agr_px["sim_rank_dodged"] = mg_agr_px["sim_rank"] + mg_agr_px["offset"]
+    mg_agr_px["Cluster"] = mg_agr_px["cluster_id"].map(CLUSTER_LABELS).fillna("Cluster")
+
+    symbol_map = {"Cluster 0 (Circle)": "circle", "Cluster 1 (Square)": "square", "Cluster 2 (Triangle)": "triangle-up"}
+    color_map = {"Cluster 0 (Circle)": PAL[0], "Cluster 1 (Square)": PAL[1], "Cluster 2 (Triangle)": PAL[2]}
+
     fig_px_agr = px.scatter(
-        mg_agr, x="sim_rank", y="consensus_rank", color=mg_agr["cluster_id"].astype(str),
-        hover_data=["name"], title="Assam - Simulated Rank vs MCDM Consensus Rank",
-        template="plotly_white", labels={"sim_rank": "Simulated Rank", "consensus_rank": "Consensus Rank", "color": "Cluster"},
-        color_discrete_sequence=px.colors.qualitative.Set1
+        mg_agr_px, x="sim_rank_dodged", y="consensus_rank", color="Cluster", symbol="Cluster",
+        symbol_map=symbol_map, color_discrete_map=color_map,
+        hover_data={"name": True, "sim_rank": True, "consensus_rank": True, "sim_rank_dodged": False, "Cluster": True},
+        title="Assam - Simulated Rank vs MCDM Consensus Rank",
+        template="plotly_white", labels={"sim_rank_dodged": "Simulated Rank", "consensus_rank": "Consensus Rank"}
     )
-    rng_agr = list(range(1, int(mx_val) + 2))
+    rng_agr = [0.5, mx_val + 0.5]
     fig_px_agr.add_trace(go.Scatter(x=rng_agr, y=rng_agr, mode="lines", line=dict(dash="dash", color="red", width=1.5), name="Perfect agreement"))
-    fig_px_agr.update_layout(height=600)
+    fig_px_agr.update_traces(marker=dict(size=12, line=dict(width=1, color="white")))
+    fig_px_agr.update_layout(
+        height=600,
+        xaxis=dict(tickmode="linear", tick0=1, dtick=1, range=[0.5, mx_val + 0.5]),
+        yaxis=dict(tickmode="linear", tick0=1, dtick=1, range=[0.5, mx_val + 0.5])
+    )
     save_html(fig_px_agr, os.path.join(dir_p6, "11_agreement_plot_interactive.html"))
 
     # 12_tank_temperature_melt_fraction.png & interactive
