@@ -48,4 +48,8 @@ A dedicated cross-source agreement script (`03b_agreement_analysis_assam.py`) wa
 - **Mean Bias Error (MBE)**: The mean bias across Assam's daytime solar radiation was determined to be **1.1%**.
 - **Decision Rule**: The framework specifies that if $|\text{MBE}| \le 10\%$, reanalysis data is accepted directly as the structural backbone without artificial empirical distortion; if $>10\%$, empirical quantile mapping is triggered.
 - **Authoritative Decision**: **`BACKBONE`** (documented in `bias_decision_assam.txt`).
-- **Downstream Impact**: In `04_preprocess_assam.py`, the quantile-mapping correction is bypassed, ensuring that pristine ERA5 reanalysis data flows directly into Phase 3 clustering and Phase 9 physics simulation.
+- **Downstream Impact — correction**: `04_preprocess_assam.py` never reads `bias_decision_assam.txt`
+  and has no conditional on it. Its own per-(point, season) empirical quantile-mapping step runs
+  **unconditionally** and always overwrites `era5_GHI`, regardless of the BACKBONE decision. See
+  `14_ERA5_POWER_VALIDATION.md` for detail. The BACKBONE decision is a valid, favorable finding on
+  its own terms (1.1% MBE), but it is not currently wired into whether the correction is applied.

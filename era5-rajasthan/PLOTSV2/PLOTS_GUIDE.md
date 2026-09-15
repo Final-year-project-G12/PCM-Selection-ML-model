@@ -3,6 +3,18 @@
 > **Project:** Climate-Adaptive PCM Thermal Storage for Solar Water Heating — Objective 1 (climate-region-aware PCM recommendation)
 > **State:** Rajasthan | **Plot set:** V2 — the same 13 objective-1 plots + 4 verification suites that `tamilnadu_pipeline/plots/` and `era5-uttarakhand/` produce, regenerated on Rajasthan data with the same figure sizes, palette and filenames.
 
+> ⚠️ **STALENESS NOTICE (2026-09-13): most specific numbers in this guide predate the
+> `T_DELIVERY_C` (50→60°C) and `M_W_KG` (300→200 kg) corrections documented in CLAUDE.md §3.2/§3.3
+> and `docs/rajasthan/05_PHASE_3_AUDIT.md` / `09_PHASE_7_AUDIT.md`.** Only a few plot descriptions
+> below (plots 3 and 12) carry an inline note about this; the survivor counts (9/14/16 per cluster,
+> n=39 total), Top-1/Top-3 picks (RT50, savE® OM50), melting-window bounds, and Spearman ρ values
+> quoted throughout §3, §4 and §6 are from the pre-correction run. The current, corrected run has
+> 4/8/11 survivors per cluster (n=23 total) and different Top-1 picks per cluster (Palmitic-stearic
+> acid/Expanded graphite, PureTemp 60, n-Heptacosane (C27) — see
+> `outputs/recommendation_cards_rajasthan.md`). Regenerate this whole plot set against current
+> on-disk data before citing any number below in the paper; treat every figure and statistic here as
+> illustrative of the plotting methodology, not as current results.
+
 ---
 
 ## 1. Quick reference
@@ -55,7 +67,7 @@ All paths relative to `era5-rajasthan/`:
 | Cluster assignments (**Level A**, annual GMM, k=3) | `data/processed/cluster_assignments_rajasthan_levelA.csv` |
 | Cluster profiles | `data/processed/cluster_profiles_rajasthan.csv` |
 | Feasibility evaluation (kappa-calibrated) | `data/processed/feasibility_survivors_by_cluster_kappa_calibrated.csv` (renamed 2026-09-08 from `feasibility_survivors_rajasthan_kappa_calibrated.csv`; the `PLOTSV2/*.py` scripts still use the old literal path and need updating before regeneration) |
-| MCDM rankings | `data/processed/mcdm_rankings_rajasthan.csv` |
+| MCDM rankings | `data/processed/mcdm_full_rankings.csv` (renamed 2026-09-08 from `mcdm_rankings_rajasthan.csv`; `generate_rajasthan_plots.py` already uses the new name) |
 | Physics validation | `data/processed/physics_validation_rajasthan.csv` |
 | PCM property database | `../PCM_data/data/PCM_Properties_cleaned_mice_pmm_detailed.csv` |
 

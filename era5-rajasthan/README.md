@@ -21,8 +21,13 @@ independent sources can be cross-checked against each other.
 
 ── QA / QC — read-only, safe to run anytime, not part of the linear chain ──
 03_verify_climate_csv.py       →  (stdout report on climate_rajasthan_points.csv)
-03_qc_plots.py                 →  outputs/qc_*.html  (folium maps + plotly charts)
+00d_population_grid_viz.py     →  outputs/grid_plot.html  (Plotly, sampling-grid sanity check)
+03_plots_raw.py                →  PLOTSV2/raw/*.png  (raw-data QA, checks A-F)
+03b_interactive_raw_qa.py      →  PLOTSV2/raw_interactive/*.html  (same checks, interactive)
 ```
+
+NOTE: no script named `03_qc_plots.py` exists in this pipeline — see the corrected section below
+("00d_population_grid_viz.py") for what actually produces the Phase-1 sampling-grid QC output.
 
 ## Run Order
 
@@ -37,7 +42,9 @@ python 02_combine_rajasthan.py        # merges everything into climate_rajasthan
 python 02b_build_daily_aggregates.py  # true daily integrals/indices from cached NASA POWER hourly data
 
 python 03_verify_climate_csv.py       # optional: QA report on climate_rajasthan_points.csv
-python 03_qc_plots.py                 # optional: spatial/distributional QC plots, any time during acquisition
+python 00d_population_grid_viz.py     # optional: sampling-grid sanity-check plot (population/weight/elevation)
+python 03_plots_raw.py                # optional: raw-data QC plots (static PNG, checks A-F)
+python 03b_interactive_raw_qa.py      # optional: same checks, interactive Plotly+Folium HTML
 ```
 
 Each script is resumable — safe to Ctrl-C and re-run; already-completed work
@@ -217,57 +224,30 @@ pulling both.
 
 HOW TO RUN: `python 03_verify_climate_csv.py`
 
-### `03_qc_plots.py`
-Spatial and distributional sanity-check plots for the data-acquisition
-phase — not final results. Builds folium maps for anything spatial and
-plotly charts for anything distributional/time-series, reading only the
-processed/status CSVs the earlier scripts already produce (never touches
-raw NetCDF/JSON caches — that's `02b`'s job). Every plot is independently
-skippable: if an input file a given plot needs doesn't exist yet, it prints
-a `[SKIP]` warning and moves on instead of crashing, so it stays runnable
-at any point during acquisition.
+### `00d_population_grid_viz.py`
+**CORRECTED — this section previously described a `03_qc_plots.py` script (folium
+population/elevation/download-status maps + several separate plotly QC charts under
+`outputs/qc_*.html`) that does not exist anywhere in this pipeline; no such file, and none of the
+`qc_population_*.html` / `qc_elevation_*.html` / `qc_download_status_*.html` / `qc_suntimes_line.html`
+/ `qc_rejection_window.html` outputs it described, were ever found on disk.**
 
-Folium maps (spatial QC):
-- `qc_population_map.html` — points sized by population, colored by
-  sampling weight, with the Rajasthan boundary overlaid if the GADM
-  GeoJSON from `00a` is still cached.
-- `qc_elevation_map.html` — points colored by `elevation_m` on a
-  terrain-style gradient; flags points with `NaN` elevation (the only real
-  attach-failure signature — see the script's comment on why "close to
-  300m" is *not* used as a flag: that fallback is applied transiently
-  inside `02_combine_rajasthan.py`'s merge step, never written back into
-  `population_grid_points.csv`).
-- `qc_download_status_map.html` — points colored green/yellow/red by
-  combined ERA5+NASA POWER completion. Note: ERA5 downloads are one
-  bbox-wide request per (year, month, var_type), not per point, so ERA5
-  completion is a single pipeline-wide figure applied identically to every
-  point — the map says so in an on-map legend note.
+What actually exists for this sanity-check role is `00d_population_grid_viz.py`: a read-only Plotly
+renderer for the population-weighted sampling grid, producing ONE self-contained
+`outputs/grid_plot.html` (`scatter_mapbox`-style, tokenless carto-darkmatter basemap) with a dropdown
+to switch which metric — `population` / `weight` / `elevation_m` — drives marker size and colour.
+Reads `population_grid_points.csv` only; produces no data. Not in the core chain. A prior Folium
+version of this map was dropped 2026-08-12 in favor of the current Plotly-only renderer.
 
-Plotly charts (distributional / time-series QC):
-- `qc_population_weight_scatter.html`, `qc_population_histogram.html`
-- `qc_elevation_histogram.html`, `qc_elevation_boxplot.html` (single
-  Rajasthan group — this pipeline instance has no `state` column since it
-  only ever produces Rajasthan points; not comparable to
-  era5-uttarakhand/'s own output without combining them externally)
-- `qc_suntimes_line.html` — sunrise/noon/sunset UTC hour across
-  2016-2025 for points spanning the longitude range, one subplot per
-  event; annotates the documented cross-midnight wraparound if visible
-  rather than treating it as a bug
-- `qc_download_status_by_year.html` — completion bar chart per year per
-  source (`complete`/`partial`=not-yet-attempted/`failed`)
-- `qc_rejection_window.html` — histogram of requested-vs-matched reading
-  time offset against the 3h rejection threshold; **currently always
-  skipped**, because `climate_rajasthan_points.csv` only stores the
-  *requested* sun-event time, not the actual matched ERA5/POWER reading
-  timestamp — `02_combine_rajasthan.py` would need two extra output
-  columns (`era5_matched_time_utc`, `power_matched_time_utc`) for this to
-  work.
+The requested-vs-matched reading-time-offset diagnostic this section used to describe under
+`qc_rejection_window.html` does not exist either, for the same underlying reason: it would need
+`era5_matched_time_utc` / `power_matched_time_utc` columns that `02_combine_rajasthan.py` never
+writes (see `docs/rajasthan/04_PHASE_2_AUDIT.md` §A.5 for that open gap).
 
-- Output: `outputs/*.html` (all standalone, self-contained files) plus a
-  stdout QC summary (point count, elevation min/max/mean, completion % per
-  source per year).
+For raw-data distributional/cross-source QC (the closest thing to what this section originally
+described), see `03_plots_raw.py` (static PNG, checks A-F) and `03b_interactive_raw_qa.py`
+(interactive Plotly+Folium HTML) in `docs/rajasthan/04_PHASE_2_AUDIT.md`.
 
-HOW TO RUN: `python 03_qc_plots.py`
+HOW TO RUN: `python 00d_population_grid_viz.py`
 
 ---
 
@@ -278,14 +258,15 @@ next stage builds climate signatures for each point and filters PCM candidates
 against climate-specific design constraints. Located in `era5-rajasthan/`:
 
 ```
-04_climate_signature_rajasthan.py   →  data/processed/climate_signature_rajasthan.csv
+04b_climate_signature.py            →  data/processed/climate_signature_rajasthan.csv
 05_cluster_rajasthan.py             →  data/processed/cluster_profiles_rajasthan.csv
 07_feasibility_filter.py            →  data/processed/feasibility_survivors_by_cluster.csv
                                         data/processed/feasibility_survivors_by_cluster_kappa_calibrated.csv
                                         (canonical Tamil-Nadu naming, unified 2026-09-08)
 ```
 
-### `04_climate_signature_rajasthan.py` (PHASE 3)
+### `04b_climate_signature.py` (PHASE 3)
+(renamed from `04_climate_signature_rajasthan.py` — script on disk is `04b_climate_signature.py`)
 
 Reduces each point's 10-year daily and sun-event records to a single
 **climate-signature vector** — the summary that Phase 4 (clustering) actually
@@ -317,11 +298,15 @@ L_required = (SHARE_PCM * Q_night) / m_PCM
 
 with SHARE_PCM = 0.5 (central estimate; range 0.4–0.7). This shifts from an
 all-latent, zero-candidate baseline to a combined sensible+latent model where
-majority of candidates survive Phase 5 filtering. See `04_climate_signature_rajasthan.py`'s
+majority of candidates survive Phase 5 filtering. See `04b_climate_signature.py`'s
 docstring (corrections #4–5) for full rationale, or CLAUDE.md §3.1 for the
-complete methodology justification and Phase 5 guidance.
+complete methodology justification and Phase 5 guidance. NOTE: `T_DELIVERY_C` (feeding this same
+`L_required` formula) was subsequently raised 50→60°C on 2026-09-13 to match Avargani et al.
+(2021)'s actual validated delivery temperature — see CLAUDE.md §3.2 and
+`docs/rajasthan/05_PHASE_3_AUDIT.md`; `L_required` now runs ~410–469 kJ/kg, not the ~285–344 kJ/kg
+this section's SHARE_PCM=0.5 example predates.
 
-**HOW TO RUN:** `python 04_climate_signature_rajasthan.py`
+**HOW TO RUN:** `python 04b_climate_signature.py`
 
 ### `05_cluster_rajasthan.py` (PHASE 4)
 
@@ -338,7 +323,8 @@ signature columns aggregated to cluster level, plus `Tm_target_capped_C` and
 
 **HOW TO RUN:** `python 05_cluster_rajasthan.py`
 
-### `07_feasibility_filter_rajasthan.py` (PHASE 5)
+### `07_feasibility_filter.py` (PHASE 5)
+(renamed from `07_feasibility_filter_rajasthan.py` — script on disk is `07_feasibility_filter.py`)
 
 Hard-filters the shared PCM candidate database against each cluster's 8
 design constraints (melting window, absolute Tm band, latent-heat floor,
@@ -361,7 +347,7 @@ together: broken assumption (old κ=0.7 → zero survivors) → diagnosis (L_req
 ceiling) → correction (SHARE_PCM factorization) → verification (new κ resets
 higher).
 
-**HOW TO RUN:** `python 07_feasibility_filter_rajasthan.py`
+**HOW TO RUN:** `python 07_feasibility_filter.py`
 
 ---
 
@@ -372,8 +358,8 @@ pip install geopandas rasterio requests pandas numpy xarray netCDF4 pvlib scipy 
 ```
 
 `geopandas`/`rasterio` are only needed for `00a`; `folium`/`branca`/`plotly`
-are only needed for `03_qc_plots.py`; the rest of the pipeline only needs
-the others.
+are only needed for the QC/visualization scripts (`00d_population_grid_viz.py`, `03_plots_raw.py`,
+`03b_interactive_raw_qa.py`); the rest of the pipeline only needs the others.
 
 ### Other files in this folder
 - `.cdsapirc` — your personal CDS/Copernicus API credentials (`url:` /

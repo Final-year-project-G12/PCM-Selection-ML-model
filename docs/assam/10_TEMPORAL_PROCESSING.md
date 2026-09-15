@@ -1,12 +1,14 @@
 # 13 — Temporal Processing Audit (Assam)
 
-## UTC as sole time reference
+## UTC storage, with IST conversion applied downstream
 
-All timestamps are UTC — `time_utc` in `suntimes.csv`, ERA5's native UTC, NASA POWER requested
-with UTC. No IST (India Standard Time, UTC+5:30) conversion exists in the pipeline. Assam sits at
-approximately UTC+5:30 (IST), so solar noon in UTC is approximately 06:00–07:00 UTC depending on
-longitude (~89–97°E). Any figures presented to a general audience need explicit UTC→IST conversion
-at presentation time.
+Raw timestamps are stored in UTC — `time_utc` in `suntimes.csv`, ERA5's native UTC, NASA POWER
+requested with UTC. **Correction:** IST (India Standard Time, UTC+5:30) conversion does exist in
+the pipeline: `04_preprocess_assam.py` creates `df["time_ist"] = df["time_utc"].dt.tz_convert("Asia/Kolkata")`
+and asserts the mean IST hour of the `noon` event falls in [10, 13] (logging `[FAIL]` otherwise);
+`02b_build_daily_aggregates_assam.py` also converts its hourly index to `Asia/Kolkata` before
+bucketing days, so "day" means local civil day, not UTC day. Assam sits at approximately UTC+5:30,
+so solar noon in UTC is approximately 06:00–07:00 UTC depending on longitude (~89–97°E).
 
 ## Sunrise/noon/sunset via pvlib SPA
 
@@ -33,7 +35,7 @@ Expected `suntimes.csv` rows: 129 × 3653 × 3 = 1,413,711.
 `nearest_row(series_df, target_time, max_hours=3)` — rejects any ERA5 or POWER reading farther
 than 3 hours from the true sun-event instant. Applied independently to each source. The actual
 matched timestamp is not persisted in the output (only the requested `time_utc` is written) — this
-is a known gap inherited from the Rajasthan design; see `10_IMPLEMENTATION_ISSUES.md`.
+is a known gap inherited from the Rajasthan design; see `20_IMPLEMENTATION_ISSUES.md`.
 
 ## Season mapping (Assam)
 
@@ -52,9 +54,11 @@ and `02b_build_daily_aggregates_assam.py`.
 
 ## Monsoon index consistency
 
-`monsoon_index` in the Tier 2 signature (fraction of annual precipitation in Jun–Sep) matches the
-4-month Monsoon season definition used in the `season` column throughout the pipeline. This is
-**correctly consistent** — a deliberate improvement over Rajasthan's documented monsoon-month mismatch.
+`monsoon_index` (computed in `04b_climate_signature.py` from ERA5's event-sampled precipitation,
+not a NASA POWER daily integral — POWER's `PRECTOTCORR` is not downloaded) sums months 6–9,
+matching the 4-month Monsoon season definition used in the `season` column throughout the
+pipeline. This is **correctly consistent** — a deliberate improvement over Rajasthan's documented
+monsoon-month mismatch.
 
 ## Literature support
 

@@ -13,10 +13,10 @@ readiness verdict for the `era5-uttarakhand/` pipeline.
 |---|---|---|---|
 | 1 — Data Collection | `00a`, `00b`, `01`, `01b`, `00_unzip_accum` | **COMPLETE** | 45 points `UKP_0001–UKP_0045`, 10,475,711 population, 2016–2025 |
 | 2 — Combine + Tier-2 repair | `02`, `02b` | **COMPLETE** | **493,155 rows = 45 × 3,653 × 3 exactly** — zero rows lost to the 3 h match window |
-| 2 QA — Raw checks | `03`, `03b` | **COMPLETE** | Noon peaks GHI (timezone OK); **GHI MBE −211.4 W/m², r = 0.432** |
+| 2 QA — Raw checks | `03`, `03b`, `03b_agreement_analysis` | **COMPLETE, RESOLVED 2026-09** | Noon peaks GHI (timezone OK); post-deaccumulation-fix **GHI MBE +19.55 W/m², r = 0.759**, `03b_agreement_analysis.py` decision branch **QUANTILE_MAP** (was MBE −211.4/−602 W/m², r = 0.432/-0.03 pre-fix, branch MANUAL_REVIEW) |
 | 2 — Preprocessing & QC | `04`, `04c` ×2 | **COMPLETE** | 493,155 → **489,105 rows** (99.2 %); 36 → 89 columns; **zero residual NaN** |
-| 3 — Climate Signature | `04b`, `04d` | **COMPLETE** | Two-tier merge; `Tm_target` fixed at **57 °C** for every point |
-| 4 — Regime Clustering | `05`, `05b` | **COMPLETE** | **K = 5**, GMM full covariance; sizes **12 / 9 / 3 / 7 / 14**; silhouette 0.279 |
+| 3 — Climate Signature | `04b`, `04d` | **COMPLETE** | Two-tier merge; `Tm_target` fixed at **57 °C** for every point; real per-point `elevation_m` (196-2510m) replaces the old pressure-derived `elev_proxy` |
+| 4 — Regime Clustering | `05`, `05b` | **COMPLETE** | **K = 5**, GMM **diagonal** covariance (fixed from `full`); sizes **7 / 3 / 9 / 10 / 16**; silhouette **0.28** (was sizes 12/9/3/7/14, silhouette 0.279, `full` covariance, from an earlier signature version) |
 | 5 — Feasibility Filtering | `06`, `07`, `07b` | **COMPLETE, RESOLVED 2026-09** | 55-candidate database; window [52, 65] °C at Tm_target=57; **29/30/29/27/29 survivors — no longer identical**, since `07b`'s regime-cap bug is fixed (Clusters 1/2 get 55.16C/56.51C) |
 | 6 — MCDM Ranking | `08` | **COMPLETE, RESOLVED 2026-09** | TOPSIS + GRA + PROMETHEE II + VIKOR + Borda (was TOPSIS+GRA only); **PureTemp 58 #1 in Clusters 0/2/3/4, PureTemp 53 in Cluster 1**; Kendall's W 0.708-0.842 per cluster (was pooled TOPSIS-vs-GRA ρ = −0.930, a two-method-era figure) |
 | 7 — Physics Validation | `10_physics_validation.py` | **COMPLETE, RESOLVED 2026-09** | Backward-Euler grey-box tank model, two solver bugs fixed (verified against `scipy.integrate.solve_ivp`); **0% in [54%, 84%] SF band** (actual ~15-19%) — the previous 92%/+0.124 figures were inflated by those bugs and are not valid; current per-cluster ρ ranges −0.227 to +0.171, none significant |
@@ -272,7 +272,8 @@ readiness verdict for the `era5-uttarakhand/` pipeline.
 2. **Add `requirements.txt`** — `pip freeze > requirements.txt`. Zero code change.
 3. **Pin `get_solarposition(method="spa")`** in `02_combine_uttarakhand.py`. One line.
 4. **Add `df = df[df["passes_all"]]`** to the four feasibility plots and `verify_03`. One line each.
-5. **Fix `TN_CENTER`** in `05d`/`05c` to the point-set mean. One line each.
+5. **~~Fix `TN_CENTER`~~ RESOLVED** — `05d`/`05c` now use `[29.7, 78.9]` (Uttarakhand's centroid),
+   confirmed in both the code and the committed HTML output.
 6. **Fix `comparison_plots_uttarakhand.py`'s `BASE`** — drop the spurious `".."`. One line.
 7. **Save `scaler` and `gmm` via `joblib`** in `04b`/`05`, and record `sklearn.__version__` in every
    output CSV.
@@ -333,43 +334,66 @@ readiness verdict for the `era5-uttarakhand/` pipeline.
 
 ## Prerequisites for a final, non-provisional result
 
-1. **Verify and, if necessary, fix `deaccumulate()`** — one inspection of a raw `*_accum.nc` file.
-   Everything solar downstream is provisional until this is settled.
-2. **Break the constant-`Tm_target` degeneracy** — run `07b` before `07`, or report the convergence
-   as a finding with `08`'s own wording.
-3. **Fix the `era5_P_atm` bound or attach real elevation**, then re-run `04 → 04b → 05` and check
-   whether the K = 5 partition survives.
+Items 1, 2, 3 (elevation half) and 5 below are now **RESOLVED (2026-09)** — kept as a record of
+what was required and confirming it was done. Item 3's `era5_P_atm` bound itself and item 4 remain
+open.
+
+1. **~~Verify and, if necessary, fix `deaccumulate()`~~ RESOLVED.** The raw `*_accum.nc` files were
+   inspected (2016/2020/2025); the bug was confirmed and fixed. See `04_PHASE_2_AUDIT.md` Part A.3.
+2. **~~Break the constant-`Tm_target` degeneracy~~ RESOLVED.** `07b` was already being run before
+   `07`; its regime-cap normalization bug was found and fixed instead. Clusters 1/2 now get a real,
+   differentiated `Tm_target`.
+3. **Fix the `era5_P_atm` bound** — still open, not touched by the 2026-09 fixes. **Attach real
+   elevation — RESOLVED** via `00c_attach_elevation.py` (196-2510 m from ERA5 geopotential); the
+   K = 5 partition has since been re-run on the corrected signature (sizes now 7/3/9/10/16, not
+   12/9/3/7/14).
 4. **Commit the small result CSVs** so the numbers in a paper are traceable to files rather than to
-   plot internals.
-5. *(Optional but high value)* **Implement a minimal Phase 7** — every input it needs is already on
-   disk (`09_PHASE_7_AUDIT.md`), and it is the designated place for regime differentiation to
-   appear.
+   plot internals — still open; `data/processed/` remains git-ignored.
+5. **~~Implement a minimal Phase 7~~ RESOLVED.** `10_physics_validation.py` exists, has been run,
+   and had two solver bugs fixed — see `09_PHASE_7_AUDIT.md`. It did not end up being where regime
+   differentiation appeared (that came from the `07b` fix instead), but it does provide independent
+   physics-based validation with an honest negative benchmark-match result.
 
 ---
 
 ## Final verdict
 
-**READY WITH MINOR FIXES — Phases 1, 2 (structure), 3 and 4.** The sampling design, the merge, the
-Tier-2 repair, the two-tier signature and the clustering are methodologically sound, well
-documented in-code, and produced clean, internally consistent, cross-checkable results. The fixes
-needed are small and specific.
+**UPDATED (2026-09) — this section previously described the pre-fix state of the pipeline; every
+verdict below has been revised to match the "Weakest components" and "Implementation issues"
+sections above, which already reflect the 2026-09 fixes.**
 
-**NOT READY AS A FINAL RESULT — any solar-magnitude claim.** The ERA5 all-sky GHI is roughly an
-order of magnitude low, the pipeline measured this, and no correction was applied. The Tier-2
-design limits the damage to `GHI_mean` within the clustering matrix, but no absolute irradiance
-figure from this pipeline should be published until `deaccumulate()` is verified.
+**READY, WITH SMALL REMAINING OPEN ITEMS — Phases 1 through 4.** The sampling design, the merge
+(with `deaccumulate()` now verified and fixed), the Tier-2 repair, the two-tier signature and the
+clustering are methodologically sound, well documented in-code, and produced clean, internally
+consistent, cross-checkable results. Remaining open items (K=5 above the source files' own
+"realistically 2-4" recommendation, the still-unfixed 850 hPa `era5_P_atm` bound, no bootstrap
+stability) are specific and documented, not blocking.
 
-**NOT READY AS A FINAL RESULT — Phases 5 and 6.** Not because the code is wrong, but because the
-result is degenerate by construction: constant `Tm_target` plus a non-binding latent-heat floor
-gives identical survivors and an identical winner in all five regimes, and that winner is a Borda
-tie between two methods that disagree at ρ = −0.930. The pipeline correctly detects and explains
-this. It is a reportable finding, not a final recommendation.
+**LARGELY READY — solar-magnitude claims.** The ERA5 all-sky GHI deaccumulation bug (roughly an
+order-of-magnitude deflation) is fixed and independently verified against NASA POWER
+(MBE +19.6 W/m², r = 0.759, was MBE −211.4/−602 W/m², r = 0.432/-0.03). The remaining open item is
+`era5_P_atm`'s own 850 hPa lower bound, which still one-sidedly truncates 37.1% of that column for
+any use other than the clustering matrix (which no longer derives elevation from it).
 
-**CORRECTLY DECLARED FUTURE WORK — Phase 7.** Named as absent in three source files, with a minimal
-specification given and every required input already on disk.
+**READY, WITH A HONEST NEGATIVE/PARTIAL FINDING — Phases 5 and 6.** The identical-survivors,
+identical-#1-everywhere result was traced to a real bug in `07b_charging_feasibility.py`'s
+regime-cap normalization (dividing away its own signal), not an inevitable consequence of the
+constant Phase-3 `Tm_target=57C`. Fixed: Cluster 1 (`Tm_target=55.16C`) and Cluster 2
+(`Tm_target=56.51C`) now get genuinely differentiated survivor sets and, for Cluster 1, a different
+consensus #1 (PureTemp 53 vs. PureTemp 58 elsewhere). Clusters 0/3/4 still sharing `Tm_target=57C`
+and mostly the same Top-1 pick is now a legitimate finding, not a bug. The four-method MCDM stack
+(TOPSIS+GRA+PROMETHEE II+VIKOR) with Kendall's W 0.708-0.842 per cluster replaces the old two-method
+Borda tie at pooled ρ = −0.930.
+
+**IMPLEMENTED AND RUN, WITH AN HONEST NEGATIVE RESULT — Phase 7.** `10_physics_validation.py` is
+implemented, was run, and had two solver bugs fixed (a backward-Euler numerator error and a
+one-directional latent-heat accumulator). The corrected result — 0% of simulations land in the
+54-84% literature solar-fraction benchmark band, actual ~15-19%, per-cluster Spearman rho −0.227 to
++0.171 with none significant — is a genuine, reportable finding once the bugs were fixed, not
+evidence the model is still broken.
 
 The pipeline's defining characteristic is that **it documents its own limitations in code rather
 than in retrospect** — the unimplemented filters, the heuristic proxy, the placeholder AHP weights,
-and the constant-`Tm_target` diagnostic are all self-declared. The gap is not honesty; it is that
-two measured problems (the GHI disagreement and the pressure-bound truncation) were observed and
-then not acted upon.
+and the constant-`Tm_target` diagnostic were all self-declared even before they were fixed. The
+main remaining gap is the still-open `era5_P_atm` 850 hPa bound and the absence of committed result
+CSVs, both documented above as specific, addressable items.

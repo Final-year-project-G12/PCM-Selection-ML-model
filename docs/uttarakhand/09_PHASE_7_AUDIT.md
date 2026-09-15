@@ -106,14 +106,34 @@ data. That is itself a diagnostic finding, not a data error.
 
 ## Key Physical Insights & Diagnostics
 
-1. **Delivered Solar Fraction Differentiation**:
-   While Phase 5 and Phase 6 returned identical top candidates across clusters (due to uniform $T_{m,target} = 57\text{ }^\circ\text{C}$), Phase 7 demonstrates **clear regional performance differentiation**:
-   - **Cluster 3 (Plains/Interior)** achieves the highest solar fractions (~78–81%), driven by strong daily solar insolation.
-   - **Cluster 2 (High Himalayan)** yields lower solar fractions (~51–63%), directly reflecting mountain cloud cover and lower ambient temperatures.
+**STALE-DATA WARNING, now corrected:** this section previously quoted per-cluster solar fractions
+of ~78-81% (Cluster 3) and ~51-63% (Cluster 2), and a rank-correlation figure of rho=0.124 — both
+left over from the pre-fix run that produced the (wrong) ~92%-in-band result described above as
+superseded. They directly contradicted the corrected ~12-19% solar-fraction range and the
+per-cluster rho values (-0.227 to +0.171, mean ~-0.092) reported earlier in this same file, and are
+replaced below with the corrected figures. The "Plains/Interior" / "High Himalayan" cluster labels
+have also been removed: no committed artefact in `era5-uttarakhand/` assigns geographic names to
+cluster IDs (see `06_PHASE_4_AUDIT.md`), so labelling Cluster 3 or Cluster 2 that way is
+interpretation, not a pipeline output.
 
-2. **Explanation of Low Rank Correlation ($\rho = 0.124$)**:
-   - In Phase 6, the TOPSIS and GRA methods showed strong anti-correlation ($\rho = -0.930$), making the MCDM consensus rank a positionally averaged compromise.
-   - The physical simulation shows that among top feasibility survivors, thermal storage capacity and melting point ($T_m$) have non-linear interactions with daily draw schedules that static MCDM property weighting cannot capture.
+1. **Delivered Solar Fraction Differentiation**:
+   Phase 5 and Phase 6 returned near-identical top candidates across clusters (Clusters 0/2/4 share
+   `Tm_target=57C`; Clusters 1/2 get a regime-capped, lower target from `07b_charging_feasibility.py`
+   — see `07_PHASE_5_AUDIT.md`). Phase 7's corrected model shows the annual solar fraction itself
+   *does* differ by cluster, even though the differences are modest in absolute terms and none reach
+   the 54-84% benchmark band: Cluster 3 is highest at ≈19.1%, Clusters 0 and 2 are ≈15.9%, Cluster 4
+   is ≈16.7%, and Cluster 1 is lowest at ≈12.0% (see the table above).
+2. **Explanation of Low Rank Correlation**:
+   - In the (now-superseded) two-method version of Phase 6, TOPSIS and GRA showed strong
+     anti-correlation ($\rho = -0.930$, pooled); the current four-method consensus has a much
+     healthier per-cluster Kendall's W of 0.708-0.842 (see `08_PHASE_6_AUDIT.md`).
+   - Even so, per-cluster Spearman rho between the MCDM consensus rank and simulated solar fraction
+     is weak and non-significant in every cluster (-0.227 to +0.171, mean ≈ -0.092, no cluster
+     p < 0.05 — see the table above). The physical simulation shows that among top feasibility
+     survivors, thermal storage capacity and melting point ($T_m$) have non-linear interactions with
+     daily draw schedules that static MCDM property weighting cannot capture, and that (at this
+     model's current parameterization) the choice of PCM barely moves annual solar fraction next to
+     the effect of the cluster's own weather driving data.
 
 ---
 

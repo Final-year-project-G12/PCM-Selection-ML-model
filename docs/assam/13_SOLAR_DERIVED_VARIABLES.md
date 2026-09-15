@@ -2,9 +2,9 @@
 
 ## GHI
 
-`GHI = accum_to_flux(ssrd)/3600`, clipped ≥ 0. See `12_ERA5_DATA_PIPELINE.md` for the full
+`GHI = deaccumulate(ssrd)/3600`, clipped ≥ 0. See `09_ERA5_DATA_PIPELINE.md` for the full
 deaccumulation story. This is the pipeline's most consequential derived variable. The Assam pipeline
-inherits the fixed `accum_to_flux()` version.
+inherits the fixed `deaccumulate()` version (a stateless pass-through, no differencing).
 
 **Assam context**: Assam's monsoon-season GHI is significantly lower than the other three states —
 the Brahmaputra valley receives >80% of its annual precipitation in Jun–Sep, and cloud cover reduces
@@ -21,7 +21,7 @@ else:
     df["DNI"] = np.where(cos_z > 0.05, df["GHI"] / cos_z, 0).clip(0, 1400)  # fallback
 ```
 
-Branch 1 (primary): DNI taken directly from the ERA5 direct-radiation field. See `12_ERA5_DATA_PIPELINE.md`
+Branch 1 (primary): DNI taken directly from the ERA5 direct-radiation field. See `09_ERA5_DATA_PIPELINE.md`
 for the unit-consistency caveat on which ERA5 field name actually matched.
 
 Branch 2 (fallback — crude closure): `DNI = GHI / cos(SZA)` assuming zero diffuse component. This
@@ -42,7 +42,8 @@ absolute values should be treated as estimates, not measured quantities.
 
 ## Clearness index (CSI / kt)
 
-`CSI = GHI / GHI_clearsky` clipped to [0, 1.5], forced to 0 below 10 W/m² clearsky threshold.
+`CSI = GHI / GHI_clearsky` clipped to **[0, 1.2]** (both in `02_combine_assam.py` and when
+recomputed in `04_preprocess_assam.py` step [8]), forced to 0 below the 10 W/m² clearsky threshold.
 
 **Clearness Index & Cluster Context**:
 
@@ -67,11 +68,11 @@ kt is substantially higher (~0.85+) due to its predominantly dry, clear-sky clim
 
 | Variable | Applied bound | Where |
 |---|---|---|
-| GHI | `<0 → 0` | `accum_to_flux()` |
+| GHI | `<0 → 0` | `deaccumulate()` call site |
 | GHI (upper) | `>1400 → NaN` (high values dropped) | `02_combine_assam.py` |
 | DNI | `clip(0, 1400)` | both branches |
 | DHI | `clip(0)`, no upper bound | `02_combine_assam.py` |
-| CSI | `clip(0, 1.5)`, forced 0 below GHI_clearsky=10 threshold | `02_combine_assam.py` |
+| CSI | `clip(0, 1.2)`, forced 0 below GHI_clearsky=10 threshold | `02_combine_assam.py`, `04_preprocess_assam.py` |
 
 ## Monsoon-season cloud cover — a real validation signal
 

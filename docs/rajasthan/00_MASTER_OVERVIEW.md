@@ -213,10 +213,10 @@ failure — see "Current architecture" → Resumability below.
 | `cluster_assignments_rajasthan_levelA.csv` | 320 | 1 row/point | `05` |
 | `cluster_profiles_rajasthan.csv` | 3 | 1 row/cluster | `05` |
 | `feasibility_survivors_by_cluster.csv` / `…_kappa_calibrated.csv` | 186 (3 clusters × 62 candidates) | 1 row/cluster×PCM | `07` |
-| `mcdm_full_rankings.csv` | survivors across clusters (n≈41) | 1 row/cluster×surviving PCM | `08` |
+| `mcdm_full_rankings.csv` | survivors across clusters (n=23, 4/8/11 per cluster, post-2026-09-13 delivery-temperature correction) | 1 row/cluster×surviving PCM | `08` |
 | `mcdm_topk_by_cluster.csv` | 9 (3 clusters × Top-3) | 1 row/cluster×Top-3 PCM | `08` |
 | `monte_carlo_stability.csv` / `mcdm_method_agreement.csv` | — | MC / method-pair diagnostics | `08` |
-| `physics_validation_rajasthan.csv` | ≈41 | 1 row/cluster×simulated PCM | `10_physics_validation.py` |
+| `physics_validation_rajasthan.csv` | 23 (n=23, 4/8/11 per cluster) | 1 row/cluster×simulated PCM | `10_physics_validation.py` |
 | `spearman_rho_by_cluster_rajasthan.csv` | 3 | 1 row/cluster | `10_physics_validation.py` |
 | `recommendation_cards_rajasthan.md` | 3 cards + 1 summary table | 1 card/cluster | `09_recommendation_cards.py` |
 

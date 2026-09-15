@@ -463,7 +463,7 @@ guidance in the docstring is wrong.
 **None present in the source files for Phase 1.** `00b` names "pvlib's SPA algorithm — no manual
 equation-of-time code" without a citation; GADM, WorldPop, ERA5 and NASA POWER are named as data
 products with their URLs only. No temporal- or spatial-methodology reference appears anywhere in
-`era5-uttarakhand/`. See `11_LITERATURE_MAPPING.md` for what must be added before submission.
+`era5-uttarakhand/`. See `13_LITERATURE_MAPPING.md` for what must be added before submission.
 
 ---
 

@@ -54,39 +54,24 @@ embedded-data Plotly page. Worth knowing before opening it or committing further
 
 ---
 
-## `05d_plots_comprehensive.py` — a real, verifiable defect
+## `05d_plots_comprehensive.py` — Tamil Nadu map-centre bug — RESOLVED
 
-The script initialises **all three Folium maps at Tamil Nadu's coordinates**:
+**This section previously reported all three Folium maps initialising at Tamil Nadu's coordinates.
+That is fixed in both the code and the committed output.** Current `05d_plots_comprehensive.py`
+line 75: `TN_CENTER = [29.7, 78.9]  # Uttarakhand centroid (was Tamil Nadu's [10.9, 78.5] —
+copy-paste bug)`, used by all four Folium maps in the script (including the India-wide overview
+map at `[22.5, 78.9]`, a deliberately different, wider-zoom centre). **Confirmed in the committed
+output**: `data/plots/comprehensive/maps/A0_all_points_overview.html` now contains
+`center: [29.7, 78.9]`, matching the 45 markers at 28.875–30.625 °N, 77.875–80.125 °E. The fix
+matches what `03b_interactive_raw_qa.py` already did correctly.
 
-```python
-TN_CENTER = [10.9, 78.5]          # line 72
-...
-m0 = folium.Map(location=TN_CENTER, zoom_start=7, tiles="CartoDB positron")   # line 115
-m1 = folium.Map(location=TN_CENTER, zoom_start=7, tiles="CartoDB positron")   # line 146
-m2 = folium.Map(location=TN_CENTER, zoom_start=7, tiles="CartoDB dark_matter")# line 170
-```
+The same literal was also present in `05c_explore_interactive.py` and is likewise fixed: current
+line 402 reads `folium.Map(location=[29.7, 78.9], …)`.
 
-**Confirmed in the committed output.** `data/plots/comprehensive/maps/A0_all_points_overview.html`
-contains:
+One remaining stale-text item in the same pair of scripts (cosmetic, no output impact):
 
-```javascript
-L.map("map_f201b1045ef73e9acb348711b5718335", {
-    center: [10.9, 78.5],
-    ...
-    "zoom": 7,
-```
-
-while all 45 markers are at 28.875–30.625 °N, 77.875–80.125 °E. **Every map in
-`data/plots/comprehensive/maps/` opens roughly 2,200 km south of the data.** The markers are
-correct; only the initial viewport is wrong. Fix: `location=[point_meta["lat"].mean(),
-point_meta["lon"].mean()]`, which is what `03b_interactive_raw_qa.py` already does correctly.
-
-The same literal appears in `05c_explore_interactive.py` line 399
-(`folium.Map(location=[10.9, 78.5], …)`).
-
-Two further stale-text items in the same pair of scripts (cosmetic, no output impact):
-
-- `05c_explore_interactive.py` docstring: "Folium map of **all 133 points**" — Uttarakhand has 45.
+- `05c_explore_interactive.py` docstring (line 46): "Folium map of **all 133 points**" — Uttarakhand
+  has 45. Not fixed alongside the map-centre bug.
 - `05d`'s `USE_PROCESSED = True` means the comprehensive plots are built from
   `uttarakhand_cleaned_physical.csv`, i.e. post-QC data. That is a deliberate, documented choice
   ("so plots reflect the QC'd backbone, not raw data with its outliers/gaps still in it"), but it
@@ -329,7 +314,7 @@ single run's numbers as provisional until independently reproduced.
 |---|---|---|
 | 45 points | `A0_all_points_overview.html` markers; `A2_population_map.html` popups; `02_climate_regime_map_folium.html` popups | **Yes** |
 | 493,155 input rows | `C_era5_vs_power_stats.csv` (n); `07_preprocessing_summary.png` | **Yes** |
-| 5 clusters, sizes 12/9/3/7/14 | `02_climate_regime_map_folium.html`; `06_cluster_sizes.png`; `02_silhouette_plot.png` (k=5) | **Yes** |
+| 5 clusters, sizes 12/9/3/7/14 *(pre-2026-09-fix run; current run is 7/3/9/10/16 per `06_PHASE_4_AUDIT.md` and this file's own `verify_02_clustering.py` section above)* | `02_climate_regime_map_folium.html`; `06_cluster_sizes.png`; `02_silhouette_plot.png` (k=5) | **Yes, internally, but all three artefacts are from the same superseded run** |
 | 55-row PCM database | `06_summary.png`; `05_pcm_survivors_per_cluster_interactive.html`; the committed source CSV | **Yes** |
 | Top-3 per cluster | `objective1/recommended_pcm_summary.html`; `objective1/consensus_vs_topsis_agreement.html`; `uttarakhand_objective1/07_bump_chart_ranks.html`; `uttarakhand_objective1/13_recommended_pcm_summary_interactive.html` | **Yes — all four** |
 | Top-3 PCM properties | `13_recommended_pcm_summary_interactive.html` `customdata` vs `PCM_Properties_cleaned_mice_pmm_detailed.csv` | **Yes — exact match** |
@@ -344,7 +329,7 @@ The plot layer is internally consistent. Where it misleads, it does so systemati
 
 | # | Defect | Severity | Fix |
 |---|---|---|---|
-| 1 | `05d`/`05c` Folium maps centred at `[10.9, 78.5]` (Tamil Nadu) | Medium — every comprehensive map opens 2,200 km off | `location=[lat.mean(), lon.mean()]` |
+| 1 | ~~`05d`/`05c` Folium maps centred at `[10.9, 78.5]` (Tamil Nadu)~~ | **RESOLVED** — both scripts and the committed HTML output now use `[29.7, 78.9]` | done |
 | 2 | ~~Plots 03/04/05/06 and `verify_03` never filter `passes_all`~~ | **RESOLVED** — all now filter `passes_all` before use (confirmed by reading current code) | done |
 | 3 | ~~`comparison_plots_uttarakhand.py`'s `BASE` includes a spurious `".."`~~ | **RESOLVED** — script now uses `config.py` for all paths and runs correctly | done |
 | 4 | ~~Plot 11 titled "Simulated Performance vs MCDM Consensus Rank" while plotting TOPSIS vs consensus~~ | **RESOLVED** — Phase 7 now exists, plot 11 correctly plots simulated solar fraction | done |

@@ -1,5 +1,33 @@
 # ASSAM — FULL PIPELINE (Consolidated, Code-Grounded)
 
+> **Correction (2026-09-14 re-audit against current code):** this document was written
+> 2026-09-05/07 and describes the pipeline as it stood then — a preliminary **K=4, 128-point**
+> clustering with a 25-row `pcm_database_assam.csv`, before the pipeline was locked to its current
+> **K=3, 129-point** model with the audited 58-row `pcm_database_final.csv` and the governed
+> feasibility/MCDM/Monte-Carlo status (`n_confirmed=[0,0,0]`, MCDM `NOT PERFORMED`, Monte Carlo
+> `SKIPPED` for K=3, with the K=4 results retained as an explicit historical benchmark). For the
+> **current** authoritative pipeline state, see `docs/assam/00_MASTER_OVERVIEW.md` and
+> `01_PROJECT_CONTEXT.md`. That said, most of this document's *code-level* findings are still
+> accurate, because the specific scripts they examine
+> (`04b_climate_signature.py`, `02_combine_assam.py`, `06_build_pcm_database.py`,
+> `01_download_era5_assam.py`, `01b_download_nasapower.py`) were not modified after this document
+> was written — including: the climate signature is 19 indices (not 18) computed entirely from
+> event-sampled data with no working Tier-1/Tier-2 split (§3.3, §7); `02_combine_assam.py`'s
+> deaccumulation helper is named `deaccumulate()`, not `accum_to_flux()`, and ERA5 pressure comes
+> from `surface_pressure`, not `msl` (§3.9); `06_build_pcm_database.py` (the non-final script)
+> still raises `KeyError: 'is_rt_line'` against the current source CSV and cannot run (§3.1); and
+> the corrosion veto is still structurally inert in the current, final `pcm_database_final.csv` /
+> `07_feasibility_filter_final.py` pair too, because no PCM row has `is_inorganic=True` — this was
+> re-confirmed directly against the current database and is not merely inherited from the older
+> script. §3.5's three field-name bugs and §3.7's "no canonical relabeling" finding were checked
+> against the *current* `05_cluster_assam.py` / `09_recommendation_cards.py` (both modified since
+> this document was written): the three field-name bugs are **fixed** in the current
+> `09_recommendation_cards.py` (the profile row now carries `Tm_target_C`, `total_population`, and
+> the criterion-contribution table now reads `cycles_confidence`, not `cycles_confidence_imputed`);
+> canonical relabeling by latitude is **still not implemented** — cluster IDs are still whatever
+> order the GMM fit produces, now just interpreted with fixed descriptive names per ID rather than
+> reordered.
+
 **Objective 1 — Climate-Region-Aware PCM Recommendation Framework**
 Group 12 · B.Tech CSE Final Year · Amrita School of Engineering · Guide: Dr. T. Deepika
 Governing document: `Objective1_PCM_Climate_Framework_Plan_v3.docx` (v3.0)

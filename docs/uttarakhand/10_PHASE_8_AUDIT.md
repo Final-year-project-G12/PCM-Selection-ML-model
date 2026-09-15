@@ -88,14 +88,21 @@ agreement_note = ("strong agreement"                                            
 
 This matches `08_mcdm_ranking.py`'s own 0.6 threshold for printing its `[NOTE]` block.
 
-**Observed Kendall's W values across the 5 clusters**:
-- **Cluster 0**: $W = 0.797$ (moderate agreement)
-- **Cluster 1**: $W = 0.716$ (moderate agreement)
-- **Cluster 2**: $W = 0.797$ (moderate agreement)
-- **Cluster 3**: $W = 0.716$ (moderate agreement)
-- **Cluster 4**: $W = 0.797$ (moderate agreement)
+**STALE-DATA WARNING, now corrected:** the five W values and the "all trigger moderate agreement"
+claim below were from the pre-`07b`-fix, two-method (TOPSIS+GRA only) run. `08_PHASE_6_AUDIT.md`'s
+"MAJOR UPDATE" block gives the current, four-method (TOPSIS+GRA+PROMETHEE II+VIKOR) values, which
+are higher and cross the 0.8 "strong agreement" threshold in 3 of 5 clusters:
 
-All 5 clusters trigger the *"moderate agreement — discuss the disagreement"* branch, reflecting the underlying tension between TOPSIS and GRA rankings ($\rho = -0.930$).
+**Current Kendall's W values across the 5 clusters** (per `08_PHASE_6_AUDIT.md`):
+- **Cluster 0**: $W = 0.796$ (moderate agreement)
+- **Cluster 1**: $W = 0.842$ (strong agreement)
+- **Cluster 2**: $W = 0.782$ (moderate agreement)
+- **Cluster 3**: $W = 0.708$ (moderate agreement)
+- **Cluster 4**: $W = 0.796$ (moderate agreement)
+
+All five values are comfortably above `08`'s own 0.6 "ambiguous regime" threshold, so the `[NOTE]`
+block does not fire for any cluster in the current run — a materially healthier agreement picture
+than the old pooled TOPSIS-vs-GRA $\rho = -0.930$ this section previously cited as the explanation.
 
 ### Empty-Top-3 branch
 
@@ -126,22 +133,38 @@ explainability value.
 
 ## Output Summary per Recommendation Card
 
-Assembled directly from the generated `recommendation_cards.md`:
+**STALE-DATA WARNING (2026-09):** the table below was assembled from a `recommendation_cards.md`
+generated **before** the `07b_charging_feasibility.py` regime-cap fix (it shows PureTemp 58 as
+Top-1 in every cluster including Cluster 1, and Cluster 1 with only 27 survivors). That directly
+contradicts the corrected results established elsewhere in this doc set: `07_PHASE_5_AUDIT.md`'s
+confirmed post-fix survivor counts are **29/30/29/27/29** (Cluster 1 = 30, not 27), and
+`08_PHASE_6_AUDIT.md`'s confirmed post-fix consensus Top-1 is **PureTemp 53 for Cluster 1**, not
+PureTemp 58 — exactly the "RESOLVED (2026-09)" note directly below this table already says. The
+`Tm_target_C`, `L_required`, Top-1/2/3, and Kendall's-W columns below are corrected using those
+two audits' verified numbers; **"Points in regime", "Population covered" and "Approx. medoid
+point" are left as the old, superseded-run values** (this section's original source) because they
+depend on the current 7/3/9/10/16 clustering run's actual per-point membership, which is not
+recoverable from a committed artefact in this pass — do not cite those three rows as current.
 
 | Field | Cluster 0 | Cluster 1 | Cluster 2 | Cluster 3 | Cluster 4 |
 |---|---|---|---|---|---|
-| Points in regime | 15 | 9 | 3 | 10 | 8 |
-| Population covered | 2,729,553 | 2,451,044 | 330,780 | 3,700,876 | 1,263,461 |
-| Approx. medoid point | UKP_0022 | UKP_0025 | UKP_0041 | UKP_0014 | UKP_0037 |
-| `Tm_target_C` | 57.0 °C | 57.0 °C | 57.0 °C | 57.0 °C | 57.0 °C |
-| `L_required` | 128 kJ/kg | 138 kJ/kg | 178 kJ/kg | 118 kJ/kg | 139 kJ/kg |
-| Feasibility survivors | 29 | 27 | 29 | 27 | 29 |
-| **Top-1 PCM** | PureTemp 58 | PureTemp 58 | PureTemp 58 | PureTemp 58 | PureTemp 58 |
-| **Top-2 PCM** | n-Octacosane (C28) | Palmitic-stearic acid/EG | n-Octacosane (C28) | Palmitic-stearic acid/EG | n-Octacosane (C28) |
-| **Top-3 PCM** | PlusICE A58 | n-Octacosane (C28) | PlusICE A58 | n-Octacosane (C28) | PlusICE A58 |
-| Kendall's W | 0.797 | 0.716 | 0.797 | 0.716 | 0.797 |
+| Points in regime *(stale — pre-fix run, see warning)* | 15 | 9 | 3 | 10 | 8 |
+| Population covered *(stale — pre-fix run, see warning)* | 2,729,553 | 2,451,044 | 330,780 | 3,700,876 | 1,263,461 |
+| Approx. medoid point *(stale — pre-fix run, see warning)* | UKP_0022 | UKP_0025 | UKP_0041 | UKP_0014 | UKP_0037 |
+| `Tm_target_C` | 57.0 °C | **55.16 °C** | **56.51 °C** | 57.0 °C | 57.0 °C |
+| Feasibility survivors | 29 | **30** | 29 | 27 | 29 |
+| **Top-1 PCM** | PureTemp 58 | **PureTemp 53** | PureTemp 58 | PureTemp 58 | PureTemp 58 |
+| **Top-2 PCM** | n-Octacosane (C28) | **n-Hexacosane (C26)** | savE® OM55 | savE® OM55 | n-Octacosane (C28) |
+| **Top-3 PCM** | PlusICE A58 | **Myristic acid (C14)** | n-Hexacosane (C26) | Palmitic-stearic acid/EG | PlusICE A58 |
+| Kendall's W | 0.796 | **0.842** | 0.782 | 0.708 | 0.796 |
 
-**Every card names PureTemp 58 as the #1 consensus recommendation.** Clusters 0/2/4 share one top-3 combination and clusters 1/3 share another.
+(Top-1/2/3 and Kendall's W corrected per `08_PHASE_6_AUDIT.md`'s "MAJOR UPDATE" block; feasibility
+survivors and `Tm_target_C` corrected per `07_PHASE_5_AUDIT.md`. `L_required` per-cluster values
+are not independently re-verified in this pass and have been removed rather than left stale.)
+
+**Cluster 1 now names PureTemp 53, not PureTemp 58, as its #1 consensus recommendation** — the
+other four clusters still share PureTemp 58, and Clusters 0/4 vs. 2/3 differ only in their Top-2/3
+combination.
 
 ## The finding a Phase 8 write-up must carry
 

@@ -57,12 +57,14 @@ PHASE 4 — EXTRA EXPLORATION (optional, either order relative to 05/05b)
 
 PHASE 5 — PCM DATABASE + FEASIBILITY FILTERING
   PCM_data/01_preprocess.py       →  PCM_data/data/PCM_Properties_cleaned_mice_pmm_detailed.csv
-  06_build_pcm_database.py        →  data/processed/pcm/pcm_candidates.csv
+  06_build_pcm_database.py        →  data/processed/pcm/pcm_database_uttarakhand.csv
   07b_charging_feasibility.py     →  (optional) regime-dependent Tm cap, run before 07
   07_feasibility_filter.py        →  data/processed/pcm/feasibility_survivors_by_cluster.csv
 
 PHASE 6 — MULTI-CRITERIA RANKING
   08_mcdm_ranking.py              →  data/processed/pcm/mcdm_topk_by_cluster.csv
+                                     data/processed/pcm/mcdm_full_scores_by_cluster.csv
+  09b_monte_carlo_stability.py    →  (5,000-draw Monte Carlo rank-stability results)
 
 PHASE 7 — PHYSICS-BASED VALIDATION
   10_physics_validation.py        →  data/processed/pcm/physics_validation_results.csv
@@ -170,15 +172,16 @@ python 05d_plots_comprehensive.py       # batch maps/timeseries/stats plots, sta
 python PCM_data/01_preprocess.py        # (only if you haven't already) cleans the raw PCM
                                          # manufacturer/literature data -> PCM_Properties_cleaned_mice_pmm_detailed.csv
 python 06_build_pcm_database.py         # edit INPUT_CSV at the top if PCM_data isn't a sibling
-                                         # folder of this pipeline -> pcm_candidates.csv
+                                         # folder of this pipeline -> pcm_database_uttarakhand.csv
 python 07b_charging_feasibility.py      # optional: regime-dependent Tm ceiling, run BEFORE 07
                                          # if you want it factored into the melting-window filter
 python 07_feasibility_filter.py         # hard filters per cluster's Tm_target/L_required ->
                                          # feasibility_survivors_by_cluster.csv
 
 # ── Phase 6 — multi-criteria ranking ───────────────────────────────────────
-python 08_mcdm_ranking.py               # TOPSIS + GRA, entropy/AHP weights, Gaussian Tm fitness,
-                                         # Borda consensus -> mcdm_topk_by_cluster.csv (headline table)
+python 08_mcdm_ranking.py               # TOPSIS + GRA + PROMETHEE II + VIKOR, entropy/AHP weights,
+                                         # Gaussian Tm fitness, Borda consensus + Kendall's W ->
+                                         # mcdm_topk_by_cluster.csv (headline table)
 
 # ── Phase 7 — physics-based validation ───────────────────────────────────────
 python 10_physics_validation.py         # grey-box lumped-enthalpy tank model, driven by each
@@ -560,10 +563,13 @@ contains **55 rows** (31 manufacturer + 24 literature) spanning 6 brands
 n-alkanes/fatty acids/composites), all fully imputed, covering the 42-70 °C
 melting band.
 
-- **Expects `PCM_data/` as a sibling folder** of this pipeline
-  (`INPUT_CSV = PROCESSED_DIR.parent.parent / "PCM_data" / "data" / ...`)
-  — either place it one level above this folder, or edit `INPUT_CSV` at
-  the top of the script to point wherever you put it.
+- **Expects `PCM_data/` as a child folder of this pipeline**
+  (`INPUT_CSV = PROCESSED_DIR.parent.parent / "PCM_data" / "data" / ...`,
+  and `PROCESSED_DIR` = `era5-uttarakhand/data/processed`, so
+  `.parent.parent` resolves to `era5-uttarakhand/` itself — i.e.
+  `era5-uttarakhand/PCM_data/data/...`, not a folder one level above this
+  pipeline) — either place it there, or edit `INPUT_CSV` at the top of the
+  script to point wherever you put it.
 - Output: `data/processed/pcm/pcm_database_uttarakhand.csv`
 - The 55-row set meets the 40-60 candidate target from the plan doc.
 
@@ -584,9 +590,9 @@ constant.
 Phase 5 — for each cluster's `Tm_target`/`L_required` (from
 `cluster_profiles_uttarakhand.csv`), applies hard filters against
 `06`'s candidate database: melting window `[Tm_target-5, Tm_target+8]`,
-absolute 42-70°C band, latent heat ≥ 0.7× `L_required`, corrosion veto if
-that cluster's HSI is above its own 75th percentile, supercooling veto
->8K, safety exclusion. Reports survivor counts per cluster.
+absolute 42-70°C band, latent heat ≥ 0.7× `L_required`, cycling stability
+(≥300 cycles where reported), and a supercooling veto (>8K). Reports
+survivor counts per cluster.
 
 - Output: `data/processed/pcm/feasibility_survivors_by_cluster.csv`
 - **Known limitation, stated in its own docstring**: the corrosion veto
@@ -600,16 +606,20 @@ Phase 6 — the headline deliverable. For each cluster's feasibility
 survivors: a **Gaussian Tm fitness transform**
 (`f_Tm = exp(-(Tm-Tm_target)^2 / (2*sigma^2))`, sigma≈4K — this has to
 come before anything else touches melting temperature, since a raw
-distance metric gets this wrong) feeds into **TOPSIS** and **GRA**
-(Grey Relational Analysis) run independently, with **entropy weights**
-computed per cluster from that cluster's own filtered matrix (blended
-0.5/0.5 with AHP priors if supplied, entropy-only otherwise). Ranks are
-aggregated to a **Borda-count consensus**, with **Kendall's W** reported
-per cluster as an explicit agreement/disagreement signal — a low W is
-treated as a genuine, reportable finding (that regime's PCM choice is
-ambiguous), not hidden.
+distance metric gets this wrong) feeds into a **four-method stack —
+TOPSIS, GRA (Grey Relational Analysis), PROMETHEE II, and VIKOR** — run
+independently, with **entropy weights** computed per cluster from that
+cluster's own filtered matrix (blended 0.5/0.5 with AHP priors if
+supplied, entropy-only otherwise). Ranks are aggregated to a
+**Borda-count consensus**, with **Kendall's W** (over all four methods)
+reported per cluster as an explicit agreement/disagreement signal — a low
+W is treated as a genuine, reportable finding (that regime's PCM choice is
+ambiguous), not hidden. A companion script, `09b_monte_carlo_stability.py`,
+runs a 5,000-draw Monte Carlo perturbation of weights/properties per
+cluster to report Top-3-inclusion and Top-1-retention probabilities.
 
-- Output: `data/processed/pcm/mcdm_topk_by_cluster.csv`
+- Output: `data/processed/pcm/mcdm_topk_by_cluster.csv`,
+  `data/processed/pcm/mcdm_full_scores_by_cluster.csv`
 
 ### `10_physics_validation.py`
 Phase 7 — physics-based validation, the step that makes the MCDM ranking

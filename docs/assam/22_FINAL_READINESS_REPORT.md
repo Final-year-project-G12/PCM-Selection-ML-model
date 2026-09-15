@@ -14,7 +14,7 @@ The pipeline distinguishes strictly between **Final Locked $K=3$ Governance** an
 |---|---|---|---|
 | **Phase 1: Spatial Grid** | Population-weighted sampling | **COMPLETE** | Exactly **129 grid points** (`ASP_0001`–`ASP_0129`), achieving **87.8% population coverage**. |
 | **Phase 2: Preprocessing** | Reanalysis & cross-validation | **COMPLETE** | Exactly **467,367 daily rows**; `03b` yields **`BACKBONE`** decision (1.1% GHI MBE). |
-| **Phase 2.5: Quality Control** | Outlier detection & imputation | **COMPLETE** | 129 parquet files; IsolationForest multivariate flagging (zero data deletion). |
+| **Phase 2.5: Quality Control** | Outlier detection & imputation | **COMPLETE** | 129 parquet files; 3σ + IsolationForest multivariate flagging (outliers never deleted, but site-years with >5% missing data after imputation **are** dropped — this is a genuine deletion step). |
 | **Phase 3: Climate Clustering** | GMM regime discovery | **LOCKED FINAL** | **$K=3$ GMM (full covariance)** on 5 core features; min $\text{BIC}=1574.94$; bootstrap ARI=$0.6289$. |
 | **Phase 4: SWH Specification** | Storage sizing & targets | **COMPLETE** | 50 kg PCM, 100 kg water, 100 L/day demand, $T_m^{\text{target}} = 44.0^\circ\text{C}$ ($T_{\text{del}}=50^\circ\text{C}$, $\Delta T=6\text{ K}$). |
 | **Phase 5: PCM Database** | Curated property repository | **LOCKED FINAL** | **58 deduplicated PCMs × 41 columns** (`pcm_database_final.csv`); strict provenance & dual-phase $C_p$. |
@@ -30,7 +30,7 @@ The pipeline distinguishes strictly between **Final Locked $K=3$ Governance** an
 ## Core Methodological Strengths
 
 1. **Uncompromised Scientific Honesty & Governance**:
-   - Zero synthetic forcing of results. When strict 7-constraint filtering without arbitrary relaxation yielded $n_{\text{confirmed}}=[0,0,0]$, the pipeline transparently reported that formal $K=3$ MCDM ranking was **`NOT PERFORMED`** and Monte Carlo was **`SKIPPED`**.
+   - Zero synthetic forcing of results. When strict 6-criterion evidence-based filtering (`07_feasibility_filter_final.py`) without arbitrary relaxation yielded $n_{\text{confirmed}}=[0,0,0]$, the pipeline transparently reported that formal $K=3$ MCDM ranking was **`NOT PERFORMED`** and Monte Carlo was **`SKIPPED`**.
    - Preserves historical $K=4$ artifacts under strict labeling without silent overwriting.
 
 2. **First-Law Energy Conserving Sub-Hourly Physics**:

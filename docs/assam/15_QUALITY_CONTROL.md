@@ -6,8 +6,9 @@
 
 ## Part 1 — Physical bounds checking
 
-Applied to `climate_assam_points.csv` before any statistical QC. Out-of-range values are flagged
-(not deleted):
+Applied to `climate_assam_points.csv` before any statistical QC. **Correction:** out-of-range
+values are **set to `NaN`** (`df.loc[out_of_bounds, col] = np.nan`), not merely flagged — this
+phrasing belongs to the outlier step (Part 2), not the bounds step:
 
 | Variable | Lower | Upper |
 |---|---|---|
@@ -27,10 +28,14 @@ would only be flagged if the raw field reaches this threshold. Given that ERA5's
 a spatially-smoothed 0.25° grid estimate, values exceeding 200 mm/event are very unlikely in the
 ERA5 output even for extreme events. This bound is appropriate.
 
-## Part 2 — Outlier detection: IsolationForest
+## Part 2 — Outlier detection: 3σ screening, then IsolationForest
 
-`04_preprocess_assam.py` uses **scikit-learn IsolationForest** (multivariate ensemble tree-based
-anomaly detection). This is a **different approach from Rajasthan**, which used a Hampel filter
+**Correction:** `04_preprocess_assam.py` applies **two** stages, not IsolationForest alone:
+1. Per `(point_id, month, event)` **3σ** test on `era5_T_amb`, `era5_GHI`, `era5_W_spd`.
+2. **scikit-learn IsolationForest** (`contamination=0.01`, `random_state=42`) on
+   `[era5_T_amb, era5_GHI, era5_RHum, era5_W_spd]` with missing values filled as 0 before fitting.
+
+Both stages set the same `is_outlier` flag. This is a **different approach from Rajasthan**, which used a Hampel filter
 (univariate, per-column, median ± n_sigma × MAD).
 
 **Why IsolationForest is better-suited for Assam**:
@@ -42,17 +47,25 @@ anomaly detection). This is a **different approach from Rajasthan**, which used 
   cloud cover that a univariate Hampel filter would aggressively flag as outliers. IsolationForest's
   ensemble tree splits better handle asymmetric, multimodal distributions.
 
-**Policy**: Outliers are **flagged but never deleted** — they receive an outlier flag column and are
-carried through to downstream phases. This matches the Rajasthan policy.
+**Policy**: Outlier-flagged rows are **flagged but never deleted** — they receive an outlier flag column and are
+carried through to downstream phases. This matches the Rajasthan policy. Note this is distinct
+from the site-year deletion in Part 3, which does remove rows (for a different reason: excessive
+missingness, not outlier status).
 
 ## Part 3 — Missing data imputation
 
-Three-step fallback chain (same logic as Rajasthan):
-1. Linear interpolation for gaps ≤ 3 consecutive events
-2. Point-seasonal mean substitution for larger gaps
-3. Point-event fallback mean (across all dates for that event) for any remaining gaps
+**Correction:** the current script performs a **two-step** fallback (its own step-[5] log message
+says "≤ 6h", but the code passes `limit=1`, i.e. bridges only a single consecutive step), followed
+by a separate deletion step, not a three-step chain:
+1. `interpolate(method="linear", limit=1)` per point — bridges single-step gaps only.
+2. Fill remaining gaps with the `(point_id, month, event)` group mean — a climatological
+   same-month-same-event value. There is no third, separate "point-event fallback" stage.
+3. **Site-years where any imputed column still exceeds 5% missing are dropped entirely** — a
+   genuine deletion this document did not previously mention. It can silently shorten a point's
+   record length and should be logged/reported (how many site-years were dropped).
 
-Imputed values receive an `_imputed` boolean flag column.
+No `_imputed` boolean flag column is written by the current script; the only status flag produced
+in this step is via the site-year drop, not a per-cell provenance flag.
 
 ## Output: `preprocessed/parquet/{point_id}.parquet`
 

@@ -12,13 +12,14 @@ requiring `diff()` against the previous hour to recover an hourly flux.
 each hour as its own ~1-hour accumulated value, NOT a running cumulative total. Applying `diff()` to
 this produced near-zero GHI (noon Pearson r ≈ 0.01 vs NASA POWER — physically implausible).
 
-**Fix** — `accum_to_flux()` in `02_combine_assam.py`:
+**Fix** — the function is named **`deaccumulate()`** in `02_combine_assam.py` (not `accum_to_flux()`
+as earlier drafts of this document stated):
 ```python
-def accum_to_flux(s):
-    s = pd.Series(np.asarray(s, dtype=float), index=s.index).copy()
-    return s.clip(lower=0)
+def deaccumulate(s):
+    return pd.Series(np.asarray(s, dtype=float), index=s.index).copy()
 ```
-No differencing. Stateless clip to non-negative. The Assam pipeline was built **after** this fix
+No differencing — a stateless pass-through; the non-negative `clip(0)` is applied at each call site
+rather than inside the function itself. The Assam pipeline was built **after** this fix
 was established in Rajasthan — `02_combine_assam.py` inherits the correct version from the start.
 This is a direct benefit of developing Assam after the Rajasthan audit.
 
@@ -26,12 +27,13 @@ This is a direct benefit of developing Assam after the Rajasthan audit.
 
 | ERA5 field | Raw unit | Operation | Output unit | Output column |
 |---|---|---|---|---|
-| `ssrd` | J/m² (per-hour accumulation) | `accum_to_flux() / 3600` | W/m² | `era5_GHI` |
-| `strd` | J/m² (per-hour accumulation) | `accum_to_flux() / 3600` | W/m² | `era5_LW_down` |
+| `ssrd` | J/m² (per-hour accumulation) | `deaccumulate() / 3600`, `clip(0)` | W/m² | `era5_GHI` |
+| `ssrdc` | J/m² (per-hour accumulation) | `deaccumulate() / 3600`, `clip(0)` | W/m² | `era5_GHI_clearsky_era5` (preferred `GHI_clearsky` source) |
+| `strd` | J/m² (per-hour accumulation) | `deaccumulate() / 3600`, `clip(0)` | W/m² | `era5_LW_down` |
 | `t2m` | K | `− 273.15` | °C | `era5_T_amb` |
 | `d2m` | K | `− 273.15` | °C | `era5_T_dew` |
-| `tp` | m | `× 1000` | mm | `era5_precipitation` |
-| `msl` | Pa | `/ 100` | hPa | `era5_P_atm` |
+| `tp` | m | `deaccumulate() × 1000`, `clip(0)` | mm | `era5_precipitation` |
+| `sp` (`surface_pressure`) | Pa | `/ 100` | hPa | `era5_P_atm` (code uses `surface_pressure`, not `msl`) |
 | `u10`, `v10` | m/s | `sqrt(u²+v²)`, `atan2(u,v)` | m/s, degrees | `era5_W_spd`, `era5_W_dir` |
 | `avg_sdirswrf` | W/m² (mean-rate) or J/m² (accum) | `clip(0)` only — **no /3600** | W/m² if mean-rate | `era5_DNI` (primary branch) |
 

@@ -58,7 +58,10 @@ clusters, not the raw data.
 
 - **18 named indices** (Ta_mean, Ta_p95/p05, DTR, GHI_mean, GHI_daily_kWh, kt_mean, kt_std, SAI, CCI, cloudy_frac, HDD18, CDD24, RH_mean, HSI, wind_mean, seasonality, monsoon_index, elevation_m) — each one line of physical justification (see the script's Table-8-equivalent docstring). Every index is computed from what the 3-events/day sampling actually supports; two are explicitly flagged as proxies (DTR = noon-sunrise, not true max-min; monsoon_index = a JJAS *fraction*, not an absolute rainfall total, since precipitation is only sampled 3x/day) — wherever `02b`'s true daily-integral value exists it's used as the canonical column instead (see `02b`'s section for which indices that covers). `elevation_m` is real per-point elevation (see the elevation note below), not a proxy.
 - **Tm_target and L_required** — the corrected v2.0 rule: `Tm_target = T_delivery + delta_T_approach` (PCM sits *above* delivery temperature so heat flows PCM->water during discharge; the earlier subtract-based rule had the sign backwards). Comes out to a constant 57 C here (50 + 7, indirect-system assumption) — held constant across all points by design, not tuned per cluster.
-- **5 interaction terms** (GHI x kt_std, DTR x cloudy_frac, RH x (Ta-Tm), wind x (Ta-Tsoil), CCI x (1-SAI)).
+- **4 interaction terms** (GHI x kt_std, DTR x cloudy_frac, RH x (Ta-Tm), CCI x (1-SAI)). A 5th term,
+  wind x (Ta-Tsoil), was removed — it reduced algebraically to a rescaled copy of `wind_mean`
+  (`Tsoil = Ta - 3.0`, a constant offset), double-weighting wind rather than adding an independent
+  interaction. See `05_PHASE_3_AUDIT.md`.
 - **PCA on the correlated block only** (Ta_mean, Ta_p95, Ta_p05, HDD18, CDD24, RH_mean, elevation_m) — retained to 95% variance (typically 2-3 components). Solar/variability indices are deliberately kept *out* of PCA since they carry the discriminating signal.
 - **Standardization** of the full signature matrix (z-scores), saved alongside the raw values.
 

@@ -434,7 +434,7 @@ operating band — the only substantive external citation in the pipeline code.
 `06_build_pcm_database.py` mentions **Singh 2025** historically, describing a superseded code path
 that appended 7 hardcoded literature rows. The 42–70 °C band and the filter set are cited to plan
 v3.0 Table 12. The MICE + RF + PMM method is described at length with **no** citation. See
-`11_LITERATURE_MAPPING.md`.
+`13_LITERATURE_MAPPING.md`.
 
 ## Validation
 
@@ -483,8 +483,11 @@ v3.0 Table 12. The MICE + RF + PMM method is described at length with **no** cit
 
 ## Status
 
-**COMPLETE, with a degenerate result.** The database build is thorough and fully auditable — the
-imputation footprint is recoverable cell-by-cell from the committed CSV, which is more transparency
-than the climate data offers. The filter is correctly ordered before ranking, declares its own
-gaps, and handles missing data conservatively. What it does not do is discriminate between regimes,
-and the reason is upstream: a constant `Tm_target`.
+**COMPLETE, and RESOLVED (2026-09) — no longer degenerate.** The database build is thorough and
+fully auditable — the imputation footprint is recoverable cell-by-cell from the committed CSV,
+which is more transparency than the climate data offers. The filter is correctly ordered before
+ranking, declares its own gaps, and handles missing data conservatively. Survivor sets are now
+genuinely differentiated across regimes (29/30/29/27/29 for Clusters 0-4) thanks to the
+`07b_charging_feasibility.py` regime-cap fix — the previous "does not discriminate between regimes"
+finding was traced to that script's normalization bug, not an inevitable consequence of the
+constant Phase-3 `Tm_target=57C`.

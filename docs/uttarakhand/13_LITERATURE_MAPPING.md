@@ -72,7 +72,9 @@ a plan section/table, or is un-cited in the code.
 **No Uttarakhand-specific or Himalayan-specific climate reference appears anywhere in `era5-uttarakhand/`.** The state-specific reasoning that does exist is stated as geographic domain knowledge in prose:
 
 - Doon Valley vs Terai plains vs Chamoli/Pithoragarh high Himalaya elevation gradients (`05_cluster_uttarakhand.py` docstring).
-- 1200 m flat altitude approximation for solar geometry (`02_combine_uttarakhand.py` comment).
+- Real per-point elevation (196-2510 m, from ERA5's geopotential field) for solar geometry
+  (`00c_attach_elevation.py`, `02_combine_uttarakhand.py`) — the 1200 m flat approximation survives
+  only as a fallback for a point missing `elevation_m`.
 - Monsoon JJA definition for northern India (`02_combine_uttarakhand.py` `SEASON_MAP`).
 
 ---

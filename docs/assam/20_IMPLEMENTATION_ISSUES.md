@@ -31,7 +31,7 @@ Ranked by severity. Fully audited and resolved items demonstrate the project's r
 ## 2. Governed Pipeline Invariants & Documented Assumptions
 
 ### 2.1 Feasibility Screening Governance (Phase 6)
-- Under final locked $K=3$ forcing and strict 7-constraint filtering without arbitrary relaxation, $n_{\text{confirmed}} = [0, 0, 0]$. Exactly one candidate (`n-Tetracosane C24`, $T_m=52.0^\circ\text{C}$) qualified under conditional status in Cluster 0 ($L = 255.0\text{ kJ/kg} \ge L_{\text{required}} = 252.0\text{ kJ/kg}$).
+- Under final locked $K=3$ forcing and strict 6-criterion evidence-based filtering (`07_feasibility_filter_final.py`) without arbitrary relaxation, $n_{\text{confirmed}} = [0, 0, 0]$. Exactly one candidate (`n-Tetracosane C24`, $T_m=52.0^\circ\text{C}$) qualified under conditional status in Cluster 0 ($L = 255.0\text{ kJ/kg} \ge L_{\text{required}} = 252.0\text{ kJ/kg}$).
 - The 8 historical survivors evaluated in Phase 9 (`RT44HC`, `savE OM42`, `C22H46`, `savE OM46`, `RT45HC`, `savE OM50`, `Myristic-Palmitic eutectic`, `savE OM48`) are designated strictly as *historical pre-audit candidates*, not final confirmed survivors.
 
 ### 2.2 Monte Carlo Uncertainty Governance (Phase 8)

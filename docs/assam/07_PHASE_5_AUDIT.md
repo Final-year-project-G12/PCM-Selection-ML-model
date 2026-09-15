@@ -1,6 +1,9 @@
 # 07 — Phase 5 Audit: Curated PCM Property Database
 
-**Script**: `06_build_pcm_database.py`
+**Script**: `06_build_pcm_database_final.py` (writes `pcm_database_final.csv`, 58 rows; the
+non-final `06_build_pcm_database.py` writes the separate, superseded `pcm_database_assam.csv` and
+still crashes with `KeyError: 'is_rt_line'` on the current source CSV, which has no `is_rt_line`
+column — it is not the script that produces the final database described below)
 
 **Status**: COMPLETE (Authoritative Final)
 
@@ -17,7 +20,18 @@ Phase 5 establishes the authoritative material property repository for latent th
   - *Organic Paraffins*: Commercial Rubitherm RT series, pure alkanes ($C_{20}–C_{30}$)
   - *Bio-based Organics*: PLUSS savE OM series, fatty acids (myristic, palmitic, stearic)
   - *Eutectic Mixtures*: Binary organic eutectics (e.g. Myristic-Palmitic 58/42)
-  - *Inorganic Salt Hydrates & Eutectics*: High-density hydrated salts (subject to corrosion screening)
+
+**Correction:** the database contains **zero** inorganic entries. Every `pcm_type` value in the
+55-row detailed source CSV and the 3 unique literature additions is some form of "Organic…"
+(`Organic (RT-line)`, `Organic n-alkane`, `Organic fatty acid`, `Organic blend`, `Organic PCM`,
+`Organic bio-based PCM`, `Organic/polymer blend`, `Organic/eutectic composite`,
+`Organic commercial PCM`, plus the literature "Organic eutectic"/"Organic paraffin" rows). No
+"Inorganic Salt Hydrates" family exists in `pcm_database_final.csv` — `is_inorganic` (computed as
+`"Inorganic" in pcm_type`) is `False` for all 58 rows, so the corrosion veto described in Phase 6
+below can never fire regardless of a cluster's HSI/RH. This is the same structural finding
+documented for the earlier non-final database and it still holds for the final one; do not
+present "corrosion screening of inorganic candidates" as an active Assam differentiator unless
+genuinely inorganic PCMs (e.g. salt hydrates) are added to the source data.
 
 ---
 

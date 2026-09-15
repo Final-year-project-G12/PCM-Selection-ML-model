@@ -385,7 +385,7 @@ Kept here as a record, with each item's resolution noted:
 | `08_PHASE_6_AUDIT.md` | MCDM ranking engine |
 | `09_PHASE_7_AUDIT.md` | Physics validation — implemented, run, two solver bugs fixed |
 | `10_PHASE_8_AUDIT.md` | Recommendation cards |
-| `11_LITERATURE_MAPPING.md` | The pipeline's complete citation footprint and the gaps to close |
+| `13_LITERATURE_MAPPING.md` | The pipeline's complete citation footprint and the gaps to close |
 | `11_OBJECTIVE1_PLOTTING_AND_VERIFICATION_AUDIT.md` | Plot inventory, verification suite, and 13 figure defects |
 | `12_FINAL_READINESS_REPORT.md` | Implementation issues, reproducibility audit, final verdict |
 | `CONSOLIDATION_SUMMARY.md` | What was merged into what, and why |

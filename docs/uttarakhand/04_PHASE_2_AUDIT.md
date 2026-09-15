@@ -506,16 +506,22 @@ Not one of the five directly-solar columns triggered a physical-bounds flag. Rea
 magnitudes, that says the values sit comfortably *inside* their ranges because they are too small,
 not because they are correct.
 
-## A.8 Cross-Source Validation Decision — there isn't one
+## A.8 Cross-Source Validation Decision — RESOLVED (2026-09): a decision now exists, but it is still never applied to the pipeline's data
+
+**This section used to say no dedicated agreement-analysis script or decision file existed at
+all. That is no longer true** — `03b_agreement_analysis.py` was added and has been run; see
+`00_MASTER_OVERVIEW.md` and the "What can and cannot be concluded" note in A.3. What remains true
+is narrower: the decision is computed and recorded, but nothing downstream ever reads it back into
+the cleaned data.
 
 | Component | Status in `era5-uttarakhand/` |
 |---|---|
 | Cross-source statistics computed | **Yes** — `03` check C and its interactive twin |
 | Statistics persisted | **Yes** — `C_era5_vs_power_stats.csv`, committed in both variants |
-| Dedicated agreement-analysis script | **No.** No `03b_agreement_analysis*.py` of any name exists. |
-| Bias decision file | **No.** No file records a BACKBONE / quantile-map decision. |
-| Threshold-based decision logic | **No.** |
-| Bias-correction / quantile-mapping step in `04` | **No.** The 13-step sequence contains no such step. |
+| Dedicated agreement-analysis script | **Yes** — `03b_agreement_analysis.py`, run |
+| Bias decision file | **Yes** — `outputs/bias_decision_uttarakhand.txt` (committed): `GHI noon: n=164,385  MBE=19.55 W/m²  r=0.7586`, `DECISION: QUANTILE_MAP`, plus a per-season before/after quantile-mapping table (Winter/Summer/Monsoon/Retreat) |
+| Threshold-based decision logic | **Yes** — `03b_agreement_analysis.py`'s `CORR_GOOD=0.90`, `CORR_SEVERE=0.70`, `MBE_SMALL_FRAC=0.05` drive the BACKBONE/QUANTILE_MAP/MANUAL_REVIEW branch choice |
+| Bias-correction / quantile-mapping step actually applied inside `04` | **No.** `04_preprocess_uttarakhand.py`'s 13-step sequence contains no call into `03b`'s mapping and does not read `bias_decision_uttarakhand.txt` — confirmed by grep, no match. |
 
 **What the pipeline says it will do**, in three separate places:
 
@@ -529,8 +535,12 @@ ERA5-vs-POWER MBE is expected and gets addressed in 04**."
 **stop and fix that before running `04`** — these are exactly the 'most silent failures at this
 stage' the plan doc warns about."
 
-**Check C shows a large systematic MBE. Nothing in `04` addresses it. The gate the source files
-describe was not enforced.**
+**Remaining genuine gap (not a doc error): `03b_agreement_analysis.py` computes and fits the
+per-season quantile mapping and prints what it *would* do, and writes the decision file, but
+`04_preprocess_uttarakhand.py` never imports or applies it — the cleaned physical file that feeds
+`04b`/`05`/`06` onward is still built from the raw (post-deaccumulation-fix, pre-quantile-map)
+ERA5 values.** This is a real scope gap in the pipeline, flagged here rather than silently fixed,
+since fixing it would require editing `04_preprocess_uttarakhand.py` itself.
 
 ### Variable pairs compared
 
@@ -597,7 +607,7 @@ run-length encoding for consecutive cloudy days · coefficient of variation for 
 **None present in the source files for Phase 2.** `02_combine_uttarakhand.py` names `pvlib` and the
 string `"ineichen"` but cites no paper; there is no ERA5 product citation, no NASA POWER citation,
 no SPA citation, no clear-sky-model citation, and no decomposition-model reference anywhere in
-`era5-uttarakhand/`. See `11_LITERATURE_MAPPING.md`.
+`era5-uttarakhand/`. See `13_LITERATURE_MAPPING.md`.
 
 ## A.11 Validation
 
