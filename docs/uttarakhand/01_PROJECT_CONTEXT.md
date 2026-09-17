@@ -82,7 +82,7 @@ Kept here as a record of what the table used to say and why it was wrong at the 
 | 4. Clustering | "Code delivered …, **not yet confirmed run**" | Run at **K = 5**; sizes **7/3/9/10/16** (not 12/9/3/7/14 — that was from an earlier signature version) |
 | 5. Feasibility | "Code delivered, **not yet run**" | Run — survivor counts now **29/30/29/27/29** per cluster (not identical, since the regime-cap bug in `07b` is fixed) |
 | 6. MCDM Ranking | "Code delivered, **not yet run**" | Run — four methods (TOPSIS+GRA+PROMETHEE+VIKOR); Cluster 1 genuinely differs (PureTemp 53, not PureTemp 58) |
-| 7. Physics Validation | "**Not written.**" | Written and run (`10_physics_validation.py`) — two model bugs fixed; corrected result is 0% within the 54-84% benchmark band (~15-19% actual), down from a bug-inflated 92% |
+| 7. Physics Validation | "**Not written.**" | Written and run (`10_physics_validation.py`) — two model bugs fixed; corrected result is 0% within the 54-84% benchmark band (~12-19% actual), down from a bug-inflated 92%. A later sizing reconciliation (Phase 3/Phase 7 tank/PCM/collector consistency) left this essentially unchanged — see `09_PHASE_7_AUDIT.md` |
 | 8. Recommendation Cards | "Code delivered, **not yet run**" | Run — `recommendation_cards.md` regenerated against all current fixes (still git-ignored, so not in this repo) |
 
 ## Known internal inconsistency: PCM database size — RESOLVED in NEXT_STEPS.md (2026-09)
@@ -145,13 +145,15 @@ group") and step 11's VIF ("computed over fewer independent spatial samples"). I
 a high silhouette is "more likely to mean an over-simple signature than a genuinely crisp regime
 split" at this N, and that K should realistically be 2–4 rather than higher.
 
-**Corrosion mechanism.** `NEXT_STEPS.md` anticipates that "the corrosion veto [will] bite for
-high-monsoon-humidity Uttarakhand clusters (Terai/valley points during Jun-Sep) … same veto,
-different physical mechanism, worth noting in text." **This still has not happened** — the
-corrosion veto is not implemented in `07_feasibility_filter.py` at all (its docstring lists it
-under "NOT applied"), and every one of the 55 database candidates is organic, so the veto could
-not have activated even if it had been implemented. This remains a genuine, documented scope gap
-(not something the 2026-09 bug fixes touched).
+**Corrosion mechanism — implemented (2026-09), still can't activate yet.** `NEXT_STEPS.md`
+anticipates that "the corrosion veto [will] bite for high-monsoon-humidity Uttarakhand clusters
+(Terai/valley points during Jun-Sep) … same veto, different physical mechanism, worth noting in
+text." `07_feasibility_filter.py` now implements the veto logic (a `corrosion_class="check_manually"`
+candidate fails if that cluster's HSI exceeds the 75th percentile across all 5 clusters) — but it
+still can't bite for the reason this section originally gave: every one of the 55 database
+candidates is organic (`corrosion_class="low_organic"`), so there's nothing for the veto to reject.
+It will activate automatically once an inorganic candidate (e.g. a salt hydrate) is added to the
+database — a data-coverage gap now, not a missing-logic gap.
 
 **`Tm_target` — RESOLVED (2026-09), was the dominant cause of identical results, no longer is.**
 `04b_climate_signature.py` sets a baseline `Tm_target_C = 57` for every point by design

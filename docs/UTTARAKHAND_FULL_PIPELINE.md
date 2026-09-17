@@ -27,6 +27,10 @@ This document consolidates the complete, verified Uttarakhand audit documentatio
 
 ---
 
+---
+
+---
+
 # Source File 0: 00_MASTER_OVERVIEW.md
 Source: `docs/uttarakhand/00_MASTER_OVERVIEW.md`
 
@@ -317,9 +321,9 @@ what the Uttarakhand pipeline demonstrably does.
 | 2 — Combine + Tier-2 | Two independent sources cross-checked | ERA5 + NASA POWER at identical points/instants; full agreement statistics computed | **Delivered, but the disagreement is never acted upon** |
 | 3 — Climate Signature | Two-tier signature (sun-event + true daily integral) | 18 indices; Tier-2 canonical where available; PCA on the thermodynamic block only | **Delivered — and it insulated the clustering matrix from the pipeline's largest data defect** |
 | 4 — Regime Clustering | Discovered regimes, not hand-picked zones | GMM **diagonal** covariance, K = 5 by manual selection from a BIC/silhouette table; lat/lon excluded | **Delivered** — clusters are spatially coherent without clustering on geography (silhouette 0.28). **But** no bootstrap stability and no external classification |
-| 5 — Feasibility Filtering | Corrected 42–70 °C SWH-specific PCM band | Band enforced; melting window [52, 65] °C at `Tm_target = 57` (regime-capped to 55.16/56.51 for Clusters 1/2) | **Partially delivered** — the corrosion veto cannot activate (all 55 candidates organic, and the database doesn't yet carry corrosion-class data); other Table-12 filters still unimplemented. Regime-capping now genuinely differentiates survivor counts (29/30/29/27/29) |
+| 5 — Feasibility Filtering | Corrected 42–70 °C SWH-specific PCM band | Band enforced; melting window [52, 65] °C at `Tm_target = 57` (regime-capped to 55.16/56.51 for Clusters 1/2) | **Delivered, with one filter still a documented no-op.** Corrosion veto is now implemented (2026-09) — the database DOES carry `corrosion_class` data (assigned in `06`), it's just that all 55 current candidates are organic (`low_organic`), so the veto has nothing to reject yet; it activates automatically once an inorganic candidate is added. The 5th-percentile-day charging-feasibility filter is still unimplemented (needs a daily GHI percentile per cluster). Regime-capping genuinely differentiates survivor counts (29/30/29/27/29) |
 | 6 — MCDM Ranking | Top-3 with explicit method-agreement reporting | TOPSIS + GRA + PROMETHEE II + VIKOR, entropy/AHP weights, Gaussian Tm fitness, Borda, Kendall's W | **Delivered** — four independent methods, Kendall's W 0.708–0.842 per cluster, VIKOR now correctly reports compromise sets (Clusters 1 and 2) instead of false single winners |
-| 7 — Physics Validation | Physics-validated ranking | Backward-Euler grey-box lumped-enthalpy tank model (`10_physics_validation.py`), Spearman rho of consensus rank vs. simulated solar fraction per cluster | **Delivered, and an honest negative result** — 0% of simulations land in the 54–84% literature benchmark band (actual ~15–19%); per-cluster rho ranges −0.227 to +0.171, none significant. This is a genuine finding once two solver bugs were fixed, not evidence the model is broken |
+| 7 — Physics Validation | Physics-validated ranking | Backward-Euler grey-box lumped-enthalpy tank model (`10_physics_validation.py`), Spearman rho of consensus rank vs. simulated solar fraction per cluster | **Delivered, and an honest negative result** — 0% of simulations land in the 54–84% literature benchmark band (actual ~12–19%); per-cluster rho ranges −0.338 to +0.169, none significant. This is a genuine finding once two solver bugs were fixed (and later a Phase 3/Phase 7 sizing inconsistency reconciled — see `09_PHASE_7_AUDIT.md`), not evidence the model is broken |
 | 8 — Recommendation Cards | Per-regime explainable output | 5 cards; population-weighted profiles; Top-3 with per-method scores and Kendall's W | **Delivered**; regenerated against the current, corrected results; output still not committed (git-ignored) |
 
 ### The central finding against the novelty claim — RESOLVED (2026-09)
@@ -342,8 +346,11 @@ and mostly the same Top-1 pick (PureTemp 58) — that remaining overlap is now a
 (those three regimes genuinely don't need a different melting-window target), not a bug. Phase 7's
 physics simulation (once its own two bugs were fixed — see `09_PHASE_7_AUDIT.md`) provides the
 further differentiation this section previously said was missing: per-cluster Spearman rho between
-MCDM rank and simulated solar fraction ranges from -0.227 to +0.171, a real, cluster-specific signal
-even though none reach statistical significance.
+MCDM rank and simulated solar fraction ranges from -0.338 to +0.169, a real, cluster-specific signal
+even though none reach statistical significance. (A later Phase 3/Phase 7 sizing reconciliation —
+see `09_PHASE_7_AUDIT.md` — moved these rho values slightly from an earlier -0.227..+0.171 but did
+not change the qualitative finding: solar fraction is a ratio-based metric that proportional system
+scaling can't move.)
 
 ### Phase -> broader-project mapping
 
@@ -362,7 +369,7 @@ even though none reach statistical significance.
   does not; it produces the input they consume.
 - That the K = 5 partition is externally validated — no Köppen-Geiger or NBC/ECBC comparison exists.
 - That the Top-3 ranking is physics-confirmed — Phase 7 was built and run, but per-cluster Spearman
-  rho (-0.227 to +0.171, none significant) shows only weak/no agreement between the MCDM rank and
+  rho (-0.338 to +0.169, none significant) shows only weak/no agreement between the MCDM rank and
   simulated solar fraction; report this honestly rather than as confirmation.
 - That the once-identical-across-regimes result was a correct mathematical outcome of a constant
   `Tm_target` — it was traced to a real bug (`07b`'s regime cap dividing away its own signal) and is
@@ -421,6 +428,7 @@ Kept here as a record, with each item's resolution noted:
 | `11_OBJECTIVE1_PLOTTING_AND_VERIFICATION_AUDIT.md` | Plot inventory, verification suite, and 13 figure defects |
 | `12_FINAL_READINESS_REPORT.md` | Implementation issues, reproducibility audit, final verdict |
 | `CONSOLIDATION_SUMMARY.md` | What was merged into what, and why |
+
 
 ---
 
@@ -511,7 +519,7 @@ Kept here as a record of what the table used to say and why it was wrong at the 
 | 4. Clustering | "Code delivered …, **not yet confirmed run**" | Run at **K = 5**; sizes **7/3/9/10/16** (not 12/9/3/7/14 — that was from an earlier signature version) |
 | 5. Feasibility | "Code delivered, **not yet run**" | Run — survivor counts now **29/30/29/27/29** per cluster (not identical, since the regime-cap bug in `07b` is fixed) |
 | 6. MCDM Ranking | "Code delivered, **not yet run**" | Run — four methods (TOPSIS+GRA+PROMETHEE+VIKOR); Cluster 1 genuinely differs (PureTemp 53, not PureTemp 58) |
-| 7. Physics Validation | "**Not written.**" | Written and run (`10_physics_validation.py`) — two model bugs fixed; corrected result is 0% within the 54-84% benchmark band (~15-19% actual), down from a bug-inflated 92% |
+| 7. Physics Validation | "**Not written.**" | Written and run (`10_physics_validation.py`) — two model bugs fixed; corrected result is 0% within the 54-84% benchmark band (~12-19% actual), down from a bug-inflated 92%. A later sizing reconciliation (Phase 3/Phase 7 tank/PCM/collector consistency) left this essentially unchanged — see `09_PHASE_7_AUDIT.md` |
 | 8. Recommendation Cards | "Code delivered, **not yet run**" | Run — `recommendation_cards.md` regenerated against all current fixes (still git-ignored, so not in this repo) |
 
 ## Known internal inconsistency: PCM database size — RESOLVED in NEXT_STEPS.md (2026-09)
@@ -574,13 +582,15 @@ group") and step 11's VIF ("computed over fewer independent spatial samples"). I
 a high silhouette is "more likely to mean an over-simple signature than a genuinely crisp regime
 split" at this N, and that K should realistically be 2–4 rather than higher.
 
-**Corrosion mechanism.** `NEXT_STEPS.md` anticipates that "the corrosion veto [will] bite for
-high-monsoon-humidity Uttarakhand clusters (Terai/valley points during Jun-Sep) … same veto,
-different physical mechanism, worth noting in text." **This still has not happened** — the
-corrosion veto is not implemented in `07_feasibility_filter.py` at all (its docstring lists it
-under "NOT applied"), and every one of the 55 database candidates is organic, so the veto could
-not have activated even if it had been implemented. This remains a genuine, documented scope gap
-(not something the 2026-09 bug fixes touched).
+**Corrosion mechanism — implemented (2026-09), still can't activate yet.** `NEXT_STEPS.md`
+anticipates that "the corrosion veto [will] bite for high-monsoon-humidity Uttarakhand clusters
+(Terai/valley points during Jun-Sep) … same veto, different physical mechanism, worth noting in
+text." `07_feasibility_filter.py` now implements the veto logic (a `corrosion_class="check_manually"`
+candidate fails if that cluster's HSI exceeds the 75th percentile across all 5 clusters) — but it
+still can't bite for the reason this section originally gave: every one of the 55 database
+candidates is organic (`corrosion_class="low_organic"`), so there's nothing for the veto to reject.
+It will activate automatically once an inorganic candidate (e.g. a salt hydrate) is added to the
+database — a data-coverage gap now, not a missing-logic gap.
 
 **`Tm_target` — RESOLVED (2026-09), was the dominant cause of identical results, no longer is.**
 `04b_climate_signature.py` sets a baseline `Tm_target_C = 57` for every point by design
@@ -607,6 +617,7 @@ remaining bug. `08_mcdm_ranking.py` still detects and prints this explicitly.
   arithmetically from script constants are labelled *(expected)*.
 - Approximate values read off a rendered chart (rather than parsed from a CSV) are marked as
   approximate at the point of use.
+
 
 ---
 
@@ -932,6 +943,7 @@ PC1 — a balanced contribution, not the outsized -0.33/0.59 the old `elev_proxy
 Out-of-range values become `NaN` (never silently clipped) and are then imputed by step 4.
 The `era5_P_atm >= 850 hPa` and `era5_LW_down >= 50 W/m²` bounds are the two that bite hardest for
 Uttarakhand — see `04_PHASE_2_AUDIT.md` Part B.
+
 
 ---
 
@@ -1482,6 +1494,7 @@ alignment, circular hour windows) are sound and well documented in-code. The per
 gap is now **resolved** (`00c_attach_elevation.py`, 196–2510 m real values); the remaining open
 item is the residual 0 m vs. real-elevation inconsistency between `00b` and `02`, which is smaller
 in practical consequence now that one side of it is physically grounded.
+
 
 ---
 
@@ -2487,6 +2500,7 @@ The GHI fix strengthens the Phase 3–6 chain further (the two-tier design had a
 canonical solar indices from it); the P_atm bound should still be stated plainly wherever
 `era5_P_atm` itself is reported.
 
+
 ---
 
 # Source File 5: 05_PHASE_3_AUDIT.md
@@ -2715,7 +2729,7 @@ constraining a PCM property. The Uttarakhand implementation's mapping:
 |---|---|---|
 | `GHI_mean` | Mean solar irradiance at the charging instant | Charging-rate feasibility; upper bound on achievable `Tm` |
 | `RH_mean` | Annual mean relative humidity → condensation risk at the PCM container | Corrosion-resistance requirement; encapsulation choice |
-| `HSI` | `RH_mean × fraction(T_amb − T_dew < 3 K)` — combined humidity + near-saturation signal | Intended as the corrosion-veto trigger. **In this run it triggers nothing** — `07`'s corrosion veto is not implemented, and all 55 database candidates are organic. |
+| `HSI` | `RH_mean × fraction(T_amb − T_dew < 3 K)` — combined humidity + near-saturation signal | The corrosion-veto trigger — **implemented in `07` (2026-09)**, comparing each cluster's HSI against the 75th percentile across all clusters. **Still triggers nothing in this run** — all 55 database candidates are organic, so the veto has no inorganic candidate to reject yet, not because the logic is missing. |
 | `wind_mean` | Mean wind speed → convective loss from collector and tank | Tank/collector loss coefficient; indirectly the required storage margin |
 | `monsoon_index` | JJAS share of annual precipitation → seasonal charging gap | Storage sizing for the monsoon under-charging window (descriptive, not a ranking criterion) |
 | `elevation_m` | Real per-point elevation (ERA5 geopotential, 196-2510m) — **was** `mean(P_atm)/1013.25`, a pressure-ratio proxy, fixed 2026-09 | Air mass into the Ineichen clear-sky model (via `02`'s per-point altitude, also fixed); PCA thermodynamic block |
@@ -2867,6 +2881,7 @@ from the pipeline's largest data defect (the ERA5 GHI deaccumulation bug, since 
 remaining open item from this phase is the unsourced `T_mains_est_C` mains-temperature offset — the
 constant-`Tm_target`-causes-identical-results concern and the four "ERA5-side instead of Tier-2"
 columns are both resolved (2026-09), per the numbered list above.
+
 
 ---
 
@@ -3214,6 +3229,7 @@ profiles) and the result is spatially coherent with a monotone temperature order
 positive finding given that latitude and longitude were excluded from the fit. The open items are
 the aggressive K for N = 45, the total absence of stability evidence, and the unrealised soft
 membership.
+
 
 ---
 
@@ -3679,13 +3695,15 @@ v3.0 Table 12. The MICE + RF + PMM method is described at length with **no** cit
    making the cap a no-op regardless of how the script was run). Fixed; Clusters 1 (Tm_target=55.16C)
    and 2 (56.51C) now get real, differentiated survivor sets (30 and 29 respectively, vs. 29/27/29
    for Clusters 0/3/4).
-2. **Three of the five plan Table-12 filters are not implemented**, and the script says so in its
-   own docstring rather than hiding it: 5th-percentile-day charging feasibility, corrosion veto,
-   safety exclusion.
-3. **The corrosion veto could not activate even if implemented** — every one of the 55 candidates
-   is organic, so `corrosion_class` is `low_organic` for all of them. `NEXT_STEPS.md`'s expectation
-   that the veto would "bite for high-monsoon-humidity Uttarakhand clusters" cannot be realised
-   with this database.
+2. **~~Three of the five plan Table-12 filters are not implemented~~ — now two.** Corrosion veto
+   is implemented (2026-09, see item 3); 5th-percentile-day charging feasibility and safety
+   exclusion remain unimplemented, and the script says so in its own docstring rather than hiding it.
+3. **The corrosion veto is implemented but cannot activate with the current database** — every one
+   of the 55 candidates is organic, so `corrosion_class` is `low_organic` for all of them (verified
+   directly against the database), leaving nothing for the veto to reject. `NEXT_STEPS.md`'s
+   expectation that the veto would "bite for high-monsoon-humidity Uttarakhand clusters" still
+   cannot be realised with this database — but the veto will fire automatically the moment an
+   inorganic candidate (e.g. a salt hydrate) is added, without any further code change.
 4. **`07`'s low-survivor warning string is stale**: it prints "your database (25 rows) is thin for
    this" while the database is 55 rows. It would not have fired in this run anyway (29 > 5).
 5. **Auto-relaxation never triggered** (29 >= 5 in every cluster), so `window_relax_applied` is 0
@@ -3710,6 +3728,7 @@ imputation footprint is recoverable cell-by-cell from the committed CSV, which i
 than the climate data offers. The filter is correctly ordered before ranking, declares its own
 gaps, and handles missing data conservatively. What it does not do is discriminate between regimes,
 and the reason is upstream: a constant `Tm_target`.
+
 
 ---
 
@@ -4074,6 +4093,7 @@ agreement picture than the old pooled −0.930), and Monte Carlo-quantified stab
 open items are the ones listed above that were never about the degeneracy (CoCoSo, Copeland
 consensus, a real AHP elicitation) — genuine future work, not correctness bugs.
 
+
 ---
 
 # Source File 9: 09_PHASE_7_AUDIT.md
@@ -4159,22 +4179,38 @@ had two bugs in the backward-Euler tank-temperature solve and the phase-2 latent
 that together let the tank artificially overheat every hour of the simulated year, which is what
 previously produced the (wrong) 92%-in-band figure. Both bugs are fixed (see the in-code comments
 at the phase-1/phase-2/phase-3 branches of `simulate_pcm_swh_year()`), and 0% in-band is the correct
-output of the de-bugged model given the script's stated tank/collector assumptions (150 kg tank,
-2.5 m² collector, 0.70 collector efficiency, 2.0 W/K ambient loss, 07:00/19:00 draws). Whether those
-*assumptions themselves* need revisiting to bring the model's absolute solar fraction into a more
-realistic range is a separate, still-open **methodology** question — not evidence that the code is
-still broken.
+output of the de-bugged model given the script's stated tank/collector assumptions.
+
+**Sizing reconciliation (2026-09, after the bug fix above)**: the assumptions themselves were then
+checked, since the 0%-in-band result raised the methodology question of whether the tank/collector
+sizing was realistic. It turned out `10_physics_validation.py`'s sizing (150 kg tank, 28 kg PCM,
+2.5 m² collector) had been independently literature-cited from Barqawi et al. (2025)'s own
+"mid-configuration" rather than matched to `04b_climate_signature.py`'s own household sizing
+(300 kg/day draw, 150 kg PCM) that Phase 5's `L_required` criterion is actually built around — a
+real Phase 3/Phase 7 inconsistency. Reconciled to 300 kg tank, 150 kg PCM (`V_PCM_M3=0.1705 m³` at
+the PCM database's median solid density), 5.0 m² collector (scaled by Barqawi et al.'s own
+collector-to-tank ratio, not an arbitrary number), and draws doubled to 2×150 kg/day to match. The
+solar fraction barely moved (12–19% before and after) because proportional scaling of an entire
+system preserves a ratio-based metric like solar fraction — this confirms the low result is a
+genuine climate-vs-design-ratio finding for Uttarakhand's weather driving data, not a residual
+sizing bug. The reconciliation is kept regardless, since Phase 3 and Phase 7 are now internally
+consistent (they weren't before), but further inflating these numbers to chase the benchmark band
+without a new external justification would be tuning toward a target, not fixing a bug — see the
+diagnostic note printed at the end of `10_physics_validation.py`'s `main()`.
 
 ### 2. Cluster-by-Cluster Physics vs. MCDM Rank Concordance
 
 | Cluster | Medoid Point | Annual Solar Fraction (all candidates) | Spearman $\rho$ | $p$-value | Interpretation |
 |:---:|:---:|:---:|:---:|:---:|:---|
-| **Cluster 0** | UKP_0007 | ≈15.9% | **−0.097** | 0.684 | Weak, non-significant inverse correlation |
+| **Cluster 0** | UKP_0007 | ≈15.9% | **+0.023** | 0.925 | Negligible, non-significant correlation |
 | **Cluster 1** | UKP_0023 | ≈12.0% | **−0.168** | 0.480 | Weak, non-significant inverse correlation |
-| **Cluster 2** | UKP_0002 | ≈15.9% | **−0.227** | 0.337 | Weak, non-significant inverse correlation |
-| **Cluster 3** | UKP_0001 | ≈19.1% | **+0.171** | 0.471 | Weak, non-significant positive correlation |
+| **Cluster 2** | UKP_0002 | ≈15.9% | **−0.338** | 0.144 | Weak, non-significant inverse correlation |
+| **Cluster 3** | UKP_0001 | ≈19.1% | **+0.169** | 0.477 | Weak, non-significant positive correlation |
 | **Cluster 4** | UKP_0015 | ≈16.7% | **−0.140** | 0.556 | Weak, non-significant inverse correlation |
-| **Mean** | — | — | **≈−0.092** | — | Overall weak/no correlation across regimes; **no cluster reaches p < 0.05** |
+| **Mean** | — | — | **≈−0.091** | — | Overall weak/no correlation across regimes; **no cluster reaches p < 0.05** |
+
+*(Rho values updated 2026-09 after a Phase 3/Phase 7 sizing reconciliation — see the note at the
+end of this section. Solar fractions were already correct and did not change.)*
 
 Exact values are recorded in `data/processed/pcm/physics_validation_spearman.csv`. Within a given
 cluster, the simulated annual solar fraction barely varies across the ~20 candidate PCMs actually
@@ -4188,19 +4224,31 @@ data. That is itself a diagnostic finding, not a data error.
 ## Key Physical Insights & Diagnostics
 
 1. **Delivered Solar Fraction Differentiation**:
-   While Phase 5 and Phase 6 returned identical top candidates across clusters (due to uniform $T_{m,target} = 57\text{ }^\circ\text{C}$), Phase 7 demonstrates **clear regional performance differentiation**:
-   - **Cluster 3 (Plains/Interior)** achieves the highest solar fractions (~78–81%), driven by strong daily solar insolation.
-   - **Cluster 2 (High Himalayan)** yields lower solar fractions (~51–63%), directly reflecting mountain cloud cover and lower ambient temperatures.
+   Phase 7 still shows **regional performance differentiation** across clusters, even though the
+   post-bug-fix absolute levels are far lower than the benchmark band:
+   - **Cluster 3** (medoid UKP_0001) achieves the highest solar fraction (≈19.1%), consistent with
+     stronger daily solar insolation at that medoid.
+   - **Cluster 1** (medoid UKP_0023) yields the lowest solar fraction (≈12.0%), reflecting weaker
+     insolation and/or lower ambient temperatures at that medoid.
+   - This ordering is much smaller in absolute spread than an earlier draft of this section claimed
+     (~78–81% vs. ~51–63%) — that older text predated the backward-Euler/latent-heat bug fixes and
+     the sizing reconciliation described above, and has been corrected here to match the current,
+     verified output.
 
-2. **Explanation of Low Rank Correlation ($\rho = 0.124$)**:
-   - In Phase 6, the TOPSIS and GRA methods showed strong anti-correlation ($\rho = -0.930$), making the MCDM consensus rank a positionally averaged compromise.
-   - The physical simulation shows that among top feasibility survivors, thermal storage capacity and melting point ($T_m$) have non-linear interactions with daily draw schedules that static MCDM property weighting cannot capture.
+2. **Explanation of Low Rank Correlation**:
+   - Mean Spearman $\rho \approx -0.091$ across clusters (table above), none reaching $p<0.05$ — the
+     MCDM consensus rank and simulated solar fraction are not meaningfully correlated in either
+     direction at this model's current parameterization.
+   - Within a cluster, simulated solar fraction barely varies across candidate PCMs (see the note
+     below the table) — the weather driving data dominates the outcome so completely that static
+     MCDM property weighting has almost nothing left to explain.
 
 ---
 
 ## Verification Status
 
 **COMPLETE & VERIFIED.** `10_physics_validation.py` runs cleanly, produces valid physics outputs, and satisfies all requirements of Section 10 of the Objective 1 framework plan.
+
 
 ---
 
@@ -4428,6 +4476,7 @@ constructed: it validates all inputs up-front, refuses to write partial output, 
 what it does *not* say — the imputation scope, the tied ranks in Clusters 0/3/4's legitimately
 shared pick, and the per-criterion/physics-validation contributions it has the data for but doesn't
 surface on the card.
+
 
 ---
 
@@ -4710,13 +4759,17 @@ from all five clusters at once**, not per cluster. They are not the per-cluster 
 agreement statistic — that is Kendall's W, verified from `08_mcdm_ranking.py`'s current output:
 0.796/0.842/0.782/0.708/0.796 for Clusters 0-4.
 
-**Caveat 2 (newly identified, 2026-09) — this verify script's coverage hasn't kept up with `08`'s
-method count.** `08_mcdm_ranking.py` now computes four methods (TOPSIS+GRA+PROMETHEE+VIKOR), but
-`verify_04_ranking.py`'s `rank_cols` only ever looks at `['topsis_rank', 'gra_rank',
-'consensus_rank']` (confirmed by reading the current script) — `promethee_rank` and `vikor_rank`
-are silently absent from its method-agreement analysis. Not a pipeline-correctness bug (the actual
-MCDM ranking is unaffected), but a real gap in this specific verification script's coverage,
-left open.
+**Caveat 2 — RESOLVED (2026-09), same session it was identified in.** This verify script's
+coverage had fallen behind `08`'s method count: `08_mcdm_ranking.py` computes four methods
+(TOPSIS+GRA+PROMETHEE+VIKOR), but `verify_04_ranking.py`'s `rank_cols` only looked at
+`['topsis_rank', 'gra_rank', 'consensus_rank']`, silently omitting `promethee_rank`/`vikor_rank`
+from every downstream analysis (the correlation matrix, top-3 inclusion probability, rank
+reversal, and the summary panel). Fixed: `rank_cols` now includes all five columns
+(`topsis_rank, gra_rank, promethee_rank, vikor_rank, consensus_rank`), with fallback rank
+computation added for the two new methods (`promethee_flow` descending, `vikor_Q` ascending —
+matching `08`'s own conventions) and the summary panel's pairwise-agreement text generalized to
+loop over all pairs instead of three hardcoded ones. Confirmed by rerunning: `Methods:` now prints
+all five columns, `06_summary.png` shows all 10 pairwise Spearman values.
 
 ---
 
@@ -4803,6 +4856,7 @@ documentation set's evidentiary weight.** The verification suite is a genuine as
 used as-is for feasibility counts, physics agreement, or tank behaviour**, and the comprehensive
 maps need a one-line centre fix before any of them goes in a report.
 
+
 ---
 
 # Source File 12: 12_FINAL_READINESS_REPORT.md
@@ -4829,7 +4883,7 @@ readiness verdict for the `era5-uttarakhand/` pipeline.
 | 4 — Regime Clustering | `05`, `05b` | **COMPLETE** | **K = 5**, GMM full covariance; sizes **12 / 9 / 3 / 7 / 14**; silhouette 0.279 |
 | 5 — Feasibility Filtering | `06`, `07`, `07b` | **COMPLETE, RESOLVED 2026-09** | 55-candidate database; window [52, 65] °C at Tm_target=57; **29/30/29/27/29 survivors — no longer identical**, since `07b`'s regime-cap bug is fixed (Clusters 1/2 get 55.16C/56.51C) |
 | 6 — MCDM Ranking | `08` | **COMPLETE, RESOLVED 2026-09** | TOPSIS + GRA + PROMETHEE II + VIKOR + Borda (was TOPSIS+GRA only); **PureTemp 58 #1 in Clusters 0/2/3/4, PureTemp 53 in Cluster 1**; Kendall's W 0.708-0.842 per cluster (was pooled TOPSIS-vs-GRA ρ = −0.930, a two-method-era figure) |
-| 7 — Physics Validation | `10_physics_validation.py` | **COMPLETE, RESOLVED 2026-09** | Backward-Euler grey-box tank model, two solver bugs fixed (verified against `scipy.integrate.solve_ivp`); **0% in [54%, 84%] SF band** (actual ~15-19%) — the previous 92%/+0.124 figures were inflated by those bugs and are not valid; current per-cluster ρ ranges −0.227 to +0.171, none significant |
+| 7 — Physics Validation | `10_physics_validation.py` | **COMPLETE, RESOLVED 2026-09** | Backward-Euler grey-box tank model, two solver bugs fixed (verified against `scipy.integrate.solve_ivp`); **0% in [54%, 84%] SF band** (actual ~12-19%) — the previous 92%/+0.124 figures were inflated by those bugs and are not valid; current per-cluster ρ ranges −0.338 to +0.169, none significant. A later Phase 3/Phase 7 tank/PCM/collector sizing reconciliation (also 2026-09) left this result essentially unchanged, confirming it as a genuine climate-vs-design finding rather than a sizing bug — see `09_PHASE_7_AUDIT.md` |
 | 8 — Recommendation Cards | `09` | **CODE COMPLETE, OUTPUT REGENERATED 2026-09 (still not committed — git-ignored)** | 5 cards; #1 is PureTemp 58 in four clusters (a legitimate shared result, not identical-by-bug) and PureTemp 53 in Cluster 1 |
 
 ---
@@ -5128,7 +5182,7 @@ readiness verdict for the `era5-uttarakhand/` pipeline.
   regimes specifically, not evidence against the framework generally.
 - That the Top-3 ranking is stable, externally validated, or physics-confirmed — **still true**;
   Monte Carlo now quantifies stability (37.8-39.3% Top-3 inclusion) and physics validation now runs
-  (0% within the literature benchmark band, per-cluster ρ −0.227 to +0.171, none significant) —
+  (0% within the literature benchmark band, per-cluster ρ −0.338 to +0.169, none significant) —
   both are honest, weak-agreement results, not confirmation.
 - ~~That RT60 is a clear winner~~ — RT60 is no longer even the consensus pick in the current
   four-method run (PureTemp 58/53 are). The current pick is decided across four methods with
@@ -5183,6 +5237,7 @@ than in retrospect** — the unimplemented filters, the heuristic proxy, the pla
 and the constant-`Tm_target` diagnostic are all self-declared. The gap is not honesty; it is that
 two measured problems (the GHI disagreement and the pressure-bound truncation) were observed and
 then not acted upon.
+
 
 ---
 
@@ -5253,7 +5308,7 @@ a plan section/table, or is un-cited in the code.
 | Borda-count consensus | `08` | Borda (1781) | Implemented; uncited in code |
 | Kendall's W | `08` | Kendall & Babington Smith (1939) | Plan v3.0 §9.5 cited for interpretation; statistic uncited |
 | Flat-plate collector 25–100 °C operating band | `07b` | **Al-Mamun 2023** | The pipeline's only substantive citation in Phase 5/7 |
-| Annual solar fraction 54–84 % benchmark | `10_physics_validation.py` | plan Table 16; Barqawi 2025 | RESOLVED 2026-09: two solver bugs fixed (backward-Euler numerator error, one-directional latent-heat accumulator), verified against `scipy.integrate.solve_ivp`. Corrected result: 0% of simulated runs land within this benchmark band (actual ~15-19%) — the previously-cited 92% was inflated by those bugs |
+| Annual solar fraction 54–84 % benchmark | `10_physics_validation.py` | plan Table 16; Barqawi 2025 | RESOLVED 2026-09: two solver bugs fixed (backward-Euler numerator error, one-directional latent-heat accumulator), verified against `scipy.integrate.solve_ivp`. Corrected result: 0% of simulated runs land within this benchmark band (actual ~12-19%) — the previously-cited 92% was inflated by those bugs. A later sizing reconciliation (tank/PCM mass and collector area matched to Phase 3's own household sizing instead of an independently literature-cited size) left the result essentially unchanged, confirming a genuine climate-vs-design finding rather than a residual sizing bug — see `09_PHASE_7_AUDIT.md` |
 | Grey-box lumped-enthalpy tank model | `10_physics_validation.py` | Barqawi et al. (2025) dynamic simulation | Implemented with implicit Backward Euler integration; see `09_PHASE_7_AUDIT.md` |
 
 ---
@@ -5282,6 +5337,7 @@ To make the paper submission-ready, add BibTeX entries for:
    - TOPSIS: Hwang, C. L., & Yoon, K. (1981). *Multiple Attribute Decision Making*. Springer-Verlag.
    - GRA: Deng, J. L. (1982). Control problems of grey systems. *Systems & Control Letters*, 1(5), 288–294.
    - MICE: van Buuren, S., & Groothuis-Oudshoorn, K. (2011). mice: Multivariate Imputation by Chained Equations in R. *Journal of Statistical Software*, 45(3), 1–67.
+
 
 ---
 
@@ -5556,4 +5612,6 @@ result CSVs, or add a `.gitignore` exception for them. See `12_FINAL_READINESS_R
 deleted; the four never-created files were written directly into their targets. All cross-references
 have been updated to point at the consolidated locations.
 
+
 ---
+

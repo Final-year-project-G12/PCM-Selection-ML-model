@@ -62,7 +62,7 @@ a plan section/table, or is un-cited in the code.
 | Borda-count consensus | `08` | Borda (1781) | Implemented; uncited in code |
 | Kendall's W | `08` | Kendall & Babington Smith (1939) | Plan v3.0 §9.5 cited for interpretation; statistic uncited |
 | Flat-plate collector 25–100 °C operating band | `07b` | **Al-Mamun 2023** | The pipeline's only substantive citation in Phase 5/7 |
-| Annual solar fraction 54–84 % benchmark | `10_physics_validation.py` | plan Table 16; Barqawi 2025 | RESOLVED 2026-09: two solver bugs fixed (backward-Euler numerator error, one-directional latent-heat accumulator), verified against `scipy.integrate.solve_ivp`. Corrected result: 0% of simulated runs land within this benchmark band (actual ~15-19%) — the previously-cited 92% was inflated by those bugs |
+| Annual solar fraction 54–84 % benchmark | `10_physics_validation.py` | plan Table 16; Barqawi 2025 | RESOLVED 2026-09: two solver bugs fixed (backward-Euler numerator error, one-directional latent-heat accumulator), verified against `scipy.integrate.solve_ivp`. Corrected result: 0% of simulated runs land within this benchmark band (actual ~12-19%) — the previously-cited 92% was inflated by those bugs. A later sizing reconciliation (tank/PCM mass and collector area matched to Phase 3's own household sizing instead of an independently literature-cited size) left the result essentially unchanged, confirming a genuine climate-vs-design finding rather than a residual sizing bug — see `09_PHASE_7_AUDIT.md` |
 | Grey-box lumped-enthalpy tank model | `10_physics_validation.py` | Barqawi et al. (2025) dynamic simulation | Implemented with implicit Backward Euler integration; see `09_PHASE_7_AUDIT.md` |
 
 ---

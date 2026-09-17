@@ -285,9 +285,9 @@ what the Uttarakhand pipeline demonstrably does.
 | 2 — Combine + Tier-2 | Two independent sources cross-checked | ERA5 + NASA POWER at identical points/instants; full agreement statistics computed | **Delivered, but the disagreement is never acted upon** |
 | 3 — Climate Signature | Two-tier signature (sun-event + true daily integral) | 18 indices; Tier-2 canonical where available; PCA on the thermodynamic block only | **Delivered — and it insulated the clustering matrix from the pipeline's largest data defect** |
 | 4 — Regime Clustering | Discovered regimes, not hand-picked zones | GMM **diagonal** covariance, K = 5 by manual selection from a BIC/silhouette table; lat/lon excluded | **Delivered** — clusters are spatially coherent without clustering on geography (silhouette 0.28). **But** no bootstrap stability and no external classification |
-| 5 — Feasibility Filtering | Corrected 42–70 °C SWH-specific PCM band | Band enforced; melting window [52, 65] °C at `Tm_target = 57` (regime-capped to 55.16/56.51 for Clusters 1/2) | **Partially delivered** — the corrosion veto cannot activate (all 55 candidates organic, and the database doesn't yet carry corrosion-class data); other Table-12 filters still unimplemented. Regime-capping now genuinely differentiates survivor counts (29/30/29/27/29) |
+| 5 — Feasibility Filtering | Corrected 42–70 °C SWH-specific PCM band | Band enforced; melting window [52, 65] °C at `Tm_target = 57` (regime-capped to 55.16/56.51 for Clusters 1/2) | **Delivered, with one filter still a documented no-op.** Corrosion veto is now implemented (2026-09) — the database DOES carry `corrosion_class` data (assigned in `06`), it's just that all 55 current candidates are organic (`low_organic`), so the veto has nothing to reject yet; it activates automatically once an inorganic candidate is added. The 5th-percentile-day charging-feasibility filter is still unimplemented (needs a daily GHI percentile per cluster). Regime-capping genuinely differentiates survivor counts (29/30/29/27/29) |
 | 6 — MCDM Ranking | Top-3 with explicit method-agreement reporting | TOPSIS + GRA + PROMETHEE II + VIKOR, entropy/AHP weights, Gaussian Tm fitness, Borda, Kendall's W | **Delivered** — four independent methods, Kendall's W 0.708–0.842 per cluster, VIKOR now correctly reports compromise sets (Clusters 1 and 2) instead of false single winners |
-| 7 — Physics Validation | Physics-validated ranking | Backward-Euler grey-box lumped-enthalpy tank model (`10_physics_validation.py`), Spearman rho of consensus rank vs. simulated solar fraction per cluster | **Delivered, and an honest negative result** — 0% of simulations land in the 54–84% literature benchmark band (actual ~15–19%); per-cluster rho ranges −0.227 to +0.171, none significant. This is a genuine finding once two solver bugs were fixed, not evidence the model is broken |
+| 7 — Physics Validation | Physics-validated ranking | Backward-Euler grey-box lumped-enthalpy tank model (`10_physics_validation.py`), Spearman rho of consensus rank vs. simulated solar fraction per cluster | **Delivered, and an honest negative result** — 0% of simulations land in the 54–84% literature benchmark band (actual ~12–19%); per-cluster rho ranges −0.338 to +0.169, none significant. This is a genuine finding once two solver bugs were fixed (and later a Phase 3/Phase 7 sizing inconsistency reconciled — see `09_PHASE_7_AUDIT.md`), not evidence the model is broken |
 | 8 — Recommendation Cards | Per-regime explainable output | 5 cards; population-weighted profiles; Top-3 with per-method scores and Kendall's W | **Delivered**; regenerated against the current, corrected results; output still not committed (git-ignored) |
 
 ### The central finding against the novelty claim — RESOLVED (2026-09)
@@ -310,8 +310,11 @@ and mostly the same Top-1 pick (PureTemp 58) — that remaining overlap is now a
 (those three regimes genuinely don't need a different melting-window target), not a bug. Phase 7's
 physics simulation (once its own two bugs were fixed — see `09_PHASE_7_AUDIT.md`) provides the
 further differentiation this section previously said was missing: per-cluster Spearman rho between
-MCDM rank and simulated solar fraction ranges from -0.227 to +0.171, a real, cluster-specific signal
-even though none reach statistical significance.
+MCDM rank and simulated solar fraction ranges from -0.338 to +0.169, a real, cluster-specific signal
+even though none reach statistical significance. (A later Phase 3/Phase 7 sizing reconciliation —
+see `09_PHASE_7_AUDIT.md` — moved these rho values slightly from an earlier -0.227..+0.171 but did
+not change the qualitative finding: solar fraction is a ratio-based metric that proportional system
+scaling can't move.)
 
 ### Phase -> broader-project mapping
 
@@ -330,7 +333,7 @@ even though none reach statistical significance.
   does not; it produces the input they consume.
 - That the K = 5 partition is externally validated — no Köppen-Geiger or NBC/ECBC comparison exists.
 - That the Top-3 ranking is physics-confirmed — Phase 7 was built and run, but per-cluster Spearman
-  rho (-0.227 to +0.171, none significant) shows only weak/no agreement between the MCDM rank and
+  rho (-0.338 to +0.169, none significant) shows only weak/no agreement between the MCDM rank and
   simulated solar fraction; report this honestly rather than as confirmation.
 - That the once-identical-across-regimes result was a correct mathematical outcome of a constant
   `Tm_target` — it was traced to a real bug (`07b`'s regime cap dividing away its own signal) and is

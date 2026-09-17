@@ -78,22 +78,38 @@ had two bugs in the backward-Euler tank-temperature solve and the phase-2 latent
 that together let the tank artificially overheat every hour of the simulated year, which is what
 previously produced the (wrong) 92%-in-band figure. Both bugs are fixed (see the in-code comments
 at the phase-1/phase-2/phase-3 branches of `simulate_pcm_swh_year()`), and 0% in-band is the correct
-output of the de-bugged model given the script's stated tank/collector assumptions (150 kg tank,
-2.5 m² collector, 0.70 collector efficiency, 2.0 W/K ambient loss, 07:00/19:00 draws). Whether those
-*assumptions themselves* need revisiting to bring the model's absolute solar fraction into a more
-realistic range is a separate, still-open **methodology** question — not evidence that the code is
-still broken.
+output of the de-bugged model given the script's stated tank/collector assumptions.
+
+**Sizing reconciliation (2026-09, after the bug fix above)**: the assumptions themselves were then
+checked, since the 0%-in-band result raised the methodology question of whether the tank/collector
+sizing was realistic. It turned out `10_physics_validation.py`'s sizing (150 kg tank, 28 kg PCM,
+2.5 m² collector) had been independently literature-cited from Barqawi et al. (2025)'s own
+"mid-configuration" rather than matched to `04b_climate_signature.py`'s own household sizing
+(300 kg/day draw, 150 kg PCM) that Phase 5's `L_required` criterion is actually built around — a
+real Phase 3/Phase 7 inconsistency. Reconciled to 300 kg tank, 150 kg PCM (`V_PCM_M3=0.1705 m³` at
+the PCM database's median solid density), 5.0 m² collector (scaled by Barqawi et al.'s own
+collector-to-tank ratio, not an arbitrary number), and draws doubled to 2×150 kg/day to match. The
+solar fraction barely moved (12–19% before and after) because proportional scaling of an entire
+system preserves a ratio-based metric like solar fraction — this confirms the low result is a
+genuine climate-vs-design-ratio finding for Uttarakhand's weather driving data, not a residual
+sizing bug. The reconciliation is kept regardless, since Phase 3 and Phase 7 are now internally
+consistent (they weren't before), but further inflating these numbers to chase the benchmark band
+without a new external justification would be tuning toward a target, not fixing a bug — see the
+diagnostic note printed at the end of `10_physics_validation.py`'s `main()`.
 
 ### 2. Cluster-by-Cluster Physics vs. MCDM Rank Concordance
 
 | Cluster | Medoid Point | Annual Solar Fraction (all candidates) | Spearman $\rho$ | $p$-value | Interpretation |
 |:---:|:---:|:---:|:---:|:---:|:---|
-| **Cluster 0** | UKP_0007 | ≈15.9% | **−0.097** | 0.684 | Weak, non-significant inverse correlation |
+| **Cluster 0** | UKP_0007 | ≈15.9% | **+0.023** | 0.925 | Negligible, non-significant correlation |
 | **Cluster 1** | UKP_0023 | ≈12.0% | **−0.168** | 0.480 | Weak, non-significant inverse correlation |
-| **Cluster 2** | UKP_0002 | ≈15.9% | **−0.227** | 0.337 | Weak, non-significant inverse correlation |
-| **Cluster 3** | UKP_0001 | ≈19.1% | **+0.171** | 0.471 | Weak, non-significant positive correlation |
+| **Cluster 2** | UKP_0002 | ≈15.9% | **−0.338** | 0.144 | Weak, non-significant inverse correlation |
+| **Cluster 3** | UKP_0001 | ≈19.1% | **+0.169** | 0.477 | Weak, non-significant positive correlation |
 | **Cluster 4** | UKP_0015 | ≈16.7% | **−0.140** | 0.556 | Weak, non-significant inverse correlation |
-| **Mean** | — | — | **≈−0.092** | — | Overall weak/no correlation across regimes; **no cluster reaches p < 0.05** |
+| **Mean** | — | — | **≈−0.091** | — | Overall weak/no correlation across regimes; **no cluster reaches p < 0.05** |
+
+*(Rho values updated 2026-09 after a Phase 3/Phase 7 sizing reconciliation — see the note at the
+end of this section. Solar fractions were already correct and did not change.)*
 
 Exact values are recorded in `data/processed/pcm/physics_validation_spearman.csv`. Within a given
 cluster, the simulated annual solar fraction barely varies across the ~20 candidate PCMs actually
@@ -106,34 +122,25 @@ data. That is itself a diagnostic finding, not a data error.
 
 ## Key Physical Insights & Diagnostics
 
-**STALE-DATA WARNING, now corrected:** this section previously quoted per-cluster solar fractions
-of ~78-81% (Cluster 3) and ~51-63% (Cluster 2), and a rank-correlation figure of rho=0.124 — both
-left over from the pre-fix run that produced the (wrong) ~92%-in-band result described above as
-superseded. They directly contradicted the corrected ~12-19% solar-fraction range and the
-per-cluster rho values (-0.227 to +0.171, mean ~-0.092) reported earlier in this same file, and are
-replaced below with the corrected figures. The "Plains/Interior" / "High Himalayan" cluster labels
-have also been removed: no committed artefact in `era5-uttarakhand/` assigns geographic names to
-cluster IDs (see `06_PHASE_4_AUDIT.md`), so labelling Cluster 3 or Cluster 2 that way is
-interpretation, not a pipeline output.
-
 1. **Delivered Solar Fraction Differentiation**:
-   Phase 5 and Phase 6 returned near-identical top candidates across clusters (Clusters 0/2/4 share
-   `Tm_target=57C`; Clusters 1/2 get a regime-capped, lower target from `07b_charging_feasibility.py`
-   — see `07_PHASE_5_AUDIT.md`). Phase 7's corrected model shows the annual solar fraction itself
-   *does* differ by cluster, even though the differences are modest in absolute terms and none reach
-   the 54-84% benchmark band: Cluster 3 is highest at ≈19.1%, Clusters 0 and 2 are ≈15.9%, Cluster 4
-   is ≈16.7%, and Cluster 1 is lowest at ≈12.0% (see the table above).
+   Phase 7 still shows **regional performance differentiation** across clusters, even though the
+   post-bug-fix absolute levels are far lower than the benchmark band:
+   - **Cluster 3** (medoid UKP_0001) achieves the highest solar fraction (≈19.1%), consistent with
+     stronger daily solar insolation at that medoid.
+   - **Cluster 1** (medoid UKP_0023) yields the lowest solar fraction (≈12.0%), reflecting weaker
+     insolation and/or lower ambient temperatures at that medoid.
+   - This ordering is much smaller in absolute spread than an earlier draft of this section claimed
+     (~78–81% vs. ~51–63%) — that older text predated the backward-Euler/latent-heat bug fixes and
+     the sizing reconciliation described above, and has been corrected here to match the current,
+     verified output.
+
 2. **Explanation of Low Rank Correlation**:
-   - In the (now-superseded) two-method version of Phase 6, TOPSIS and GRA showed strong
-     anti-correlation ($\rho = -0.930$, pooled); the current four-method consensus has a much
-     healthier per-cluster Kendall's W of 0.708-0.842 (see `08_PHASE_6_AUDIT.md`).
-   - Even so, per-cluster Spearman rho between the MCDM consensus rank and simulated solar fraction
-     is weak and non-significant in every cluster (-0.227 to +0.171, mean ≈ -0.092, no cluster
-     p < 0.05 — see the table above). The physical simulation shows that among top feasibility
-     survivors, thermal storage capacity and melting point ($T_m$) have non-linear interactions with
-     daily draw schedules that static MCDM property weighting cannot capture, and that (at this
-     model's current parameterization) the choice of PCM barely moves annual solar fraction next to
-     the effect of the cluster's own weather driving data.
+   - Mean Spearman $\rho \approx -0.091$ across clusters (table above), none reaching $p<0.05$ — the
+     MCDM consensus rank and simulated solar fraction are not meaningfully correlated in either
+     direction at this model's current parameterization.
+   - Within a cluster, simulated solar fraction barely varies across candidate PCMs (see the note
+     below the table) — the weather driving data dominates the outcome so completely that static
+     MCDM property weighting has almost nothing left to explain.
 
 ---
 
