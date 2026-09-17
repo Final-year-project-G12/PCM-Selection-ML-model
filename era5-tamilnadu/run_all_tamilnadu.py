@@ -118,6 +118,10 @@ hit external APIs (CDS/ERA5, NASA POWER, WorldPop/GADM), need credentials
 --include-setup if you genuinely want them run first, in this order):
   00a_build_population_grid.py  — population-weighted sample points
   00b_build_suntimes.py         — sunrise/noon/sunset times per point/day
+  00c_attach_elevation.py       — real per-point elevation (added 2026-09-16;
+                                   one small CDS request, not a per-year
+                                   download — needs population_grid_points.csv
+                                   from 00a); must run before 02_combine
   01_download_era5_tamilnadu.py — ERA5 download (needs suntimes.csv)
   01b_download_nasapower.py     — NASA POWER download
   00_unzip_accum.py             — fixes any ZIP-disguised .nc files; runs
@@ -129,8 +133,9 @@ of the CORE_SCRIPTS read their output, so they cannot break the core
 chain; each one's failure is logged and does NOT stop the run):
   03_plots_raw.py, 03b_agreement_analysis.py, 03b_interactive_raw_qa.py,
   04c_postprocess_plots.py, 04c_interactive_postprocess_qc.py,
-  04d_signature_interactive.py, 05b_cluster_interactive.py,
-  05d_plots_comprehensive.py
+  05b_cluster_interactive.py, 05d_plots_comprehensive.py
+  (04d_signature_interactive.py was deleted 2026-09-08 — no downstream
+  dependents; do not re-add it here.)
 
 HOW TO RUN:
   python run_all_tamilnadu.py                 # core pipeline only (default)
@@ -166,8 +171,15 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent
 
 # One-time raw-data acquisition — excluded by default, see docstring.
+# BUG FIX (2026-09-17): 00c_attach_elevation.py was added 2026-09-16 but
+# never wired in here -- a fresh --include-setup run would have silently
+# skipped elevation attachment entirely, leaving 02_combine_tamilnadu.py to
+# fall back to its flat DEFAULT_ALT_M for every point. Inserted right after
+# 00a (the only thing it depends on) and before the downloads, since it
+# doesn't need them.
 SETUP_SCRIPTS = [
     "00a_build_population_grid.py",
+    "00c_attach_elevation.py",
     "00b_build_suntimes.py",
     "01_download_era5_tamilnadu.py",
     "01b_download_nasapower.py",

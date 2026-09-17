@@ -595,11 +595,17 @@ absolute 42-70°C band, latent heat ≥ 0.7× `L_required`, cycling stability
 survivor counts per cluster.
 
 - Output: `data/processed/pcm/feasibility_survivors_by_cluster.csv`
-- **Known limitation, stated in its own docstring**: the corrosion veto
-  and a 5th-percentile-day charging-feasibility check from the plan
-  doc's Table 12 aren't fully applied yet — the database/cluster profiles
-  don't carry the data those two specific filters need. Documented, not
-  silently skipped.
+- **Corrosion veto — implemented (2026-09).** Compares each cluster's HSI
+  against the 75th percentile across all 5 clusters, vetoing any
+  `corrosion_class="check_manually"` (inorganic) candidate in a
+  high-humidity cluster. Currently a documented no-op: all 55 database
+  candidates are organic (`corrosion_class="low_organic"`), so nothing is
+  vetoed yet — it will start binding automatically once an inorganic
+  candidate is added to the database.
+- **Still not applied**: the 5th-percentile-day charging-feasibility check
+  from the plan doc's Table 12 — the cluster profiles don't carry a daily
+  GHI percentile (just the mean), which that specific filter needs.
+  Documented, not silently skipped.
 
 ### `08_mcdm_ranking.py`
 Phase 6 — the headline deliverable. For each cluster's feasibility
@@ -644,8 +650,9 @@ population covered, approximate medoid point, population-weighted climate
 signature table, `Tm_target`/`L_required`, survivor count, Top-3 PCM
 candidates with per-method scores and the Kendall's W agreement note, and
 a caveats section (thermal conductivity/density/specific heat not
-reported for the literature-added candidates; cycling/corrosion vetoes
-only partially applied — see `07`'s docstring).
+reported for the literature-added candidates; corrosion veto implemented
+but currently a no-op given an all-organic database, 5th-percentile-day
+charging feasibility still not applied — see `07`'s docstring).
 
 - Output: `data/processed/pcm/recommendation_cards.md` — this is your
   results section; reformat the tables to your target format (e.g. IEEE
@@ -743,9 +750,10 @@ random-forest imputation).
   traceable in a methodology write-up.
 - **PCM database coverage**: 55 rows (31 manufacturer + 24 literature)
   across 6 brands, meeting the 40-60 candidate target (see `06`'s section
-  above). Corrosion veto and 5th-percentile-day charging feasibility aren't
-  fully wired into `07` yet either (see `07`'s section above).
-- **Phase 7 (physics-based validation) is implemented** in `10_physics_validation.py`. It runs a single-PCM grey-box lumped-enthalpy-tank simulation per cluster, comparing simulated annual solar fraction against published benchmarks (54-84%). **A backward-Euler solve bug and a latent-heat-accumulator bug were fixed here 2026-09** (see "Notes / known limitations" below) — the corrected result is 0% of simulated runs landing within the benchmark band (actual ~15-19% across clusters); a previously-reported 92% was itself an artifact of the bug.
+  above). Corrosion veto is implemented (see `07`'s section above, currently
+  a documented no-op given an all-organic database); 5th-percentile-day
+  charging feasibility isn't fully wired into `07` yet.
+- **Phase 7 (physics-based validation) is implemented** in `10_physics_validation.py`. It runs a single-PCM grey-box lumped-enthalpy-tank simulation per cluster, comparing simulated annual solar fraction against published benchmarks (54-84%). **A backward-Euler solve bug and a latent-heat-accumulator bug were fixed here 2026-09** (see "Notes / known limitations" above) — the corrected result is 0% of simulated runs landing within the benchmark band (actual ~12-19% across clusters); a previously-reported 92% was itself an artifact of the bug. **A Phase 3/Phase 7 sizing inconsistency was found and fixed shortly after (2026-09)**: the tank/PCM/collector sizing here (150kg tank, 28kg PCM, 2.5m^2 collector) had been independently literature-cited rather than matched to `04b`'s own household sizing (300kg/day draw, 150kg PCM) that `L_required` is built around. Reconciled to 300kg tank, 150kg PCM, 5.0m^2 collector (scaled by the same source's own collector-to-tank ratio), 2x150kg/day draws. Solar fraction barely moved (still 12-19%, still 0% in-band) — proportional scaling of the whole system can't change a ratio-based metric, so this confirms the low result is a genuine climate-vs-design finding for Uttarakhand, not a residual sizing bug. See `NEXT_STEPS.md` for the full quantification.
 
 ## Further reading in this repo
 

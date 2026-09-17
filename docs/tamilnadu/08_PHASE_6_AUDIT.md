@@ -15,15 +15,35 @@ Script: `08_mcdm_ranking.py`.
 > calibration lives in Phase 5 (`07_feasibility_filter.py`), whose ported
 > `calibrate_kappa_for_cluster()` uses the correct `>= k` direction.
 >
-> The pipeline has been run once against the unified engine (2026-09-08); a small residual bug
-> in the supercooling entropy cap was fixed after that run, so the numbers below are indicative
-> and a fresh run is still pending.
+> **RE-RUN 2026-09-16 — clean run against elevation-corrected data, TWO inert fixes, ONE
+> criterion added that genuinely helped one of three clusters, investigation closed.** The
+> results below supersede the 2026-09-08 numbers. Full step-by-step in `CHANGELOG.md`'s
+> 2026-09-16 entries and the full physics-agreement investigation in `09_PHASE_7_AUDIT.md`
+> (read that doc for the complete story — this doc summarizes the ranking-engine side of it):
+> 1. **`TM_TARGET_C` correction now actually in effect** (57.0°C → **67.0°C**) — a directory-layout
+>    path bug (fixed in `config.py`) was silently resolving to a stale, uncorrected
+>    `pcm_shared_config.py`; the corrected copy has `T_DELIVERY_C` raised 50→60°C per an
+>    Avargani et al. (2021) citation-accuracy fix.
+> 2. **`Tm_fitness`/`f_Tm` scored against `Tm_target_capped_C`** (the kt_worst_month
+>    achievability ceiling), not the raw `Tm_target_C`. More physically grounded, but **inert**
+>    on rank order by itself (every survivor already sits below both numbers).
+> 3. **Asymmetric Gaussian** (σ=2K above target, 4K below). **Inert**: Constraint 6 excludes
+>    every candidate above the ceiling, so the branch this changes never executes.
+> 4. **`thermal_margin` added as a 9th criterion** — `Tm_target_capped_C − Tm`, rewarding
+>    headroom below the ceiling. **Genuinely fixed Cluster 0** (physics-agreement Spearman ρ:
+>    -0.595 → +0.381) but did **not** fix Clusters 1/2 (+0.176→+0.103, +0.048→+0.024) — root
+>    cause there is a dynamic climate-PCM interaction no static criterion can capture (proven
+>    with a same-PCM-different-cluster test — see `09_PHASE_7_AUDIT.md` §3). **Investigation
+>    closed 2026-09-16**: the criterion is kept (real, cited improvement, harmless where it
+>    doesn't apply), and Clusters 1/2's residual disagreement is documented as a genuine finding,
+>    not chased further — see `09_PHASE_7_AUDIT.md` §5 for the full reasoning against continuing
+>    to tune criteria to match one physics simulation's output.
 
-## Criteria (8, exact — Table 13) and weights
+## Criteria (9, was 8 exact from Table 13 — see `thermal_margin` note) and weights
 
-| Criterion | Direction | AHP prior (Table 13) | Notes |
+| Criterion | Direction | AHP prior | Notes |
 |---|---|---|---|
-| `Tm_fitness` | benefit | 0.24 | Gaussian target fitness `exp(−(Tm−Tm_target)²/(2σ²))`, σ=4K |
+| `Tm_fitness` | benefit | 0.14 (was 0.24 — split with `thermal_margin`, see below) | Gaussian target fitness `exp(−(Tm−Tm_target)²/(2σ²))` against **`Tm_target_capped_C`** (achievability ceiling, since 2026-09-16 — was the raw uncapped `Tm_target_C`), **asymmetric σ**: 4K below target, 2K above (since 2026-09-16, confirmed inert on this dataset — see the note at the top of this doc) |
 | `latent_heat` | benefit | 0.20 | **climate-relative**: `latent_heat_kJ_kg / L_required` for that cluster |
 | `vol_latent_heat` (ρL) | benefit | 0.12 | separate criterion, kept |
 | `thermal_conductivity` | benefit | 0.13 | |
@@ -31,6 +51,7 @@ Script: `08_mcdm_ranking.py`.
 | `supercooling` | cost | 0.08 | **entropy weight capped at 2× prior (0.16)** — see below |
 | `corrosion` | cost | 0.06 (cluster-rescaled 1×–2× by HSI) | structural proxy `2.0 if Inorganic else 1.0` — inert (0 salt hydrates) |
 | `cost` | cost | 0.06 | always NaN → entropy weight 0 via the `<2 real values` guard |
+| `thermal_margin` | benefit | 0.10 (new, 2026-09-16) | `Tm_target_capped_C − Tm` — headroom below the achievability ceiling. **Not** in the plan doc's literal Table 13 — a documented deviation, same footing as the climate-relative `latent_heat` / log-scaled `cycling` transforms. Its prior was carved out of `Tm_fitness`'s original 0.24 (0.14+0.10=0.24) so the combined "Tm-related" share of the weight pie is unchanged, not silently inflated relative to the other 7 criteria. |
 
 Blend: `w_j = 0.5·w_entropy_j + 0.5·w_AHP_j`, per cluster, from that cluster's own filtered matrix.
 
@@ -56,7 +77,8 @@ Table-13 prior** (supercooling ≤ 0.16) and the remaining criteria rescaled to 
 - **Pairwise method-agreement** (Spearman ρ / Kendall τ per method pair) + outlier summary.
 - **λ=0 vs λ=0.5 Top-3 ablation** (is the entropy component load-bearing?).
 - **Provenance hard-fail**: `assert_fingerprint_match` on `upstream_cluster_profile_fingerprint`.
-- **Monte Carlo**: `N_DRAWS = 1000` (both states; raise both to 5000 for the final reported run),
+- **Monte Carlo**: `N_DRAWS = 5000` (raised from the 1000 fast-iteration fallback 2026-09-16 for
+  the final reported run — Rajasthan still at 1000, not yet raised there),
   Dirichlet weight draws + Gaussian property perturbation + family-distribution sampling for
   imputed properties. Reports Top-3 inclusion %, Top-1 retention %, rank-reversal freq, mean ρ vs baseline.
 
@@ -69,23 +91,44 @@ all 4 method ranks + raw scores, Borda/consensus/Copeland, Kendall's W, entropy-
 `mcdm_method_agreement.csv`, `outputs/qc_montecarlo_inclusion.html`. All carry
 `upstream_cluster_profile_fingerprint`.
 
-## Results — 2026-09-08 run (3 clusters, 13/13/16 survivors, n=42; INDICATIVE — re-run pending)
+## Results — 2026-09-16 final run (3 clusters, 8/10/8 survivors, n=26; `Tm_target_C=67`, 9 criteria, `N_DRAWS=5000`)
 
-- **`Tm_fitness` is the dominant entropy criterion** (weight ≈ 0.54 / 0.71 / 0.70), all flagged by
-  the >40%-domination check. Supercooling blends to ≈ 0.16–0.20 (the run used a build with a residual
-  cap bug — the fixed cap holds it at 0.16).
-- **Kendall's W** ≈ 0.55 / 0.57 / 0.60 — no cluster "strong"; clusters 0–1 "ambiguous", cluster 2 "moderate".
-- **Structural outlier**: PROMETHEE II in Cluster 0 (consistent with its native-Tm handling);
-  **GRA in Clusters 1 and 2**.
-- **Borda ≠ Copeland Top-3** flagged in every cluster.
-- Consensus Top-1: `Myristic acid` (C0) / `n-Tetracosane (C24)` (C1) / `Palmitic-Stearic eutectic`
-  (C2). Several deterministic Top-3 picks have MC Top-3 inclusion < 50% (flagged).
+- **`thermal_margin` is now the dominant entropy criterion in all 3 clusters** (weight 0.51–0.64),
+  ahead of `Tm_fitness` (0.15–0.20) — the same one-criterion-domination pattern that flagged
+  `Tm_fitness` before has simply moved to the new criterion. Blended `weight_thermal_margin` ≈
+  0.31–0.37. This is expected (the whole point of the fix was to give this signal real weight)
+  and is not itself a problem — see `09_PHASE_7_AUDIT.md` for why it helped Cluster 0 specifically
+  and not the other two.
+- **Supercooling blends to ≈ 0.118–0.120** — comfortably under its 0.16 cap; the entropy-cap
+  guard is present and correct but isn't binding on this run's data.
+- **Kendall's W moved**: 0.848 (C0, was 0.786 — up), 0.477 (C1, was 0.839 — **down sharply, now
+  "ambiguous"**, below the 0.6 plan-doc threshold), 0.780 (C2, was 0.815 — down slightly). The
+  new criterion increased method agreement in Cluster 0 but *reduced* it in Cluster 1 — a
+  reminder that this criterion is a genuine trade-off, not a free improvement, consistent with
+  §5 of `09_PHASE_7_AUDIT.md`'s conclusion that no single criterion change was going to cleanly
+  fix all three clusters at once. All 3 clusters: Borda and Copeland still agree on #1.
+- **Consensus Top-1 per cluster is now `RT57HC` in all three** (Tm=56.5°C) — was
+  `n-Octacosane (C28)` / `PureTemp 60` / `PureTemp 60` before this criterion. Worth flagging
+  explicitly: this reproduces the same "identical PCM across every cluster" pattern seen at the
+  very start of this project's Phase 6 history (before the 2026-09-08 unification), though for a
+  different reason this time — Tamil Nadu's three achievability ceilings (61.09–61.94°C) are
+  close enough to each other that a margin-rewarding criterion converges on the same answer. Not
+  necessarily wrong, but worth an independent sanity check rather than taking at face value.
+- **Candidate pool**: 8/10/8 survivors (unchanged by the criterion addition — Phase 5 feasibility
+  filtering runs before Phase 6 and doesn't see the new criterion).
+- **Monte Carlo, at the final `N_DRAWS=5000`**: Top-3 inclusion for each cluster's consensus #1
+  (`RT57HC`) is 86.5% (C0) / 75.2% (C1) / 84.2% (C2) — Top-1 retention 49.2% / 40.0% / 42.3%.
+  Consistent with the earlier 1000-draw estimates (86.4/75.3/82.4% inclusion) to within ~2
+  points, confirming those were already close to converged; the 5000-draw run is the more precise
+  number to quote, not a materially different one.
 
 ## Status
 
-**Unified with Rajasthan; fresh run pending** (the 2026-09-08 run predates the final supercooling
-cap fix). Re-run `08_mcdm_ranking.py` → `10_physics_validation.py` → `09_recommendation_cards.py`.
-Also raise `N_DRAWS` to 5000 for the reported numbers.
+**Unified with Rajasthan; investigation closed 2026-09-16.** Final 9-criterion engine run
+complete against elevation-corrected data, the corrected `TM_TARGET_C=67`, and `N_DRAWS=5000`
+(the plan doc's actual default — Rajasthan is still at 1000, not yet raised there). The
+physics-vs-MCDM disagreement in Clusters 1/2 is a **closed, documented finding**, not a pending
+fix — see `09_PHASE_7_AUDIT.md` §5 for why further criteria-tuning was deliberately not pursued.
 
 ## Literature Support
 | Component | Reference | Source |

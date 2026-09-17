@@ -181,12 +181,35 @@ for Uttarakhand, only filenames.
   MICE+RF+PMM-imputed to full coverage across 42-70C) — the earlier ~25-row
   count is stale; `06_build_pcm_database.py`'s docstring has the current
   breakdown.
-- **Corrosion veto and 5th-percentile-day charging feasibility** are not
-  applied in `07` — the database and cluster profiles don't carry the
-  data those two specific filters from Table 12 need yet. Documented,
-  not silently skipped. `07b_charging_feasibility.py` covers the
-  regime-dependent Tm cap piece of this if you want it before `07`.
-- **Physics validation (Phase 7)** is completed in `10_physics_validation.py`. It runs a grey-box lumped-enthalpy simulation across all 5 clusters against Table 16 benchmark ranges (54-84% annual solar fraction). **Result changed materially by the 2026-09 bug-fix round below — see that note.** Current result: 0% of runs fall within the benchmark band (actual solar fraction ~15-19% across clusters), down from a previously-reported 92% that was itself inflated by the tank-model bug.
+- **Corrosion veto — implemented (2026-09).** `07_feasibility_filter.py`
+  now compares each cluster's HSI against the 75th percentile across all 5
+  clusters and vetoes any `corrosion_class="check_manually"` candidate in
+  a high-humidity cluster. Currently a documented no-op — all 55 database
+  candidates are organic (`low_organic`), so nothing is vetoed with the
+  current database — but it will bind automatically once an inorganic
+  candidate is added. `NEXT_STEPS.md`'s earlier anticipation that "the
+  corrosion veto will bite for high-monsoon-humidity Uttarakhand clusters"
+  still can't be realized until the database gains an inorganic row.
+- **5th-percentile-day charging feasibility** is still not applied in
+  `07` — the cluster profiles don't carry a daily GHI percentile (just the
+  mean), which this specific Table-12 filter needs. Documented, not
+  silently skipped. `07b_charging_feasibility.py` covers the
+  regime-dependent Tm cap piece of Table 12 (a different filter).
+- **Physics validation (Phase 7)** is completed in `10_physics_validation.py`. It runs a grey-box lumped-enthalpy simulation across all 5 clusters against Table 16 benchmark ranges (54-84% annual solar fraction). **Result changed materially by the 2026-09 bug-fix round below — see that note.** Current result: 0% of runs fall within the benchmark band (actual solar fraction ~12-19% across clusters), down from a previously-reported 92% that was itself inflated by the tank-model bug.
+  **A sizing inconsistency between Phase 3 and Phase 7 was found and fixed** (also 2026-09, after
+  the bug-fix round): `10_physics_validation.py`'s tank/PCM/collector sizing was independently
+  literature-cited (Barqawi2025's own "mid-configuration": 150kg tank, 2.5m^2 collector, 28kg PCM)
+  rather than matching `04b_climate_signature.py`'s own household sizing (300kg/day draw, 150kg
+  PCM) that the MCDM's `L_required` criterion was actually built around. Reconciled: tank mass
+  300kg, PCM mass 150kg (via `V_PCM_M3=0.1705` at the database's median solid density), collector
+  area 5.0m^2 (scaled by Barqawi2025's own collector-to-tank ratio, not an arbitrary number), draws
+  doubled to 2x150kg/day. **Result: solar fraction barely moved** (still 12-19%, still 0% in-band) —
+  proportional scaling of the whole system doesn't change a ratio-based metric like solar fraction,
+  so this confirms the low result is a genuine climate-vs-design-ratio finding for Uttarakhand, not
+  a residual sizing bug. The reconciliation is still worth keeping (Phase 3 and Phase 7 are now
+  internally consistent, which they weren't before) — just don't expect it to close the benchmark
+  gap, and don't further inflate these numbers chasing the benchmark without a new, external
+  justification (that would be tuning toward a target, not fixing a bug).
 
 - **Second correctness audit round — 10 bugs found and fixed, RESOLVED
   (2026-09).** After the elevation/GHI fixes below were confirmed working,

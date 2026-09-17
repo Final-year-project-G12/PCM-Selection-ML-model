@@ -69,8 +69,18 @@ from config import PROCESSED_DIR
 # This copy lives at the REPO ROOT (PCM-Selection-ML-model/PCM_data/data/),
 # NOT under era5-tamilnadu/ — there is no per-pipeline PCM_data/ folder for
 # Tamil Nadu (unlike era5-uttarakhand/). PROCESSED_DIR is
-# era5-tamilnadu/data/processed, so three .parent hops reach the repo root.
-INPUT_CSV = PROCESSED_DIR.parent.parent.parent / "PCM_data" / "data" / "PCM_Properties_cleaned_mice_pmm_detailed.csv"
+# era5-tamilnadu/data/processed, so three .parent hops reach the repo root
+# IN THE ORIGINAL LAYOUT. This pipeline copy now lives one level deeper, at
+# <repo>/new_obj/tamilnadu_pipeline/ — same fix as config.py's
+# pcm_shared_config resolution: try the original three-hop path first, fall
+# back to the new_obj/-nested repo root (four hops, then into the canonical
+# PCM-Selection-ML-model/ that also holds the physics-corrected
+# pcm_shared_config.py — see config.py's own comment on that).
+_INPUT_CSV_CANDIDATES = [
+    PROCESSED_DIR.parent.parent.parent / "PCM_data" / "data" / "PCM_Properties_cleaned_mice_pmm_detailed.csv",
+    PROCESSED_DIR.parent.parent.parent.parent / "PCM-Selection-ML-model" / "PCM_data" / "data" / "PCM_Properties_cleaned_mice_pmm_detailed.csv",
+]
+INPUT_CSV = next((p for p in _INPUT_CSV_CANDIDATES if p.exists()), _INPUT_CSV_CANDIDATES[0])
 
 OUT_DIR = PROCESSED_DIR / "pcm"
 OUT_DIR.mkdir(parents=True, exist_ok=True)

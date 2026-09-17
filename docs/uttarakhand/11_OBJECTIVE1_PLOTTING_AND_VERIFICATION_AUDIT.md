@@ -259,13 +259,17 @@ from all five clusters at once**, not per cluster. They are not the per-cluster 
 agreement statistic — that is Kendall's W, verified from `08_mcdm_ranking.py`'s current output:
 0.796/0.842/0.782/0.708/0.796 for Clusters 0-4.
 
-**Caveat 2 (newly identified, 2026-09) — this verify script's coverage hasn't kept up with `08`'s
-method count.** `08_mcdm_ranking.py` now computes four methods (TOPSIS+GRA+PROMETHEE+VIKOR), but
-`verify_04_ranking.py`'s `rank_cols` only ever looks at `['topsis_rank', 'gra_rank',
-'consensus_rank']` (confirmed by reading the current script) — `promethee_rank` and `vikor_rank`
-are silently absent from its method-agreement analysis. Not a pipeline-correctness bug (the actual
-MCDM ranking is unaffected), but a real gap in this specific verification script's coverage,
-left open.
+**Caveat 2 — RESOLVED (2026-09), same session it was identified in.** This verify script's
+coverage had fallen behind `08`'s method count: `08_mcdm_ranking.py` computes four methods
+(TOPSIS+GRA+PROMETHEE+VIKOR), but `verify_04_ranking.py`'s `rank_cols` only looked at
+`['topsis_rank', 'gra_rank', 'consensus_rank']`, silently omitting `promethee_rank`/`vikor_rank`
+from every downstream analysis (the correlation matrix, top-3 inclusion probability, rank
+reversal, and the summary panel). Fixed: `rank_cols` now includes all five columns
+(`topsis_rank, gra_rank, promethee_rank, vikor_rank, consensus_rank`), with fallback rank
+computation added for the two new methods (`promethee_flow` descending, `vikor_Q` ascending —
+matching `08`'s own conventions) and the summary panel's pairwise-agreement text generalized to
+loop over all pairs instead of three hardcoded ones. Confirmed by rerunning: `Methods:` now prints
+all five columns, `06_summary.png` shows all 10 pairwise Spearman values.
 
 ---
 

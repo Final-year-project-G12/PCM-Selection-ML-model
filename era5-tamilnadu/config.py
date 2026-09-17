@@ -19,12 +19,36 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent
 
 # Cross-state numeric constants (Phase 2/3 design basis) live in ONE place —
-# PCM-Selection-ML-model/pcm_shared_config.py, one level up — so Tamil Nadu
-# and Rajasthan cannot silently disagree on them. Re-exported here so
-# existing `from config import SHARE_PCM` (etc.) in the scripts keeps working
+# PCM-Selection-ML-model/pcm_shared_config.py — so Tamil Nadu and Rajasthan
+# cannot silently disagree on them. Re-exported here so existing
+# `from config import SHARE_PCM` (etc.) in the scripts keeps working
 # unchanged. Paths below stay per-state; only these scalars are shared.
-if str(BASE_DIR.parent) not in _sys.path:
-    _sys.path.insert(0, str(BASE_DIR.parent))
+#
+# This pipeline copy was moved to <repo>/new_obj/tamilnadu_pipeline/, one
+# directory level deeper than the original <repo>/PCM-Selection-ML-model/
+# era5-tamilnadu/ layout this file was written for — BASE_DIR.parent alone
+# (new_obj/) no longer contains pcm_shared_config.py. Search a couple of
+# known candidate locations instead of assuming one fixed relative depth, so
+# this keeps working from either layout. Resolved to the canonical, 2026-09-13
+# physics-corrected copy at <repo>/PCM-Selection-ML-model/pcm_shared_config.py
+# (T_DELIVERY_C=60.0/TM_TARGET_C=67.0 — see that file's own header for the
+# Avargani et al. 2021 citation) — NOT the stale pre-correction copy under
+# <repo>/All_objective_all/PCM-Selection-ML-model/, which still has the
+# uncorrected T_DELIVERY_C=50.0/TM_TARGET_C=57.0.
+_PCM_SHARED_CONFIG_CANDIDATES = [
+    BASE_DIR.parent,                                       # original layout
+    BASE_DIR.parent.parent / "PCM-Selection-ML-model",      # new_obj/-nested layout
+]
+for _cand in _PCM_SHARED_CONFIG_CANDIDATES:
+    if (_cand / "pcm_shared_config.py").is_file():
+        if str(_cand) not in _sys.path:
+            _sys.path.insert(0, str(_cand))
+        break
+else:
+    raise ModuleNotFoundError(
+        "pcm_shared_config.py not found in any candidate location: "
+        + ", ".join(str(c) for c in _PCM_SHARED_CONFIG_CANDIDATES)
+    )
 from pcm_shared_config import (  # noqa: E402
     COVERAGE_TARGET,
     MAX_MATCH_HOURS,

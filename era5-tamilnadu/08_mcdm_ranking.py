@@ -194,7 +194,17 @@ PCM_DIR.mkdir(parents=True, exist_ok=True)
 
 SURVIVORS_FILE = PCM_DIR / "feasibility_survivors_by_cluster_kappa_calibrated.csv"
 PROFILE_FILE = CLUSTER_DIR / f"cluster_profiles_{STATE_NAME}.csv"
-PCM_MANUFACTURER_CSV = BASE_DIR.parent / "PCM_data" / "data" / "PCM_Properties_cleaned_mice_pmm_detailed.csv"
+# Same fix as config.py / 06_build_pcm_database.py: this pipeline copy now
+# lives one level deeper (<repo>/new_obj/tamilnadu_pipeline/) than the
+# original <repo>/PCM-Selection-ML-model/era5-tamilnadu/ layout BASE_DIR.parent
+# alone assumed. Try the original path first, fall back to the new_obj/-nested
+# repo root's canonical PCM-Selection-ML-model/.
+_PCM_MANUFACTURER_CSV_CANDIDATES = [
+    BASE_DIR.parent / "PCM_data" / "data" / "PCM_Properties_cleaned_mice_pmm_detailed.csv",
+    BASE_DIR.parent.parent / "PCM-Selection-ML-model" / "PCM_data" / "data" / "PCM_Properties_cleaned_mice_pmm_detailed.csv",
+]
+PCM_MANUFACTURER_CSV = next(
+    (p for p in _PCM_MANUFACTURER_CSV_CANDIDATES if p.exists()), _PCM_MANUFACTURER_CSV_CANDIDATES[0])
 
 # Canonical Tamil-Nadu output naming — same for both states, no suffix.
 OUT_FULL = PCM_DIR / "mcdm_full_rankings.csv"          # full per-survivor audit trail
@@ -210,7 +220,27 @@ CANDIDATE_POOL_LO, CANDIDATE_POOL_HI = 8, 20   # plan doc Table 12 "healthy" ban
 
 # --- Target-based Tm handling (plan doc §9.2 — see module docstring for
 # full provenance discussion) ------------------------------------------
-SIGMA_TM_K = 4.0
+# ASYMMETRIC SIGMA (2026-09-16): the plan doc's own stated position is that
+# an asymmetric Gaussian (sigma_upper < sigma_lower, "Tm too high is worse
+# than too low") is "physically better motivated" than the flat sigma=4K
+# both sides used previously here, but left the choice unimplemented
+# ("whichever is chosen, state it and test the alternative" — see module
+# docstring). Implemented now because the symmetric form was empirically
+# shown to reward candidates sitting right at Tm_target_capped_C (the
+# kt_worst_month achievability ceiling) as strongly as candidates with real
+# thermal margin below it — those near-ceiling candidates don't reliably
+# complete a full melt on a below-average solar day, which
+# 10_physics_validation.py's Spearman check caught (Cluster 0: rho=-0.595
+# between MCDM consensus rank and simulated annual solar fraction, BEFORE
+# this change). SIGMA_TM_UPPER_K=2.0 / SIGMA_TM_LOWER_K=4.0 is THIS
+# SCRIPT'S OWN choice of split (the plan doc specifies the asymmetry
+# direction, not a specific upper/lower ratio) — state that if quoting
+# these values, and re-check 10_physics_validation.py's Spearman rho after
+# any re-run to confirm the split is actually doing its job, not just
+# assumed to.
+SIGMA_TM_LOWER_K = 4.0   # Tm below target (more margin from the achievability ceiling) — unchanged
+SIGMA_TM_UPPER_K = 2.0   # Tm at/above target — tighter, penalizes overshoot more sharply
+SIGMA_TM_K = SIGMA_TM_LOWER_K   # back-compat alias — some call sites still reference the old symmetric name
 PROMETHEE_Q_K = 2.0   # indifference threshold
 PROMETHEE_P_K = 8.0   # preference threshold
 
@@ -221,7 +251,29 @@ LAMBDA_BLEND = 0.5
 # log-scaled cycles_confidence transform — see build_criteria_matrix().
 # The dict keys are kept stable so downstream column names don't shift.
 CRITERIA = ["Tm_fitness", "latent_heat", "vol_latent_heat", "thermal_conductivity",
-            "cycling", "supercooling", "corrosion", "cost"]
+            "cycling", "supercooling", "corrosion", "cost", "thermal_margin"]
+
+# thermal_margin — ADDED 2026-09-16, not part of the plan doc's literal
+# Table 13 list; documented deviation, same footing as the climate-relative
+# latent_heat / log-scaled cycling transforms above. Root cause: Tm_fitness
+# only measures how CLOSE Tm sits to Tm_target_capped_C (the kt_worst_month
+# achievability ceiling) -- within a survivor pool that Constraint 6
+# already restricts to Tm <= that ceiling, "closest to target" and
+# "highest Tm in the pool" are the same thing, so Tm_fitness alone rewards
+# candidates sitting right at the edge of achievability. Those candidates
+# don't reliably complete a full melt on a below-average solar day (they
+# stall, delivering only sensible not latent heat), which
+# 10_physics_validation.py's Spearman check caught as a NEGATIVE
+# correlation between MCDM consensus rank and simulated annual solar
+# fraction in Cluster 0 (rho=-0.595) -- confirmed NOT fixed by capping
+# Tm_fitness's target (that fix alone didn't change rank order at all,
+# since every survivor already sits below the cap either way) or by an
+# asymmetric Gaussian sigma (inert: no survivor is ever above the cap for
+# it to penalize). thermal_margin = Tm_target_capped_C - Tm, a benefit
+# criterion measuring headroom BELOW the ceiling -- genuinely distinct
+# information from Tm_fitness's "how close" measure, blended through the
+# same entropy+AHP weighting as every other criterion so the data (not a
+# hardcoded assumption) decides how much it should matter per cluster.
 
 # Cost criteria whose IDEAL value sits at or near zero — the entropy
 # formula overweights these (see module docstring). Their entropy-derived
@@ -235,9 +287,16 @@ CRITERIA_TYPE = {   # "benefit" (higher better) or "cost" (lower better) —
     "Tm_fitness": "benefit", "latent_heat": "benefit", "vol_latent_heat": "benefit",
     "thermal_conductivity": "benefit", "cycling": "benefit",
     "supercooling": "cost", "corrosion": "cost", "cost": "cost",
+    "thermal_margin": "benefit",
 }
 LITERATURE_WEIGHTS_TABLE13 = {   # plan doc's INDICATIVE starting weights, used as
-    "Tm_fitness": 0.24,   # literature-informed priors until a real pairwise elicitation
+    # Tm_fitness's original Table-13 prior (0.24) split 0.14/0.10 with the
+    # new thermal_margin criterion (2026-09-16) -- the combined "Tm-related"
+    # share of the weight pie is unchanged from the plan doc's 0.24, this
+    # just divides it between "how close to target" (Tm_fitness) and "how
+    # much headroom below the ceiling" (thermal_margin) instead of silently
+    # inflating Tm's total influence relative to the other 7 criteria.
+    "Tm_fitness": 0.14,   # literature-informed priors until a real pairwise elicitation
     "latent_heat": 0.20,  # (see PAIRWISE_MATRIX TODO below) replaces it
     "vol_latent_heat": 0.12,
     "thermal_conductivity": 0.13,
@@ -245,13 +304,14 @@ LITERATURE_WEIGHTS_TABLE13 = {   # plan doc's INDICATIVE starting weights, used 
     "supercooling": 0.08,
     "corrosion": 0.06,   # cluster-dependent — see reweight_corrosion_for_cluster()
     "cost": 0.06,
+    "thermal_margin": 0.10,
 }
 assert abs(sum(LITERATURE_WEIGHTS_TABLE13.values()) - 1.0) < 1e-9
 
 # ═══════════════════════════════════════════════════════════
 # TODO: real AHP pairwise elicitation (FUTURE ENHANCEMENT)
 # ═══════════════════════════════════════════════════════════
-# Fill in an 8x8 Saaty pairwise comparison matrix (criteria in CRITERIA
+# Fill in a 9x9 Saaty pairwise comparison matrix (criteria in CRITERIA
 # order) from your guide/faculty elicitation, set PAIRWISE_MATRIX
 # below (currently None), and this script will compute weights via the
 # eigenvector method AND the consistency ratio (must be <0.10 per plan doc
@@ -267,16 +327,17 @@ RI_TABLE = {1: 0.0, 2: 0.0, 3: 0.58, 4: 0.90, 5: 1.12, 6: 1.24, 7: 1.32, 8: 1.41
 RUN_COCOSO = False   # optional 5th ranker, plan doc §9.4 — never a replacement for the 4 core methods
 
 # --- Monte Carlo -----------------------------------------------------------
-N_DRAWS = 1000        # plan doc default is 5000; 1000 is the documented,
-                      # literature-precedented fallback (module docstring).
-                      # SET IDENTICALLY IN BOTH STATES (2026-09-08 Phase 6
-                      # unification): the first 5000-draw Rajasthan run took
-                      # 606s wall-clock (183-232s/cluster); Tamil Nadu has 5
-                      # clusters of 9-16 survivors, so 5000 there is ~500-900s
-                      # — impractical for iteration in both. The plan doc
-                      # notes inclusion probabilities converge well before
-                      # 5000. Raise BOTH to 5000 (this one constant) for the
-                      # final reported run once the pipelines are settled.
+N_DRAWS = 5000        # RAISED 2026-09-16 for the final reported run (was
+                      # 1000, the documented fast-iteration fallback, used
+                      # for every dev/diagnostic run up to and including the
+                      # thermal_margin criterion investigation — see
+                      # CHANGELOG.md). Plan doc default; ~600s/1000 draws
+                      # observed on the current 3-cluster, 8/10/8-survivor
+                      # dataset, so 5000 is expected to take on the order of
+                      # 30-50 minutes. Does not change the deterministic
+                      # consensus ranking or the Spearman-vs-physics numbers
+                      # in 09_PHASE_7_AUDIT.md — only tightens the Monte
+                      # Carlo Top-3-inclusion/Top-1-retention precision.
 DIRICHLET_CONCENTRATION = 25.0   # chosen to give roughly +/-20% variation around
                                    # nominal weights — see main()'s printed check
 GAUSS_NOISE_PCT = {"latent_heat": 0.05, "thermal_conductivity": 0.10,
@@ -406,7 +467,13 @@ def literature_rich_properties():
 # 3. BUILD THE CRITERIA MATRIX  (per cluster)
 # ═══════════════════════════════════════════════════════════
 
-def gaussian_tm_fitness(tm, tm_target, sigma=SIGMA_TM_K):
+def gaussian_tm_fitness(tm, tm_target, sigma_lower=SIGMA_TM_LOWER_K, sigma_upper=SIGMA_TM_UPPER_K):
+    """Asymmetric Gaussian target-fitness: sigma_lower for Tm <= tm_target
+    (below the achievability ceiling — more forgiving), sigma_upper for
+    Tm > tm_target (at/above it — penalized more sharply). Reduces to the
+    old symmetric form if sigma_lower == sigma_upper."""
+    tm = np.asarray(tm, dtype=float)
+    sigma = np.where(tm <= tm_target, sigma_lower, sigma_upper)
     return np.exp(-((tm - tm_target) ** 2) / (2 * sigma ** 2))
 
 
@@ -448,7 +515,7 @@ def build_criteria_matrix(cand_df, tm_target, l_required):
     """cand_df: rows for ONE cluster's surviving candidates, already
     joined with rich properties. l_required: that cluster's
     L_required_kJ_per_kg (climate-relative latent-heat criterion). Returns
-    a DataFrame indexed by pcm_id with the 8 CRITERIA columns (raw,
+    a DataFrame indexed by pcm_id with the 9 CRITERIA columns (raw,
     pre-normalization; NaN preserved, never zero-filled — see module
     docstring on missing-value handling)."""
     m = pd.DataFrame(index=cand_df["pcm_id"])
@@ -462,6 +529,13 @@ def build_criteria_matrix(cand_df, tm_target, l_required):
     m["supercooling"] = cand_df["supercooling_K"].values
     m["corrosion"] = cand_df["corrosion_score"].values
     m["cost"] = cand_df["cost"].values
+    # thermal_margin (added 2026-09-16): headroom, in K, below the
+    # achievability ceiling (tm_target here is Tm_target_capped_C, the
+    # kt_worst_month ceiling -- see the CRITERIA comment above). Benefit
+    # criterion: more margin = more reliable full melt on a below-average
+    # solar day. Every survivor already has Tm <= tm_target by Constraint
+    # 6, so this is >= 0 for every candidate by construction.
+    m["thermal_margin"] = tm_target - cand_df["Tm_C"].values
     return m
 
 
@@ -978,7 +1052,24 @@ def main():
 
     for prof in profiles.itertuples():
         cid = prof.cluster_id
-        tm_target = prof.Tm_target_C
+        # BUG FIX (2026-09-16): was prof.Tm_target_C (the raw, uncapped
+        # delivery-temperature target). 07_feasibility_filter.py's own
+        # Constraint 6 already restricts survivors to Tm <=
+        # Tm_target_capped_C (the kt_worst_month-derived, literature-
+        # anchored ceiling on what this cluster's real solar charging can
+        # actually reach) -- every candidate here already sits at or below
+        # that ceiling. Scoring f_Tm (the Gaussian target-fitness criterion
+        # that PROMETHEE's native Tm handling and every Monte Carlo draw
+        # also key off, via this same tm_target) against the UNCAPPED
+        # target instead systematically rewarded candidates sitting right
+        # at the edge of achievability -- which don't reliably melt on a
+        # below-average solar day -- over candidates with real thermal
+        # margin. Root-caused via 10_physics_validation.py's Spearman
+        # check: MCDM consensus rank vs. simulated annual solar fraction
+        # was NEGATIVELY correlated in Cluster 0 (rho=-0.595) before this
+        # fix. Use the same achievability-anchored target the feasibility
+        # filter already uses, consistently.
+        tm_target = prof.Tm_target_capped_C
         cluster_hsi = prof.HSI_sunrise
         l_required = float(prof.L_required_kJ_per_kg)   # climate-relative latent-heat criterion
 
