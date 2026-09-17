@@ -1,0 +1,123 @@
+====================================================================
+  PHASE 2 — PREPROCESSING & QUALITY CONTROL — Tamil Nadu
+====================================================================
+
+[1/13] Dataset inspection ...
+  Shape: (1457547, 37)
+  Dtypes:
+float64           28
+int64              4
+str                3
+datetime64[us]     1
+category           1
+  Duplicate (point_id, date, event) rows: 0
+
+  Missing % (top 15, before any cleaning):
+lat            0.0
+lon            0.0
+population     0.0
+weight         0.0
+elevation_m    0.0
+grid_lat       0.0
+grid_lon       0.0
+era5_T_amb     0.0
+era5_T_dew     0.0
+era5_RHum      0.0
+era5_W_spd     0.0
+era5_W_dir     0.0
+era5_GHI       0.0
+era5_DNI       0.0
+era5_DHI       0.0
+
+[2/13] Physical validation ...
+  era5_GHI: 274,165 values forced to 0 (SZA >= 90, sun below horizon)
+  era5_DHI: 274,165 values forced to 0 (SZA >= 90, sun below horizon)
+  era5_GHI_clearsky: 38,403 values forced to 0 (SZA >= 90, sun below horizon)
+
+  Total values NaN'd by physical validation: 0
+
+[2b/13] Per-season quantile mapping (daytime era5_GHI > 0) ...
+  Winter: n=166,285  MBE   12.60 ->   -0.15 W/m²
+  Summer: n=197,487  MBE   -5.67 ->    0.10 W/m²
+  Monsoon: n=287,310  MBE   -5.23 ->   -0.08 W/m²
+  Retreat: n=302,457  MBE  -15.03 ->    0.01 W/m²
+  Saved: ghi_quantile_mapping_report.csv
+
+[3/13] Hampel filter (MAD-based outlier flagging) ...
+  Window = trailing+leading 15 occurrences of the SAME (point_id, event) series, sorted by date (not hours — see module docstring).
+  era5_GHI: 64,235 points flagged as Hampel outliers -> NaN (4.407% of rows)
+  era5_T_amb: 29,733 points flagged as Hampel outliers -> NaN (2.040% of rows)
+  era5_RHum: 35,234 points flagged as Hampel outliers -> NaN (2.417% of rows)
+  era5_W_spd: 22,989 points flagged as Hampel outliers -> NaN (1.577% of rows)
+  era5_cloud_cover: 182,183 points flagged as Hampel outliers -> NaN (12.499% of rows)
+
+[3b/13] Yeo-Johnson skew diagnostic (report-only) ...
+            column  skew_before  yeo_johnson_lambda  skew_after
+          era5_GHI        0.850             -0.0572       0.106
+        era5_W_spd        0.917              0.0425      -0.002
+era5_precipitation        9.701            -10.2199       1.534
+  era5_cloud_cover       -0.857              3.7202      -0.530
+        era5_T_amb       -0.082              1.1788      -0.017
+  Saved: yeo_johnson_skew.csv  (diagnostic only — no columns transformed)
+
+[4/13] Hierarchical imputation (interpolate -> ffill/bfill -> zone/global median -> MICE) ...
+  Missing cells entering imputation: 334,374
+  Remaining after interpolate+ffill/bfill: 365
+  Remaining after point/zone/global median: 0
+  No residual missing cells — MICE not needed.
+
+  Total imputed cells (steps a-d combined): 334,374 (1.043% of the imputable matrix)
+
+[5/13] Temporal validation ...
+  Duplicate (point_id, date, event) after all cleaning: 0
+  Date range: 2016-01-01 -> 2025-12-31 (3653 days)
+
+[6/13] Feature engineering ...
+  Added: ['era5_W_dir_sin', 'era5_W_dir_cos', 'era5_cloud_opacity', 'era5_T_depression', 'is_daytime', 'ist_hour_decimal', 'solar_hour_angle']
+
+[7/13] Lag features: occurrences=[1, 7, 30] on ['era5_GHI', 'era5_T_amb', 'era5_RHum', 'era5_W_spd', 'era5_cloud_cover', 'era5_CSI'] (within point_id x event groups, i.e. 1/7/30 DAYS prior at the SAME sun event) ...
+[8/13] Rolling stats: windows=[7, 30] occurrences on ['era5_GHI', 'era5_T_amb', 'era5_RHum', 'era5_W_spd', 'era5_cloud_cover', 'era5_CSI'] ...
+[9/13] Delta features (1-day-prior rate of change, same event) ...
+
+  [9c/13] Dropped 11,970 lag-warmup rows (first 30 occurrences per point_id x event group). Remaining: 1,445,577
+
+[9b/13] Savitzky-Golay smoothing diagnostic (visual QA only) ...
+  Saved: savitzky_golay_diagnostic.png  (TNP_0001, 2021)
+
+[10/13] Correlation analysis (Pearson + Spearman) ...
+  Saved: correlation_pearson.csv, correlation_spearman.csv, correlation_heatmaps.png
+
+[11/13] Variance Inflation Factor ...
+           feature     VIF
+        era5_P_atm 1874.08
+        era5_T_amb 1020.54
+        era5_T_dew  437.43
+         era5_RHum  346.40
+          era5_SZA  178.29
+ era5_GHI_clearsky  124.37
+          era5_GHI   44.68
+  era5_cloud_cover   10.07
+          era5_DNI    6.83
+        era5_W_spd    5.24
+          era5_CSI    4.29
+          era5_DHI    2.70
+era5_precipitation    1.15
+  Excluded from VIF (deliberate arithmetic identities, still in the correlation report): ['era5_T_depression', 'era5_cloud_opacity']
+  Saved: vif_report.csv  (VIF > 10 = high multicollinearity — reported, nothing dropped)
+
+  Saved (physical units, for Phase 3): C:\Users\jaswi\OneDrive\Desktop\ALL\SEM_7\project\jammalamadugu\new_obj\tamilnadu_pipeline\data\preprocessed\tamilnadu_cleaned_physical.csv
+
+[12/13] MinMax scaling (train-only fit, leakage-safe) ...
+  Scaled 73 columns, fit on first 70% of rows (1,011,903/1,445,577)
+  Saved: C:\Users\jaswi\OneDrive\Desktop\ALL\SEM_7\project\jammalamadugu\new_obj\tamilnadu_pipeline\data\preprocessed\tamilnadu_cleaned_scaled.csv
+  Saved: C:\Users\jaswi\OneDrive\Desktop\ALL\SEM_7\project\jammalamadugu\new_obj\tamilnadu_pipeline\data\preprocessed\scalers.pkl
+
+[13/13] Final validation ...
+  [PASS] Physical file: zero NaN in imputable columns  (0 NaN cells remain)
+  [PASS] Physical file: zero Inf  (0 Inf cells)
+  [PASS] Scaled file: TRAIN portion within [0,1]
+  Informational: 0.000% of scaled cells across the FULL file (train+val+test) fall outside [0,1] — expected when val/test contains a more extreme value than training ever saw; not a failure by itself.
+  [PASS] Zero duplicate (point_id, date, event) rows  (0 duplicates)
+  [PASS] All required columns present
+
+  RESULT: 5/5 checks passed
