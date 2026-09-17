@@ -127,3 +127,9 @@ era5-tamilnadu-pipeline/data/plots/post_preprocess_interactive/B_distributions_p
 *.parquet
 *.pt
 data/
+
+# ── Tamil Nadu — override the safety catches above ────────────────────
+# era5-tamilnadu/data/ is meant to be tracked; only files over GitHub's
+# 100 MB limit are excluded, individually, in era5-tamilnadu/.gitignore.
+!era5-tamilnadu/data/
+!era5-tamilnadu/data/**
