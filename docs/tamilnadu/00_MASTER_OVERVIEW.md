@@ -36,9 +36,9 @@ Objective 1 addresses the broader final-year project goals. The framework doc es
 | **Phase 1 — Data Collection** | **RG5**: Lack of predictive optimization under climatic uncertainty. | Establishes the population-weighted grid (133 points, 87.5% population) and temporal solar windows to represent real meteorological stress. | WorldPop 2020; GADM v4.1 |
 | **Phase 2 — Preprocessing & QA** | **RG5**: Lack of predictive optimization under climatic uncertainty. | Filters, cleans, and imputes historical weather with 13-step QC and Step 2b quantile mapping, providing high-fidelity data. | Ghodusinejad (2026); Mansouri (2025) |
 | **Phase 3 — Climate Signature** | **RG5**: Lack of predictive optimization under climatic uncertainty. | Distills raw weather into PCM-facing thermal targets (`Tm_target`, `L_required` with `SHARE_PCM=0.5`). | Avargani (2021); Singh (2025) |
-| **Phase 4 — GMM Clustering** | **RG5**: Lack of predictive optimization under climatic uncertainty. | Discovers 5 spatial climate regimes (`covariance_type="diag"`), replacing arbitrary administrative boundaries with GMM profiles. | Liu et al. (2025) |
+| **Phase 4 — GMM Clustering** | **RG5**: Lack of predictive optimization under climatic uncertainty. | Discovers 3 spatial climate regimes (auto-selected, `covariance_type="diag"`), replacing arbitrary administrative boundaries with GMM profiles. | Liu et al. (2025) |
 | **Phase 5 — Feasibility Filter** | **RG5**: Lack of predictive optimization under climatic uncertainty. | Implements 8 physical screening constraints (Table 12) to prevent compensatory MCDM errors. | Martinez (2025); Abdellatif (2025) |
-| **Phase 6 — MCDM Ranking** | **RG5**: Lack of predictive optimization under climatic uncertainty. | 4-method Borda + Monte Carlo (N_DRAWS=1000) uncertainty propagation over 8 Table-13 criteria identifies Top-3 candidates robust to parameter uncertainty; unified with Rajasthan. | Chen et al. (2025); Chopra (2023) |
+| **Phase 6 — MCDM Ranking** | **RG5**: Lack of predictive optimization under climatic uncertainty. | 4-method Borda + Monte Carlo (N_DRAWS=5000) uncertainty propagation over 9 criteria (8 Table-13 + `thermal_margin`) identifies Top-3 candidates robust to parameter uncertainty; unified with Rajasthan. | Chen et al. (2025); Chopra (2023) |
 | **Phase 7 — Physics Validation** | **RG4**: Limited real-world experimental / dynamic physical validation. | Provides a grey-box lumped-enthalpy tank simulation (`UA_TANK_W_K=2.0`) to verify that MCDM rankings correlate with physical solar fraction. | Barqawi (2025) |
 | **Phase 8 — Rec Cards** | **RG3**: Poor alignment with household demand. | Distills final recommendations into actionable cards aligned to domestic hot water profiles (300 L/day). | Odoi & Yorke (2025) |
 | **Phase 9+ — DRL Controller** | **RG1**: Lack of real-time adaptive control. | Future work: DRL uses discovered regimes to optimize PCM charging online. | Emami (2026); Terfai (2025) |
@@ -81,9 +81,10 @@ Phase 5 — FEASIBILITY FILTERING
 Phase 6 — MULTI-CRITERIA RANKING ENGINE  (UNIFIED with Rajasthan 2026-09-08 — byte-identical engine)
   08_mcdm_ranking.py            → mcdm_full_rankings.csv, mcdm_topk_by_cluster.csv, monte_carlo_stability.csv,
                                   mcdm_method_agreement.csv, outputs/qc_montecarlo_inclusion.html
-                                  (8 Table-13 criteria; climate-relative latent heat; log-scaled cycling;
+                                  (9 criteria — 8 Table-13 + thermal_margin, added 2026-09-16;
+                                   climate-relative latent heat; log-scaled cycling;
                                    supercooling entropy weight capped at 2× prior; PROMETHEE native Tm;
-                                   Kendall's W + pairwise agreement; N_DRAWS=1000)
+                                   Kendall's W + pairwise agreement; N_DRAWS=5000)
         ↓
 Phase 7 — PHYSICS-BASED VALIDATION
   10_physics_validation.py      → physics_validation_results.csv, physics_validation_spearman.csv (UA_TANK=2.0 W/K, v3.1)
@@ -100,14 +101,14 @@ Phase 8 — RECOMMENDATION CARDS
 
 | Phase | Script(s) | Status | Headline Finding |
 |---|---|---|---|
-| 1 — Data Collection | `00a`, `00b`, `01`, `01b`, `00_unzip_accum` | **COMPLETE** | 133 points, 240 NetCDF files, 1330 NASA POWER JSON files. |
-| 2 — Preprocessing & QA | `02`, `02b`, `03`, `03b`, `04`, `04c` | **COMPLETE (v3.1 fixes applied)** | Deaccumulation replaced with `accum_to_flux()`. Per-season quantile mapping in Step 2b. Re-run required for new outputs. |
-| 3 — Climate Signature | `04b`, `04d` | **Analysis complete; clean re-run pending** | 300 L/day draw with `SHARE_PCM=0.5` (now defined in `config.py`); completed-run cluster targets ≈ 301-326 kJ/kg. |
-| 4 — GMM Clustering | `05`, `05a`, `05b`, `cluster_lib.py` | **COMPLETE (unified with Rajasthan 2026-09-08)** | **k=3** via the shared 3-tier `suggest_k` cascade (bootstrap-ARI tiebreak), `covariance_type="diag"`, Köppen-Geiger external validation (ARI 0.067), canonical latitude relabel, `provenance_lib` hard-fail wired into 07/08/10/09. `05a` = Level B regime-shift re-clustering (k=4, 90.2% shift). `11_seasonal_pcm_sensitivity.py` (post-Phase-6, reads `08` outputs) is now listed under Phase 5-8, not here. |
-| 5 — Feasibility | `06`, `07` | **Code unified with Rajasthan 2026-09-08; clean re-run pending** | `06` builds 62 records (55 manufacturer + 7 literature) from the one canonical MICE/PMM output; `07` applies 8 constraints (Constraint 6 = `Tm ≤ Tm_target_capped_C` from Phase 3) + κ-calibration, emitting `feasibility_survivors_by_cluster.csv` and `…_kappa_calibrated.csv`. `07b_charging_feasibility.py` deleted. Pre-unification pass counts 15/9/13/13/9 are stale. |
-| 6 — MCDM Ranking | `08` | **UNIFIED with Rajasthan 2026-09-08 (byte-identical engine); re-run pending** | 8 Table-13 criteria; climate-relative latent heat; log-scaled cycling; **supercooling entropy weight capped at 2× prior (0.16)**; PROMETHEE native Tm (q=2K/p=8K); Kendall's W + pairwise method-agreement; N_DRAWS=1000. 2026-09-08 run: k=3, `Tm_fitness`-dominant, Top-1 = Myristic acid / n-Tetracosane / Palmitic-Stearic. |
-| 7 — Physics Validation | `10` | **Analysis complete; clean re-run pending** | `UA_TANK_W_K=2.0` active. Completed run: mean Spearman ρ = **+0.177** (per cluster −0.016/+0.717/+0.355/−0.171/−0.000); 24/59 sims in 54-84% band; cycles 3-260/yr. |
-| 8 — Rec Cards | `09` | **Re-run pending** | Aggregates Phases 4–7 into `recommendation_cards.md` (k=3 → 3 cluster cards after the unified Phase 4). |
+| 1 — Data Collection | `00a`, `00b`, `00c`, `01`, `01b`, `00_unzip_accum` | **COMPLETE** | 133 points, 240 NetCDF files, 1330 NASA POWER JSON files. `00c_attach_elevation.py` **added 2026-09-16** — real per-point elevation (-0.0–1,283.4 m, mean 282.4 m), replacing the flat 150 m proxy. |
+| 2 — Preprocessing & QA | `02`, `02b`, `03`, `03b`, `04`, `04c` | **COMPLETE (re-run 2026-09-16 against elevation-corrected data)** | Deaccumulation via `accum_to_flux()`. Per-season quantile mapping in Step 2b. 1,457,547 rows, 100% ERA5 + 100% NASA POWER coverage. |
+| 3 — Climate Signature | `04b`, `04d` | **COMPLETE (re-run 2026-09-16)** | 300 L/day draw with `SHARE_PCM=0.5`; cluster `L_required` targets now ≈ 301-326 kJ/kg range recomputed against the corrected `Tm_target_C=67°C` (see Phase 5-6 below). |
+| 4 — GMM Clustering | `05`, `05a`, `05b`, `cluster_lib.py` | **COMPLETE (re-run 2026-09-16, k=5 override reverted to auto)** | **k=3** via the shared 3-tier `suggest_k` cascade (bootstrap-ARI 0.630, tiebreak) — `LEVEL_A_K_OVERRIDE` was briefly forced to 5 (2026-09-14) then reverted to `None` after re-confirming k=3 is the statistically best choice (k=5 was the *worst* of {2,3,4,5} on both silhouette and bootstrap-ARI). `covariance_type="diag"`. Köppen-Geiger external validation **currently not wired in** in this pipeline copy (raster file missing — see `06_PHASE_4_AUDIT.md`). `05a` = Level B regime-shift re-clustering (k=3, 85.7% shift, ARI 0.371). `11_seasonal_pcm_sensitivity.py` (post-Phase-6, reads `08` outputs) is listed under Phase 5-8, not here. |
+| 5 — Feasibility | `06`, `07` | **COMPLETE (re-run 2026-09-16)** | `06` builds 62 records (55 manufacturer + 7 literature); `07` applies 8 constraints (Constraint 6 = `Tm ≤ Tm_target_capped_C`) + κ-calibration. **8/10/8 survivors/cluster** (n=26) under the corrected `Tm_target_C=67°C` — down from the earlier 13/13/16 (n=42) under the uncorrected 57°C, a direct and expected consequence of the higher target shrinking the melting window. |
+| 6 — MCDM Ranking | `08` | **COMPLETE (re-run 2026-09-16); 9th criterion added, investigation closed** | 9 criteria (8 Table-13 + `thermal_margin`, added to fix a diagnosed physics-agreement gap — see `08_PHASE_6_AUDIT.md`). Kendall's W 0.848/0.477/0.780 (Cluster 1 now "ambiguous," a real trade-off from the new criterion). Consensus Top-1: `RT57HC` in all three clusters (flagged for an independent sanity check — reproduces the pre-unification "same PCM everywhere" pattern, for a different reason this time). |
+| 7 — Physics Validation | `10` | **COMPLETE (re-run 2026-09-16); investigation closed** | `UA_TANK_W_K=2.0` active. Mean Spearman ρ = **+0.169** (per cluster: **+0.381**/+0.103/+0.024, was -0.595/+0.176/+0.048 before the `thermal_margin` fix). Cluster 0 genuinely fixed (its #1 pick now lands in the 54-84% benchmark band). Clusters 1/2's residual weak agreement is a **closed, documented finding** — proven (not assumed) to be a dynamic climate-PCM interaction no static MCDM criterion can capture, not chased further to avoid overfitting the ranking to one physics simulation. 6/26 sims in 54-84% band. None of these correlations are statistically significant (n=8-10/cluster) — see `09_PHASE_7_AUDIT.md` for the full investigation. |
+| 8 — Rec Cards | `09` | **COMPLETE (re-run 2026-09-16)** | Aggregates Phases 4–7 into `recommendation_cards.md` (k=3 → 3 cluster cards), including the Phase 7 disagreement caveat printed at the top of the file. |
 
 ---
 
@@ -148,10 +149,10 @@ The five v3.0 critical bugs plus three blocking script/orchestrator errors found
 - [ ] **Phase 2**: `python 03b_agreement_analysis.py` → cross-source decision
 - [ ] **Phase 2**: `python 04_preprocess_tamilnadu.py` → Step 2b quantile mapping
 - [ ] **Phase 3**: `python 04b_climate_signature.py` → 300 L/day draw; `SHARE_PCM` imported from `config.py`
-- [ ] **Phase 4**: `python 05_cluster_tamilnadu.py` → `covariance_type="diag"`, `K_FINAL=5`
+- [ ] **Phase 4**: `python 05_cluster_tamilnadu.py` → `covariance_type="diag"`, k auto-selected via `cluster_lib.suggest_k` (currently k=3; `LEVEL_A_K_OVERRIDE=None` — do not hardcode a k without re-checking `bic_selection_tamilnadu.csv` first)
 - [ ] **Phase 5**: `python 06_build_pcm_database.py` → 62 PCMs (55 manufacturer + 7 literature)
 - [ ] **Phase 5**: `python 07_feasibility_filter.py` → `feasibility_survivors_by_cluster.csv` + `feasibility_survivors_by_cluster_kappa_calibrated.csv` (62 audited per cluster, 8 constraints, κ-calibrated companion)
-- [ ] **Phase 6**: `python 08_mcdm_ranking.py` → 8 criteria, N_DRAWS=1000 (raise to 5000 for final); writes `mcdm_full_rankings.csv` + `mcdm_topk_by_cluster.csv` + `monte_carlo_stability.csv` + `mcdm_method_agreement.csv`
+- [ ] **Phase 6**: `python 08_mcdm_ranking.py` → 9 criteria (8 Table-13 + `thermal_margin`, added 2026-09-16), N_DRAWS=5000 (raised 2026-09-16 for the final reported run); writes `mcdm_full_rankings.csv` + `mcdm_topk_by_cluster.csv` + `monte_carlo_stability.csv` + `mcdm_method_agreement.csv`
 - [ ] **Phase 7**: `python 10_physics_validation.py` → `UA_TANK=2.0 W/K`; writes `physics_validation_results.csv`
 - [ ] **Phase 8**: `python 09_recommendation_cards.py` → `recommendation_cards.md`
 - [ ] **Phase 4 Level B (regime shift)**: `python 05a_level_b_regime_shift_tamilnadu.py` → runs in Phase-4 order, non-blocking
@@ -166,13 +167,15 @@ The five v3.0 critical bugs plus three blocking script/orchestrator errors found
 
 ---
 
-## Data-Layout Note (Clean Re-run Pending)
-The `data/processed/processed/` path-duplication bug is **fixed** in `config.py` / `04b_climate_signature.py`, and the stale `era5-tamilnadu/data/processed/processed/` mirror tree has been **deleted** (2026-09-08). The canonical `data/processed/` tree still holds a superseded pre-unification Phase 5 run (7-constraint schema); one clean re-run of the CORE chain — after the unified Phase 3 (which must produce `Tm_target_capped_C` via `kt_worst_month`) — regenerates `pcm_database_tamilnadu.csv` (62 rows), `feasibility_survivors_by_cluster.csv`, `feasibility_survivors_by_cluster_kappa_calibrated.csv`, and everything downstream, in the canonical location. Do not quote pre-unification survivor counts.
+## Data-Layout Note
+The `data/processed/processed/` path-duplication bug is **fixed** in `config.py` / `04b_climate_signature.py`, and the stale `era5-tamilnadu/data/processed/processed/` mirror tree has been **deleted** (2026-09-08). A clean re-run of the full CORE chain (Phases 1-8) against elevation-corrected data and the corrected `TM_TARGET_C=67°C` completed **2026-09-16** — the canonical `data/processed/` tree now holds current results throughout; do not quote pre-2026-09-16 survivor counts or MCDM/physics numbers (see `CHANGELOG.md`'s 2026-09-16 entry for the full before/after).
+
+Separately: this pipeline copy also needed two path-resolution fixes (`config.py`, `06_build_pcm_database.py`, `08_mcdm_ranking.py`) because it now lives one directory level deeper (`new_obj/tamilnadu_pipeline/`) than the layout those scripts' relative paths assumed (`PCM-Selection-ML-model/era5-tamilnadu/`) — see `CHANGELOG.md`.
 
 ---
 
 ## Still Open
-See `12_FINAL_READINESS_REPORT.md`: PCM database expansion, external cluster validation, elevation proxy, monsoon precipitation download, full Level-B GMM.
+See `12_FINAL_READINESS_REPORT.md`: PCM database expansion, external cluster validation (Köppen raster currently missing from this pipeline copy — see `06_PHASE_4_AUDIT.md`), monsoon precipitation download, full Level-B GMM. Elevation is **no longer open** — resolved 2026-09-16 via `00c_attach_elevation.py`. The MCDM-vs-physics disagreement diagnosed 2026-09-16 (see `08_PHASE_6_AUDIT.md` / `09_PHASE_7_AUDIT.md`) is a new open item, requiring a criteria-set design decision, not just a re-run.
 
 ## Plot Documentation
 See `11_PLOTS_GUIDE.md` for the interpretation and exact location of plots produced by raw QA, preprocessing, climate-signature, clustering, comprehensive, Objective 1, and comparison scripts.

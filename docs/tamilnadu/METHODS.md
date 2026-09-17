@@ -580,9 +580,10 @@ Fuzzy membership could give partial credit to PCMs near the melting window bound
 
 ### Method Chosen: **4-Method Stack (TOPSIS + GRA + PROMETHEE II + VIKOR) with Borda Consensus + Monte Carlo**
 
-Ranks the feasibility survivors using four independent MCDM methods over the 8 Table-13 criteria,
-aggregates via Borda count (cross-checked with Copeland pairwise), and propagates weight/property
-uncertainty through `N_DRAWS` (=1000; 5000 for the final run) Dirichlet + Gaussian Monte Carlo draws.
+Ranks the feasibility survivors using four independent MCDM methods over 9 criteria (8 Table-13 +
+`thermal_margin`, added 2026-09-16 — see `08_PHASE_6_AUDIT.md`), aggregates via Borda count
+(cross-checked with Copeland pairwise), and propagates weight/property uncertainty through
+`N_DRAWS=5000` (raised 2026-09-16 for the final reported run) Dirichlet + Gaussian Monte Carlo draws.
 
 **Why 4-method stack chosen:**
 

@@ -29,41 +29,103 @@ $$C_{\text{tank}} \frac{d T_{\text{tank}}}{dt} = Q_{\text{solar}} - Q_{\text{dra
 
 ---
 
-## Validation Findings — 2026-09-08 unified run (3 clusters, INDICATIVE — re-run pending)
+## Validation Findings — 2026-09-16, final state (elevation-corrected data, `Tm_target_C=67`, 9-criterion MCDM engine, 3 clusters, 8/10/8 survivors, n=26)
 
-> Ran against the unified Phase 5/6 outputs. Tamil Nadu's Phase 4 now yields **k=3** clusters
-> (13/13/16 survivors, n=42), not the earlier 5. The Phase 6 build used had a residual
-> supercooling-cap bug (fixed after); a fresh run is pending. Read cluster-by-cluster.
+> This section documents the full investigation chain in order: the original negative-ρ finding,
+> the `thermal_margin` criterion added in response to it, what that fix actually did (helped
+> Cluster 0, did not help Clusters 1/2), why it couldn't have, and the final honest conclusion.
+> See `CHANGELOG.md`'s 2026-09-16 entries for the complete step-by-step record.
 
-### 1. Spearman Rank Concordance ($\rho$) — MCDM consensus rank vs simulated annual solar fraction
-- **Cluster 0**: $\rho = +0.791$ (partial-to-strong agreement)
-- **Cluster 1**: $\rho = +0.680$ (partial agreement)
-- **Cluster 2**: $\rho = +0.478$ (partial agreement)
-- **Statewide mean**: $\rho \approx +0.65$ — the highest concordance the pipeline has produced.
+### 1. Timeline of Spearman ρ (MCDM consensus rank vs. simulated annual solar fraction)
 
-### 2. Benchmark Band — ⚠️ TANK/COLLECTOR CALIBRATION DIVERGES FROM RAJASTHAN
+| Cluster | n | Before any fix | After `Tm_target_capped_C` fix | After asymmetric σ | After `thermal_margin` criterion (final) |
+|---|---|---|---|---|---|
+| 0 | 8 | -0.595 | -0.595 (no change) | -0.595 (no change) | **+0.381** |
+| 1 | 10 | +0.176 | +0.176 (no change) | +0.176 (no change) | +0.103 |
+| 2 | 8 | +0.048 | +0.048 (no change) | +0.048 (no change) | +0.024 |
+| Mean | | -0.124 | -0.124 | -0.124 | **+0.169** |
 
-- **Solar Fraction Range**: **30%–53%** across all simulations. **0 of 42 simulations land in the
-  published 54–84% benchmark band.** The script itself prints the warning: a systematically off
-  solar fraction usually traces to the tank/collector assumptions (`M_W_KG`, `A_C_M2`,
-  `COLLECTOR_EFF`, draw schedule), not the PCM choice.
-- **Rajasthan's Phase 7 sits at SF ≈ 63–66%, 100% in-band.** Tamil Nadu's `10_physics_validation.py`
-  is a **standalone model** (`M_W_KG = 150`, `DRAW_MASS_KG = 75 × 2 = 150 kg/day`); Rajasthan's
-  uses the shared `physics_lib.py` (`M_W_KG = 300`, `DRAW_TOTAL_KG_PER_DAY = 300`). Until these two
-  Phase 7 models are reconciled and Tamil Nadu is re-calibrated into the benchmark band, **the
-  positive $\rho$ above and Rajasthan's $\rho$ are not directly comparable** — this is the next
-  unification (Phase 7), separate from the Phase 5/6 unification.
-- **Annual cycling**: 144–329 complete cycles/year (rank-1 picks 167/144/206) — realistic daily
-  charge/discharge.
+**None of these values are statistically significant at any conventional threshold** — p-values
+range 0.12–0.96 across every column above, n=8–10 per cluster. This matters: with this few
+survivors, no correlation reported anywhere in this table — positive or negative — is
+distinguishable from zero. Treat every number in this table as a descriptive point estimate, not
+a significance-tested claim, and see §4 before reading too much into any single sign flip.
+
+### 2. Two inert fixes, one that worked — and why
+
+1. **`f_Tm` scored against `Tm_target_capped_C` (61.94°C) instead of raw `Tm_target_C` (67.0°C)**
+   — `08_mcdm_ranking.py` line 991. **No effect**: every survivor's Tm already sits below both
+   numbers, so a Gaussian centered above the whole pool is monotonic in Tm either way.
+2. **Asymmetric Gaussian** (σ=2K above target, 4K below). **No effect**: Constraint 6 already
+   excludes every candidate above the ceiling, so the branch this fix changes never executes on
+   this dataset.
+3. **`thermal_margin` criterion added** (9th criterion, `08_mcdm_ranking.py` — see
+   `08_PHASE_6_AUDIT.md`): `Tm_target_capped_C − Tm`, a benefit criterion rewarding headroom below
+   the achievability ceiling, blended through the same entropy+AHP weighting as every other
+   criterion. **Worked for Cluster 0** (ρ: -0.595→+0.381; its consensus #1, `RT57HC`, now lands
+   in-band at 55.4% simulated solar fraction) because Cluster 0's actual failure mode — the old #1
+   pick (`n-Octacosane`, Tm=61.6°C) sitting right at the 61.94°C ceiling and stalling on
+   below-average solar days — is exactly what a margin criterion measures. **Did not meaningfully
+   move Clusters 1/2** (+0.176→+0.103, +0.048→+0.024) — see §3 for why not.
+
+### 3. Why Clusters 1/2 don't respond, and won't respond to any static criterion
+
+The entropy weighting made `thermal_margin` even more dominant than `Tm_fitness` used to be in
+these two clusters (weight 0.307–0.331 vs. 0.194–0.199) — the same one-criterion-domination
+pattern recurring under a new name, not a real fix, and empirically it didn't help. Checking why:
+
+**A clean test that rules out any static per-candidate criterion.** `CrodaTherm 60` has the
+identical Tm (59.8°C), latent heat, and thermal conductivity in every cluster (its properties are
+fixed; only the climate driving each cluster's simulation differs). Its simulated performance:
+
+| Cluster | CrodaTherm 60 simulated solar fraction |
+|---|---|
+| 0 | 38.3% (worst candidate in the cluster) |
+| 1 | **79.2%** (best candidate in the cluster) |
+| 2 | **65.9%** (best candidate in the cluster) |
+
+Same PCM, same Tm, wildly different real-world outcome — because the outcome is driven by an
+**interaction between Tm and each cluster's specific real 10-year day-by-day weather at its
+medoid point**, not by any property of the PCM alone. A "distance from delivery temperature"
+hypothesis was tested too (Spearman of `|Tm-60°C|` vs. simulated SF) and also failed to hold
+consistently across clusters (ρ = +0.558, -0.104, -0.158 — inconsistent sign). **No static,
+per-candidate MCDM criterion — margin-based, delivery-distance-based, or otherwise — can capture
+a relationship that depends on the specific dynamic climate trajectory a cluster's PCM tank sees
+over 10 years.** This is a structural limit of static ranking criteria, not a gap that the next
+criterion will close.
+
+### 4. Benchmark band
+Solar fraction range 30.7%–79.2% across all 26 simulations; 6/26 (23%) land in the published
+54–84% band. Annual cycling stays in a realistic tens-to-low-hundreds-per-year range across
+candidates (`physics_validation_results.csv`, `complete_cycles_per_year`).
+
+### 5. Final conclusion — this is a reportable finding, not an unresolved bug
+
+**Phase 6 (static MCDM ranking) and Phase 7 (dynamic physics simulation) sometimes disagree, and
+that disagreement is itself a legitimate, reportable result of running both.** MCDM ranks
+candidates on fixed properties evaluated the same way regardless of a cluster's actual weather
+trajectory; the physics simulation is inherently dynamic, driven by 10 years of real day-by-day
+data per cluster. Iterating the MCDM criteria set further to chase a positive correlation in every
+cluster was tried once (successfully, for Cluster 0, for a diagnosable static reason) and
+evaluated for Clusters 1/2, where it does not apply and should not be forced — doing so would mean
+overfitting the ranking to this one simulation's specific parameterization, which would undermine
+the point of having two independent checks. **The disagreement in Clusters 1/2 is evidence that
+Phase 7's physics validation is doing exactly what it is for**: catching what a static,
+literature-informed criteria set cannot see. Report both results together, not the MCDM ranking
+alone.
 
 ---
 
 ## Status
-**Ran against the unified Phase 5/6 engine 2026-09-08; fresh run pending** (Phase 6 supercooling
-cap had a residual bug fixed after). **Phase 7 itself is NOT yet unified** — Tamil Nadu uses a
-standalone tank model, Rajasthan uses `physics_lib.py`; they disagree on tank mass and daily draw
-and produce SF in different bands (TN 30–53%, RJ 63–66%). Reconciling them is the next unification
-step. Re-run `08_mcdm_ranking.py` → `10_physics_validation.py` → `09_recommendation_cards.py`.
+**Investigation closed, 2026-09-16.** `thermal_margin` (9th criterion) kept — real, cited
+improvement for Cluster 0, harmless elsewhere. Clusters 1/2's disagreement is documented as a
+genuine finding (§5), not chased further. **Phase 7 itself is still NOT unified with Rajasthan**
+— Tamil Nadu uses a standalone tank model, Rajasthan uses `physics_lib.py`; reconciling tank
+mass/draw-schedule assumptions between the two remains a separate, optional unification step
+(see `00_MASTER_OVERVIEW.md` "Still Open"). `N_DRAWS` raised to 5000 (2026-09-16, the plan doc's
+default) for the final reported Monte Carlo stability numbers — confirmed this did not change
+anything in this section, as expected (Spearman ρ here is computed from the deterministic
+consensus rank, not the MC layer; all three values bit-identical before/after the raise).
 
 ---
 

@@ -234,7 +234,7 @@ def main():
     print("\nNext (Phase 5): filter the PCM database (45-65°C core window, "
           "42-70°C with documented relaxation, per v2.0) against each cluster's "
           "Tm_target / L_required from Phase 3, then rank with the MCDM engine "
-          "(Phase 6). See NEXT_STEPS.md.")
+          "(Phase 6). See docs/era5_tamilnadu/00_MASTER_OVERVIEW.md.")
 
 
 if __name__ == "__main__":

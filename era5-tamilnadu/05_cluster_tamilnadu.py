@@ -150,9 +150,22 @@ EXPECTED_K_RANGE_SINGLE_STATE = (2, 4)
 
 # Optional manual override — leave None to use the auto-suggested k from
 # suggest_k(); set an int to force a specific k after reviewing
-# bic_selection_tamilnadu.csv. Forced to 5 per student decision (2026-09-14),
-# overriding the cascade's auto-suggested k=3.
-LEVEL_A_K_OVERRIDE = 5
+# bic_selection_tamilnadu.csv.
+#
+# REVERTED TO AUTO (2026-09-16): the prior LEVEL_A_K_OVERRIDE=5 (student
+# decision, 2026-09-14) forced a k that was OUTSIDE the documented expected
+# single-state range (2-4) and, on both the original and the post-elevation
+# rerun (00c_attach_elevation.py), was the WORST of k=2..5 on both GMM
+# silhouette (0.203, lowest) and bootstrap-ARI stability (0.557, lowest) —
+# i.e. it wasn't just "not the top pick", it was measurably the least
+# internally-cohesive and least resample-stable candidate among the
+# plausible options. k=3 lands in silhouette band AND the expected range,
+# with the highest bootstrap-ARI (0.630) of any in-range k — tier 1 of the
+# cascade fires cleanly, no ambiguity. Confirmed unchanged by the elevation
+# correction (same k=3 suggestion before and after). Set back to None so the
+# auto-suggestion drives it; re-review bic_selection_tamilnadu.csv before
+# overriding again.
+LEVEL_A_K_OVERRIDE = None
 
 
 def log_header(title):
