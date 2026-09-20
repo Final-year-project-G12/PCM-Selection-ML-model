@@ -128,8 +128,19 @@ era5-tamilnadu-pipeline/data/plots/post_preprocess_interactive/B_distributions_p
 *.pt
 data/
 
-# ── Tamil Nadu — override the safety catches above ────────────────────
-# era5-tamilnadu/data/ is meant to be tracked; only files over GitHub's
-# 100 MB limit are excluded, individually, in era5-tamilnadu/.gitignore.
-!era5-tamilnadu/data/
-!era5-tamilnadu/data/**
+# ── ERA5 Tamil Nadu pipeline — large / regenerated data ────────────────
+# REVERSED 2026-09-20: the previous "track everything, exclude a short
+# manual list in era5-tamilnadu/.gitignore" policy let 11+ GB of raw/
+# regenerated data (240 NetCDF files, a 1.57 GB WorldPop raster, 1331
+# NASA POWER JSON files, preprocessed CSVs/scalers, plot exports) get
+# swept into a single commit via a routine `git add .` — the manual
+# exclude list could not keep up. Switched to the same "exclude raw/
+# processed/plots by default" pattern already used for Rajasthan/Assam/
+# Uttarakhand below. If a specific small summary file genuinely needs to
+# be tracked for reproducibility, add it back individually with `git add
+# -f <path>` and a matching `!path` line here — do not re-add a blanket
+# directory override.
+era5-tamilnadu/data/raw/
+era5-tamilnadu/data/processed/
+era5-tamilnadu/data/preprocessed/
+era5-tamilnadu/data/plots/
