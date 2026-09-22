@@ -43,7 +43,13 @@ ensure_data_dirs()
 YEARS  = [str(y) for y in range(2016, 2026)]
 MONTHS = [f"{m:02d}" for m in range(1, 13)]
 
-# Default elevation approximation (Assam valley/plains baseline ~100m)
+# Fallback only — real per-point elevation now comes from population_df's
+# `elevation_m` column (attached by 00c_attach_elevation.py from ERA5's
+# invariant geopotential field). This flat Brahmaputra-valley constant is
+# used only if that column is missing or NaN for a given point (e.g. 00c
+# hasn't been run yet) — see 00c_attach_elevation.py's docstring for why a
+# flat default understates elevation for the hill-district points at the
+# edge of Assam's sampling envelope.
 DEFAULT_ALT_M = 100
 
 MAX_MATCH_HOURS = 3
@@ -350,7 +356,7 @@ def nearest_row(series_df, target_time, max_hours=MAX_MATCH_HOURS):
 # PROCESS ONE POINT
 # ===========================================================
 
-def process_point_era5(lat, lon, instant_ds, accum_ds):
+def process_point_era5(lat, lon, instant_ds, accum_ds, alt_m=DEFAULT_ALT_M):
     fi_frames, fa_frames = [], []
     grid_lat_used = grid_lon_used = None
 
@@ -387,7 +393,7 @@ def process_point_era5(lat, lon, instant_ds, accum_ds):
 
     df = df[~df.index.duplicated(keep="first")]
     df = apply_unit_conversions(df)
-    df = compute_solar(df, lat, lon, alt=DEFAULT_ALT_M)
+    df = compute_solar(df, lat, lon, alt=alt_m)
 
     df.index = df.index.tz_localize("UTC")
     return df, grid_lat_used, grid_lon_used
@@ -395,8 +401,11 @@ def process_point_era5(lat, lon, instant_ds, accum_ds):
 
 def process_point(point_row, instant_ds, accum_ds, sun_df):
     point_id = point_row.point_id
+    alt_m = getattr(point_row, "elevation_m", DEFAULT_ALT_M)
+    if alt_m is None or (isinstance(alt_m, float) and np.isnan(alt_m)):
+        alt_m = DEFAULT_ALT_M
     era5_df, grid_lat, grid_lon = process_point_era5(
-        point_row.lat, point_row.lon, instant_ds, accum_ds)
+        point_row.lat, point_row.lon, instant_ds, accum_ds, alt_m=alt_m)
     power_df = load_power_series(point_id)
 
     if era5_df is None and power_df is None:
@@ -415,6 +424,7 @@ def process_point(point_row, instant_ds, accum_ds, sun_df):
             "point_id": point_id,
             "lat": point_row.lat, "lon": point_row.lon,
             "population": point_row.population, "weight": point_row.weight,
+            "elevation_m": alt_m,
             "date": r.date, "event": r.event, "time_utc": target,
             "grid_lat": grid_lat, "grid_lon": grid_lon,
         }

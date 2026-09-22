@@ -39,7 +39,13 @@ def load_manufacturer_rows(csv_path):
     df = pd.read_csv(csv_path)
     out = pd.DataFrame()
     out["name"]                 = df["product"]
-    out["family"]               = np.where(df["is_rt_line"] == 1, "Rubitherm RT", "PLUSS savE")
+    # `manufacturer` (Rubitherm / Pluss / PCM Products Ltd / PureTemp /
+    # CrodaTherm / Literature) replaces the old 2-manufacturer `is_rt_line`
+    # binary flag, which the current canonical 01_preprocess.py no longer
+    # emits -- referencing it raised KeyError. Same correction already made
+    # in Rajasthan's 07_feasibility_filter.py/08_mcdm_ranking.py and in
+    # era5-tamilnadu/era5-uttarakhand's own 06_build_pcm_database.py.
+    out["family"]               = df["manufacturer"]
     out["pcm_type"]             = df["pcm_type"]
     out["Tm_C"]                 = df["Tm_melting"]
     out["Tm_freezing_C"]        = df["Tm_freezing"]

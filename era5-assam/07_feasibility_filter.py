@@ -152,9 +152,14 @@ def main():
     for _, prof in profiles.iterrows():
         cid = int(prof["cluster_id"])
 
+        # "Tm_target_C_regime_capped" was never actually populated anywhere
+        # in this pipeline (dead fallback code) -- 05_cluster_assam.py's
+        # cluster_profiles now carry "Tm_target_capped_C" instead, ported
+        # from era5-rajasthan/era5-tamilnadu's 04b_climate_signature.py
+        # (see that file's docstring for the capping methodology).
         tm_target = (
-            prof["Tm_target_C_regime_capped"]
-            if "Tm_target_C_regime_capped" in prof.index
+            prof["Tm_target_capped_C"]
+            if "Tm_target_capped_C" in prof.index and pd.notna(prof["Tm_target_capped_C"])
             else prof["Tm_target_C"]
         )
         l_required  = prof["L_required_kJ_per_kg"]

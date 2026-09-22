@@ -138,9 +138,27 @@ def main():
             kt_valid = grp[grp["era5_CSI"] > 0]["era5_CSI"]
             row["kt_mean"] = kt_valid.mean() if len(kt_valid) > 0 else 0.5
             row["kt_std"] = kt_valid.std() if len(kt_valid) > 0 else 0.15
+            # kt_worst_month: lowest of the 12 calendar-month mean kt values
+            # (all years pooled per month), for Tm_target_capped_C below —
+            # ported from era5-rajasthan/era5-tamilnadu's 04b_climate_
+            # signature.py correction #5 (2026-08-11: worst-MONTH basis, not
+            # worst-DAY, since a single day's p05 clearness collapsed
+            # linearly toward Ta_mean produced an unvalidated, overly severe
+            # cap). Rajasthan/TN compute this from a full per-day kt series
+            # (daily_aggregates_<state>.csv); Assam's pipeline only samples
+            # 3 events/day (see this file's own docstring, "PHYSICAL RIGOR &
+            # TERMINOLOGY CORRECTIONS" #1), so the month-pooled mean of
+            # era5_CSI across the 3-event sample is the closest equivalent
+            # available here — same "worst calendar month" concept, adapted
+            # to this pipeline's actual sampling granularity rather than
+            # left unimplemented.
+            kt_pos = grp[grp["era5_CSI"] > 0]
+            monthly_kt = kt_pos.groupby("month")["era5_CSI"].mean() if "month" in kt_pos.columns else pd.Series(dtype=float)
+            row["kt_worst_month"] = monthly_kt.min() if len(monthly_kt) > 0 else row["kt_mean"]
         else:
             row["kt_mean"] = 0.60
             row["kt_std"] = 0.15
+            row["kt_worst_month"] = 0.60
 
         # Solar Availability Index (SAI): Fraction of days with estimated daily GHI >= 2.0 kWh/m²/day
         noon_ghi_daily = grp[grp["event"] == "noon"].set_index("date")["era5_GHI"] * 6.5 / 1000.0
@@ -193,10 +211,6 @@ def main():
     if len(missing_pids) == 0:
         log("  [PASS] 100% Point Retention Verified (129/129 points present).")
 
-    # Save raw signatures
-    sig_df.to_csv(OUT_RAW, index=False)
-    log(f"  Saved raw physical signatures to: {OUT_RAW}")
-
     # 4. Refined Energy Requirements & Targets
     log("\n[5] Derived PCM & System Targets:")
     sig_df["Tm_target"] = TM_TARGET
@@ -208,6 +222,37 @@ def main():
     log(f"  Hot water demand = {M_DRAW_KG} kg/day")
     log(f"  T_mains range across sites: {sig_df['T_mains_est'].min():.2f}°C – {sig_df['T_mains_est'].max():.2f}°C")
     log(f"  L_required range across sites: {sig_df['L_required_kWh'].min():.2f} – {sig_df['L_required_kWh'].max():.2f} kWh/day")
+
+    # Tm_target_capped_C: a poor-period clearness cap on Tm_target, ported
+    # from era5-rajasthan/era5-tamilnadu's 04b_climate_signature.py (same
+    # Hottel-Whillier-style linear collapse-to-ambient heuristic, worst-
+    # MONTH basis). Previously MISSING entirely in this pipeline -- 07_
+    # feasibility_filter.py already had fallback code looking for a
+    # (differently, never-populated-named) "Tm_target_C_regime_capped"
+    # column and silently always fell back to the uncapped Tm_target_C.
+    # NOT independently re-validated here -- same caveat as the source
+    # pipelines: a first-order approximation, not a calibrated collector
+    # model; should not feed a hard per-point filter without further
+    # validation.
+    kt_ratio = (sig_df["kt_worst_month"] / sig_df["kt_mean"]).clip(upper=1.0)
+    tm_cap = sig_df["Ta_mean"] + kt_ratio * (sig_df["Tm_target"] - sig_df["Ta_mean"])
+    sig_df["tm_target_capped_flag"] = sig_df["Tm_target"] > tm_cap
+    sig_df["Tm_target_capped_C"] = np.minimum(sig_df["Tm_target"], tm_cap)
+    n_capped = int(sig_df["tm_target_capped_flag"].sum())
+    log(f"  Tm_target_capped_C (worst-month): {sig_df['Tm_target_capped_C'].min():.1f} - "
+        f"{sig_df['Tm_target_capped_C'].max():.1f} °C "
+        f"({n_capped}/{len(sig_df)} points where the base target exceeds the poor-period cap)")
+
+    # Save raw signatures -- moved here (was previously BEFORE Tm_target/
+    # T_mains_est/L_required_kWh/Tm_target_capped_C were added to sig_df,
+    # so OUT_RAW never actually carried those columns and every downstream
+    # reader of climate_signatures_raw.csv silently fell back to a default
+    # instead of the real per-point value -- e.g. 05_cluster_assam.py's
+    # Tm_target_capped_C cluster-profile aggregation always hit its
+    # "not in sub.columns" fallback of 44.0). Now saved with every derived
+    # column already attached.
+    sig_df.to_csv(OUT_RAW, index=False)
+    log(f"  Saved raw physical signatures to: {OUT_RAW}")
 
     # 5. PCA Execution on Correlated Thermodynamic Block
     log("\n[6] PCA on Correlated Thermodynamic Block:")

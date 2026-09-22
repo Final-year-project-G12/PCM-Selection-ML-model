@@ -97,7 +97,14 @@ def load_and_build_database():
             rec["source_type"] = "Manufacturer"
 
         rec["pcm_type"] = str(row.get("pcm_type", "Organic")).strip()
-        rec["family"] = "Rubitherm RT" if row.get("is_rt_line", 0) == 1 else ("Pluss savE" if "savE" in rec["product_name"] else rec["pcm_type"])
+        # `is_rt_line` doesn't exist in the current canonical CSV (see
+        # 06_build_pcm_database.py's own fix for the KeyError version of
+        # this bug) -- row.get("is_rt_line", 0) never raised here because
+        # of the .get() default, but it silently always evaluated False,
+        # so every Rubitherm-line PCM fell through to pcm_type instead of
+        # being labelled "Rubitherm RT". Use the manufacturer column
+        # already read into rec["manufacturer"] above instead.
+        rec["family"] = rec["manufacturer"]
 
         # Fix 1: Strict value_status (Reported | Imputed | Missing)
         rec["Tm_C"] = float(row["Tm_melting"]) if pd.notna(row["Tm_melting"]) else np.nan

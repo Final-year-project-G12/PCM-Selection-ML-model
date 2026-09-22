@@ -111,8 +111,22 @@ def main():
     mcdm_full = pd.read_csv(MCDM_FULL_FILE)
     phys_df = pd.read_csv(PHYSICS_FILE)
 
-    # Extract historical 8-PCM consensus ranking from Cluster 2 (which contains all 8 candidates)
-    mcdm_hist = mcdm_full[mcdm_full["cluster_id"] == 2][
+    # Extract the historical consensus ranking from whichever cluster carries
+    # the FULLEST candidate set -- this used to be hardcoded as "Cluster 2
+    # contains all 8 candidates" (true only when every cluster's corrosion
+    # veto/Tm-window happened to admit the same candidates, e.g. under the
+    # pre-2026-09-22 uncapped Tm_target=44C run). With the Tm_target_capped_C
+    # fix, per-cluster survivor counts genuinely differ (8/7/7 as of this
+    # run) because Cluster 0's lower corrosion-veto HSI admits one extra PCM
+    # ("savE® OM46") the other two clusters exclude -- so the largest
+    # cluster is no longer reliably Cluster 2, and must be found, not assumed.
+    candidate_counts_by_cluster = mcdm_full.groupby("cluster_id")["name"].nunique()
+    fullest_cluster_id = int(candidate_counts_by_cluster.idxmax())
+    n_full = int(candidate_counts_by_cluster.max())
+    log(f"  Cluster candidate counts: {candidate_counts_by_cluster.to_dict()} "
+        f"-> using cluster {fullest_cluster_id} ({n_full} candidates) as the canonical full set")
+
+    mcdm_hist = mcdm_full[mcdm_full["cluster_id"] == fullest_cluster_id][
         ["name", "consensus_rank", "topsis_rank", "gra_rank", "promethee_rank", "vikor_rank"]
     ].rename(columns={
         "name": "pcm_name",
@@ -123,9 +137,26 @@ def main():
     for _, r in mcdm_hist.iterrows():
         log(f"    Rank {int(r['historical_mcdm_rank'])}: {r['pcm_name']}")
 
-    # Merge with Phase 9 physics dataset
+    # Merge with Phase 9 physics dataset. Row count is no longer a fixed
+    # constant (was hardcoded 24 = 8 PCMs x 3 clusters, an assumption tied
+    # to the pre-fix uniform candidate count) -- it is now
+    # len(mcdm_hist) x (number of clusters in phys_df), and can be LESS than
+    # that if a cluster's own survivor list excludes a PCM the fullest
+    # cluster admits (that PCM still has a physics row for every cluster,
+    # by Phase 9's own construction, but no historical_mcdm_rank to merge
+    # against in a cluster that excluded it -- an inner join correctly
+    # drops those rows rather than inventing a rank).
     merged = pd.merge(phys_df, mcdm_hist, on="pcm_name")
-    assert len(merged) == 24, f"Expected 24 merged rows (8 PCMs x 3 clusters), got {len(merged)}"
+    n_clusters = phys_df["cluster_id"].nunique()
+    expected_max = len(mcdm_hist) * n_clusters
+    assert 0 < len(merged) <= expected_max, (
+        f"Expected between 1 and {expected_max} merged rows "
+        f"({len(mcdm_hist)} PCMs x up to {n_clusters} clusters), got {len(merged)}")
+    if len(merged) < expected_max:
+        log(f"  [NOTE] {expected_max - len(merged)} (PCM, cluster) pair(s) dropped by the inner "
+            f"join -- a PCM in the fullest cluster's ranking that a smaller cluster's own "
+            f"survivor list excluded. Expected, not an error; see the per-cluster candidate "
+            f"counts above.")
 
     # -------------------------------------------------------------------------
     # 3. COMPUTE INDEPENDENT PHYSICS RANKINGS PER CLUSTER
@@ -284,7 +315,8 @@ def main():
     ax.invert_xaxis()
     ax.set_xlabel("Historical MCDM Consensus Rank (1 = Best)", fontsize=11, fontweight="bold")
     ax.set_ylabel("Physics Overall Delivery Rank (1 = Best)", fontsize=11, fontweight="bold")
-    ax.set_title("Historical MCDM Rank vs. Physics Delivery Rank\n(Inverse Ordering: savE OM48 #8 MCDM -> #1 Physics)", fontsize=12, fontweight="bold")
+    ax.set_title(f"Historical MCDM Rank vs. Physics Delivery Rank\n"
+                 f"(aggregate rho = {agg_rho_del:+.2f}, Top-1 agree = {agg_top1_del})", fontsize=12, fontweight="bold")
     ax.grid(True, linestyle=":", alpha=0.6)
     ax.legend(loc="upper left")
     plt.tight_layout()
@@ -304,7 +336,8 @@ def main():
     ax.invert_xaxis()
     ax.set_xlabel("Historical MCDM Consensus Rank (1 = Best)", fontsize=11, fontweight="bold")
     ax.set_ylabel("Physics Solar Fraction Rank (1 = Best)", fontsize=11, fontweight="bold")
-    ax.set_title("Historical MCDM Rank vs. Physics Solar Fraction Rank\n(Inverse Ordering: RT44HC #1 MCDM -> #8 Solar Fraction)", fontsize=12, fontweight="bold")
+    ax.set_title(f"Historical MCDM Rank vs. Physics Solar Fraction Rank\n"
+                 f"(aggregate rho = {agg_rho_sf:+.2f}, Top-1 agree = {agg_top1_sf})", fontsize=12, fontweight="bold")
     ax.grid(True, linestyle=":", alpha=0.6)
     ax.legend(loc="upper left")
     plt.tight_layout()
@@ -324,7 +357,8 @@ def main():
     ax.invert_xaxis()
     ax.set_xlabel("Historical MCDM Consensus Rank (1 = Best)", fontsize=11, fontweight="bold")
     ax.set_ylabel("Physics Durability Rank (1 = Fewest Cycles/Yr)", fontsize=11, fontweight="bold")
-    ax.set_title("Historical MCDM Rank vs. Physics Cycling Rank\n(Near-Zero Correlation: rho ~ 0.14)", fontsize=12, fontweight="bold")
+    ax.set_title(f"Historical MCDM Rank vs. Physics Cycling Rank\n"
+                 f"(aggregate rho = {agg_rho_cyc:+.2f})", fontsize=12, fontweight="bold")
     ax.grid(True, linestyle=":", alpha=0.6)
     ax.legend(loc="upper left")
     plt.tight_layout()
@@ -339,12 +373,18 @@ def main():
         sub = comp_df[comp_df["cluster_id"] == cid]
         ax.scatter(sub["melting_temp_degC"], sub["overall_delivery_success_rate"] * 100.0,
                    s=100, alpha=0.8, label=f"Cluster {cid} ({cluster_stats[cid]['medoid_pt']})")
-    ax.axvline(44.0, color="green", linestyle="--", linewidth=1.5,
-               label="MCDM Gaussian Center (Tm = 44°C)")
+    # MCDM Gaussian center is now a PER-CLUSTER Tm_target_capped_C value
+    # (not the old fixed 44.0C -- see 04b_climate_signature.py), so a
+    # single vertical line can only show its cluster-mean, labelled as such
+    # rather than implying one fixed constant.
+    mcdm_target_mean = float(mcdm_full["Tm_target_C"].mean()) if "Tm_target_C" in mcdm_full.columns else None
+    if mcdm_target_mean is not None:
+        ax.axvline(mcdm_target_mean, color="green", linestyle="--", linewidth=1.5,
+                   label=f"Mean historical MCDM target (Tm = {mcdm_target_mean:.1f}°C, varies by cluster)")
     ax.axvline(50.0, color="crimson", linestyle="-", linewidth=2.0,
                label="Required Hot Water Delivery Temp (50°C)")
-    
-    # Annotate key outliers
+
+    # Annotate every aggregate point with its actual delivery rate
     for _, r in agg_df.iterrows():
         pname_short = r["pcm_name"].split()[0]
         ax.annotate(f"{pname_short} ({r['overall_delivery_success_rate']*100:.1f}%)",
@@ -353,7 +393,11 @@ def main():
 
     ax.set_xlabel("PCM Melting Temperature Tm (°C)", fontsize=11, fontweight="bold")
     ax.set_ylabel("10-Year Overall Delivery Success Rate (%)", fontsize=11, fontweight="bold")
-    ax.set_title("Physical Mechanism: Delivery Performance vs. Melting Temperature\n(PCMs with Tm >= 50°C Outperform 44°C Target by 5x)", fontsize=12, fontweight="bold")
+    del_range = (agg_df["overall_delivery_success_rate"].min() * 100.0,
+                 agg_df["overall_delivery_success_rate"].max() * 100.0)
+    ax.set_title(f"Physical Mechanism: Delivery Performance vs. Melting Temperature\n"
+                 f"(delivery success ranges {del_range[0]:.1f}%-{del_range[1]:.1f}% across candidates)",
+                 fontsize=12, fontweight="bold")
     ax.grid(True, linestyle=":", alpha=0.6)
     ax.legend(loc="upper left")
     plt.tight_layout()
@@ -458,93 +502,129 @@ def main():
     rep("A positive Spearman rho (+1.0) indicates perfect agreement; a negative rho (-1.0)")
     rep("indicates complete inverse ordering (disagreement).")
     rep()
-    rep(f"  Cluster 0 (ASP_0012):")
-    rep(f"    - vs. Delivery Success Rate Rank : rho = {cluster_stats[0]['rho_delivery']:+.4f} (p = {cluster_stats[0]['p_delivery']:.4f})  [Inverse ordering]")
-    rep(f"    - vs. Solar Fraction Rank        : rho = {cluster_stats[0]['rho_solar']:+.4f} (p = {cluster_stats[0]['p_solar']:.4f})  [Inverse ordering]")
-    rep(f"    - vs. Cycling Durability Rank    : rho = {cluster_stats[0]['rho_cycles']:+.4f} (p = {cluster_stats[0]['p_cycles']:.4f})  [Near-zero correlation]")
-    rep(f"  Cluster 1 (ASP_0092):")
-    rep(f"    - vs. Delivery Success Rate Rank : rho = {cluster_stats[1]['rho_delivery']:+.4f} (p = {cluster_stats[1]['p_delivery']:.4f})  [Inverse ordering]")
-    rep(f"    - vs. Solar Fraction Rank        : rho = {cluster_stats[1]['rho_solar']:+.4f} (p = {cluster_stats[1]['p_solar']:.4f})  [Inverse ordering]")
-    rep(f"    - vs. Cycling Durability Rank    : rho = {cluster_stats[1]['rho_cycles']:+.4f} (p = {cluster_stats[1]['p_cycles']:.4f})  [Near-zero correlation]")
-    rep(f"  Cluster 2 (ASP_0028):")
-    rep(f"    - vs. Delivery Success Rate Rank : rho = {cluster_stats[2]['rho_delivery']:+.4f} (p = {cluster_stats[2]['p_delivery']:.4f})  [Strong inverse ordering]")
-    rep(f"    - vs. Solar Fraction Rank        : rho = {cluster_stats[2]['rho_solar']:+.4f} (p = {cluster_stats[2]['p_solar']:.4f})  [Inverse ordering]")
-    rep(f"    - vs. Cycling Durability Rank    : rho = {cluster_stats[2]['rho_cycles']:+.4f} (p = {cluster_stats[2]['p_cycles']:.4f})  [Near-zero correlation]")
+    def _rho_label(rho):
+        if rho >= 0.4:
+            return "Positive agreement"
+        elif rho <= -0.4:
+            return "Inverse ordering"
+        else:
+            return "Near-zero correlation"
+    for cid in sorted(cluster_stats.keys()):
+        cs = cluster_stats[cid]
+        rep(f"  Cluster {cid} ({cs['medoid_pt']}):")
+        rep(f"    - vs. Delivery Success Rate Rank : rho = {cs['rho_delivery']:+.4f} (p = {cs['p_delivery']:.4f})  [{_rho_label(cs['rho_delivery'])}]")
+        rep(f"    - vs. Solar Fraction Rank        : rho = {cs['rho_solar']:+.4f} (p = {cs['p_solar']:.4f})  [{_rho_label(cs['rho_solar'])}]")
+        rep(f"    - vs. Cycling Durability Rank    : rho = {cs['rho_cycles']:+.4f} (p = {cs['p_cycles']:.4f})  [{_rho_label(cs['rho_cycles'])}]")
     rep(f"  3-Cluster Aggregate Mean:")
-    rep(f"    - vs. Aggregate Delivery Rank    : rho = {agg_rho_del:+.4f} (p = {agg_p_del:.4f})  [Inverse ordering]")
-    rep(f"    - vs. Aggregate Solar Frac Rank  : rho = {agg_rho_sf:+.4f} (p = {agg_p_sf:.4f})  [Inverse ordering]")
-    rep(f"    - vs. Aggregate Cycling Rank     : rho = {agg_rho_cyc:+.4f} (p = {agg_p_cyc:.4f})  [No correlation]")
+    rep(f"    - vs. Aggregate Delivery Rank    : rho = {agg_rho_del:+.4f} (p = {agg_p_del:.4f})  [{_rho_label(agg_rho_del)}]")
+    rep(f"    - vs. Aggregate Solar Frac Rank  : rho = {agg_rho_sf:+.4f} (p = {agg_p_sf:.4f})  [{_rho_label(agg_rho_sf)}]")
+    rep(f"    - vs. Aggregate Cycling Rank     : rho = {agg_rho_cyc:+.4f} (p = {agg_p_cyc:.4f})  [{_rho_label(agg_rho_cyc)}]")
     rep()
+
+    # Sections 8-11 below were REWRITTEN 2026-09-23 to compute every cited
+    # number/PCM name from the actual current run (agg_df / cluster_stats /
+    # merged) instead of the hardcoded prose an earlier version of this
+    # script shipped. That hardcoded version described one specific
+    # historical run (Tm_target=44C, 16/15/15 survivors, "savE OM48" as the
+    # extreme outlier) and would silently keep printing those exact PCM
+    # names and numbers even after a legitimate upstream fix (the
+    # Tm_target_capped_C port) changed the actual candidate pool to 8/7/7
+    # survivors with a different #1 pick (RT44HC) -- caught because
+    # "savE® OM48" no longer exists in this run's candidate pool at all.
+    agg_mcdm_top1_name = agg_df.loc[agg_df["historical_mcdm_rank"] == 1, "pcm_name"].iloc[0]
+    agg_phys_top1_del_name = agg_df.loc[agg_df["agg_delivery_rank"] == 1, "pcm_name"].iloc[0]
+    agg_phys_top1_sf_name = agg_df.loc[agg_df["agg_solar_fraction_rank"] == 1, "pcm_name"].iloc[0]
+    n_top1_del_agree = sum(1 for c in cluster_stats.values() if c["top1_agree_del"])
+    n_top1_sf_agree = sum(1 for c in cluster_stats.values() if c["top1_agree_sf"])
+    n_clusters_compared = len(cluster_stats)
 
     rep("8. TOP-1 AND TOP-3 AGREEMENT")
     rep("-----------------------------")
-    rep("  - Top-1 Agreement across all clusters: 0.0% (0 / 3 matches).")
-    rep("    * Historical MCDM Top-1 is RT44HC across all clusters.")
-    rep("    * Physics Delivery Top-1 is savE® OM48 across all clusters (Rank 8 in MCDM).")
-    rep("    * Physics Solar Fraction Top-1 is savE® OM48 across all clusters (Rank 8 in MCDM).")
-    rep("  - Top-3 Overlap across all clusters: 0.0% (0 / 3 candidates overlap).")
-    rep("    * Historical MCDM Top-3: {RT44HC, RT45HC, C22H46 (docosane-class paraffin)}.")
-    rep("    * Physics Delivery Top-3: {savE® OM48, Myristic-Palmitic eutectic, savE® OM42}.")
-    rep("    * Physics Solar Fraction Top-3: {savE® OM48, savE® OM50, savE® OM46}.")
+    rep(f"  - Top-1 Agreement (vs. Delivery) across clusters: "
+        f"{n_top1_del_agree/n_clusters_compared*100:.1f}% ({n_top1_del_agree} / {n_clusters_compared} matches).")
+    rep(f"  - Top-1 Agreement (vs. Solar Fraction) across clusters: "
+        f"{n_top1_sf_agree/n_clusters_compared*100:.1f}% ({n_top1_sf_agree} / {n_clusters_compared} matches).")
+    rep(f"    * Historical MCDM Top-1 (3-cluster aggregate) is {agg_mcdm_top1_name}.")
+    rep(f"    * Physics Delivery Top-1 (aggregate) is {agg_phys_top1_del_name} "
+        f"(MCDM rank {int(agg_df.loc[agg_df['pcm_name'] == agg_phys_top1_del_name, 'historical_mcdm_rank'].iloc[0])}).")
+    rep(f"    * Physics Solar Fraction Top-1 (aggregate) is {agg_phys_top1_sf_name} "
+        f"(MCDM rank {int(agg_df.loc[agg_df['pcm_name'] == agg_phys_top1_sf_name, 'historical_mcdm_rank'].iloc[0])}).")
+    rep(f"  - Aggregate Top-3 Overlap vs. Delivery: {agg_overlap_del}/3.")
+    rep(f"  - Aggregate Top-3 Overlap vs. Solar Fraction: {agg_overlap_sf}/3.")
+    rep(f"    * Historical MCDM Top-3: {sorted(agg_top3_mcdm)}.")
+    rep(f"    * Physics Delivery Top-3: {sorted(agg_top3_del)}.")
+    rep(f"    * Physics Solar Fraction Top-3: {sorted(agg_top3_sf)}.")
     rep()
 
     rep("9. RANK DIFFERENCES ANALYSIS")
     rep("----------------------------")
-    rep("Rank Difference = Physics Rank - MCDM Rank.")
-    rep("  - Extreme Outlier 1: savE® OM48 (Tm = 51.0 °C)")
-    rep("    * Historical MCDM Rank: 8 (dead last)")
-    rep("    * Physics Delivery Rank: 1 (overall delivery = 9.0% - 15.2%, 5x higher than RT44HC)")
-    rep("    * Rank Difference: -7 positions (massive physical outperformance)")
-    rep("  - Extreme Outlier 2: RT44HC (Tm = 43.0 °C)")
-    rep("    * Historical MCDM Rank: 1 (consensus winner)")
-    rep("    * Physics Solar Fraction Rank: 8 (lowest annual solar fraction: 49.7% - 52.7%)")
-    rep("    * Physics Delivery Rank: 4 (overall delivery = 1.2% - 3.8%)")
-    rep("    * Rank Difference: +7 positions in Solar Fraction (massive physical underperformance)")
+    rep("Rank Difference = Physics Rank - MCDM Rank. Negative = physics ranked it BETTER")
+    rep("than MCDM did; positive = physics ranked it WORSE.")
+    agg_df["rank_diff_delivery"] = agg_df["agg_delivery_rank"] - agg_df["historical_mcdm_rank"]
+    agg_df["rank_diff_solar"] = agg_df["agg_solar_fraction_rank"] - agg_df["historical_mcdm_rank"]
+    biggest_del_out = agg_df.loc[agg_df["rank_diff_delivery"].abs().idxmax()]
+    biggest_sf_out = agg_df.loc[agg_df["rank_diff_solar"].abs().idxmax()]
+    rep(f"  - Largest delivery-rank disagreement: {biggest_del_out['pcm_name']} "
+        f"(Tm = {biggest_del_out['melting_temp_degC']:.1f} °C) -- MCDM rank "
+        f"{int(biggest_del_out['historical_mcdm_rank'])}, physics delivery rank "
+        f"{int(biggest_del_out['agg_delivery_rank'])} "
+        f"({biggest_del_out['overall_delivery_success_rate']*100:.1f}% mean delivery success), "
+        f"difference {int(biggest_del_out['rank_diff_delivery']):+d} positions.")
+    rep(f"  - Largest solar-fraction-rank disagreement: {biggest_sf_out['pcm_name']} "
+        f"(Tm = {biggest_sf_out['melting_temp_degC']:.1f} °C) -- MCDM rank "
+        f"{int(biggest_sf_out['historical_mcdm_rank'])}, physics solar-fraction rank "
+        f"{int(biggest_sf_out['agg_solar_fraction_rank'])} "
+        f"({biggest_sf_out['solar_fraction']*100:.1f}% mean solar fraction), "
+        f"difference {int(biggest_sf_out['rank_diff_solar']):+d} positions.")
     rep()
 
-    rep("10. PHYSICAL INTERPRETATION OF DISAGREEMENT")
-    rep("-------------------------------------------")
-    rep("The pronounced divergence between the historical MCDM rankings and the dynamic")
-    rep("physics simulation traces directly to a fundamental thermodynamic mechanism:")
+    rep("10. PHYSICAL INTERPRETATION")
+    rep("----------------------------")
+    rep("The SWH specification enforces a strict delivery temperature threshold of")
+    rep("T_delivery >= 50.0 °C. Hot water draw events (07:00 and 19:00 IST) only count as")
+    rep("successful if the tank water reaches or exceeds 50.0 °C at draw time. The historical")
+    rep("MCDM matrix scored candidates against a fixed Tm_target that, prior to the")
+    rep("Tm_target_capped_C fix (2026-09-23), was an uncapped 44.0 °C constant -- now a")
+    rep("per-cluster, poor-period-clearness-capped value (~37-42 °C in this run, see")
+    rep("04b_climate_signature.py). Either way, the MCDM target sits well below the 50.0 °C")
+    rep("delivery floor: a PCM whose Tm matches the MCDM target discharges its latent heat")
+    rep("below the temperature the system actually needs to deliver, so a strong MCDM/delivery")
+    rep("correlation is not guaranteed by construction -- whether it appears, as in this run's")
+    rep("mostly-positive delivery-rank correlations (see Section 7), or not, is itself the")
+    rep("finding, not an assumption.")
     rep()
-    rep("  A. Domestic Delivery Temperature Constraint:")
-    rep("     The SWH specification enforces a strict delivery temperature threshold of")
-    rep("     T_delivery >= 50.0 °C. Hot water draw events (07:00 and 19:00 IST) only count")
-    rep("     as successful if the tank water reaches or exceeds 50.0 °C at draw time.")
-    rep()
-    rep("  B. MCDM Target Centering Disconnect:")
-    rep("     The historical MCDM matrix incorporated a Gaussian fitness function:")
-    rep("         f_Tm = exp(-(Tm - 44.0)^2 / (2 * 4.0^2))")
-    rep("     which assumed an ideal melting temperature of 44.0 °C. This assigned high")
-    rep("     scores to RT44HC (Tm=43 °C, f_Tm=0.97) and C22H46 (Tm=44.5 °C, f_Tm=0.95), while")
-    rep("     penalizing savE® OM48 (Tm=51 °C, f_Tm=0.22). With f_Tm carrying 30% of the AHP")
-    rep("     prior weight, RT44HC was artificially propelled to Rank 1.")
-    rep()
-    rep("  C. Thermodynamic Reality in Dynamic Operation:")
-    rep("     In actual operation, a PCM melting at 43.0 °C discharges its latent heat at")
-    rep("     43.0 °C during tank cooling. Heat supplied at 43.0 °C CANNOT elevate or sustain")
-    rep("     tank water at or above the 50.0 °C delivery threshold. It only provides preheating")
-    rep("     up to 43 °C, requiring supplementary sensible heating to reach 50 °C.")
-    rep("     Conversely, savE® OM48 melts at 51.0 °C and freezes at 49.0 °C (accounting for")
-    rep("     supercooling hysteresis). Its latent heat plateau discharges directly into the")
-    rep("     50 °C delivery zone, maintaining water above 50 °C during early evening hours")
-    rep("     and producing evening delivery rates of 17.9% - 30.4% (compared to 2.4% - 7.7%")
-    rep("     for RT44HC).")
-    rep()
+
     rep("11. FINAL SCIENTIFIC VERDICT")
     rep("----------------------------")
+    # Verdict computed from the actual aggregate correlations/agreement
+    # rather than a fixed conclusion -- the two physics dimensions can (and
+    # in this run, do) disagree with each other about whether MCDM is
+    # supported, so the verdict names each dimension separately rather than
+    # forcing one summary label across both.
+    def _verdict_for(rho, top1_agree, overlap):
+        if rho >= 0.4 and top1_agree:
+            return "SUPPORTED"
+        elif rho <= -0.4 and not top1_agree and overlap == 0:
+            return "NOT PHYSICALLY SUPPORTED"
+        else:
+            return "PARTIALLY SUPPORTED / INCONCLUSIVE"
+    verdict_del = _verdict_for(agg_rho_del, agg_top1_del, agg_overlap_del)
+    verdict_sf = _verdict_for(agg_rho_sf, agg_top1_sf, agg_overlap_sf)
     rep("================================================================================")
-    rep("  VERDICT: NOT PHYSICALLY SUPPORTED")
+    rep(f"  VERDICT vs. DELIVERY SUCCESS: {verdict_del}  (rho = {agg_rho_del:+.4f}, "
+        f"Top-1 agree = {agg_top1_del}, Top-3 overlap = {agg_overlap_del}/3)")
+    rep(f"  VERDICT vs. SOLAR FRACTION  : {verdict_sf}  (rho = {agg_rho_sf:+.4f}, "
+        f"Top-1 agree = {agg_top1_sf}, Top-3 overlap = {agg_overlap_sf}/3)")
     rep("================================================================================")
-    rep("The historical MCDM consensus ranking is NOT PHYSICALLY SUPPORTED by the independent")
-    rep("10-year dynamic physics validation. The MCDM ranking exhibits an inverse ordering")
-    rep("(Spearman rho between -0.43 and -0.64) against both delivery success rate and solar")
-    rep("fraction, with 0% Top-1 agreement and 0% Top-3 overlap.")
+    rep("The historical MCDM consensus ranking is evaluated against two independent physics")
+    rep("metrics separately rather than forced into one summary verdict, because they can")
+    rep("(and in this run, do) point in different directions: a positive rho on one metric")
+    rep("and a negative rho on the other is a real, reportable finding about which physical")
+    rep("behavior static MCDM screening does and does not predict -- not noise to average away.")
     rep()
-    rep("This finding demonstrates that static MCDM screening based on an uncoupled, assumed")
-    rep("temperature target (Tm ~ 44 °C) fails to predict dynamic storage utility when the end-use")
-    rep("delivery requirement (50 °C) imposes a distinct physical threshold. Independent")
-    rep("physics validation is indispensable for solar thermal PCM selection.")
+    rep("This still demonstrates that independent physics validation is indispensable for")
+    rep("solar thermal PCM selection: MCDM screening on material properties alone cannot be")
+    rep("assumed to predict every operational outcome, even where it predicts some.")
     rep()
     rep("12. LIMITATIONS")
     rep("----------------")
@@ -554,8 +634,9 @@ def main():
     rep("     physics validation used final K=3 medoids.")
     rep("  3. Current Governance State: Under the verified Phase 7 pipeline, formal MCDM")
     rep("     was NOT PERFORMED (n_confirmed = 0); no active K=3 MCDM ranking exists.")
-    rep("  4. Candidate Universe Scope: Evaluations are confined strictly to the 8 Phase-6-")
-    rep("     screened candidates and should not be extrapolated to unstudied PCMs.")
+    rep(f"  4. Candidate Universe Scope: Evaluations are confined strictly to the "
+        f"{len(mcdm_hist)} Phase-6-screened candidates from cluster {fullest_cluster_id} and "
+        f"should not be extrapolated to unstudied PCMs.")
     rep("  5. Fixed System Geometry: The results reflect a 100 kg tank, 50 kg PCM, 2.0 m²")
     rep("     collector, and 100 L/day draw schedule; alternative tank/collector sizing")
     rep("     would shift delivery percentages though the relative Tm ranking mechanism remains.")

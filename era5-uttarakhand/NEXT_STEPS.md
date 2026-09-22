@@ -14,6 +14,17 @@ an ERA5 GHI/longwave/precipitation deaccumulation bug that deflated GHI
 ~10x — see the elevation and GHI notes near the end of this doc). The
 table below is kept for phase-by-phase context, not as an open TODO list.
 
+**Update (2026-09-22), scope check on "done":** every Phase 5-8 output
+in `data/processed/pcm/` was re-confirmed to share one fresh
+`run_all_uttarakhand.py` timestamp (2026-09-22 09:01) — the 8-phase table
+below is current. Two items OUTSIDE the 8-phase numbering are not: the
+optional `11_level_b_seasonal_analysis.py` has still never been run (no
+output files exist), and `12_mcdm_interactive_plots.py`'s plots/CSV are
+one generation stale (dated 2026-09-14, before the 2026-09-22 MCDM
+re-run) — see `README.md`'s status note for detail. Neither blocks the
+"Phase 1-8 done" claim; both are worth a quick re-run before final
+write-up if their outputs are cited.
+
 | Phase | What's needed | Status |
 |---|---|---|
 | 1. Data Collection | ERA5 + NASA POWER, 45 population-weighted Uttarakhand points, 3 sun-events/day, 10 years | **Done.** Points confirmed (`00a_build_population_grid.py`, ~87.5% population coverage); `02_combine_uttarakhand.py` produces `climate_uttarakhand_points.csv` (493,155 rows, 100% ERA5/POWER coverage). |

@@ -131,13 +131,24 @@ def main():
     joblib.dump(scaler, CLUSTERING_DIR / "scaler_assam.joblib")
 
     # 4. K = 2..10 Grid Search Comparison
-    log("\n[4] K = 2..10 Metric Grid Search Comparison (5 Core Features, Full Covariance)...")
+    log("\n[4] K = 2..10 Metric Grid Search Comparison (5 Core Features, Diagonal Covariance)...")
     comp_rows = []
 
     for k in range(2, 11):
+        # covariance_type="diag" (diagonal) -- NOT "full" -- is the correct
+        # choice here. A full covariance matrix requires D*(D+1)/2
+        # parameters PER component; with 5 standardized core features and
+        # up to K=10 components, that overdetermines the fit relative to
+        # 129 points, which is exactly what caused every point's
+        # max_membership_prob to saturate near 1.000 in the original run
+        # (soft clustering silently degenerating to hard clustering -- 62/80
+        # points in the prior assignment file had prob > 0.999, median
+        # 0.999993). Diagonal covariance assumes feature independence and
+        # needs only D parameters per component -- the same fix Tamil Nadu
+        # and Uttarakhand's own GMM runs made for the same reason.
         gmm = GaussianMixture(
             n_components=k,
-            covariance_type="full",
+            covariance_type="diag",
             random_state=RANDOM_SEED,
             n_init=10,
             max_iter=300
@@ -181,11 +192,11 @@ def main():
         plt.savefig(CLUSTERING_DIR / fig_name, dpi=300)
         plt.close()
 
-    # 5. Fit Final K=3 Full-Covariance GMM
-    log(f"\n[5] Fitting Final GMM (K={K_FINAL}, covariance_type='full', n_init=10, max_iter=300)...")
+    # 5. Fit Final K=3 Diagonal-Covariance GMM (see [4]'s comment for why not "full")
+    log(f"\n[5] Fitting Final GMM (K={K_FINAL}, covariance_type='diag', n_init=10, max_iter=300)...")
     final_gmm = GaussianMixture(
         n_components=K_FINAL,
-        covariance_type="full",
+        covariance_type="diag",
         random_state=RANDOM_SEED,
         n_init=10,
         max_iter=300
@@ -233,7 +244,7 @@ def main():
 
         boot_gmm = GaussianMixture(
             n_components=K_FINAL,
-            covariance_type="full",
+            covariance_type="diag",
             random_state=b,
             n_init=3,
             max_iter=200
@@ -267,7 +278,7 @@ def main():
 
     boot_df.to_csv(OUT_BOOT, index=False)
     boot_df.to_csv(OUT_BOOT_ALIAS, index=False)
-    log(f"  Bootstrap Stability Results (K=3, Full Covariance):")
+    log(f"  Bootstrap Stability Results (K=3, Diagonal Covariance):")
     log(f"    - Mean ARI          : {mean_ari:.4f}")
     log(f"    - Median ARI        : {median_ari:.4f}")
     log(f"    - Std ARI           : {std_ari:.4f}")
@@ -310,6 +321,8 @@ def main():
             "elev_proxy_mean": sub["elev_proxy"].mean() if "elev_proxy" in sub.columns else np.nan,
             "Tm_target_C": 44.0,
             "Tm_target_mean": 44.0,
+            "Tm_target_capped_C": (sub["Tm_target_capped_C"].mean()
+                                    if "Tm_target_capped_C" in sub.columns else 44.0),
             "L_required_kWh_mean": q_required_kWh,
             "L_required_kJ_per_kg": req_energy_kJ_kg,
             "HSI": hsi_val,
