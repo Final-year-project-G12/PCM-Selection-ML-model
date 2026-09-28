@@ -78,6 +78,15 @@ OUT_PROFILES = CLUSTERING_DIR / "gmm_cluster_profiles.csv"
 OUT_PROFILES_ALIAS = CLUSTERING_DIR / "cluster_profiles_assam.csv"
 OUT_BOOT = CLUSTERING_DIR / "gmm_bootstrap_stability.csv"
 OUT_BOOT_ALIAS = CLUSTERING_DIR / "bootstrap_stability_assam.csv"
+
+# SWH Design Parameters (§4 SWH spec)
+T_DELIVERY = 50.0       # °C
+DT_APPROACH = 6.0       # K
+TM_TARGET = T_DELIVERY + DT_APPROACH  # = 56.0 °C
+M_DRAW_KG = 100.0       # kg/day
+CP_WATER = 4186.0       # J/(kg·K)
+M_PCM_KG = 50.0         # kg
+SHARE_PCM = 0.5         # Fraction of nocturnal heat deficit covered by PCM latent heat (Avargani 2021)
 OUT_REPORT = PREPROCESSED_DIR / "clustering_report.txt"
 
 RANDOM_SEED = 42
@@ -290,8 +299,9 @@ def main():
 
         # Energy requirements calculation (§4 SWH spec)
         t_mains_mean = np.maximum(5.0, sub["Ta_mean"] - 6.0).mean()
-        q_required_kWh = (100.0 * 4186.0 * (50.0 - t_mains_mean)) / 3_600_000.0
-        req_energy_kJ_kg = (q_required_kWh * 3600.0) / 50.0
+        q_night_kWh = (M_DRAW_KG * CP_WATER * (T_DELIVERY - t_mains_mean)) / 3_600_000.0
+        q_required_kWh = SHARE_PCM * q_night_kWh
+        req_energy_kJ_kg = (SHARE_PCM * (q_night_kWh * 3600.0)) / M_PCM_KG
         hsi_val = sub["HSI"].mean() if "HSI" in sub.columns else sub["RH_mean"].mean()
 
         p_row = {
@@ -308,8 +318,8 @@ def main():
             "wind_mean_mean": sub["wind_mean"].mean(),
             "monsoon_index_mean": sub["monsoon_index"].mean() if "monsoon_index" in sub.columns else np.nan,
             "elev_proxy_mean": sub["elev_proxy"].mean() if "elev_proxy" in sub.columns else np.nan,
-            "Tm_target_C": 44.0,
-            "Tm_target_mean": 44.0,
+            "Tm_target_C": TM_TARGET,
+            "Tm_target_mean": TM_TARGET,
             "L_required_kWh_mean": q_required_kWh,
             "L_required_kJ_per_kg": req_energy_kJ_kg,
             "HSI": hsi_val,

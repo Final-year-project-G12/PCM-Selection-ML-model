@@ -57,7 +57,7 @@ OUT_RANKINGS_CSV = OUT_PCM_DIR / "mcdm_rankings_by_cluster.csv"
 OUT_REPORT_TXT = OUT_REPORT_DIR / "mcdm_ranking_report.txt"
 
 # Core Parameters
-TARGET_TM_C = 44.0
+TARGET_TM_C = 56.0
 SIGMA_TM = 4.0
 
 GRA_ZETA = 0.5
@@ -193,7 +193,11 @@ def run_phase7():
         c_feas = feas_by_cluster[feas_by_cluster["cluster_id"] == cid]
         
         c_summary = feas_summary[feas_summary["cluster_id"] == cid]
-        l_req = c_summary["L_required_kJ_kg"].iloc[0] if len(c_summary) > 0 else 250.0
+        l_req = (
+            c_summary["L_required_kJ_kg"].iloc[0]
+            if len(c_summary) > 0 and pd.notna(c_summary["L_required_kJ_kg"].iloc[0])
+            else prof.get("L_required_kJ_per_kg", np.nan)
+        )
 
         confirmed_df = c_feas[c_feas["overall_feasibility"] == "CONFIRMED_FEASIBLE"]
         conditional_df = c_feas[c_feas["overall_feasibility"] == "CONDITIONALLY_FEASIBLE"]

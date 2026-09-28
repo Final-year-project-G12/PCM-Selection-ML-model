@@ -37,7 +37,7 @@ def log(msg=""):
 # 1. AUTOMATED THERMODYNAMIC UNIT TESTS
 # -----------------------------------------------------------------------------
 def test_1_latent_energy_absorbed_melting():
-    Mp, L, Cp_s, Cp_l, sc, Tm = 50.0, 200000.0, 2000.0, 2200.0, 3.0, 44.0
+    Mp, L, Cp_s, Cp_l, sc, Tm = 50.0, 200000.0, 2000.0, 2200.0, 3.0, 56.0
     node = PCMStateNode({"Tm_C": Tm, "latent_heat_kJ_kg": L/1000.0, "Cp_solid_kJ_kgK": Cp_s/1000.0, "Cp_liquid_kJ_kgK": Cp_l/1000.0, "supercooling_K": sc}, Mp=Mp)
     node.reset_state(T_initial=Tm, f_melt_initial=0.0)
     H_start = node.Hp
@@ -49,7 +49,7 @@ def test_1_latent_energy_absorbed_melting():
     log("  [PASS] Unit Test 1: Latent energy absorbed during melting verified")
 
 def test_2_latent_energy_released_freezing():
-    Mp, L, Cp_s, Cp_l, sc, Tm = 50.0, 200000.0, 2000.0, 2200.0, 3.0, 44.0
+    Mp, L, Cp_s, Cp_l, sc, Tm = 50.0, 200000.0, 2000.0, 2200.0, 3.0, 56.0
     node = PCMStateNode({"Tm_C": Tm, "latent_heat_kJ_kg": L/1000.0, "Cp_solid_kJ_kgK": Cp_s/1000.0, "Cp_liquid_kJ_kgK": Cp_l/1000.0, "supercooling_K": sc}, Mp=Mp)
     node.Hp = node.H_freeze_start
     node.mode = "FREEZING"
@@ -64,20 +64,20 @@ def test_2_latent_energy_released_freezing():
     log("  [PASS] Unit Test 2: Latent energy released during freezing verified")
 
 def test_3_no_latent_plateau_skipped():
-    Mp, L, Cp_s, Cp_l, sc, Tm = 50.0, 200000.0, 2000.0, 2200.0, 3.0, 44.0
+    Mp, L, Cp_s, Cp_l, sc, Tm = 50.0, 200000.0, 2000.0, 2200.0, 3.0, 56.0
     node = PCMStateNode({"Tm_C": Tm, "latent_heat_kJ_kg": L/1000.0, "Cp_solid_kJ_kgK": Cp_s/1000.0, "Cp_liquid_kJ_kgK": Cp_l/1000.0, "supercooling_K": sc}, Mp=Mp)
     node.reset_state(T_initial=10.0)
     H_initial = node.Hp
-    H_target = node.H_melt_end + Mp * Cp_l * (55.0 - Tm)
+    H_target = node.H_melt_end + Mp * Cp_l * (65.0 - Tm)
     dH_large = H_target - H_initial
     node.update_enthalpy(dH_large)
     assert abs(node.Hp - (H_initial + dH_large)) < 1e-6, "Enthalpy mismatch on multi-boundary jump!"
-    assert abs(node.Tp - 55.0) < 1e-6, f"Expected 55.0 °C, got {node.Tp}"
+    assert abs(node.Tp - 65.0) < 1e-6, f"Expected 65.0 °C, got {node.Tp}"
     assert node.f_melt == 1.0 and node.mode == "LIQUID"
     log("  [PASS] Unit Test 3: No latent plateau skipped under multi-boundary jump")
 
 def test_4_no_energy_created_or_destroyed():
-    Mp, L, Cp_s, Cp_l, sc, Tm = 50.0, 200000.0, 2000.0, 2200.0, 3.0, 44.0
+    Mp, L, Cp_s, Cp_l, sc, Tm = 50.0, 200000.0, 2000.0, 2200.0, 3.0, 56.0
     node = PCMStateNode({"Tm_C": Tm, "latent_heat_kJ_kg": L/1000.0, "Cp_solid_kJ_kgK": Cp_s/1000.0, "Cp_liquid_kJ_kgK": Cp_l/1000.0, "supercooling_K": sc}, Mp=Mp)
     node.reset_state(T_initial=20.0)
     H_start = node.Hp
@@ -91,7 +91,7 @@ def test_4_no_energy_created_or_destroyed():
     log("  [PASS] Unit Test 4: Strict energy conservation across 500 random heat steps")
 
 def test_5_direction_reversal_continuity():
-    Mp, L, Cp_s, Cp_l, sc, Tm = 50.0, 200000.0, 2000.0, 2200.0, 3.0, 44.0
+    Mp, L, Cp_s, Cp_l, sc, Tm = 50.0, 200000.0, 2000.0, 2200.0, 3.0, 56.0
     node = PCMStateNode({"Tm_C": Tm, "latent_heat_kJ_kg": L/1000.0, "Cp_solid_kJ_kgK": Cp_s/1000.0, "Cp_liquid_kJ_kgK": Cp_l/1000.0, "supercooling_K": sc}, Mp=Mp)
     node.reset_state(T_initial=Tm, f_melt_initial=0.5)
     H_start = node.Hp
@@ -103,9 +103,9 @@ def test_5_direction_reversal_continuity():
     log("  [PASS] Unit Test 5: Reversal immediately after boundary remains continuous")
 
 def test_6_supercooling_hysteresis():
-    Mp, L, Cp_s, Cp_l, sc, Tm = 50.0, 200000.0, 2000.0, 2200.0, 3.0, 44.0
+    Mp, L, Cp_s, Cp_l, sc, Tm = 50.0, 200000.0, 2000.0, 2200.0, 3.0, 56.0
     node = PCMStateNode({"Tm_C": Tm, "latent_heat_kJ_kg": L/1000.0, "Cp_solid_kJ_kgK": Cp_s/1000.0, "Cp_liquid_kJ_kgK": Cp_l/1000.0, "supercooling_K": sc}, Mp=Mp)
-    node.reset_state(T_initial=50.0)
+    node.reset_state(T_initial=65.0)
     dH_cool = node.H_freeze_start - node.Hp
     node.update_enthalpy(dH_cool)
     assert abs(node.Tp - (Tm - sc)) < 1e-6, f"Expected T_freeze={Tm - sc}, got {node.Tp}"

@@ -42,6 +42,7 @@ ABSOLUTE_TM_MIN, ABSOLUTE_TM_MAX = 42.0, 70.0
 WINDOW_LOWER_OFFSET  = 6.0   # plan Table 12/13: 6K lower bound
 WINDOW_UPPER_OFFSET  = 8.0   # plan Table 12/13: 8K upper bound
 LATENT_HEAT_FRACTION = 0.7
+SHARE_PCM            = 0.5   # Fraction of nocturnal heat deficit covered by PCM latent heat (Avargani 2021)
 CYCLES_FLOOR         = 300
 SUPERCOOLING_MAX_K   = 8.0
 MIN_SURVIVORS        = 5
@@ -131,15 +132,15 @@ def main():
         if "Tm_target_mean" in profiles.columns:
             profiles["Tm_target_C"] = profiles["Tm_target_mean"]
         else:
-            profiles["Tm_target_C"] = 44.0
+            profiles["Tm_target_C"] = 56.0
 
     if "L_required_kJ_per_kg" not in profiles.columns:
         if "L_required_kWh_mean" in profiles.columns:
             profiles["L_required_kJ_per_kg"] = profiles["L_required_kWh_mean"] * 3600.0 / 50.0
         else:
             t_mains = np.maximum(5.0, profiles.get("Ta_mean_mean", 25.0) - 6.0)
-            q_req = (100.0 * 4186.0 * (50.0 - t_mains)) / 3_600_000.0
-            profiles["L_required_kJ_per_kg"] = (q_req * 3600.0) / 50.0
+            q_night_kWh = (100.0 * 4186.0 * (50.0 - t_mains)) / 3_600_000.0
+            profiles["L_required_kJ_per_kg"] = (SHARE_PCM * q_night_kWh * 3600.0) / 50.0
 
     if "HSI" not in profiles.columns:
         profiles["HSI"] = profiles.get("HSI_mean", profiles.get("RH_mean_mean", 75.0))

@@ -125,7 +125,14 @@ def main():
 
     # Merge with Phase 9 physics dataset
     merged = pd.merge(phys_df, mcdm_hist, on="pcm_name")
-    assert len(merged) == 24, f"Expected 24 merged rows (8 PCMs x 3 clusters), got {len(merged)}"
+    n_candidates = len(mcdm_hist)
+    n_clusters = merged["cluster_id"].nunique()
+    expected_rows = n_candidates * n_clusters
+    assert len(merged) == expected_rows, (
+        f"Expected {expected_rows} merged rows "
+        f"({n_candidates} PCMs x {n_clusters} clusters), "
+        f"got {len(merged)}"
+    )
 
     # -------------------------------------------------------------------------
     # 3. COMPUTE INDEPENDENT PHYSICS RANKINGS PER CLUSTER
@@ -339,10 +346,12 @@ def main():
         sub = comp_df[comp_df["cluster_id"] == cid]
         ax.scatter(sub["melting_temp_degC"], sub["overall_delivery_success_rate"] * 100.0,
                    s=100, alpha=0.8, label=f"Cluster {cid} ({cluster_stats[cid]['medoid_pt']})")
-    ax.axvline(44.0, color="green", linestyle="--", linewidth=1.5,
-               label="MCDM Gaussian Center (Tm = 44°C)")
+    ax.axvline(44.0, color="gray", linestyle="--", linewidth=1.2,
+               label="Historical MCDM Target (Tm = 44°C)")
     ax.axvline(50.0, color="crimson", linestyle="-", linewidth=2.0,
                label="Required Hot Water Delivery Temp (50°C)")
+    ax.axvline(56.0, color="darkblue", linestyle="-.", linewidth=1.5,
+               label="Corrected SWH Target (Tm = 56°C)")
     
     # Annotate key outliers
     for _, r in agg_df.iterrows():

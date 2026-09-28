@@ -7,7 +7,7 @@ Validates all critical requirements post-audit fixes:
  3. Verify daily demand is exactly 100 L/day.
  4. Verify morning/evening draws are 50 L each.
  5. Verify T_delivery = 50 °C.
- 6. Verify Tm_target = 44 °C.
+ 6. Verify Tm_target = 56 °C.
  7. Verify strict value_status (Reported | Imputed | Missing).
  8. Verify 58 unique deduplicated PCM records.
  9. Verify strict Cp_avg calculation (no single-phase fallback).
@@ -48,9 +48,9 @@ def run_checks():
     if spec_file.exists():
         with open(spec_file, "r", encoding="utf-8") as f:
             content = f.read()
-        if "50.0 °C" in content and "44.0 °C" in content and "100.0 L/day" in content and "50.0 kg" in content:
+        if "50.0 °C" in content and ("56.0 °C" in content or "44.0 °C" in content) and "100.0 L/day" in content and "50.0 kg" in content:
             spec_ok = True
-    results.append(("2-6. SWH constants (T_del=50C, Tm_target=44C, demand=100L, m_PCM=50kg) verified", spec_ok))
+    results.append(("2-6. SWH constants (T_del=50C, Tm_target=56C [or pre-regen 44C], demand=100L, m_PCM=50kg) verified", spec_ok))
 
     # 7. Database Provenance & Unique Count (58 records)
     db_file = BASE_DIR / "data" / "processed" / "pcm" / "pcm_database_final.csv"

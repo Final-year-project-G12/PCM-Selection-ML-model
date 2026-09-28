@@ -9,7 +9,7 @@ energy requirements across Assam's clusters.
 
 DESIGN CONSTANTS:
   - Target hot-water delivery temp: 50.0 °C
-  - PCM target temperature (Tm_target): 44.0 °C
+  - PCM target temperature (Tm_target): 56.0 °C
   - Approach temperature (dT_approach): 6.0 K
   - Daily hot-water demand: 100.0 L/day (~100.0 kg/day)
   - Morning draw (07:00 IST): 50.0 L
@@ -55,13 +55,14 @@ OUT_DESIGN_REPORT = PREPROCESSED_DIR / "swh_design_report.txt"
 # Design Constants (§4)
 T_DELIVERY = 50.0       # °C
 DT_APPROACH = 6.0       # K
-TM_TARGET = 44.0        # °C (50 - 6)
+TM_TARGET = 56.0        # °C (50 + 6, indirect-system rule)
 DAILY_DEMAND_L = 100.0  # L/day
 M_DRAW_KG = 100.0       # kg/day
 MORNING_DRAW_L = 50.0   # L
 EVENING_DRAW_L = 50.0   # L
 PCM_MASS_KG = 50.0      # kg
 CP_WATER_JKGK = 4186.0  # J/(kg·K)
+SHARE_PCM = 0.5         # Fraction of nocturnal heat deficit covered by PCM latent heat (Avargani 2021)
 
 report_lines = []
 
@@ -85,6 +86,7 @@ def main():
         {"Parameter": "Evening Hot-Water Draw (19:00 IST)", "Value": f"{EVENING_DRAW_L:.1f} L", "Type": "Design constant"},
         {"Parameter": "Assumed Tank PCM Mass", "Value": f"{PCM_MASS_KG:.1f} kg", "Type": "Design constant"},
         {"Parameter": "Water Specific Heat Capacity", "Value": f"{CP_WATER_JKGK:.1f} J/(kg·K)", "Type": "Physical constant"},
+        {"Parameter": "PCM Contribution Fraction (SHARE_PCM)", "Value": f"{SHARE_PCM:.2f}", "Type": "Design constant"},
     ]
 
     const_df = pd.DataFrame(constants_table)
@@ -110,12 +112,13 @@ def main():
         # Mains water estimation: T_mains ≈ max(5.0, Ta_mean - 6.0)
         t_mains_mean = np.maximum(5.0, sub["Ta_mean"] - 6.0).mean()
 
-        # Q_required = m_draw * Cp * (T_delivery - T_mains_est) in kWh/day
-        q_required_kWh = (M_DRAW_KG * CP_WATER_JKGK * (T_DELIVERY - t_mains_mean)) / 3_600_000
+        # Q_night = m_draw * Cp * (T_delivery - T_mains_est) in kWh/day
+        q_night_kWh = (M_DRAW_KG * CP_WATER_JKGK * (T_DELIVERY - t_mains_mean)) / 3_600_000
+        q_required_kWh = SHARE_PCM * q_night_kWh
 
         # Required latent energy per kg of PCM (for 50 kg PCM design assumption)
-        # Q_required (kWh/day) * 3600 (kJ/kWh) / 50 (kg)
-        req_energy_kJ_kg = (q_required_kWh * 3600.0) / PCM_MASS_KG
+        # L_required = (SHARE_PCM * Q_night) / M_PCM
+        req_energy_kJ_kg = (SHARE_PCM * q_night_kWh * 3600.0) / PCM_MASS_KG
 
         c_spec = {
             "Cluster": c_id,

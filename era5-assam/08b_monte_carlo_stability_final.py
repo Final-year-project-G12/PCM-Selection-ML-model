@@ -60,7 +60,7 @@ MC_TM_STD_K = 1.0
 MC_RELATIVE_STD = {"latent_heat_kJ_kg": 0.05, "TC_W_mK": 0.10, "rho_H_MJ_m3": 0.08}
 RANDOM_SEED = 42
 
-TARGET_TM_C = 44.0
+TARGET_TM_C = 56.0
 SIGMA_TM = 4.0
 
 PRIOR_WEIGHTS = {
