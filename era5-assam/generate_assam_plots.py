@@ -72,9 +72,51 @@ def shtml(fig, n):
 # ---- Plot 1: Raw vs Preprocessed GHI ----
 def p01():
     print("[1/13] Raw vs Preprocessed Radiation")
-    raw = load(RAW_CSV, "raw", nrows=200000)
-    pre = load(PHYSICAL_CSV, "preprocessed", nrows=200000)
-    if raw is None or pre is None:
+    pt = "ASP_0001"
+    raw_vals = None
+    pre_vals = None
+    
+    pre = load(PHYSICAL_CSV, "preprocessed")
+    if pre is not None:
+        p = pre[pre["point_id"] == pt].sort_values("time_utc").reset_index(drop=True)
+        if len(p) > 0 and "era5_GHI" in p.columns:
+            pre_vals = p["era5_GHI"].values
+
+            # Try loading raw NetCDF directly if RAW_CSV is not present
+            import glob, netCDF4 as nc
+            files = sorted(glob.glob(os.path.join(BASE, "data", "raw", "era5", "points", "*_accum.nc")))
+            if files:
+                target_ts = pd.to_datetime(p["time_utc"]).astype("int64") // 10**9
+                times, ssrd_vals = [], []
+                for f in files:
+                    try:
+                        ds = nc.Dataset(f)
+                        vt = ds.variables["valid_time"][:]
+                        s = ds.variables["ssrd"][:, 8, 8]
+                        var = ds.variables["ssrd"]
+                        if hasattr(var, "scale_factor"): s = s * var.scale_factor
+                        if hasattr(var, "add_offset"): s = s + var.add_offset
+                        times.append(vt)
+                        ssrd_vals.append(s)
+                        ds.close()
+                    except Exception:
+                        pass
+                if times:
+                    all_times = np.concatenate(times)
+                    all_ssrd = np.concatenate(ssrd_vals)
+                    order = np.argsort(all_times)
+                    all_times, all_ssrd = all_times[order], all_ssrd[order]
+                    _, uidx = np.unique(all_times, return_index=True)
+                    all_times, all_ssrd = all_times[uidx], all_ssrd[uidx]
+                    all_ghi = np.clip(all_ssrd / 3600.0, 0, 1400)
+                    idx = np.clip(np.searchsorted(all_times, target_ts.values), 0, len(all_times) - 1)
+                    idx_prev = np.clip(idx - 1, 0, len(all_times) - 1)
+                    diff_curr = np.abs(all_times[idx] - target_ts.values)
+                    diff_prev = np.abs(all_times[idx_prev] - target_ts.values)
+                    best_idx = np.where(diff_prev < diff_curr, idx_prev, idx)
+                    raw_vals = all_ghi[best_idx]
+
+    if raw_vals is None or pre_vals is None:
         raw_sig = load(os.path.join(BASE, "data", "processed", "climate_signatures_raw.csv"), "raw_sig")
         if raw_sig is not None:
             fig, ax = plt.subplots(figsize=(10, 5))
@@ -83,21 +125,21 @@ def p01():
             ax.legend(); ax.grid(alpha=0.3)
             plt.tight_layout(); sfig("01_raw_vs_preprocessed_radiation.png")
         return
-    pt_col = "point_id" if "point_id" in raw.columns else raw.columns[0]
-    pt = raw[pt_col].iloc[0]
-    r = raw[raw[pt_col] == pt]
-    p = pre[pre[pt_col] == pt] if pt_col in pre.columns else pre.head(len(r))
-    ghi_r = "era5_GHI" if "era5_GHI" in r.columns else ([c for c in r.columns if "GHI" in c.upper()] or [None])[0]
-    ghi_p = "era5_GHI" if "era5_GHI" in p.columns else ([c for c in p.columns if "GHI" in c.upper()] or [None])[0]
-    if not ghi_r: return
+
     fig, ax = plt.subplots(2, 1, figsize=(14, 7))
-    ax[0].plot(r[ghi_r].values[:500], color="#e07b39", lw=0.8, alpha=0.8, label="Raw GHI")
+    ax[0].plot(raw_vals, color="#e07b39", lw=0.8, alpha=0.8, label="Raw GHI")
     ax[0].set(title=f"Raw GHI - Point {pt}", ylabel="GHI (W/m2)"); ax[0].legend(); ax[0].grid(alpha=0.3)
-    if ghi_p:
-        ax[1].plot(p[ghi_p].values[:500], color="#3b7dd8", lw=0.9, label="Preprocessed GHI")
+    ax[1].plot(pre_vals, color="#3b7dd8", lw=0.9, label="Preprocessed GHI")
     ax[1].set(title="Preprocessed GHI", ylabel="GHI (W/m2)", xlabel="Record index"); ax[1].legend(); ax[1].grid(alpha=0.3)
     plt.suptitle("Assam - Raw vs Preprocessed Solar Radiation (GHI)", fontsize=13)
     plt.tight_layout(); sfig("01_raw_vs_preprocessed_radiation.png")
+
+    if HAS_PLOTLY:
+        fig2 = go.Figure()
+        fig2.add_trace(go.Scatter(y=raw_vals, mode="lines", name="Raw GHI", line=dict(color="#e07b39", width=1)))
+        fig2.add_trace(go.Scatter(y=pre_vals, mode="lines", name="Preprocessed GHI", line=dict(color="#3b7dd8", width=1.5)))
+        fig2.update_layout(title=f"Raw vs Preprocessed GHI - {pt}", xaxis_title="Record", yaxis_title="GHI (W/m2)", template="plotly_dark", height=450)
+        shtml(fig2, "01_raw_vs_preprocessed_radiation_interactive.html")
 
 # ---- Plot 2: Climate Regime Map ----
 def p02():

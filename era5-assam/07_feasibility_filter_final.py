@@ -48,11 +48,13 @@ OUT_REPORT_TXT = OUT_REPORT_DIR / "feasibility_filter_report.txt"
 # Design Constants (Phase 4 Alignment)
 TARGET_DELIVERY_TEMP_C = 50.0
 APPROACH_TEMP_K = 6.0
-TARGET_TM_C = 44.0
+TARGET_TM_C = TARGET_DELIVERY_TEMP_C + APPROACH_TEMP_K  # 50.0 + 6.0 = 56.0°C (indirect-system rule)
 DAILY_DEMAND_L = 100.0
 MORNING_DRAW_L = 50.0
 EVENING_DRAW_L = 50.0
 PCM_MASS_KG = 50.0
+CP_WATER_JKGK = 4186.0
+SHARE_PCM = 0.5  # Fraction of nocturnal heat deficit covered by PCM latent heat (Avargani 2021)
 
 # Temperature Window Constraints
 TM_TARGET_LOWER_K = 6.0
@@ -89,22 +91,22 @@ def run_feasibility_filter():
             if in_table and l_str and not l_str.startswith("#"):
                 parts = l_str.split(",")
                 if len(parts) >= 5:
-                    cid = int(parts[0])
-                    l_req_kJ_kg = float(parts[4])
-                    cluster_l_req[cid] = l_req_kJ_kg
-    
-    if not cluster_l_req:
-        cluster_l_req = {0: 252.09, 1: 258.69, 2: 279.70}
+                    try:
+                        cid = int(parts[0])
+                        l_req_kJ_kg = float(parts[4])
+                        cluster_l_req[cid] = l_req_kJ_kg
+                    except (ValueError, IndexError):
+                        pass
 
     hsi_global_p75 = profiles["RH_mean_mean"].quantile(0.75) if "RH_mean_mean" in profiles.columns else 78.5
 
     all_audit_rows = []
     summary_rows = []
 
-    broad_tm_min = TARGET_TM_C - TM_TARGET_LOWER_K  # 38.0°C
-    broad_tm_max = TARGET_TM_C + TM_TARGET_UPPER_K  # 52.0°C
-    combined_tm_min = max(broad_tm_min, ABSOLUTE_TM_MIN_C) # 42.0°C
-    combined_tm_max = broad_tm_max                         # 52.0°C
+    broad_tm_min = TARGET_TM_C - TM_TARGET_LOWER_K  # 50.0°C
+    broad_tm_max = TARGET_TM_C + TM_TARGET_UPPER_K  # 64.0°C
+    combined_tm_min = max(broad_tm_min, ABSOLUTE_TM_MIN_C) # 50.0°C
+    combined_tm_max = broad_tm_max                         # 64.0°C
 
     print(f"PCM Candidate Pool: {len(pcm_db)} unique materials")
     print(f"Fixed Design PCM Mass: {PCM_MASS_KG} kg")
@@ -113,7 +115,15 @@ def run_feasibility_filter():
 
     for _, prof in profiles.iterrows():
         cid = int(prof["cluster_id"])
-        l_req = cluster_l_req.get(cid, 250.0)
+        # Dynamic extraction from SWH spec, cluster profiles, or direct calculation (SHARE_PCM = 0.5)
+        if cid in cluster_l_req:
+            l_req = cluster_l_req[cid]
+        elif "L_required_kJ_per_kg" in prof and pd.notna(prof["L_required_kJ_per_kg"]):
+            l_req = float(prof["L_required_kJ_per_kg"])
+        else:
+            t_m_mean = max(5.0, prof.get("Ta_mean_mean", 25.0) - 6.0)
+            q_night_kWh = (DAILY_DEMAND_L * CP_WATER_JKGK * (TARGET_DELIVERY_TEMP_C - t_m_mean)) / 3_600_000.0
+            l_req = (SHARE_PCM * q_night_kWh * 3600.0) / PCM_MASS_KG
         hsi_val = prof.get("RH_mean_mean", 75.0)
         hsi_high = hsi_val > hsi_global_p75
 
