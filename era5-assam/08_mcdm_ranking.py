@@ -76,8 +76,8 @@ MC_RELATIVE_STD        = {"latent_heat_kJ_kg": 0.05, "TC_W_mK": 0.10, "rho_H_MJ_
 MC_RANDOM_SEED         = 42
 
 # Climate-relative latent heat: rank on L/L_required instead of raw L.
-# Since Tm_target=44C is constant for all Assam clusters, raw latent heat
-# carries zero climate information (same 6 numbers per cluster). Ratio over
+# Since Tm_target=56C is constant for all Assam clusters, raw latent heat
+# carries zero climate information (same numbers per cluster). Ratio over
 # cluster-specific L_required gives genuine benefit signal.
 # Documented deviation from plan Table 13 literal list -- justified above.
 USE_CLIMATE_RELATIVE_LATENT_HEAT = True
@@ -431,7 +431,7 @@ def main():
     top1_sets = topk_df[topk_df["consensus_rank"] == 1].groupby("cluster_id")["name"].first()
     if top1_sets.nunique() == 1:
         print(f"\n  [FINDING] All clusters share the same #1 PCM: {top1_sets.iloc[0]!r}")
-        print("  This is expected: Tm_target=44C is constant across Assam (uniform")
+        print("  This is expected: Tm_target=56C is constant across Assam (uniform")
         print("  hot-water demand). The cluster differentiation from Phase 4 matters")
         print("  for system sizing and seasonal analysis (Phase 4 Level B), not PCM")
         print("  selection. State this clearly in Section 9 of your paper.")

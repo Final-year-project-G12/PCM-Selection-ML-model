@@ -54,9 +54,11 @@ OUT_REPORT = PREPROCESSED_DIR / "climate_signature_report.txt"
 # Design Parameters (§6.3)
 T_DELIVERY = 50.0       # °C (Indian domestic hot-water target)
 DT_APPROACH = 6.0       # K  (Heat exchanger approach temperature)
-TM_TARGET = T_DELIVERY - DT_APPROACH # = 44 °C
+TM_TARGET = T_DELIVERY + DT_APPROACH # = 56 °C (indirect-system rule)
 M_DRAW_KG = 100.0       # kg/day (100 L/day household hot water demand)
 CP_WATER = 4186.0       # J/(kg·K)
+SHARE_PCM = 0.5         # Fraction of nocturnal heat deficit covered by PCM latent heat (Avargani 2021)
+
 
 report_lines = []
 
@@ -216,10 +218,12 @@ def main():
     sig_df["Tm_target"] = TM_TARGET
     # Site-specific mains water temperature estimation: T_mains ≈ max(5.0, Ta_mean - 6.0)
     sig_df["T_mains_est"] = np.maximum(5.0, sig_df["Ta_mean"] - 6.0)
-    sig_df["L_required_kWh"] = (M_DRAW_KG * CP_WATER * (T_DELIVERY - sig_df["T_mains_est"])) / 3_600_000
+    sig_df["Q_night_kWh"] = (M_DRAW_KG * CP_WATER * (T_DELIVERY - sig_df["T_mains_est"])) / 3_600_000
+    sig_df["L_required_kWh"] = SHARE_PCM * sig_df["Q_night_kWh"]
 
     log(f"  Tm_target = {TM_TARGET}°C (T_delivery={T_DELIVERY}°C, ΔT_approach={DT_APPROACH}K)")
     log(f"  Hot water demand = {M_DRAW_KG} kg/day")
+    log(f"  SHARE_PCM = {SHARE_PCM}")
     log(f"  T_mains range across sites: {sig_df['T_mains_est'].min():.2f}°C – {sig_df['T_mains_est'].max():.2f}°C")
     log(f"  L_required range across sites: {sig_df['L_required_kWh'].min():.2f} – {sig_df['L_required_kWh'].max():.2f} kWh/day")
 

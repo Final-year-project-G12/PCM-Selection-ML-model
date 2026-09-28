@@ -4,7 +4,7 @@
 FINAL PHASE 3 — CLIMATE REGIME CLUSTERING (Assam Project)
 
 Clusters the 129 Assam population-weighted grid points into 3 climate regimes using
-a Gaussian Mixture Model (GMM) with full covariance matrix trained on 5 core physical
+a Gaussian Mixture Model (GMM) with diagonal covariance trained on 5 core physical
 climate features:
   1. GHI_mean  (Mean daytime solar irradiance, W/m²)
   2. Ta_mean   (Mean 3-event daytime ambient temperature, °C)
@@ -18,7 +18,7 @@ The 19-feature full-covariance GMM fit 839 free parameters on n=129 samples (6.5
 and contained 22 multicollinear feature pairs (|r| >= 0.70), causing ill-conditioned matrices,
 overfitting, and severe bootstrap instability (mean ARI = 0.3281 - 0.3603).
 
-WHY THE 5-FEATURE K=3 FULL-COVARIANCE MODEL WAS SELECTED:
+WHY THE 5-FEATURE K=3 DIAGONAL-COVARIANCE MODEL WAS SELECTED:
 ---------------------------------------------------------
 1. Reduces parameters per component from 209 to 20 (total params for K=3 = 62, ratio = 0.48 params/sample).
 2. Completely eliminates severe multicollinearity (all 5-feature pairwise correlations |r| < 0.50).
@@ -78,6 +78,17 @@ OUT_PROFILES = CLUSTERING_DIR / "gmm_cluster_profiles.csv"
 OUT_PROFILES_ALIAS = CLUSTERING_DIR / "cluster_profiles_assam.csv"
 OUT_BOOT = CLUSTERING_DIR / "gmm_bootstrap_stability.csv"
 OUT_BOOT_ALIAS = CLUSTERING_DIR / "bootstrap_stability_assam.csv"
+
+# SWH Design Parameters (§4 SWH spec) -- matches 04b_climate_signature.py's
+# own T_DELIVERY/TM_TARGET/SHARE_PCM constants exactly (same pattern as
+# era5-uttarakhand/config.py + 04b_climate_signature.py).
+T_DELIVERY = 50.0       # °C
+DT_APPROACH = 6.0       # K
+TM_TARGET = T_DELIVERY + DT_APPROACH  # = 56.0 °C
+M_DRAW_KG = 100.0       # kg/day
+CP_WATER = 4186.0       # J/(kg·K)
+M_PCM_KG = 50.0         # kg
+SHARE_PCM = 0.5         # Fraction of nocturnal heat deficit covered by PCM latent heat (Avargani 2021)
 OUT_REPORT = PREPROCESSED_DIR / "clustering_report.txt"
 
 RANDOM_SEED = 42
@@ -231,7 +242,7 @@ def main():
 
     # 6. Bootstrap Stability Analysis (500 iterations predicting all 129 original points)
     log("\n[7] Assessing Bootstrap Clustering Stability (500 iterations)...")
-    log("  Methodology: Resample 129 grid points with replacement, fit K=3 full GMM,")
+    log("  Methodology: Resample 129 grid points with replacement, fit K=3 diag GMM,")
     log("  predict labels for ALL 129 original points, calculate ARI against full-data reference.")
 
     n_bootstraps = 500
@@ -301,8 +312,9 @@ def main():
 
         # Energy requirements calculation (§4 SWH spec)
         t_mains_mean = np.maximum(5.0, sub["Ta_mean"] - 6.0).mean()
-        q_required_kWh = (100.0 * 4186.0 * (50.0 - t_mains_mean)) / 3_600_000.0
-        req_energy_kJ_kg = (q_required_kWh * 3600.0) / 50.0
+        q_night_kWh = (M_DRAW_KG * CP_WATER * (T_DELIVERY - t_mains_mean)) / 3_600_000.0
+        q_required_kWh = SHARE_PCM * q_night_kWh
+        req_energy_kJ_kg = (SHARE_PCM * (q_night_kWh * 3600.0)) / M_PCM_KG
         hsi_val = sub["HSI"].mean() if "HSI" in sub.columns else sub["RH_mean"].mean()
 
         p_row = {
@@ -319,10 +331,10 @@ def main():
             "wind_mean_mean": sub["wind_mean"].mean(),
             "monsoon_index_mean": sub["monsoon_index"].mean() if "monsoon_index" in sub.columns else np.nan,
             "elev_proxy_mean": sub["elev_proxy"].mean() if "elev_proxy" in sub.columns else np.nan,
-            "Tm_target_C": 44.0,
-            "Tm_target_mean": 44.0,
+            "Tm_target_C": TM_TARGET,
+            "Tm_target_mean": TM_TARGET,
             "Tm_target_capped_C": (sub["Tm_target_capped_C"].mean()
-                                    if "Tm_target_capped_C" in sub.columns else 44.0),
+                                    if "Tm_target_capped_C" in sub.columns else TM_TARGET),
             "L_required_kWh_mean": q_required_kWh,
             "L_required_kJ_per_kg": req_energy_kJ_kg,
             "HSI": hsi_val,
@@ -350,7 +362,7 @@ observations (6.50 parameters/sample) and contained 22 pairs of features with
 high correlation (|r| >= 0.70). This caused ill-conditioned sample covariance
 matrices, overfitting, and severe bootstrap instability (mean ARI = 0.3281 - 0.3603).
 
-SELECTION OF THE 5-FEATURE K=3 FULL-COVARIANCE MODEL:
+SELECTION OF THE 5-FEATURE K=3 DIAGONAL-COVARIANCE MODEL:
 ------------------------------------------------------
 The model was simplified to 5 core physical climate features:
   GHI_mean, Ta_mean, DTR, RH_mean, wind_mean
