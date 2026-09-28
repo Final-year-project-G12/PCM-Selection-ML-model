@@ -30,7 +30,7 @@ Phase 11 consolidates and audits all data, analytical, visual, and reporting art
 
 Exactly **10 thesis-ready tables** are consolidated in standardized CSV format:
 
-1. `table01_climate_signatures.csv`: 18 climate signature indices summarized across the 129 spatial points.
+1. `table01_climate_signatures.csv`: 19 climate signature indices summarized across the 129 spatial points.
 2. `table02_pca_loadings.csv`: Principal component factor loadings for the thermodynamic index block.
 3. `table03_gmm_selection.csv`: Clustering diagnostic metrics ($K=2$ to $K=6$) establishing minimum BIC at $K=3$.
 4. `table04_cluster_profiles_k3.csv`: Final $K=3$ regime profiles, population distributions, and medoids (`ASP_0012`, `ASP_0092`, `ASP_0028`).

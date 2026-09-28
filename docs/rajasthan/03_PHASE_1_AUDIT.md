@@ -187,7 +187,8 @@ peer-reviewed methodology claims.
 
 `03_verify_climate_csv.py` Check 2 (point coverage) and Check 3 (row coverage) validate this phase's
 output indirectly, downstream, in Phase 2. No dedicated Phase-1-only validation script exists;
-`03_qc_plots.py`'s population/elevation/download-status maps serve this role.
+`00d_population_grid_viz.py`'s population/weight/elevation map (see "Sampling-grid visualization"
+above) serves this role — `03_qc_plots.py` does not exist in this pipeline.
 
 ## Outputs
 

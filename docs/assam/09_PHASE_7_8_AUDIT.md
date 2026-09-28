@@ -1,6 +1,6 @@
 # 09 — Phase 7 & 8 Audit: MCDM Ranking Engine & Monte Carlo Uncertainty
 
-**Scripts**: `08_mcdm_ranking.py`, `09_recommendation_cards.py`
+**Scripts**: `08_mcdm_ranking_final.py` (final $K=3$ governance — reports `NOT PERFORMED`), `08_mcdm_ranking.py` (historical $K=4$ benchmark engine), `09_recommendation_cards.py`
 
 **Status**: GOVERNED (Authoritative Final)
 

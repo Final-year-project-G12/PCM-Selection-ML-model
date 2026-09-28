@@ -32,7 +32,8 @@ Phase 2.5 — QUALITY CONTROL & OUTLIER DETECTION
                                    (Physical bounds checks, IsolationForest multivariate flagging)
         ↓
 Phase 3 — CLIMATE REGIME CLUSTERING (LOCKED K=3 MODEL)
-  04b_climate_signature.py       → climate_signatures_raw.csv (18 indices across 129 sites)
+  04b_climate_signature.py       → climate_signatures_raw.csv (19 indices across 129 sites, all
+                                   computed from event-sampled ERA5 data — see 02_DATA_SOURCES_AND_VARIABLES.md)
   05_cluster_assam.py            → clustering/cluster_assignments_assam.csv (K=3 GMM, full covariance)
                                    (5 core features: GHI_mean, Ta_mean, DTR, RH_mean, wind_mean;
                                     min BIC=1574.94 at K=3; medoids: ASP_0012, ASP_0092, ASP_0028)
@@ -133,7 +134,7 @@ Phase 11 — FINAL OUTPUTS AUDIT & CONSOLIDATION
 The consolidated deliverables are indexed in `final_output_manifest.csv` (31 total entries: 27 Active/Final, 4 Locked Historical):
 
 ### Consolidated Thesis Tables (`final_outputs/tables/`)
-1. `table01_climate_signatures.csv`: Summary statistics of 18 climate signature indices across 129 points.
+1. `table01_climate_signatures.csv`: Summary statistics of 19 climate signature indices across 129 points.
 2. `table02_pca_loadings.csv`: Principal component loadings for the thermodynamic index block.
 3. `table03_gmm_selection.csv`: Clustering diagnostic metrics ($K=2$ to $K=6$) establishing minimum BIC at $K=3$.
 4. `table04_cluster_profiles_k3.csv`: Final $K=3$ regime profiles, population distributions, and medoids.

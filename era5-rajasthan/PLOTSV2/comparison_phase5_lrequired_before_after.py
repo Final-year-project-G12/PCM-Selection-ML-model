@@ -27,7 +27,7 @@ OUTPUT_DIR = os.path.join(_HERE, "comparison_plots", "phase5_lrequired_before_af
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # Try to find both pre and post correction files
-SURVIVORS_POST = os.path.join(DATA_DIR, "feasibility_survivors_rajasthan_kappa_calibrated.csv")
+SURVIVORS_POST = os.path.join(DATA_DIR, "feasibility_survivors_by_cluster_kappa_calibrated.csv")
 SURVIVORS_PRE_CANDIDATES = [
     os.path.join(DATA_DIR, "feasibility_survivors_rajasthan_precorrection.csv"),
     os.path.join(DATA_DIR, "feasibility_survivors_rajasthan_preL_required_correction.csv"),

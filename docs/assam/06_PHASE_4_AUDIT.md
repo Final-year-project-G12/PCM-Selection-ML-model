@@ -44,11 +44,11 @@ The thermal energy demand for the SWH system is driven by the climate forcing es
 
 ## Regime-Specific Thermal Requirements
 
-Because the domestic delivery temperature ($50.0^\circ\text{C}$) and approach temperature ($6.0\text{ K}$) are uniform across Assam, $T_m^{\text{target}} = 44.0^\circ\text{C}$ applies state-wide. However, differences in ambient thermal baselines ($T_{a,\text{mean}}$) and estimated mains water temperature ($T_{\text{mains}} \approx T_{a,\text{mean}} - 2.0\text{ K}$) yield regime-specific night-discharge thermal deficits:
+Because the domestic delivery temperature ($50.0^\circ\text{C}$) and approach temperature ($6.0\text{ K}$) are uniform across Assam, $T_m^{\text{target}} = 44.0^\circ\text{C}$ applies state-wide. However, differences in ambient thermal baselines ($T_{a,\text{mean}}$) and estimated mains water temperature ($T_{\text{mains}} = \max(5.0,\ T_{a,\text{mean}} - 6.0\text{ K})$, as computed in `05_cluster_assam.py`'s cluster-profile step) yield regime-specific night-discharge thermal deficits:
 
 $$Q_{\text{deficit}} = M_w \cdot C_{p,w} \cdot (T_{\text{delivery}} - T_{\text{mains}})$$
 
 $$L_{\text{required}} = \frac{Q_{\text{deficit}}}{M_p}$$
 
 - **Historical $K=4$ baseline values**: In the historical 4-cluster screening, $L_{\text{required}}$ ranged from $232.3\text{ kJ/kg}$ (warmer southern fringe) to $248.9\text{ kJ/kg}$ (cooler hill/transition zone).
-- **Final $K=3$ baseline values**: Under the final 3-regime climate forcing, Cluster 2 (cooler highland ambient baseline, $T_a = 22.59^\circ\text{C}$) establishes the highest latent heat demand ($L_{\text{required}} \approx 252\text{ kJ/kg}$), whereas Cluster 0 and Cluster 1 require approximately $230–240\text{ kJ/kg}$.
+- **Final $K=3$ baseline values** (per `07_feasibility_filter_final.py`'s recorded per-cluster values, `{0: 252.09, 1: 258.69, 2: 279.70}` kJ/kg): Cluster 2 (cooler highland ambient baseline, $T_a = 22.59^\circ\text{C}$) establishes the highest latent heat demand ($L_{\text{required}} \approx 279.7\text{ kJ/kg}$), Cluster 1 is next ($\approx 258.7\text{ kJ/kg}$), and Cluster 0 (warmest baseline) requires the least ($\approx 252.1\text{ kJ/kg}$) — consistent with colder mains water widening the night-discharge deficit. *(Earlier drafts of this section attributed ≈252 kJ/kg to Cluster 2, which is actually Cluster 0's value — corrected here.)*

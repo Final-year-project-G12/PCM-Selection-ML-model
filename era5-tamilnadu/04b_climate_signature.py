@@ -28,7 +28,7 @@ era5-rajasthan/04b_climate_signature.py. Both states:
     SAME formulas, reading SHARE_PCM / ASSUMED_PCM_MASS_KG / T_DELIVERY_C /
     DT_APPROACH_C from pcm_shared_config.py (via config.py);
   * emit the SAME output column schema (names + order + units), so Phase 4's
-    cross-region 05_cluster_regions.py can concatenate both directly.
+    cross-region 05_cluster_tamilnadu.py can concatenate both directly.
 
 The one genuinely state-specific piece is the INPUT plumbing: Tamil Nadu's
 Tier-2 daily-integral table (tier2_signature_tamilnadu.csv, from
@@ -388,7 +388,7 @@ pca_input_scaled = pca_scaler.fit_transform(pca_input)
 # n_components PINNED (pcm_shared_config.PCA_N_COMPONENTS) rather than a
 # data-determined 0.95-variance threshold, so climate_signature_tamilnadu.csv
 # and climate_signature_rajasthan.csv carry the SAME PC1..PCn columns and
-# Phase 4's 05_cluster_regions.py can concatenate them. Tamil Nadu's
+# Phase 4's 05_cluster_tamilnadu.py can concatenate them. Tamil Nadu's
 # temp/elevation block reaches 95% variance by PC3, so PC4 here is a
 # low-variance (near-noise) component kept only for schema alignment.
 pca = PCA(n_components=PCA_N_COMPONENTS, random_state=42)
@@ -538,4 +538,4 @@ print("  PHASE 3 COMPLETE — Tamil Nadu")
 print(f"  Output: {CLIMATE_SIGNATURE_FILE}")
 print("=" * 68)
 print("\nColumn schema now matches climate_signature_rajasthan.csv exactly — "
-      "Phase 4's 05_cluster_regions.py can concatenate both states directly.")
+      "Phase 4's 05_cluster_tamilnadu.py can concatenate both states directly.")

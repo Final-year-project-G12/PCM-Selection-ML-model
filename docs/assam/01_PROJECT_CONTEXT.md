@@ -27,7 +27,7 @@ and real-time grid operation.
 | Deliverable | Description | Authoritative Assam Status |
 |---|---|---|
 | **D1: Spatial & Climate Grid** | Population-weighted sampling & climate series | **Complete** — 129 points (`ASP_0001`–`ASP_0129`), 87.8% population coverage, 10-year hourly series |
-| **D2: Climate Signature & QC** | 18-index signature + QC | **Complete** — 18 indices across 129 points; IsolationForest QC; 467,367 daily rows |
+| **D2: Climate Signature & QC** | 19-index signature + QC | **Complete** — 19 indices across 129 points, all computed from event-sampled data (no working Tier-2 integration — see N2 below); 3σ + IsolationForest QC; 467,367 daily rows |
 | **D3: Regime Clustering** | Discovered climate regimes | **Locked Final** — $K=3$ GMM (full covariance, 5 features); min BIC=1574.94; medoids: ASP_0012, ASP_0092, ASP_0028 |
 | **D4: SWH System Sizing** | Thermal energy storage specification | **Complete** — 50 kg PCM, 100 kg water, 100 L/day demand, $T_m^{\text{target}} = 44.0^\circ\text{C}$ ($T_{\text{del}}=50^\circ\text{C}$, $\Delta T=6\text{ K}$) |
 | **D5: Curated PCM Database** | Deduplicated database with strict provenance | **Locked Final** — 58 PCMs × 41 properties (`pcm_database_final.csv`); strict $C_{p,\text{avg}}$ (no single-phase fallback) |
@@ -43,7 +43,7 @@ and real-time grid operation.
 | ID | Claim | Assam Implementation Reality |
 |---|---|---|
 | **N1** | Discovered climate regimes vs hand-picked zones | GMM $K=3$ (full covariance on 5 features) with global BIC minimum (1574.94) and bootstrap ARI (0.6289) |
-| **N2** | Two-tier climate signature | 18 indices: Tier 1 sun-event statistics + Tier 2 daily-integral indices |
+| **N2** | Two-tier climate signature | Not actually implemented as two tiers: `04b_climate_signature.py` computes all 19 indices from the event-sampled physical file alone and does not read `daily_aggregates_assam.csv` / `tier2_signature_assam.csv`, even though `02b_build_daily_aggregates_assam.py` produces both. Flagged as a genuine implementation gap, not a doc error — see `02_DATA_SOURCES_AND_VARIABLES.md` and `16_CLIMATE_SIGNATURE.md`. |
 | **N3** | Corrected 42–70°C SWH-specific PCM band | Enforced in feasibility screening against the 58-row database |
 | **N4** | Multi-method agreement & consensus | Historical $K=4$ benchmark evaluated TOPSIS, GRA, PROMETHEE II, VIKOR, Borda, Copeland, Kendall's W |
 | **N5** | Dynamic physics validation | 10-year sub-hourly numerical simulation across 8 historical PCMs and 3 final medoids; revealed negative agreement |

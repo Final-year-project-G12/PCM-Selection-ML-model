@@ -1,8 +1,6 @@
 # 07 — Phase 5 Audit: Feasibility Filtering
 
 Scripts: `06_build_pcm_database.py`, `07_feasibility_filter.py`.
-<<<<<<< HEAD
-=======
 
 > **UNIFIED 2026-09-08 with Rajasthan.** `07_feasibility_filter.py` now uses the
 > same 8-constraint set, constraint order, missing-value semantics,
@@ -14,7 +12,6 @@ Scripts: `06_build_pcm_database.py`, `07_feasibility_filter.py`.
 > naming for both states — Rajasthan's `feasibility_survivors_rajasthan*.csv`
 > were renamed to match. **The pipeline has not been re-run since these changes;
 > the survivor counts below are from the pre-unification run and are stale.**
->>>>>>> 935afa34a2c58bf28d0e38fac953d563fa476637
 
 ## Purpose
 Hard-screen candidate PCMs from a database against each cluster's climate-adaptive targets (melting point and latent heat) to ensure only physically viable PCMs proceed to ranking.
@@ -24,21 +21,6 @@ Hard-screen candidate PCMs from a database against each cluster's climate-adapti
 - Appends 7 literature PCMs (fatty acids, paraffins) from Singh et al. Table 2.
 - Total candidates: **62 PCMs** = **55 manufacturer-derived records** + **7 literature records**. Row-for-row identical to Rajasthan's pool on all shared columns (same canonical source + same literature rows).
 
-<<<<<<< HEAD
-## Screen Constraints (Table 12)
-1. Melting window: `Tm ∈ [Tm_target − 5, Tm_target + 8]°C` (relaxable ±2K, up to 4 steps).
-2. Absolute band: `Tm ∈ [42, 70]°C`.
-3. Latent heat floor: `L ≥ 0.7 × L_required` — **now binding after v3.1 L_required fix**.
-4. Cycling stability: `cycles ≥ 300` (flagged if NaN).
-5. Supercooling veto: `supercooling ≤ 8K` (flagged if NaN).
-6. Corrosion veto: excludes `check_manually` in high-HSI clusters.
-7. Safety exclusion: flammability keyword veto.
-
-## Current Finding
-- The feasibility output audits **62 candidates per cluster**, with pass/fail detail for every filter. Despite its filename, `feasibility_survivors_by_cluster.csv` is not survivors-only.
-- Current actual survivors (`passes_all=True`) are **15, 9, 13, 13, and 9** for clusters 0-4 respectively.
-- Current cluster `L_required` values are approximately **301-326 kJ/kg**. The latent-heat floor is `max(100, 0.7 × L_required)` and is achievable for a subset of candidates.
-=======
 ## Screen Constraints (Table 12) — 8 constraints, exact order (matches Rajasthan)
 1. **Melting window**: `Tm ∈ [Tm_target − 5, Tm_target + 8]°C`, relaxable ±2K, up to 4 rounds.
 2. **Absolute band**: `Tm ∈ [42, 70]°C`.
@@ -57,23 +39,18 @@ Hard-screen candidate PCMs from a database against each cluster's climate-adapti
 - Pre-unification survivor counts were **15, 9, 13, 13, 9** for clusters 0-4 (7-constraint schema, no Constraint 6, no kappa calibration). **These will change after the re-run** and must not be quoted for the unified pipeline.
 - `L_required` values are ~**301–326 kJ/kg** (combined sensible+latent basis, Phase 3 OPTION A).
 - **Path bug fixed**: the `data/processed/processed/` duplication is resolved in `config.py` / `04b_climate_signature.py`. The stale `data/processed/processed/` mirror tree has been deleted. The stale 7-constraint `data/processed/pcm/feasibility_survivors_by_cluster.csv` will be overwritten by the re-run (delete it first for a clean tree if preferred).
->>>>>>> 935afa34a2c58bf28d0e38fac953d563fa476637
 
 ## CRITICAL UPDATE: L_required Methodology Correction (2026-08-31, OPTION A)
 
 **The v3.1 L_required fix documented above has been superseded by a more fundamental methodology correction (2026-08-31).** Phase 3's all-latent assumption (PCM supplies 100% of night discharge alone) was replaced with a literature-anchored fractional-share model: **SHARE_PCM = 0.5**, meaning PCM supplies ~50% of delivery, tank sensible heat + concurrent charging supply the remainder (per Zhao 2022, Huang 2020, Abdelsalam 2020, Koželj 2021).
 
-**Current interpretation:** `SHARE_PCM = 0.5` is active in the upstream sizing calculation. The older approximately 2500 kJ/kg all-latent value and the approximately 1250 kJ/kg planning estimate are superseded by the values written to the current signature and feasibility artifacts. See `04b_climate_signature.py` and `config.py` for the active implementation.
+**Current interpretation:** `SHARE_PCM = 0.5` is active in the upstream sizing calculation. The older ≈2500 kJ/kg all-latent value and the ≈1250 kJ/kg planning estimate are superseded by the values written to the signature and feasibility artifacts. `SHARE_PCM` is defined in `config.py` (added 2026-09-07 — it was previously imported but undefined, so `04b`/`11` raised `ImportError`); `latent_heat_floor_kj_kg()` is also in `config.py` and imported by `07` and `11`. See `20_IMPLEMENTATION_ISSUES.md` §6.
 
 ## Status
-<<<<<<< HEAD
-**COMPLETE for the current generated artifacts.** Re-run `06_build_pcm_database.py` and `07_feasibility_filter.py` whenever the PCM source or upstream climate signatures change.
-=======
 **Code UNIFIED with Rajasthan (2026-09-08) — clean re-run PENDING (not executed as part of the unification).**
 - `06_build_pcm_database.py` `INPUT_CSV` resolves to the repo-root `PCM_data/data/PCM_Properties_cleaned_mice_pmm_detailed.csv` (55 manufacturer rows); the `is_rt_line` reference was replaced with `manufacturer` (matches Rajasthan).
 - `07b_charging_feasibility.py` **deleted**; removed from `run_all_tamilnadu.py`.
 - Re-run order after the unified upstream chain (Phase 3 must have produced `Tm_target_capped_C` via the `kt_worst_month` method): `06_build_pcm_database.py` → `07_feasibility_filter.py` → `08_mcdm_ranking.py` (+ `10_physics_validation.py`, `09_recommendation_cards.py`). `07` now emits **both** `feasibility_survivors_by_cluster.csv` (fixed κ=0.7) and `feasibility_survivors_by_cluster_kappa_calibrated.csv`; `08`/`09` read the `_kappa_calibrated` one.
->>>>>>> 935afa34a2c58bf28d0e38fac953d563fa476637
 
 ## Literature Support
 | Component | Reference | Source |

@@ -36,6 +36,30 @@ property values.
 
 **All Phase 6 outputs from before this date are now STALE.** Phase 3's L_required methodology was corrected 2026-08-31 (SHARE_PCM=0.5), which halves L_required and cascades through Phase 5's feasibility filtering (changing κ calibrations) and into this script's survivor input set. The survivor set fed to Phase 6 is now different; ranking results will change. **Phase 5 and 6 must both be re-run** against updated signatures before these results are valid. See CLAUDE.md §3.1 for full detail.
 
+## CRITICAL UPDATE #2: Delivery temperature corrected to match Avargani (2026-09-13)
+
+**Every result below (including the 39-survivor / RT50 / savE OM50 numbers cited later in this
+doc) is now STALE again.** `T_DELIVERY_C` was `50.0°C`; Avargani et al. (2021)'s cited 300 L/7h
+capability is validated at 60±2°C, so the constant was corrected to `60.0°C` in
+`pcm_shared_config.py` (see `05_PHASE_3_AUDIT.md` and `07_PHASE_5_AUDIT.md`). Full pipeline
+re-run (04b → 05 → 05a → 07 → 08 → 10 → 09), **2026-09-13, current on-disk state:**
+
+| | Cluster 0 | Cluster 1 | Cluster 2 |
+|---|---|---|---|
+| Survivors ranked (κ-calibrated) | 4 (undersized) | 8 (healthy) | 11 (healthy) |
+| Candidate pool status | `insufficient_even_at_kappa_0` | `in_band` (κ=0.5) | `in_band` (κ=0.3) |
+| Kendall's W | 0.900 (strong, but n=4 caveat) | 0.750 (moderate) | 0.555 (ambiguous, <0.6) |
+| Top-1 (Borda consensus) | Palmitic-stearic acid/Expanded graphite | PureTemp 60 | n-Heptacosane (C27) |
+| Entropy weight on Tm_fitness | 51.9% | 83.3% | 68.1% |
+| MC Top-3 inclusion (Top-1) | 99.5% | 99.3% | 91.6% |
+
+`mcdm_full_rankings.csv` now holds **23 rows across 3 clusters** (n=4/8/11), down from the
+2026-08-31 fix's 39 (n=9/14/16) — the raised `L_required` ceiling shrinks the survivor pool this
+script ranks, same mechanism as Phase 5's re-run (see `07_PHASE_5_AUDIT.md`'s superseding
+section). Cluster 0's Top-3 all rest on a 4-candidate pool and should be quoted with that caveat
+in the paper — see `10_PHASE_8_AUDIT.md` / `outputs/recommendation_cards_rajasthan.md` for the
+full per-cluster caveat text. Fingerprint: `2557_3_1789246270.557`.
+
 ## Inputs
 
 `feasibility_survivors_by_cluster_kappa_calibrated.csv` (or equivalent survivor set),

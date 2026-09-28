@@ -291,7 +291,7 @@ a tie, not by a margin.**
 **None present in the source files** for TOPSIS, Grey Relational Analysis, Shannon-entropy
 weighting, Borda count or Kendall's W. `08` cites plan v3.0 §9, §9.2 (the Gaussian transform and
 sigma = 4 K), §9.5 (the low-W interpretation) and Table 13 (the AHP prior) — all internal
-references. See `11_LITERATURE_MAPPING.md`.
+references. See `13_LITERATURE_MAPPING.md`.
 
 ## Validation
 

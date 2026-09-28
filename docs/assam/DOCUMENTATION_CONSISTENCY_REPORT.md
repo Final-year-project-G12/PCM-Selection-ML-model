@@ -1,5 +1,23 @@
 # Documentation Consistency & Synchronization Report: Assam (Phases 1–11)
 
+> **Correction (2026-09-14 code-grounded re-audit):** this report's "ALL CLAIMS VERIFIED" verdict
+> (§1) was based on synchronizing `docs/assam/*.md` against other analytical *outputs* (CSVs,
+> manifests), not against a fresh line-by-line read of the pipeline source. A subsequent direct
+> code audit found and corrected additional discrepancies this pass missed — among them: the
+> climate signature has 19 indices, not 18, and is computed entirely from event-sampled data
+> (`04b_climate_signature.py` never reads the Tier-2 `daily_aggregates_assam.csv`/
+> `tier2_signature_assam.csv` files, contrary to the "two-tier" framing); `04_preprocess_assam.py`
+> applies its quantile-mapping bias correction unconditionally and never reads
+> `bias_decision_assam.txt`, so the "BACKBONE bypass" claim in `04_PHASE_2_AUDIT.md` and
+> `14_ERA5_POWER_VALIDATION.md` was incorrect; the deaccumulation helper in `02_combine_assam.py`
+> is named `deaccumulate()`, not `accum_to_flux()`; ERA5 pressure comes from `surface_pressure`,
+> not `msl`; CSI is clipped to [0, 1.2] not [0, 1.5]; `10_TEMPORAL_PROCESSING.md`'s claim that
+> no IST conversion exists was wrong (it exists in `04_preprocess_assam.py` and `02b`); the
+> Phase 6 governance script is `07_feasibility_filter_final.py` (6 evidence-based criteria), not
+> `07_feasibility_filter.py` (7 constraints, the older/historical script); and the corrosion veto
+> is structurally inert because no PCM in `pcm_database_final.csv` has `is_inorganic=True`. See the
+> individual files for the corrected text.
+
 **Timestamp**: 2026-09-04  
 **Project**: Climate-Adaptive Intelligent Control and Optimization of PCM Thermal Storage for Solar Water Heating (Group 12)  
 **Scope**: Verification and synchronization of documentation across `docs/assam/` against authoritative analytical outputs.

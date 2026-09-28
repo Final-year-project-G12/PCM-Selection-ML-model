@@ -152,6 +152,19 @@ APPLIED — see the printed report and the docstrings below for detail:
      any downstream script; Tm_target_capped_C itself (the name 05/07
      already reference) now means the worst-month version. kt_p05 itself
      is also kept unchanged (still used nowhere else, retained for record).
+  6. T_DELIVERY_C corrected 50.0 -> 60.0 C, 2026-09-13. The Q_night_kJ
+     formula below (300 L * cp_water * (T_DELIVERY_C - T_mains)) reuses
+     Avargani et al. (2021)'s 300 L/7h night-discharge capability figure,
+     but that capability is specifically validated AT 60+-2C delivery
+     (Avargani Fig. 5/10 show deliverable volume/duration shrinking at
+     other target temperatures) — using it at 50C silently borrowed a
+     number the cited paper never validated at that temperature. Now
+     defined once in pcm_shared_config.py (imported above) so every state
+     pipeline stays consistent; TM_TARGET_C moves from 57.0 to 67.0 C as a
+     direct consequence, so cluster Tm_target_C, Phase 5's absolute Tm
+     band check, and physics_lib.py's calibrated simulator all shift too —
+     re-run 05 onward and re-check physics_validation's solar-fraction
+     calibration band after this change.
 
 REQUIRED LIBRARIES (install if missing):
   pip install pandas numpy scikit-learn plotly
@@ -215,9 +228,12 @@ PHYSICAL_FILE = PREPROCESSED_DIR / "rajasthan_cleaned_physical.csv"
 # --- PCM-facing design basis (§6.3) ---------------------------------------
 # T_DELIVERY_C / DT_APPROACH_C / TM_TARGET_C now come from
 # pcm_shared_config.py (via config.py) so Rajasthan and Tamil Nadu's 04b
-# cannot drift apart. Values unchanged: 50.0 + 7.0 -> 57.0 C, indirect-
-# system assumption (T_delivery = Indian-domestic SWH target §6.3;
-# DT_approach = midpoint of the doc's 5-8 K heat-exchanger range).
+# cannot drift apart. CORRECTED 2026-09-13: 60.0 + 7.0 -> 67.0 C (was
+# 50.0 + 7.0 -> 57.0 C — see correction #6 above for why T_DELIVERY_C was
+# raised), indirect-system assumption (T_delivery = Avargani et al. (2021)'s
+# actual 60+-2C validated delivery temperature for the 300L/7h night-
+# discharge figure; DT_approach = midpoint of the doc's 5-8 K
+# heat-exchanger range).
 
 """
 Night-discharge design basis [Avargani et al. 2021, J. Energy Storage]:
@@ -231,6 +247,16 @@ claim PCM latent heat alone supplies the full load. Literature on combined
 sensible-latent SWH reports PCM contributing 40–78% of total night thermal
 delivery (Zhao 2022: 50%; Huang 2020: ~70%; Abdelsalam 2020: 50% volume
 fraction; Koželj 2021: 15% volume → 70% storage increase).
+
+COLLECTOR TECHNOLOGY CAVEAT (2026-09-13): Avargani's system uses a
+circular-trough (concentrating) collector, not the flat-plate collector
+this pipeline's own physics simulator (physics_lib.py) assumes. The
+300L/7h figure is used here only as a demand-scale reference (an
+order-of-magnitude night-discharge target), not as a flat-plate-collector
+performance benchmark — a concentrating collector's higher achievable
+inlet temperature is part of why that system reaches 60C in the first
+place, and a flat-plate system feeding the same PCM bed may not reach the
+same night-discharge capability at the same flow rate.
 
 OPTION A (IMPLEMENTED): L_required now represents PCM's literature-anchored
 fractional share:
@@ -413,7 +439,7 @@ sig["kt_worst_month"] = kt_worst_month
 # Approximated via a Hottel-Whillier-style linear scaling: for a fixed
 # heat-loss coefficient, a flat-plate collector's achievable temperature
 # rise above ambient scales roughly linearly with incident irradiance/
-# clearness. The base Tm_target_C (57C) is treated as achievable above
+# clearness. The base Tm_target_C (67C) is treated as achievable above
 # Ta_mean on a "typical" day (that point's own kt_daily_mean); on a poor
 # period the achievable rise is scaled down by the clearness ratio:
 #

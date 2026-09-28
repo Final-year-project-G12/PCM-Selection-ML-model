@@ -36,9 +36,20 @@ MAX_MATCH_HOURS = 3
 # Indian domestic SWH delivery target and heat-exchanger approach temperature
 # (midpoint of the framework doc's stated 5-8 K range). Their sum is the
 # constant base melting-point target for an indirect system.
-T_DELIVERY_C = 50.0
+#
+# CORRECTED 2026-09-13: was 50.0. The Phase 3 night-discharge formula
+# (Q_night_kJ = 300 L * cp_water * (T_DELIVERY_C - T_mains)) reuses Avargani
+# et al. (2021)'s 300 L/7h capability figure, but that capability is
+# specifically validated AT 60+-2C delivery (Avargani Fig. 5/10 show the
+# deliverable volume/duration shrinking at other target temperatures) — using
+# it at 50C silently borrowed a number the cited paper never validated at
+# that temperature. Raised to 60.0 C so the formula matches what Avargani
+# actually tested. TM_TARGET_C shifts from 57.0 to 67.0 C as a result; the
+# per-state physics-simulator calibration (10_physics_validation.py's
+# solar-fraction benchmark bands) should be re-checked after this change.
+T_DELIVERY_C = 60.0
 DT_APPROACH_C = 7.0
-TM_TARGET_C = T_DELIVERY_C + DT_APPROACH_C   # -> 57.0 C
+TM_TARGET_C = T_DELIVERY_C + DT_APPROACH_C   # -> 67.0 C
 
 # Placeholder PCM bed mass used to convert the night-discharge energy floor
 # into a per-kg latent-heat requirement. A sizing placeholder, not a design

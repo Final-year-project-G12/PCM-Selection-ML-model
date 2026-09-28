@@ -6,14 +6,18 @@ and Phase 3 and cannot be understood in isolation from Phase 2's output.
 
 Scripts covered:
 - **Phase 2:** `02_combine_rajasthan.py`, `02b_build_daily_aggregates.py`,
-  `03_verify_climate_csv.py`, `03_qc_plots.py`, `03b_agreement_analysis.py`,
-  `03c_plots_raw_rajasthan.py` (added 2026-08-11, raw QC plots)
+  `03_verify_climate_csv.py`, `03_plots_raw.py`, `03b_agreement_analysis.py`,
+  `03_plots_raw.py` (added 2026-08-11, raw QC plots — note: script name is
+  `03_plots_raw.py` on disk, not `03c_plots_raw_rajasthan.py` as earlier drafts of this doc named it)
 - **Phase 2.5:** `03b_quality_check_rajasthan.py`, `03b_validate_quality_fix_rajasthan.py`,
-  `03c_plots_raw_rajasthan.py`, `03b_quality_check_plots_rajasthan.py`
+  `03_plots_raw.py`, `03b_quality_check_plots_rajasthan.py`
 - **Preprocessing (alternate/Tamil-Nadu-aligned path):** `04_preprocess_rajasthan.py` — audit stub in §B.11
-- **Visualization / interactive QC (not in the core chain):** `03b_coverage_viz_rajasthan.py`,
-  `03b_qmap_before_after_viz_rajasthan.py`, `03d_interactive_raw_qa.py`, `04d_postprocess_plots.py`,
-  `04e_interactive_postprocess_qc.py` — audit stubs in §B.12
+- **Visualization / interactive QC (not in the core chain):** `03b_interactive_raw_qa.py`,
+  `04c_postprocess_plots.py`, `04c_interactive_postprocess_qc.py` — audit stubs in §B.12.
+  (NOTE: `03b_coverage_viz_rajasthan.py` and `03b_qmap_before_after_viz_rajasthan.py`, both
+  referenced later in this file's §B.12, do NOT exist anywhere in `era5-rajasthan/` — flagged as a
+  genuine doc/code mismatch, not fixed by renaming, since no equivalent script was found to point to
+  instead.)
 
 **Cross-references:** `00_MASTER_OVERVIEW.md` ("Current known issues", "Phase 1–8 status at a
 glance"). All supporting details now embedded in this file.
@@ -44,7 +48,7 @@ Parts C/D is now **resolved** (the map is applied in Phase 2.5).
 Phase 1 (raw NetCDF/JSON, points, suntimes)
     ↓
 Phase 2   — 02_combine_rajasthan.py, 02b_build_daily_aggregates.py,
-            03_verify_climate_csv.py, 03_qc_plots.py, 03b_agreement_analysis.py
+            03_verify_climate_csv.py, 03_plots_raw.py, 03b_agreement_analysis.py
     ↓  climate_rajasthan_points.csv (RAW, 34 cols)
 Phase 2.5 — 04_preprocess_rajasthan.py   (BOUNDS + SZA night-mask + per-season
             quantile map persisted + Hampel + 4-stage/MICE imputation)
@@ -146,7 +150,7 @@ re-download) and trapezoidally integrates GHI/clear-sky GHI over UTC hour-of-day
 - `seasonality` (coefficient of variation of monthly-mean GHI)
 - `monsoon_index` (Jun–Sep GHI fraction — a **proxy**, since `PRECTOTCORR` was never downloaded)
 
-### `03_verify_climate_csv.py` and `03_qc_plots.py` — QA
+### `03_verify_climate_csv.py` and `03_plots_raw.py` / `03b_interactive_raw_qa.py` — QA
 
 Six ordered checks (schema, point coverage, row coverage, null rates, physical-sanity range checks,
 cross-source correlation) — see §B.2 (Part 1: Sanity Checks) below for the full threshold table.
@@ -195,9 +199,9 @@ requested `time_utc` appears in `climate_rajasthan_points.csv`. This is a genuin
 limitation — adding `era5_matched_time_utc`/`power_matched_time_utc` output columns would both
 enable already-written QC diagnostics and let reviewers verify how often sources are paired from
 meaningfully different instants. Currently low-cost to fix; currently not fixed. **This gap
-propagates into Phase 2.5**, where it structurally disables `03_qc_plots.py`'s rejection-window
-diagnostic and forces `03b`'s MANUAL_REVIEW-branch diagnostics onto an SZA-based proxy instead of a
-direct time-offset measurement (see §B.3).
+propagates into Phase 2.5**, where it structurally disables `03b_interactive_raw_qa.py`'s
+rejection-window diagnostic and forces `03b`'s MANUAL_REVIEW-branch diagnostics onto an SZA-based
+proxy instead of a direct time-offset measurement (see §B.3).
 
 **Missing/duplicated timestamp handling:** Duplicated `(point_id, date, event)` combinations are
 flagged as hard FAIL in `03_verify_climate_csv.py` Check 3. Missing timestamps become `NaN` rows
@@ -434,11 +438,13 @@ Phase 2's `03b_agreement_analysis.py`, §A.8).
 
 ## B.3 Part 1b: Visual QC
 
-`03_qc_plots.py` generates 8 interactive HTML visualizations (spatial folium maps + distributional
-plotly charts) showing spatial coverage, elevation distribution, data-coverage heatmaps,
-distributional histograms per variable and season, and summary statistics. The rejection-window
-diagnostic is permanently skipped (with an in-code message) because matched timestamps are never
-persisted — see §A.5 for the upstream root cause.
+`03b_interactive_raw_qa.py` (Plotly + Folium) and `03b_quality_check_plots_rajasthan.py` (post-clean
+Plotly companion) together generate the interactive HTML visualizations showing spatial coverage,
+elevation distribution, data-coverage heatmaps, distributional histograms per variable and season,
+and summary statistics — no single script named `03_qc_plots.py` exists on disk; earlier drafts of
+this doc used that name loosely for this pair. The rejection-window diagnostic is permanently
+skipped (with an in-code message) because matched timestamps are never persisted — see §A.5 for the
+upstream root cause.
 
 ## B.4 Part 2: Actual Data Cleaning (`03b_quality_check_rajasthan.py`)
 
@@ -477,7 +483,7 @@ not introduce schema violations or new failures. Confirms the cleaning was safe 
 
 ## B.6 Part 2c: Visual QC (Before/After)
 
-`03c_plots_raw_rajasthan.py` and `03b_quality_check_plots_rajasthan.py` generate pre-cleaning and
+`03_plots_raw.py` and `03b_quality_check_plots_rajasthan.py` generate pre-cleaning and
 post-cleaning distributional plots (histograms, box plots, spatial maps), showing what the Hampel
 filter changed and justifying the exclusion of GHI/CSI.
 
@@ -553,27 +559,24 @@ they now sit correctly downstream of the active Phase 2.5 rather than of a side 
 None of these are in `run_all_rajasthan.py`'s core chain; all are read-only with respect to their
 inputs and exist for visual sanity-checking.
 
-- **`03b_coverage_viz_rajasthan.py`** — two standalone HTML views built from
-  `03b_agreement_analysis.py`'s inputs/output: `outputs/spatial_coverage_map.html` (folium; grid
-  points coloured by data-completeness % and by mean GHI MBE, ERA5−POWER, with points that would
-  independently fail the BACKBONE/QUANTILE_MAP/MANUAL_REVIEW gate marked) and a temporal companion
-  view. Never writes back to any input.
-- **`03b_qmap_before_after_viz_rajasthan.py`** — re-fits the identical per-season empirical
-  quantile mapping of daytime ERA5 GHI onto NASA POWER (`N_QUANTILES=100`, same functions as
-  `03b_agreement_analysis.py`) and renders a before/after view (`outputs/
-  era5_power_scatter_before_after.html`). Purely diagnostic — like `03b_agreement_analysis.py`
-  itself, it changes nothing about the fact that the mapping is never persisted and Phase 3 consumes
-  uncorrected ERA5 GHI (see Part C).
-- **`03d_interactive_raw_qa.py`** — interactive (Plotly + Folium) raw-data QA, the 1:1 port of the
+- **`03b_coverage_viz_rajasthan.py`** and **`03b_qmap_before_after_viz_rajasthan.py`** — GENUINE
+  DOC/CODE MISMATCH, not a simple rename: these two scripts are referenced here (and were presumably
+  real at some point in this project's history — a coverage/MBE folium map and a before/after
+  quantile-mapping scatter, both built from `03b_agreement_analysis.py`'s inputs/output) but neither
+  file exists anywhere in `era5-rajasthan/` as of this audit. No equivalent script was found to
+  redirect this reference to. Flagged as an open documentation gap — either the scripts were deleted
+  without updating this doc, or they were never actually built; not fixed here since fabricating a
+  replacement script name would be worse than leaving this flagged.
+- **`03b_interactive_raw_qa.py`** — interactive (Plotly + Folium) raw-data QA, the 1:1 port of the
   Tamil Nadu pipeline's `03b_interactive_raw_qa.py` (same six checks A–F), reading
   `climate_rajasthan_points.csv` as zoomable/hoverable HTML. Sits alongside
-  `03c_plots_raw_rajasthan.py` (which covers A–E in Plotly); kept as the structural twin of the
-  Tamil Nadu script for cross-region review. Read-only.
-- **`04d_postprocess_plots.py`** — static-PNG post-preprocessing QA, the port of Tamil Nadu's
+  `03_plots_raw.py` (which covers A–E in Plotly/matplotlib as static PNGs); kept as the structural
+  twin of the Tamil Nadu script for cross-region review. Read-only.
+- **`04c_postprocess_plots.py`** — static-PNG post-preprocessing QA, the port of Tamil Nadu's
   `04c_postprocess_plots.py`. Runs **after** `04_preprocess_rajasthan.py` on its output
   (`rajasthan_cleaned_physical.csv`): missing-data heatmap (should be ~all-zero), post-cleaning
-  distribution sanity, etc. — the cleaned-data counterpart to `03c_plots_raw_rajasthan.py`.
-- **`04e_interactive_postprocess_qc.py`** — interactive (Plotly) version of `04d_postprocess_plots.py`
+  distribution sanity, etc. — the cleaned-data counterpart to `03_plots_raw.py`.
+- **`04c_interactive_postprocess_qc.py`** — interactive (Plotly) version of `04c_postprocess_plots.py`
   (checks A, B, D, E, F), reading `rajasthan_cleaned_physical.csv` with a `usecols` filter (the file
   is large). Output to `PLOTSV2/post_preprocess_interactive/*.html`.
 
@@ -606,8 +609,8 @@ inputs and exist for visual sanity-checking.
   `02b_build_daily_aggregates.py` (Jun–Sep) — see `00_MASTER_OVERVIEW.md` known issue 7. (Phase 2)
 
 - **No matched-timestamp columns are ever written** (`era5_matched_time_utc` /
-  `power_matched_time_utc`), which structurally disables `03_qc_plots.py`'s rejection-window
-  diagnostic (both the Phase 2 and Phase 2.5 instances of this script) and forces `03b`'s
+  `power_matched_time_utc`), which structurally disables `03b_interactive_raw_qa.py`'s rejection-
+  window diagnostic (both the Phase 2 and Phase 2.5 instances of this script) and forces `03b`'s
   MANUAL_REVIEW-branch diagnostics to use an SZA-based proxy instead of a direct time-offset
   measurement — low-cost to fix (two extra output columns) if the rejection-window QC is ever
   needed. (Phase 2, propagates into Phase 2.5)

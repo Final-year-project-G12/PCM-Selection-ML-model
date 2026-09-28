@@ -1,6 +1,10 @@
 # 08 — Phase 6 Audit: Feasibility Filtering Engine
 
-**Script**: `07_feasibility_filter.py`
+**Script**: `07_feasibility_filter_final.py` (evidence-based, 6-criterion, no auto-relaxation —
+this is the script whose behavior matches the "Final Locked K=3 Feasibility Governance" described
+below; the separate, older `07_feasibility_filter.py` implements a different 7-constraint design
+with a 0.7×L_required floor and automatic melting-window relaxation, and is the script that fed
+the historical K=4 8-PCM survivor set in §2 below)
 
 **Status**: GOVERNED (Authoritative Final)
 
@@ -8,7 +12,7 @@
 
 ## Objective & Methodological Distinction
 
-Phase 6 screens candidate phase-change materials against 7 multi-physics, safety, and operational constraints. To preserve scientific integrity, this audit explicitly distinguishes between two separate pipeline versions:
+Phase 6 screens candidate phase-change materials against 6 evidence-based multi-physics, safety, and operational criteria (the final governance script merges the melting-window and absolute-band checks of the older 7-constraint design into a single combined Tm criterion). To preserve scientific integrity, this audit explicitly distinguishes between two separate pipeline versions:
 1. **Final Locked $K=3$ Feasibility Governance** (Audited 58-PCM database under final $K=3$ climate forcing).
 2. **Historical Pre-Audit $K=4$ Feasibility Survivors** (Preliminary 25-PCM screening under historical $K=4$ forcing, which provided the 8 candidates evaluated in Phase 9 physics validation).
 
@@ -20,16 +24,17 @@ Phase 6 screens candidate phase-change materials against 7 multi-physics, safety
 - **Candidate Pool**: Audited 58-row production database (`pcm_database_final.csv`).
 - **Climate Forcing**: Final locked $K=3$ climate regimes (Medoids: `ASP_0012`, `ASP_0092`, `ASP_0028`).
 - **Target Melting Temperature**: $T_m^{\text{target}} = 44.0^\circ\text{C}$ ($T_{\text{del}} = 50.0^\circ\text{C}, \Delta T_{\text{approach}} = 6.0\text{ K}$).
-- **Target Latent Heat Demand**: Regime-specific $L_{\text{required}}$ based on ambient temperature baselines ($232–252\text{ kJ/kg}$).
+- **Target Latent Heat Demand**: Regime-specific $L_{\text{required}}$ based on ambient temperature baselines — `{Cluster 0: 252.09, Cluster 1: 258.69, Cluster 2: 279.70}` kJ/kg per `07_feasibility_filter_final.py`'s recorded values.
 
-### Constraint Architecture (7 Vetoes)
-1. **Melting Window**: $T_m \in [T_m^{\text{target}} - 6, T_m^{\text{target}} + 8] = [38.0, 52.0]^\circ\text{C}$.
-2. **Absolute SWH Band**: $T_m \in [42.0, 70.0]^\circ\text{C}$.
-3. **Latent Heat Capacity Floor**: $L \ge 1.0 \times L_{\text{required}}$ (strict unrelaxed floor).
-4. **Thermal Cycling Durability**: Tested $\ge 300$ cycles without degradation.
-5. **Corrosion Veto**: Prohibition of inorganic salt hydrates in high-humidity regimes ($HSI > \text{global } p_{75}$).
-6. **Supercooling Limit**: Supercooling $\Delta T_{\text{sub}} \le 8.0\text{ K}$.
-7. **Chemical & Fire Safety**: Elimination of toxic, explosive, or highly flammable materials.
+### Constraint Architecture (6 Criteria, Evidence-Based PASS/FAIL/UNKNOWN)
+1. **Combined Tm Window**: $T_m \in [\max(T_m^{\text{target}}-6,\,42.0),\ T_m^{\text{target}}+8] = [42.0, 52.0]^\circ\text{C}$ — the melting-window and absolute-band checks are merged into one combined criterion in this script (they were two separate checks in the older `07_feasibility_filter.py`).
+2. **Latent Heat Capacity Floor**: $L \ge 1.0 \times L_{\text{required}}$ (strict unrelaxed floor; `UNKNOWN` if latent heat is not reported).
+3. **Thermal Cycling Durability**: `PASS` only if cycles are explicitly *reported* (not imputed) and $\ge 300$; otherwise `UNKNOWN`.
+4. **Supercooling Limit**: `PASS` only if supercooling is explicitly *reported* (or both Tm/Tm_freezing are reported) and $\le 8.0\text{ K}$; otherwise `UNKNOWN`.
+5. **Corrosion Veto**: `FAIL` only if `is_inorganic` and the cluster's humidity proxy (`RH_mean_mean`, used as the HSI stand-in) exceeds the global p75; `PASS` only with explicit documented compatibility evidence; otherwise `UNKNOWN`. **As currently populated, `is_inorganic` is `False` for all 58 database rows (§07_PHASE_5_AUDIT.md), so this criterion can never resolve to `FAIL` — it is structurally inert given the current data, exactly as in the older non-final script.**
+6. **Chemical & Fire Safety**: `PASS`/`FAIL` only on explicit *reported* flammability evidence; otherwise `UNKNOWN`.
+
+A PCM is `CONFIRMED_FEASIBLE` only if all 6 are `PASS`; `CONDITIONALLY_FEASIBLE` if none are `FAIL` but ≥1 is `UNKNOWN`; `INFEASIBLE` if any is `FAIL`. Given how much of the 58-row database has imputed (not reported) cycling/supercooling/safety data, most candidates land in `CONDITIONALLY_FEASIBLE` or `INFEASIBLE` rather than `CONFIRMED_FEASIBLE` — this, not the corrosion veto, is the primary reason $n_{\text{confirmed}}=[0,0,0]$.
 
 ### Governance Findings
 - **Zero Automatic Relaxation**: Unlike early prototypes that relaxed temperature bands or latent heat thresholds when candidate counts dropped, final governance strictly prohibits automatic relaxation.

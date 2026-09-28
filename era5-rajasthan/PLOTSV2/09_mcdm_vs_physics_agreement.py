@@ -33,7 +33,7 @@ warnings.filterwarnings("ignore")
 _HERE = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(_HERE, "..", "data", "processed")
 OUTPUT_DIR = os.path.join(_HERE, "physics_validation")
-MCDM_FILE = os.path.join(DATA_DIR, "mcdm_rankings_rajasthan.csv")
+MCDM_FILE = os.path.join(DATA_DIR, "mcdm_full_rankings.csv")
 PHYSICS_FILE = os.path.join(DATA_DIR, "physics_validation_rajasthan.csv")
 RHO_FILE = os.path.join(DATA_DIR, "spearman_rho_by_cluster_rajasthan.csv")
 
@@ -76,6 +76,16 @@ print(f"Joined dataset: {len(joined)} rows")
 
 clusters = sorted(joined["cluster_id"].unique())
 print(f"Clusters in joined data: {clusters}")
+
+if len(joined) == 0:
+    raise ValueError(
+        "MCDM/physics join produced 0 rows on ['cluster_id', 'pcm_id'] — "
+        f"MCDM file has {len(mcdm_df)} rows, physics file has {len(physics_df)} rows. "
+        "This usually means one of the two files is stale (e.g. mcdm_full_rankings.csv "
+        "from an earlier kappa/candidate-pool run than physics_validation_rajasthan.csv). "
+        "Re-run 08_mcdm_ranking.py then 10_physics_validation.py so both reflect the same "
+        "feasibility_survivors_by_cluster_kappa_calibrated.csv before re-generating this plot."
+    )
 
 print("\n=== VERIFICATION BLOCK ===")
 
@@ -130,9 +140,11 @@ print()
 
 print("=" * 50)
 
-# Create subplots (one per cluster)
+# Create subplots (one per cluster) — cols must match len(clusters), not a
+# hardcoded 3, or make_subplots rejects the specs shape (or silently mis-sizes
+# the grid) whenever a cluster has no joined rows.
 fig = make_subplots(
-    rows=1, cols=3,
+    rows=1, cols=len(clusters),
     subplot_titles=[f"Cluster {c}" for c in clusters],
     specs=[[{"secondary_y": False} for _ in clusters]]
 )
