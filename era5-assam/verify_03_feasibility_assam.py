@@ -93,9 +93,9 @@ if feas is not None:
         if db is not None and tm_col in db.columns and lh_col in db.columns:
             ax.scatter(db[tm_col], db[lh_col], color="#b0bec5", s=50, alpha=0.55, edgecolor="none", label=f"Database Pool (n={len(db)})", zorder=2)
             
-        # Feasibility operating window shading [38°C, 54°C]
-        ax.axvspan(38.0, 54.0, color="#2ca02c", alpha=0.08, label="Phase 5 Feasibility Window [38°C – 54°C]")
-        ax.axvline(44.0, color="#1f77b4", ls="--", lw=1.5, label="SWH Target: Tm = 44.0°C")
+        # Feasibility operating window shading [50°C, 64°C]
+        ax.axvspan(50.0, 64.0, color="#2ca02c", alpha=0.08, label="Phase 5 Feasibility Window [50°C – 64°C]")
+        ax.axvline(56.0, color="#1f77b4", ls="--", lw=1.5, label="SWH Target: Tm = 56.0°C")
         ax.axhline(180.0, color="#e07b39", ls=":", lw=1.5, label="Latent Floor Reference (~180 kJ/kg)")
         
         markers_cl = {0: 'o', 1: 's', 2: '^'}
@@ -122,9 +122,9 @@ if feas is not None:
                 
         ax.set_xlabel("Melting Temperature (°C)", fontsize=11, fontweight="bold")
         ax.set_ylabel("Latent Heat of Fusion (kJ/kg)", fontsize=11, fontweight="bold")
-        ax.set_title("Verification 02: Feasible PCM Candidates in Property Space (Assam K=3)\n(Screened Against SWH Delivery Target Tm = 44°C and Storage Enthalpy Floor)",
+        ax.set_title("Verification 02: Feasible PCM Candidates in Property Space (Assam K=3)\n(Screened Against SWH Delivery Target Tm = 56°C and Storage Enthalpy Floor)",
                      fontsize=12, fontweight="bold", pad=12)
-        ax.set_xlim(25, 65)
+        ax.set_xlim(25, 75)
         ax.set_ylim(80, 290)
         ax.legend(fontsize=8.5, loc="lower right", framealpha=0.92)
         ax.grid(alpha=0.25, linestyle="--")
@@ -233,8 +233,8 @@ summary_text = (
     "=================================================================================\n\n"
     f"1. Database Candidate Pool       : 25 unique candidate PCMs (pcm_database_assam.csv)\n"
     f"2. Total Cluster Evaluations     : 75 evaluations (25 PCMs x 3 climate regimes)\n"
-    f"3. SWH System Physical Target    : Tm_target = 44.0 °C (T_delivery 50.0 °C - dT_approach 6.0 K)\n"
-    f"4. Operating Screening Window    : [38.0 °C, 52.0 °C] (C0, C1); [38.0 °C, 54.0 °C] (C2, relaxed)\n"
+    f"3. SWH System Physical Target    : Tm_target = 56.0 °C (T_delivery 50.0 °C + dT_approach 6.0 K)\n"
+    f"4. Operating Screening Window    : [50.0 °C, 64.0 °C]\n"
     f"5. Latent Heat Floor Targets     : C0 >= 176.5 kJ/kg | C1 >= 181.1 kJ/kg | C2 >= 195.8 kJ/kg\n\n"
     "FEASIBLE SURVIVOR BREAKDOWN BY CLIMATE REGIME:\n"
     "---------------------------------------------------------------------------------\n"

@@ -153,7 +153,7 @@ def main():
                 lines.append(f"| {col} | {float(val):.3f} |")
 
         l_req_kj_kg = prof.get('L_required_kJ_per_kg', prof.get('L_required_kWh_mean', np.nan) * 3600.0 / 50.0)
-        tm_t = prof.get('Tm_target_C', prof.get('Tm_target_mean', 44.0))
+        tm_t = prof.get('Tm_target_C', prof.get('Tm_target_mean', 56.0))
 
         lines.append(f"\n**Derived targets:** Tm_target = {float(tm_t):.1f} C, "
                       f"L_required = {float(l_req_kj_kg):.0f} kJ/kg")

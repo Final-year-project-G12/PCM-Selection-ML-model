@@ -97,7 +97,7 @@ M_W_KG = 100.0           # Tank water mass (kg)
 C_W_JKGK = 4186.0        # Water specific heat capacity (J/kg·K)
 M_P_KG = 50.0            # PCM mass (kg)
 T_DELIVERY_C = 50.0      # Target hot water delivery temperature (°C)
-T_M_TARGET_C = 44.0      # Target PCM melting temperature (°C)
+T_M_TARGET_C = 56.0      # Target PCM melting temperature (°C) (50 + 6, indirect-system rule)
 
 # Collector parameters (Hottel-Whillier-Bliss)
 A_C_M2 = 2.0             # Solar collector area (m²)
@@ -628,6 +628,8 @@ def simulate_pcm_swh_10year(forcing_df, pcm_row, dt_sec=DT_SEC):
     E_refill_total = 0.0
     E_loss_total = 0.0
     E_draw_total = 0.0
+    useful_demand_energy_total = 0.0
+    required_demand_energy_total = 0.0
     
     H_sys_initial = M_W_KG * C_W_JKGK * Tw + pcm.Hp
     
@@ -666,6 +668,12 @@ def simulate_pcm_swh_10year(forcing_df, pcm_row, dt_sec=DT_SEC):
                 
                 E_draw_total += draw_energy
                 E_refill_total += refill_energy
+                
+                # Demand-deficit solar fraction: useful energy delivered toward 50 C setpoint above mains
+                useful_demand_energy = DRAW_MASS_KG * C_W_JKGK * max(0.0, min(Tw, T_DELIVERY_C) - tmains)
+                required_demand_energy = DRAW_MASS_KG * C_W_JKGK * max(0.0, T_DELIVERY_C - tmains)
+                useful_demand_energy_total += useful_demand_energy
+                required_demand_energy_total += required_demand_energy
                 
                 E_draw_step = draw_energy
                 E_refill_step = refill_energy
@@ -734,8 +742,8 @@ def simulate_pcm_swh_10year(forcing_df, pcm_row, dt_sec=DT_SEC):
     evening_rate = evening_draws_success / max(evening_draws_total, 1)
     overall_rate = (morning_draws_success + evening_draws_success) / max(morning_draws_total + evening_draws_total, 1)
     
-    useful_solar_delivered = E_solar_total - E_loss_total
-    solar_fraction = min(1.0, max(0.0, useful_solar_delivered / max(E_draw_total, 1.0)))
+    # Solar fraction: fraction of required delivery-temperature rise met by solar thermal energy
+    solar_fraction = min(1.0, max(0.0, useful_demand_energy_total / max(required_demand_energy_total, 1.0)))
     
     return {
         "spinup_cycles": spinup_cycles_run,
