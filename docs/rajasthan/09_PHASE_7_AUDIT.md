@@ -8,6 +8,25 @@
 Script: `10_physics_validation.py` (was `10_physics_validation.py`). Phase 8
 (`08_phase8_supercooling_sweep.py`) extends this with supercooling-penalty sensitivity testing.
 
+⚠️ **NEWEST UPDATE (2026-09-19), re-run COMPLETE — supersedes every `0.105 / -0.190 / -0.091` and
+`Tm_fitness (51.9/83.3/68.1%)` figure below.** `Tm_fitness` was fixed to score against each
+cluster's achievable `Tm_target_capped_C` instead of the raw `Tm_target_C`. **Current on-disk
+numbers** (per `outputs/recommendation_cards_rajasthan.md` and
+`physics_validation_summary_rajasthan.txt`):
+- Spearman rho (Borda vs. simulated SF): **-0.200 / -0.168 / +0.569** (clusters 0/1/2),
+  p = 0.800/0.691/0.067. Clusters 0–1 remain NEGATIVE (rho≤0.4); Cluster 2 is now **PARTIAL**
+  (0.4<rho≤0.8) — the first cluster in this project's Phase 7 history to clear the 0.4 threshold.
+- Kendall's W: **1.0000 / 0.7679 / 0.4170** (not 0.900/0.750/0.555 as older sections below state).
+- Dominant entropy-weighted criterion is **NOT uniformly Tm_fitness**: `vol_latent_heat` (47.5%,
+  Cluster 0), `Tm_fitness` (80.5%, Cluster 1), `thermal_conductivity` (41.4%, Cluster 2).
+- Seasonal sensitivity re-run the same day: **8/11 (cluster, season) cells now flip** the annual
+  #1 pick — supersedes the "0/11 flip, seasonally robust" finding in the 2026-09-13 section below.
+See the "UPDATE (2026-09-19)" section further down for the full before/after table and
+`08_PHASE_6_AUDIT.md` for the MCDM-side detail. Everything between here and that section
+(the 2026-09-13 banners, the historical ρ table, "Dominant Entropy-Weighted Criterion", and
+"Cluster-Specific Interpretations") predates this fix and should be read as history, not current
+state.
+
 ⚠️ **UNIFICATION UPDATE (2026-09-08): Phase 6 unified with Tamil Nadu — this Phase 7 result set is
 STALE, re-run pending.** The unified `08_mcdm_ranking.py` now **caps supercooling's entropy weight
 at 2× its Table-13 prior (0.16)**, directly addressing the overweighting this Phase 7/8 pair
@@ -79,12 +98,19 @@ survivor pool using a hardcoded `LATENT_HEAT_FRACTION=0.7`, stricter than every 
 5 calibrated kappa (0.0/0.5/0.3) and inconsistent with the pool it drew from. **Fixed:** the
 seasonal floor now uses each cluster's own `calibrated_kappa` instead of a shared fixed 0.7.
 
-**Result: no longer degenerate — and this is a genuine POSITIVE finding, not a loss.** All 11
-(cluster, season) cells now have healthy survivor counts (4–11) and rank cleanly — **0/11 flip
-from the annual #1 pick** (was the "6-7/9 flip" finding pre-Fix-1, briefly "0/0/0 empty tables"
-between Fix 1 and this correction). Rajasthan's delivery-temperature-anchored `Tm_target` rule is
-seasonally robust: the #1 PCM recommendation per cluster does not change across Winter/Summer/
-Monsoon/Retreat.
+**Result (2026-09-13 state, SUPERSEDED 2026-09-19 — see below): no longer degenerate.** At the time
+of this fix, all 11 (cluster, season) cells had healthy survivor counts (4–11) and ranked cleanly —
+**0/11 flip from the annual #1 pick** (was the "6-7/9 flip" finding pre-Fix-1, briefly "0/0/0 empty
+tables" between Fix 1 and this correction). This was read as Rajasthan's delivery-temperature-
+anchored `Tm_target` rule being seasonally robust.
+
+**⚠️ This "0/11 flip, seasonally robust" reading did not survive the next fix.** The 2026-09-19
+`Tm_fitness` scoring correction (scored against `Tm_target_capped_C` instead of raw `Tm_target_C`)
+changed Cluster 0 and Cluster 2's annual Top-1 PCM, and a same-day re-run of
+`11_seasonal_pcm_sensitivity.py` against the corrected Top-1 picks shows **8/11 (cluster, season)
+cells now flip** (Cluster 0: 4/4, Cluster 1: 0/3 valid cells, Cluster 2: 4/4) — see
+`outputs/seasonal_pcm_sensitivity_rajasthan.md`, the current on-disk result. **The "0/11,
+seasonally robust" conclusion above is stale; 8/11 is current.**
 
 **Re-examined against the DRL literature (2026-09-13): this null result is the RIGHT outcome for
 Objective 1, and does not weaken Objective 3's case.** The original plan motivated O3's DRL
@@ -159,16 +185,17 @@ iterated further. Top-1 with the criterion on is a different PCM in every cluste
 acid/NBR-1.0 / RT57HC / savE® OM55), so Rajasthan also does not reproduce TN's "same PCM in every
 cluster" convergence pattern.
 
-**Not yet reconciled, flagged for follow-up (out of scope for this pass):** the seasonal-sensitivity
-"0/11 flip, seasonally robust" finding documented above (2026-09-13, "genuine positive finding")
-was generated against the pre-2026-09-19 Top-1 picks. Today's re-run of
-`11_seasonal_pcm_sensitivity.py` (same day as this update, after the Tm_fitness capped-target fix
-changed Cluster 0 and Cluster 2's annual Top-1) shows **8/11 (cluster, season) combinations now flip**
-— the opposite of the "seasonally robust" conclusion above. This needs its own dedicated
-re-examination (does the O3-motivation reframing above still hold, or does the original
-seasonal-flip motivation come back into play?) before either claim is presented as current in a
-write-up. Not resolved here — this pass was scoped to the MCDM criteria fixes, not the seasonal
-script's downstream consequence.
+**Reconciled — 8/11 is the current, on-disk result** (confirmed against
+`outputs/seasonal_pcm_sensitivity_rajasthan.md`): the seasonal-sensitivity "0/11 flip, seasonally
+robust" finding documented earlier in this file (2026-09-13) was generated against the
+pre-2026-09-19 Top-1 picks and is now stale. The same-day re-run of `11_seasonal_pcm_sensitivity.py`
+(after the Tm_fitness capped-target fix changed Cluster 0 and Cluster 2's annual Top-1) shows
+**8/11 (cluster, season) combinations flip** — the opposite of the "seasonally robust" conclusion.
+**Open, not yet resolved in the write-up:** whether the O3-motivation reframing above (real-time
+weather/demand variability, not PCM-ranking instability) still holds now that the seasonal-flip
+finding is back, or whether the original "PCM ranking flips across seasons" motivation for O3
+should be reinstated instead. This is a paper-framing decision, not a further code/data fix — flag
+it before finalizing Objective 3's motivation section.
 
 ## Purpose
 
@@ -240,8 +267,11 @@ Draw-profile integration (365 days):
 **⚠️ HISTORICAL TABLE — the ρ values below are PRE-unification (raw, uncapped supercooling entropy
 weight, n=9/15/17 survivors on the pre-2026-09-13 L_required basis). Kept as the diagnostic
 baseline this audit was originally built against. For the CURRENT on-disk numbers (post-cap,
-post-2026-09-13 T_DELIVERY_C/M_W_KG corrections, n=4/8/11 survivors), see the banners at the top of
-this file: rho = 0.105 / -0.190 / -0.091 (clusters 0/1/2), calibration SF = 64.0/65.8/64.3%.**
+post-2026-09-13 T_DELIVERY_C/M_W_KG corrections, AND post-2026-09-19 Tm_fitness scoring fix,
+n=4/8/11 survivors), see the "NEWEST UPDATE (2026-09-19)" banner at the top of this file:
+rho = -0.200 / -0.168 / +0.569 (clusters 0/1/2), calibration SF = 64.0/65.8/64.3%. (The
+0.105/-0.190/-0.091 reading that appeared here between 2026-09-13 and 2026-09-19 is itself now
+superseded, not current.)**
 
 | Cluster | n_candidates | Borda vs. Solar Fraction (PRE-cap, historical) | Notes |
 |---------|---|---|---|
@@ -249,25 +279,30 @@ this file: rho = 0.105 / -0.190 / -0.091 (clusters 0/1/2), calibration SF = 64.0
 | **1** | 15 | **ρ = +0.125** | Weak positive. Kendall's W ≈ 0.65 (moderate). |
 | **2** | 17 | **ρ = −0.097** | Weak negative. Largest cluster. |
 
-**Overall (pre-cap, historical) finding**: no cluster exceeds ρ=0.4. **Current, post-cap, post-2026-
-09-13-corrections result: still no cluster exceeds ρ=0.4** (0.105 / -0.190 / -0.091) — the
-supercooling entropy cap changed the ranking basis and the dominant criterion (see below) but did
-not flip the overall negative-validation finding.
+**Overall (pre-cap, historical) finding**: no cluster exceeds ρ=0.4. **Current (post-cap,
+post-2026-09-13 corrections, AND post-2026-09-19 Tm_fitness fix) result: rho = -0.200 / -0.168 /
++0.569** — Clusters 0–1 still don't exceed ρ=0.4 (negative-band), but **Cluster 2 now does**
+(0.4<ρ≤0.8, PARTIAL agreement) — the 2026-09-13 "still no cluster exceeds ρ=0.4" framing is no
+longer accurate; see the "NEWEST UPDATE (2026-09-19)" banner at the top of this file.
 
 ## Dominant Entropy-Weighted Criterion Per Cluster
 
 **PRE-unification Phase 6** identified supercooling as dominant (63.8% / 48.6% / 57.0%) — an
 artifact of the Shannon-entropy formula overweighting a near-zero-ideal cost criterion.
 
-**POST-unification, CURRENT (`08_mcdm_ranking.py` on-disk output, 2026-09-13 re-run)** caps
-supercooling's entropy weight at 2× its Table-13 prior (0.16); it blends to ≈0.12–0.16, and
-**`Tm_fitness` is the dominant criterion in every cluster** — current entropy weights **51.9%
-(Cluster 0) / 83.3% (Cluster 1) / 68.1% (Cluster 2)**, per `physics_validation_summary_rajasthan.txt`
-and `08_PHASE_6_AUDIT.md`. The "model can't simulate supercooling" caveat still holds for the
-residual supercooling weight, but supercooling is no longer the driver of the MCDM ranking in any
-cluster. Phase 8's penalty sweep — which *worsened* physics/MCDM agreement as k rose in every
-cluster, both pre- and post-2026-09-13 — is the empirical evidence that supercooling was
-over-weighted pre-cap, i.e. that the cap is the right direction.
+**POST-unification (`08_mcdm_ranking.py` on-disk output, 2026-09-13 re-run, SUPERSEDED 2026-09-19)**
+capped supercooling's entropy weight at 2× its Table-13 prior (0.16); it blended to ≈0.12–0.16, and
+at that point `Tm_fitness` was the dominant criterion in every cluster — entropy weights 51.9%
+(Cluster 0) / 83.3% (Cluster 1) / 68.1% (Cluster 2).
+
+**CURRENT (post-2026-09-19 Tm_fitness scoring fix)**: the dominant criterion is **no longer
+uniformly Tm_fitness** — `vol_latent_heat` (47.5%, Cluster 0), `Tm_fitness` (80.5%, Cluster 1),
+`thermal_conductivity` (41.4%, Cluster 2), per `physics_validation_summary_rajasthan.txt`. The
+"model can't simulate supercooling" caveat still holds for the residual supercooling weight, but
+supercooling remains a minor driver of the MCDM ranking in every cluster. Phase 8's penalty sweep —
+which *worsened* physics/MCDM agreement as k rose in every cluster, across all three corrections —
+is the empirical evidence that supercooling was over-weighted pre-cap, i.e. that the cap is the
+right direction.
 
 ## PCM-vs-Plain-Tank Comparator (Honest Negative Result)
 
@@ -284,8 +319,8 @@ Every Phase 7 output carries these inherited caveats verbatim, never silently dr
 1. **Cost always NaN**: Unavoidable — Phase 6 database limitation. No remedy here.
 2. **Corrosion is binary proxy**: `2.0 if inorganic else 1.0`, not a measured rating. Cannot be independently verified by this simulation.
 3. **Database status**: current 23 survivors (4/8/11 per cluster) tagged "COMPLETE — 55-row manufacturer database (+7 literature rows = 62 candidates total)" (Phase 6) — the 62-row pool itself is final; the survivor count changed with the 2026-09-13 T_DELIVERY_C/L_required correction, not with the database.
-4. **Cluster instability, current numbers**: Kendall's W = 0.900/0.750/0.555 (clusters 0/1/2) — Cluster 2 is now the one below the 0.6 ambiguous threshold (was Cluster 0 historically, at W=0.388 on the pre-2026-09-13 pool). Low ρ in Phase 7 may reflect pre-existing MCDM instability as much as physics disagreement — requires more data or method recalibration, not physics-model retuning.
-5. **Supercooling cannot be validated**: The dominant entropy-weighted criterion in all clusters (48–64%) is supercooling. **This physics model deliberately does not simulate supercooling** (Barqawi's 3-phase model assumes ideal solid–liquid transition at Tm with no nucleation delay — see physics_lib.py for derivation). A disagreement concentrated on supercooling cannot be resolved by this simulation and should not be misread as evidence the MCDM supercooling weight is wrong. Phase 8 tests this hypothesis directly via penalty sensitivity analysis.
+4. **Cluster instability, current numbers (post-2026-09-19)**: Kendall's W = 1.0000/0.7679/0.4170 (clusters 0/1/2) — Cluster 2 is the one below the 0.6 ambiguous threshold (was Cluster 0 historically, at W=0.388 on the pre-2026-09-13 pool; the intermediate 0.900/0.750/0.555 reading from 2026-09-13 is itself superseded). Low ρ in Clusters 0–1 may reflect pre-existing MCDM instability as much as physics disagreement — requires more data or method recalibration, not physics-model retuning.
+5. **Supercooling cannot be validated**: supercooling is no longer the dominant entropy-weighted criterion in any cluster (current dominant criteria: vol_latent_heat 47.5%/Cluster 0, Tm_fitness 80.5%/Cluster 1, thermal_conductivity 41.4%/Cluster 2 — see "Dominant Entropy-Weighted Criterion Per Cluster" above), but **this physics model still deliberately does not simulate supercooling** (Barqawi's 3-phase model assumes ideal solid–liquid transition at Tm with no nucleation delay — see physics_lib.py for derivation), so any residual supercooling weight in a cluster's blend remains unvalidatable by this simulation regardless of its current size. Phase 8 tests the supercooling-penalty hypothesis directly via sensitivity analysis.
 
 ## Completion Report: What Was Actually Built (2026-08-11, Re-run 2026-08-14, Re-run again 2026-09-13)
 
@@ -306,34 +341,37 @@ Two bugs were caught by Phase 7's own mandatory self-tests (`self_test_energy_co
 ## Cluster-Specific Interpretations
 
 **⚠️ HISTORICAL (2026-08 state, n=9/15/17, pre-2026-09-13 corrections) — interpretations below were
-written against that run. Current on-disk numbers are n=4/8/11, rho=0.105/-0.190/-0.091, Kendall's
-W=0.900/0.750/0.555, dominant criterion Tm_fitness (51.9/83.3/68.1%) not supercooling — see the
-banners at the top of this file. The qualitative diagnoses below (MCDM instability vs. structural
-physics-model scope limits) still apply in kind, but the specific numbers quoted in each subsection
-are superseded.**
+originally written against that run, then partially updated for the 2026-09-13 corrections
+(rho=0.105/-0.190/-0.091, Kendall's W=0.900/0.750/0.555, dominant criterion Tm_fitness uniformly at
+51.9/83.3/68.1%). BOTH of those states are now superseded by the 2026-09-19 Tm_fitness scoring fix:
+current numbers are rho = -0.200/-0.168/+0.569, Kendall's W = 1.0000/0.7679/0.4170, dominant
+criteria vol_latent_heat(47.5%)/Tm_fitness(80.5%)/thermal_conductivity(41.4%) — see the "NEWEST
+UPDATE (2026-09-19)" banner at the top of this file. The qualitative diagnoses below (MCDM
+instability vs. structural physics-model scope limits) still apply in kind, but every specific
+number quoted in each subsection below predates the 2026-09-19 fix.**
 
-### Cluster 0 (ρ = −0.385 historical; current ρ = 0.105, still on an undersized n=4 pool)
+### Cluster 0 (ρ = −0.385 pre-unification; ρ = +0.105 as of 2026-09-13; current ρ = −0.200, still on an undersized n=4 pool)
 
-MCDM and physics rankings were **negatively correlated** in the historical run — higher-ranked PCM by MCDM delivered **worse** simulated performance; the current run's rho is weakly positive (0.105) but still far below the 0.4 bar, on an even smaller (n=4, `insufficient_even_at_kappa_0`) pool. Two non-exclusive diagnoses, still applicable:
+MCDM and physics rankings were **negatively correlated** pre-unification — higher-ranked PCM by MCDM delivered **worse** simulated performance; the 2026-09-13 run flipped weakly positive (+0.105), and the current (2026-09-19) run flipped negative again (−0.200), still far below the 0.4 bar, on the same undersized n=4 pool. Two non-exclusive diagnoses, still applicable:
 
-1. **MCDM ranking itself unstable/undersized**: current Kendall's W=0.900 (high agreement given only n=4 candidates) but candidate_pool_status remains undersized. Low correlation against physics may reflect the small pool as much as a physics-model gap. **Fix indicated**: this cluster's pool is confirmed (2026-09-13 investigation, CLAUDE.md §3.4) to be genuinely climate-driven, not a calibration artifact — expanding it further would need new PCM candidates in the 42–70°C band with a lower melting point, not a κ change.
+1. **MCDM ranking itself unstable/undersized**: current Kendall's W=1.0000 (perfect agreement given only n=4 candidates) but candidate_pool_status remains undersized. Low correlation against physics may reflect the small pool as much as a physics-model gap. **Fix indicated**: this cluster's pool is confirmed (2026-09-13 investigation, CLAUDE.md §3.4) to be genuinely climate-driven, not a calibration artifact — expanding it further would need new PCM candidates in the 42–70°C band with a lower melting point, not a κ change.
 
-2. **Supercooling weight mismatch (historical)**: in the pre-cap run supercooling dominated (63.8%); post-cap, `Tm_fitness` dominates (51.9%) instead. The physics model still cannot simulate supercooling regardless of its current weight — this caveat is structural, not tied to the specific dominant-criterion number.
+2. **Dominant criterion (current)**: `vol_latent_heat` (47.5% entropy weight), not Tm_fitness (was 51.9% at 2026-09-13) or supercooling (63.8% pre-cap). The physics model still cannot independently verify latent-heat-driven disagreement here any more precisely than it could supercooling — this caveat is structural, not tied to the specific dominant-criterion number.
 
-### Cluster 1 (ρ = +0.125 historical; current ρ = −0.190)
+### Cluster 1 (ρ = +0.125 pre-unification; ρ = −0.190 as of 2026-09-13; current ρ = −0.168)
 
-**Was the best outcome of the three clusters in the historical run; now the worst.** MCDM and physics now disagree more than before (-19.0% rank correlation, vs the historical weak positive +12.5%). Current Kendall's W = 0.750 (moderate-to-strong method agreement), n=8 (healthy pool, `in_band` at κ=0.5).
+**Was the best outcome of the three clusters pre-unification; has been the worst since 2026-09-13.** Current Kendall's W = 0.7679 (moderate-to-strong method agreement), n=8 (healthy pool, `in_band` at κ=0.5).
 
-- The flip from weakly positive to negative coincides with the post-cap dominant criterion becoming Tm_fitness (83.3% entropy weight, the highest of the three clusters) rather than supercooling (was 48.6%) — worth investigating whether Tm_fitness's Gaussian-target transform is driving this cluster's disagreement now, rather than supercooling.
-- Phase 8's k-sweep still shows agreement worsening further as the supercooling penalty rises (−0.190 → −0.333), so supercooling over-weighting is not the current explanation for this cluster's disagreement.
+- Dominant criterion remains `Tm_fitness` across both the 2026-09-13 and current runs (83.3% → 80.5% entropy weight, the highest of the three clusters both times) — worth investigating whether Tm_fitness's Gaussian-target transform is driving this cluster's persistent disagreement, rather than supercooling (which was never dominant here post-cap).
+- Phase 8's k-sweep still shows agreement worsening further as the supercooling penalty rises (−0.168 → −0.311), so supercooling over-weighting is not the current explanation for this cluster's disagreement.
 
-### Cluster 2 (ρ = −0.097 historical; current ρ = −0.091, largest cluster)
+### Cluster 2 (ρ = −0.097 pre-unification; ρ = −0.091 as of 2026-09-13; current ρ = +0.569, largest cluster)
 
-**Weakly negative agreement in both the historical and current runs** — MCDM and physics essentially uncorrelated, and the number barely moved (−0.097 → −0.091) despite the underlying survivor pool shrinking from n=17 to n=11. Kendall's W = 0.555 (now the most ambiguous of the three clusters, <0.6).
+**The only cluster to cross into PARTIAL agreement (0.4<ρ≤0.8) since the 2026-09-19 Tm_fitness fix** — a reversal from weakly-negative-to-uncorrelated in both earlier runs. Kendall's W = 0.4170 (the most ambiguous of the three clusters, <0.6; Borda and Copeland also disagree on Top-3 membership here — Copeland-vs-simulation rho=0.633, p=0.036, nominally significant).
 
-- Dominant criterion is now Tm_fitness (68.1%), not supercooling (was 57%) — same caveat as Clusters 0/1: the physics model cannot validate supercooling at any weight.
-- Candidate pool may still be heterogeneous enough (paraffins vs. fatty acids vs. inorganics) that a single MCDM ranking cannot capture the variation under this climate.
-- Phase 8's k-sweep shows agreement worsening (−0.091 → −0.264 at k≥0.1) in this cluster too.
+- Dominant criterion is now `thermal_conductivity` (41.4%), not Tm_fitness (68.1% at 2026-09-13) or supercooling (57% pre-cap) — same caveat as Clusters 0/1: the physics model cannot validate supercooling at any residual weight.
+- Candidate pool may still be heterogeneous enough (paraffins vs. fatty acids vs. inorganics) that a single MCDM ranking cannot capture the variation under this climate — the Borda/Copeland Top-3 disagreement is itself evidence of this.
+- Phase 8's k-sweep shows agreement worsening (+0.569 → +0.387 at k≥0.1) in this cluster too — the direction is consistent with Clusters 0/1 even though the sign here is now positive.
 
 ## Code Quality & Documented Design Decisions
 
@@ -362,12 +400,19 @@ See `10_PHASE_8_AUDIT.md` for the full Phase 8 findings.
 
 **Status**: Phase 7 script renumbered to `10_physics_validation.py` (2026-09-08). Pre-unification
 physics validation found weak-to-negative correlation with MCDM, attributed to supercooling's
-entropy-inflated MCDM weight (48–64%). The unified Phase 6 caps that weight at 0.16, and a fresh
-`10_physics_validation.py` run against the post-cap `mcdm_full_rankings.csv` has since been
-completed (2026-09-13, together with the T_DELIVERY_C=60°C and M_W_KG=200kg corrections) —
-**the cap did NOT flip the result to positive**: current rho = 0.105/-0.190/-0.091 (clusters 0/1/2),
-still all ≤0.4, i.e. still a genuine negative validation, now with `Tm_fitness` (51.9/83.3/68.1%)
-rather than supercooling as the dominant MCDM criterion. Phase 8's k-sweep (agreement still worsens
-as the supercooling penalty rises, in every cluster) remains the supporting evidence that
-supercooling was over-weighted pre-cap and that capping it was the right direction, even though it
-was not sufficient on its own to produce a positive physics/MCDM correlation.
+entropy-inflated MCDM weight (48–64%). The unified Phase 6 caps that weight at 0.16; a
+`10_physics_validation.py` run against the post-cap `mcdm_full_rankings.csv` (2026-09-13, together
+with the T_DELIVERY_C=60°C and M_W_KG=200kg corrections) still found no cluster exceeding ρ=0.4
+(rho = 0.105/-0.190/-0.091). **A further fix, 2026-09-19 (`Tm_fitness` scored against
+`Tm_target_capped_C` instead of raw `Tm_target_C`), changed the result again and is the current
+on-disk state: rho = -0.200/-0.168/+0.569 (clusters 0/1/2), p=0.800/0.691/0.067.** Clusters 0–1
+remain a genuine negative validation (≤0.4); **Cluster 2 crossed into PARTIAL agreement**
+(0.4<ρ≤0.8) for the first time in this project's Phase 7 history. The dominant MCDM criterion is no
+longer uniformly `Tm_fitness`: `vol_latent_heat` (47.5%, Cluster 0), `Tm_fitness` (80.5%, Cluster 1),
+`thermal_conductivity` (41.4%, Cluster 2). Phase 8's k-sweep (agreement still worsens as the
+supercooling penalty rises, in every cluster, including Cluster 2's now-positive baseline) remains
+the supporting evidence that supercooling is over-weighted whenever its penalty is amplified, even
+though neither the entropy cap nor the Tm_fitness fix was sufficient on its own to produce a
+uniformly positive physics/MCDM correlation. The seasonal-sensitivity picture flipped alongside
+this fix too: 8/11 (cluster, season) cells now flip the annual #1 pick (was 0/11 at 2026-09-13) —
+see the "Level B seasonal PCM sensitivity" section above.

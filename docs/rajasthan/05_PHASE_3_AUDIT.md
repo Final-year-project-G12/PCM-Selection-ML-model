@@ -143,9 +143,11 @@ Q_night_kJ  = 300.0 * 4.186 * (60.0 - T_mains_est_C)   [was (50.0 - T_mains_est_
 - Physics validation (Phase 7): calibration medoid solar fractions shifted down (~58–60% vs. the
   pre-fix ~64–66%, still inside the 54–84% benchmark band) since the simulator now targets a
   harder-to-hit 60°C delivery threshold. Per-cluster Spearman rho (MCDM rank vs. simulated
-  solar-fraction rank) moved to 0.105 / -0.095 / -0.091 (cluster 0/1/2) — still NEGATIVE-band per
-  the existing interpretation convention; cluster 0's reading is on an n=4 undersized pool and
-  should be read with that caveat. See `physics_validation_summary_rajasthan.txt`.
+  solar-fraction rank), current on-disk value (post-2026-09-19 `Tm_fitness` scoring fix — see
+  `09_PHASE_7_AUDIT.md`'s "UPDATE (2026-09-19)" section): **-0.200 / -0.168 / +0.569** (cluster
+  0/1/2) — clusters 0–1 remain NEGATIVE-band, cluster 2 is now PARTIAL (0.4<rho≤0.8); cluster 0's
+  reading is on an n=4 undersized pool and should be read with that caveat. See
+  `physics_validation_summary_rajasthan.txt`.
 
 ## The five interaction terms (exact, with in-code physical justification)
 

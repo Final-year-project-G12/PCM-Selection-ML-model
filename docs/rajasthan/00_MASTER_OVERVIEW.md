@@ -34,13 +34,33 @@ landed after the unification above, and this time the full Phase 5–9 chain WAS
 **Current (2026-09-13) numbers**, superseding both the pre-unification numbers below AND the
 2026-09-08 unification's own then-current numbers: κ-calibrated survivors **23 total (4/8/11 per
 cluster)**, down from the unification's 39 (9/14/16); calibration medoid solar fractions
-**64.0/65.8/64.3%**. Additionally, `11_seasonal_pcm_sensitivity.py` had a separate bug (hardcoded
+**64.0/65.8/64.3%**. `11_seasonal_pcm_sensitivity.py` had a separate bug (hardcoded
 `LATENT_HEAT_FRACTION=0.7` instead of each cluster's own calibrated kappa) that was found and fixed
-in the same pass — the corrected result is **0/11 cluster-season cells flip** from the annual #1
-PCM pick, reframed as a positive finding (Rajasthan's PCM selection is seasonally robust; Objective
-3's DRL controller is now motivated by real-time weather/demand variability, not PCM-ranking
-instability — see `09_PHASE_7_AUDIT.md`). See `05_PHASE_3_AUDIT.md`, `07_PHASE_5_AUDIT.md`,
-`09_PHASE_7_AUDIT.md` and `10_PHASE_8_AUDIT.md` for full detail.
+in the same pass.
+
+⚠️ **FURTHER CORRECTION (2026-09-19): `Tm_fitness` scoring fix, full re-run COMPLETE.** `Tm_fitness`
+was being scored against the raw `Tm_target_C` (67.0°C) instead of each cluster's own achievable
+`Tm_target_capped_C`; fixed to score against the capped target. This changed Phase 6's rankings and
+Phase 7's validation result, and — unlike the 2026-09-13 corrections above — was NOT propagated into
+this file's status table/validation-strategy sections below until this pass. **Current on-disk
+numbers, per `outputs/recommendation_cards_rajasthan.md` and `physics_validation_summary_rajasthan.txt`:**
+- Spearman rho (Borda vs. simulated solar fraction): **-0.200 / -0.168 / +0.569** (clusters 0/1/2),
+  p = 0.800/0.691/0.067. Clusters 0–1 remain NEGATIVE (rho≤0.4); Cluster 2 is now PARTIAL
+  (0.4<rho≤0.8), up from NEGATIVE pre-fix.
+- Kendall's W: **1.0000 / 0.7679 / 0.4170** (Cluster 2 still below the 0.6 ambiguous threshold).
+- Top-1 picks: savE® OM55 (Cluster 0), PureTemp 60 (Cluster 1), Palmitic-stearic acid/Expanded
+  graphite (Cluster 2).
+- Dominant entropy-weighted criterion per cluster: `vol_latent_heat` (47.5%, Cluster 0),
+  `Tm_fitness` (80.5%, Cluster 1), `thermal_conductivity` (41.4%, Cluster 2) — NOT uniformly
+  `Tm_fitness` as earlier drafts of this file stated.
+- Seasonal sensitivity (`outputs/seasonal_pcm_sensitivity_rajasthan.md`): **8 of 11 valid
+  cluster-season cells flip** the annual #1 PCM pick (Cluster 0: 4/4 flip; Cluster 1: 0/3 flip,
+  one cell has <2 survivors; Cluster 2: 4/4 flip) — this supersedes the "0/11 flip, seasonally
+  robust" framing below, which was the pre-2026-09-19 result and is no longer current.
+
+See `05_PHASE_3_AUDIT.md`, `07_PHASE_5_AUDIT.md`, `08_PHASE_6_AUDIT.md`, `09_PHASE_7_AUDIT.md` and
+`10_PHASE_8_AUDIT.md` for full detail — `08_PHASE_6_AUDIT.md`'s and `09_PHASE_7_AUDIT.md`'s own
+"UPDATE (2026-09-19)" sections carry the ground-truth numbers this banner summarizes.
 
 ---
 
@@ -180,8 +200,8 @@ failure — see "Current architecture" → Resumability below.
 | 4 — Regime Clustering | `05` | **COMPLETE — with 2 caught-and-fixed bugs** | k=3 (GMM `diag` covariance, fixed from `full`); GMM cluster-index instability fixed via canonical relabeling (2026-08-11); Koppen-Geiger external validation wired in (ARI=0.2787, NMI=0.3817 vs GMM, per `cluster_profiles_rajasthan.csv`'s current on-disk `koppen_ari`/`koppen_nmi` columns) |
 | 5 — Feasibility Filtering | `01_preprocess`, `07` | **UNIFIED with Tamil Nadu 2026-09-08; re-run COMPLETE (2026-09-13)** | 8 constraints in canonical order; Constraint 6 = `Tm ≤ Tm_target_capped_C` (replaces retired `07b_charging_feasibility.py`); κ-calibration; outputs `feasibility_survivors_by_cluster{,_kappa_calibrated}.csv`. 62-row shared PCM pool. Current κ-calibrated survivors: **4/8/11 per cluster (n=23)**, κ = 0.0/0.5/0.3. |
 | 6 — MCDM Ranking | `08` | **UNIFIED with Tamil Nadu 2026-09-08 (byte-identical engine); re-run COMPLETE (2026-09-13)** | 8 Table-13 criteria; climate-relative latent heat (`L/L_required`); log-scaled cycling; **supercooling entropy weight capped at 2× prior (0.16)** — fixes the entropy-formula overweighting Phase 7/8 diagnosed as the negative-correlation cause. Current dominant criterion is Tm_fitness (entropy weight 51.9%/83.3%/68.1% per cluster), not supercooling. PROMETHEE handles Tm natively (q=2K/p=8K). N_DRAWS=1000 (both states). Provenance hard-fail. AHP pairwise elicitation still a TODO stub. |
-| 7 — Physics Validation | `physics_lib.py`, `10_physics_validation.py` | **RE-RUN COMPLETE (2026-09-13, renumbered 09→10)** | Current Spearman rho (Borda vs. simulated solar fraction) = **0.105 / -0.190 / -0.091** (clusters 0/1/2) — still all ≤0.4, a genuine negative validation, though the exact numbers moved from the pre-unification -0.385/+0.125/-0.097 after the entropy cap + T_DELIVERY_C/M_W_KG fixes. Calibration medoid SF = 64.0/65.8/64.3% (in the 54–84% benchmark band). |
-| 8 — Supercooling Penalty | `physics_lib.py`, `08_phase8_supercooling_sweep.py` | **RE-RUN COMPLETE (2026-09-13)** | Current sweep still worsens physics/MCDM agreement as k rises in every cluster (k=0.0→0.3: cluster 0 0.105→-0.949, cluster 1 -0.190→-0.333, cluster 2 -0.091→-0.264) — same qualitative conclusion as the pre-unification sweep, now on the smaller n=4/8/11 pool. Energy conservation passes; 100% of medoids stay in-band across all k. |
+| 7 — Physics Validation | `physics_lib.py`, `10_physics_validation.py` | **RE-RUN COMPLETE (2026-09-19, Tm_fitness scoring fix)** | Current Spearman rho (Borda vs. simulated solar fraction) = **-0.200 / -0.168 / +0.569** (clusters 0/1/2), p=0.800/0.691/0.067 — Clusters 0–1 still NEGATIVE (≤0.4), Cluster 2 now PARTIAL (was NEGATIVE pre-2026-09-19 fix). Kendall's W = 1.0000/0.7679/0.4170. Calibration medoid SF = 64.0/65.8/64.3% (in the 54–84% benchmark band). |
+| 8 — Supercooling Penalty | `physics_lib.py`, `08_phase8_supercooling_sweep.py` | **RE-RUN COMPLETE (2026-09-19)** | Current sweep still worsens physics/MCDM agreement as k rises in every cluster (k=0.0→0.1–0.3: cluster 0 -0.200→-1.000, cluster 1 -0.168→-0.311, cluster 2 +0.569→+0.387) — same qualitative conclusion as earlier sweeps, now on the Tm_fitness-corrected n=4/8/11 pool. Energy conservation passes; 100% of medoids stay in-band across all k. |
 | 8 (deliverable) — Recommendation Cards | `09_recommendation_cards.py` | **RE-RUN COMPLETE (2026-09-13, renumbered 10→09)** | Pure aggregation of Phases 4/6/7 into `recommendation_cards_rajasthan.md`; hard-fails on cross-phase cluster-identity mismatch. Numbered 09 to match Tamil Nadu; runs LAST. |
 
 ## Current architecture
@@ -239,9 +259,10 @@ Calinski-Harabasz for cluster count, Monte Carlo inclusion-probability for MCDM 
 Kendall's W for cross-method ranking agreement. A third layer — **external classification
 validation** (Köppen-Geiger, NBC/ECBC climate zones) — is specified and explicitly stubbed (`None`
 values, not fabricated), and a fourth — **physics-based simulation validation** (Phase 7,
-`10_physics_validation.py`) — is implemented and run (current, post-unification and post-2026-09-13
-delivery-temperature/tank-mass corrections: rho = 0.105 / -0.190 / -0.091, clusters 0/1/2 — still a
-genuine negative result, all ≤0.4).
+`10_physics_validation.py`) — is implemented and run (current, post-unification, post-2026-09-13
+delivery-temperature/tank-mass corrections, AND post-2026-09-19 Tm_fitness scoring fix:
+rho = -0.200 / -0.168 / +0.569, clusters 0/1/2 — Clusters 0–1 remain a genuine negative result
+(≤0.4), Cluster 2 is now PARTIAL agreement (0.4<rho≤0.8)).
 
 ## Current known issues
 
@@ -343,8 +364,8 @@ objectives.
 | 3 — Climate Signature | N2, N3 | Two-tier signature (not a single temperature); Tm_target/L_required corrected to the 42–70°C SWH band (not the 18–28°C comfort band a naive approach might reuse) |
 | 4 — Regime Clustering | N1 | GMM-discovered regimes (k=3, statistically selected, not hand-picked); external validation now PARTIALLY wired in (Köppen-Geiger, ARI=0.2787/NMI=0.3817) — N1's "discovered, not hand-picked" claim is now supported by internal statistical measures PLUS one external classification cross-check (NBC/ECBC still open) |
 | 5 — Feasibility Filtering | N3 (partial) | Enforces the corrected 42–70°C band and SWH-specific constraints; **database-size gap closed 2026-08-12** (18–25 → 55 rows, inside the 40–60 target) — N3's practical value depended on having enough real in-band candidates to filter; that prerequisite is now met, and Phase 5 has been re-run against the expanded database (most recently 2026-09-13, against the corrected T_DELIVERY_C=60°C/L_required basis) — current κ-calibrated survivors 4/8/11 per cluster (n=23) |
-| 6 — MCDM Ranking | N4 | Four-method consensus + Monte Carlo, not a single TOPSIS winner; Kendall's W explicitly reports when consensus is *not* strong (current on-disk run: Cluster 0 W=0.900, Cluster 1 W=0.750, Cluster 2 W=0.555 — Cluster 2 now the ambiguous one, <0.6) rather than hiding disagreement — this honest reporting is itself part of N4's value proposition |
-| 7 — Physics Validation (COMPLETE) | N5 | Independently validated the MCDM ranking against simulated solar fraction — **the result is a genuine NEGATIVE validation (Spearman rho ≤0.4, all 3 clusters — current values 0.105/-0.190/-0.091)**, not a confirmation. This is itself evidence for N5 as a methodology (the validation was performed rigorously and reported honestly, exactly per the framework doc's own "write it out plainly" instruction) even though it does not currently confirm the MCDM ranking's output — N5's claim should read "the ranking WAS physics-tested, honestly, with a negative result" not "the ranking IS physics-validated." Cluster 0's reading additionally carries an n=4 undersized-pool caveat (accepted policy, see `12_FINAL_READINESS_REPORT.md` "Scientific risks"). See `09_PHASE_7_AUDIT.md`. |
+| 6 — MCDM Ranking | N4 | Four-method consensus + Monte Carlo, not a single TOPSIS winner; Kendall's W explicitly reports when consensus is *not* strong (current on-disk run, post-2026-09-19 Tm_fitness fix: Cluster 0 W=1.0000, Cluster 1 W=0.7679, Cluster 2 W=0.4170 — Cluster 2 the ambiguous one, <0.6) rather than hiding disagreement — this honest reporting is itself part of N4's value proposition |
+| 7 — Physics Validation (COMPLETE) | N5 | Independently validated the MCDM ranking against simulated solar fraction — **current result (post-2026-09-19 Tm_fitness fix) is Spearman rho = -0.200/-0.168/+0.569 (clusters 0/1/2): Clusters 0–1 remain a genuine NEGATIVE validation (≤0.4), Cluster 2 is now PARTIAL agreement (0.4<rho≤0.8)**, not a uniform negative result as earlier drafts stated. This is itself evidence for N5 as a methodology (the validation was performed rigorously and reported honestly, exactly per the framework doc's own "write it out plainly" instruction) even though it does not currently confirm the MCDM ranking's output for Clusters 0–1 — N5's claim should read "the ranking WAS physics-tested, honestly, with mixed results" not "the ranking IS physics-validated." Cluster 0's reading additionally carries an n=4 undersized-pool caveat (accepted policy, see `12_FINAL_READINESS_REPORT.md` "Scientific risks"). See `09_PHASE_7_AUDIT.md`. |
 | 8 — Recommendation Cards (COMPLETE) | (packaging) | Aggregates N1–N5's evidence, including Phase 7's negative result and its caveats, into the final deliverable format — `09_recommendation_cards.py`'s own caveats section surfaces the physics-validation band per cluster, not just the MCDM Top-3 |
 
 ### Phase → RG (broader project research gap) mapping — explicitly indirect
@@ -393,12 +414,14 @@ pending re-run.** The items below are the genuinely open (non-blocking) items, n
    `07_PHASE_5_AUDIT.md` and CLAUDE.md §3.4.
 3. NBC/ECBC Indian climate-zone validation remains stubbed (Köppen-Geiger is now wired in — see
    known issue 9 above). Still open, non-blocking.
-4. Interpret and write up Phase 7's negative result properly (see `09_PHASE_7_AUDIT.md`) — this is
-   itself a real, reportable finding, not a failure to hide: the current rho = 0.105/-0.190/-0.091
-   (clusters 0/1/2) means the MCDM ranking, as currently weighted, is not confirmed by the physics
-   simulation even after the supercooling entropy-weight cap. Phase 8's k-sweep (agreement worsens
-   as the supercooling penalty rises, in every cluster) is the supporting evidence that supercooling
-   was over-weighted pre-cap, not that the cap itself was insufficient.
+4. Interpret and write up Phase 7's result properly (see `09_PHASE_7_AUDIT.md`) — this is itself a
+   real, reportable finding, not a failure to hide: the current rho = -0.200/-0.168/+0.569
+   (clusters 0/1/2, post-2026-09-19 Tm_fitness scoring fix) means the MCDM ranking, as currently
+   weighted, is not confirmed by the physics simulation for Clusters 0–1 (still NEGATIVE, ≤0.4) but
+   is now PARTIALLY confirmed for Cluster 2 (0.4<rho≤0.8) — a mixed result, not a uniform negative
+   one. Phase 8's k-sweep (agreement worsens as the supercooling penalty rises, in every cluster) is
+   the supporting evidence that supercooling remains over-weighted, not that the Tm_fitness fix was
+   insufficient.
 
 ## Recommended next step
 
