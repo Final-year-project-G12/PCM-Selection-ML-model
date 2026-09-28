@@ -17,6 +17,26 @@ Scripts: `08_phase8_supercooling_sweep.py`, the supercooling penalty implementat
 `check_supercooling_K.py` (audit stub at the end of this file). Sensitivity sweep
 k ∈ [0.0, 0.1, 0.2, 0.3]. Results below are PRE-unification (raw supercooling entropy weight).
 
+⚠️ **NEWEST UPDATE (2026-09-19), re-run COMPLETE — supersedes the "TANK MASS RE-CALIBRATION" table
+below.** After the 2026-09-19 `Tm_fitness` scoring fix (scored against `Tm_target_capped_C` instead
+of raw `Tm_target_C` — see `09_PHASE_7_AUDIT.md`), the current on-disk
+`phase8_supercooling_sweep_summary_rajasthan.txt` gives:
+
+| k | Cluster 0 rho (n=4) | Cluster 1 rho (n=8) | Cluster 2 rho (n=11) |
+|---|---|---|---|
+| 0.0 | -0.200 | -0.168 | +0.569 |
+| 0.1 | -1.000 | -0.311 | +0.387 |
+| 0.2 | -1.000 | -0.311 | +0.387 |
+| 0.3 | -1.000 | -0.311 | +0.387 |
+
+Same qualitative conclusion as every earlier version of this sweep: agreement still worsens (rho
+moves further from its k=0.0 value) as the supercooling penalty k rises, in every cluster — the
+2026-09-19 Tm_fitness fix changed the starting point (Cluster 2's k=0.0 baseline is now positive,
++0.569, instead of negative) but not the direction of the effect. Cluster 0 still swings hardest
+(-0.200 → -1.000) on its n=4 undersized pool. 100% of medoids stay in-band across all four k values.
+The "TANK MASS RE-CALIBRATION" table directly below (k=0.0 rho = 0.105/-0.190/-0.091) is now
+superseded by this table.
+
 > ✅ **DELIVERY TEMPERATURE CORRECTION (2026-09-13): re-run complete.** `T_DELIVERY_C` corrected
 > 50→60°C to match Avargani et al. (2021)'s actual validated delivery temperature (see
 > `05_PHASE_3_AUDIT.md`); Phase 5's raised `L_required` ceiling shrank the survivor pool to
@@ -35,7 +55,7 @@ k ∈ [0.0, 0.1, 0.2, 0.3]. Results below are PRE-unification (raw supercooling 
 > swing hardest (0.105 → -0.949) — treat that cluster's k-sensitivity as noisier than clusters 1/2's.
 > 100% of medoids stay in-band across all four k values tested.
 
-> ✅ **TANK MASS RE-CALIBRATION (2026-09-13, same pass): re-run complete.** `M_W_KG` corrected
+> ✅ **TANK MASS RE-CALIBRATION (2026-09-13, same pass) — SUPERSEDED 2026-09-19, see banner above.** `M_W_KG` corrected
 > 300→200 kg (decoupled from Avargani's flow-through 300L figure, re-grounded in Eldokaishi et al.
 > 2022's 50-240L tank-volume literature — see `09_PHASE_7_AUDIT.md`), with `COLLECTOR_UL_WM2K`
 > and `NIGHT_ISOLATION_FRACTION` re-tuned to keep calibration in-band. Current

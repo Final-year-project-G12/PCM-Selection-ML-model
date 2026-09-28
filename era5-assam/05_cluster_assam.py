@@ -4,7 +4,7 @@
 FINAL PHASE 3 — CLIMATE REGIME CLUSTERING (Assam Project)
 
 Clusters the 129 Assam population-weighted grid points into 3 climate regimes using
-a Gaussian Mixture Model (GMM) with full covariance matrix trained on 5 core physical
+a Gaussian Mixture Model (GMM) with diagonal covariance trained on 5 core physical
 climate features:
   1. GHI_mean  (Mean daytime solar irradiance, W/m²)
   2. Ta_mean   (Mean 3-event daytime ambient temperature, °C)
@@ -18,7 +18,7 @@ The 19-feature full-covariance GMM fit 839 free parameters on n=129 samples (6.5
 and contained 22 multicollinear feature pairs (|r| >= 0.70), causing ill-conditioned matrices,
 overfitting, and severe bootstrap instability (mean ARI = 0.3281 - 0.3603).
 
-WHY THE 5-FEATURE K=3 FULL-COVARIANCE MODEL WAS SELECTED:
+WHY THE 5-FEATURE K=3 DIAGONAL-COVARIANCE MODEL WAS SELECTED:
 ---------------------------------------------------------
 1. Reduces parameters per component from 209 to 20 (total params for K=3 = 62, ratio = 0.48 params/sample).
 2. Completely eliminates severe multicollinearity (all 5-feature pairwise correlations |r| < 0.50).
@@ -79,7 +79,9 @@ OUT_PROFILES_ALIAS = CLUSTERING_DIR / "cluster_profiles_assam.csv"
 OUT_BOOT = CLUSTERING_DIR / "gmm_bootstrap_stability.csv"
 OUT_BOOT_ALIAS = CLUSTERING_DIR / "bootstrap_stability_assam.csv"
 
-# SWH Design Parameters (§4 SWH spec)
+# SWH Design Parameters (§4 SWH spec) -- matches 04b_climate_signature.py's
+# own T_DELIVERY/TM_TARGET/SHARE_PCM constants exactly (same pattern as
+# era5-uttarakhand/config.py + 04b_climate_signature.py).
 T_DELIVERY = 50.0       # °C
 DT_APPROACH = 6.0       # K
 TM_TARGET = T_DELIVERY + DT_APPROACH  # = 56.0 °C
@@ -140,13 +142,24 @@ def main():
     joblib.dump(scaler, CLUSTERING_DIR / "scaler_assam.joblib")
 
     # 4. K = 2..10 Grid Search Comparison
-    log("\n[4] K = 2..10 Metric Grid Search Comparison (5 Core Features, Full Covariance)...")
+    log("\n[4] K = 2..10 Metric Grid Search Comparison (5 Core Features, Diagonal Covariance)...")
     comp_rows = []
 
     for k in range(2, 11):
+        # covariance_type="diag" (diagonal) -- NOT "full" -- is the correct
+        # choice here. A full covariance matrix requires D*(D+1)/2
+        # parameters PER component; with 5 standardized core features and
+        # up to K=10 components, that overdetermines the fit relative to
+        # 129 points, which is exactly what caused every point's
+        # max_membership_prob to saturate near 1.000 in the original run
+        # (soft clustering silently degenerating to hard clustering -- 62/80
+        # points in the prior assignment file had prob > 0.999, median
+        # 0.999993). Diagonal covariance assumes feature independence and
+        # needs only D parameters per component -- the same fix Tamil Nadu
+        # and Uttarakhand's own GMM runs made for the same reason.
         gmm = GaussianMixture(
             n_components=k,
-            covariance_type="full",
+            covariance_type="diag",
             random_state=RANDOM_SEED,
             n_init=10,
             max_iter=300
@@ -190,11 +203,11 @@ def main():
         plt.savefig(CLUSTERING_DIR / fig_name, dpi=300)
         plt.close()
 
-    # 5. Fit Final K=3 Full-Covariance GMM
-    log(f"\n[5] Fitting Final GMM (K={K_FINAL}, covariance_type='full', n_init=10, max_iter=300)...")
+    # 5. Fit Final K=3 Diagonal-Covariance GMM (see [4]'s comment for why not "full")
+    log(f"\n[5] Fitting Final GMM (K={K_FINAL}, covariance_type='diag', n_init=10, max_iter=300)...")
     final_gmm = GaussianMixture(
         n_components=K_FINAL,
-        covariance_type="full",
+        covariance_type="diag",
         random_state=RANDOM_SEED,
         n_init=10,
         max_iter=300
@@ -229,7 +242,7 @@ def main():
 
     # 6. Bootstrap Stability Analysis (500 iterations predicting all 129 original points)
     log("\n[7] Assessing Bootstrap Clustering Stability (500 iterations)...")
-    log("  Methodology: Resample 129 grid points with replacement, fit K=3 full GMM,")
+    log("  Methodology: Resample 129 grid points with replacement, fit K=3 diag GMM,")
     log("  predict labels for ALL 129 original points, calculate ARI against full-data reference.")
 
     n_bootstraps = 500
@@ -242,7 +255,7 @@ def main():
 
         boot_gmm = GaussianMixture(
             n_components=K_FINAL,
-            covariance_type="full",
+            covariance_type="diag",
             random_state=b,
             n_init=3,
             max_iter=200
@@ -276,7 +289,7 @@ def main():
 
     boot_df.to_csv(OUT_BOOT, index=False)
     boot_df.to_csv(OUT_BOOT_ALIAS, index=False)
-    log(f"  Bootstrap Stability Results (K=3, Full Covariance):")
+    log(f"  Bootstrap Stability Results (K=3, Diagonal Covariance):")
     log(f"    - Mean ARI          : {mean_ari:.4f}")
     log(f"    - Median ARI        : {median_ari:.4f}")
     log(f"    - Std ARI           : {std_ari:.4f}")
@@ -320,6 +333,8 @@ def main():
             "elev_proxy_mean": sub["elev_proxy"].mean() if "elev_proxy" in sub.columns else np.nan,
             "Tm_target_C": TM_TARGET,
             "Tm_target_mean": TM_TARGET,
+            "Tm_target_capped_C": (sub["Tm_target_capped_C"].mean()
+                                    if "Tm_target_capped_C" in sub.columns else TM_TARGET),
             "L_required_kWh_mean": q_required_kWh,
             "L_required_kJ_per_kg": req_energy_kJ_kg,
             "HSI": hsi_val,
@@ -347,7 +362,7 @@ observations (6.50 parameters/sample) and contained 22 pairs of features with
 high correlation (|r| >= 0.70). This caused ill-conditioned sample covariance
 matrices, overfitting, and severe bootstrap instability (mean ARI = 0.3281 - 0.3603).
 
-SELECTION OF THE 5-FEATURE K=3 FULL-COVARIANCE MODEL:
+SELECTION OF THE 5-FEATURE K=3 DIAGONAL-COVARIANCE MODEL:
 ------------------------------------------------------
 The model was simplified to 5 core physical climate features:
   GHI_mean, Ta_mean, DTR, RH_mean, wind_mean

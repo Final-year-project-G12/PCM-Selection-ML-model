@@ -9,6 +9,28 @@ builds a per-point climate signature, clusters the state into climate
 regimes, and screens/ranks PCM (phase-change-material) candidates for each
 regime, ending in one recommendation card per regime.
 
+> **Status check (2026-09-22):** Phases 1-8 are complete and internally
+> consistent — every file in `data/processed/pcm/` (`pcm_database_uttarakhand.csv`
+> through `recommendation_cards.md`) carries the same 2026-09-22 09:01
+> timestamp, confirming a fresh, single, end-to-end `run_all_uttarakhand.py`
+> pass. Two things below this line are documented as run/current but are
+> not, as of that same check:
+> - **`11_level_b_seasonal_analysis.py` has never been run** — no
+>   `data/processed/pcm/level_b_seasonal_topk.csv` or
+>   `level_b_seasonal_summary.md` exists on disk. It's outside the core
+>   8-phase numbering (a seasonal re-ranking extension, not a blocker —
+>   see its own section below), so this doesn't affect the Phase 1-8
+>   "done" status, but don't cite Level-B seasonal results as available.
+> - **`data/plots/mcdm/*` is one generation stale**: those 3 files
+>   (`mcdm_clusters_folium.html`, `mcdm_clusters_plotly.html`,
+>   `mcdm_cluster_map_points.csv`) are dated 2026-09-14, from BEFORE the
+>   most recent `08_mcdm_ranking.py` re-run (2026-09-22) that produced the
+>   current `mcdm_topk_by_cluster.csv`. `12_mcdm_interactive_plots.py`
+>   hasn't been re-run since, so its `mcdm_final_results_complete.csv`
+>   output doesn't exist yet and the plots folder doesn't reflect the
+>   latest ranking. Re-run `12_mcdm_interactive_plots.py` before citing or
+>   screenshotting anything from `data/plots/mcdm/`.
+
 ## Pipeline overview
 
 ```

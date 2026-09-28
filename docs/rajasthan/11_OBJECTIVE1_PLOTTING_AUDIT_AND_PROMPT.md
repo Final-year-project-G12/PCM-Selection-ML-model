@@ -73,7 +73,8 @@ files each) contain the raw and clean distributions separately, but not side-by-
 
 **How to verify:** Confirm k=3, confirm cluster 0 is the southernmost group (clusters are
 canonically relabeled by ascending mean latitude, per the 2026-08-11 fix), and don't expect regime
-boundaries to match Köppen-Geiger zones cleanly — ARI=0.19/NMI=0.32 against Köppen is a real,
+boundaries to match Köppen-Geiger zones cleanly — ARI=0.2787/NMI=0.3817 (current on-disk value;
+`cluster_profiles_rajasthan.csv`'s `koppen_ari`/`koppen_nmi` columns) against Köppen is a real,
 reported, and *expected* low-to-moderate agreement (the GMM finds finer structure than Köppen's
 broad classes), not an error to chase down.
 
@@ -115,10 +116,11 @@ three, the bug has resurfaced — that is a real red flag, not a stylistic quirk
 used to catch the VIKOR bug and to identify GRA as a "structural outlier."
 
 **How to verify:** Expect **GRA** to show the lowest mean pairwise correlation with the other three
-methods (Phase 6's own diagnostic names GRA the structural outlier in all three clusters). Expect
-Cluster 0's block to look visibly weaker/patchier than Clusters 1 and 2's (Kendall's W: Cluster 0 =
-0.388 vs. Clusters 1/2 = 0.634–0.635) — Cluster 0's low agreement is a genuine, still-open finding,
-not a data-sparsity artifact (n=9, a healthy sample size).
+methods (Phase 6's own diagnostic names GRA the structural outlier in all three clusters). Current
+on-disk Kendall's W is Cluster 0=0.900, Cluster 1=0.750, Cluster 2=0.555 — expect **Cluster 2's**
+block to look visibly weaker/patchier now (below the 0.6 ambiguous threshold), not Cluster 0 as in
+the historical n=9/15/17 run (W=0.388 vs. 0.634–0.635 then) — Cluster 2's current n=11 pool is a
+healthy sample size, so this would be a genuine, still-open finding, not a data-sparsity artifact.
 
 ### 2.7 Monte Carlo Top-3 inclusion probability
 
@@ -139,10 +141,12 @@ rank-reversal frequency shows how often *any* two candidates swap order across t
 (N_DRAWS=1000, not the framework doc's 5000 — a documented, defensible deviation, not a shortcut to
 hide).
 
-**How to verify:** Cluster 0 (Kendall's W=0.388, the weakest cross-method agreement) should show
-higher rank-reversal frequency than Clusters 1/2 (W=0.634–0.635) — this is a specific, testable
-prediction from the project's own numbers; if Cluster 0 doesn't show elevated churn, that's worth a
-second look at either plot.
+**How to verify:** current on-disk Kendall's W is Cluster 0=0.900, Cluster 1=0.750, Cluster 2=0.555
+(`spearman_rho_by_cluster_rajasthan.csv`'s `kendalls_w_cluster` column) — **Cluster 2, not Cluster
+0, is now the weakest cross-method agreement** (below the 0.6 ambiguous threshold), a flip from the
+pre-2026-09-13 numbers cited elsewhere in this doc (Cluster 0 was weakest then, W=0.388). So Cluster
+2 should now show the higher rank-reversal frequency, not Cluster 0 — re-derive this prediction from
+the current CSV before checking the plot, don't reuse the historical Cluster-0 prediction.
 
 ### 2.9 Agreement plot — simulated performance rank vs. MCDM consensus rank
 
@@ -150,11 +154,15 @@ second look at either plot.
 actually deliver better simulated solar fraction? The framework doc frames this validation as "what
 makes the result publishable, not skippable."
 
-**How to verify against the known, already-computed numbers:** the trend per cluster should visually
+**How to verify against the known, already-computed numbers (current on-disk, post-2026-09-13
+corrections — see `spearman_rho_by_cluster_rajasthan.csv`):** the trend per cluster should visually
 match:
-- Cluster 0: ρ = −0.385 (downward trend — higher MCDM rank, *worse* simulated performance)
-- Cluster 1: ρ = +0.125 (weak upward trend — best of the three, still weak)
-- Cluster 2: ρ = −0.097 (flat/weak downward)
+- Cluster 0: ρ = 0.105 (weak upward trend, but on an undersized n=4 pool)
+- Cluster 1: ρ = −0.190 (downward trend — higher MCDM rank, *worse* simulated performance)
+- Cluster 2: ρ = −0.091 (flat/weak downward)
+
+(Historical pre-2026-09-13 numbers were ρ = −0.385 / +0.125 / −0.097 for clusters 0/1/2 — note
+Clusters 0 and 1's signs have since flipped; always read the current CSV rather than these numbers.)
 
 If a regenerated scatter shows any cluster trending strongly positive, the join between
 `mcdm_full_rankings.csv` and `physics_validation_rajasthan.csv` is probably wrong (check you're
@@ -354,8 +362,11 @@ PART A — the 13 requested plots
      computed and saved, verify the exact column name on disk rather than guessing). One violin/bar
      per cluster. Note: N_DRAWS=1000 in this pipeline (not literature-cited 5000) — label the axis/
      caption accordingly, don't claim 5000 draws. Verification block: print mean rank-reversal
-     frequency per cluster and confirm Cluster 0 (Kendall's W=0.388) is higher than Clusters 1/2
-     (W=0.634-0.635); print WARN if not, since this is a specific documented prediction.
+     frequency per cluster and compare against the CURRENT `kendalls_w_cluster` values in
+     `spearman_rho_by_cluster_rajasthan.csv` (as of 2026-09-13: Cluster 0=0.900, Cluster 1=0.750,
+     Cluster 2=0.555 — Cluster 2 is now the lowest-agreement cluster, not Cluster 0 as in the
+     historical n=9/15/17 run); print WARN if the cluster with the lowest W doesn't also show the
+     highest rank-reversal frequency, since this is a specific documented prediction.
 
 9. Agreement plot — simulated performance rank vs. MCDM consensus rank, per cluster
    → outputs/objective1_plots_rajasthan/06_physics_validation/mcdm_vs_physics_agreement_rajasthan.html

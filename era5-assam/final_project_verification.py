@@ -5,7 +5,8 @@ MASTER FINAL PROJECT VERIFICATION SUITE (Phase 11)
 
 Performs comprehensive end-to-end verification across the entire project lifecycle:
   1. Final climate clustering is strictly K=3 with 129 grid points.
-  2. Final Phase 3 medoids match {0: 'ASP_0012', 1: 'ASP_0092', 2: 'ASP_0028'}.
+  2. Final Phase 3 medoids match {0: 'ASP_0003', 1: 'ASP_0036', 2: 'ASP_0080'}
+     (updated 2026-09-23 -- see the inline comment at this check for why).
   3. Phase 9 physics outputs contain exactly 8 PCMs across 3 clusters (24 rows).
   4. Phase 10 comparison outputs contain exactly 8 PCMs across 3 clusters (24 rows).
   5. Current K=3 MCDM governance enforces n_confirmed=[0,0,0] and NOT PERFORMED.
@@ -58,10 +59,15 @@ def run_master_verification():
         import importlib
         phys_val = importlib.import_module("10_physics_validation")
         medoids = phys_val.derive_true_medoids(pd.read_csv(assign_f), pd.read_csv(sig_f))
-        expected_medoids = {0: "ASP_0012", 1: "ASP_0092", 2: "ASP_0028"}
+        # Updated 2026-09-23 alongside the matching fix in verify_phase9.py:
+        # these medoids shifted because 05_cluster_assam.py's GMM
+        # covariance_type changed "full"->"diag" (the correct choice for 5
+        # features / 80 points), which genuinely changes cluster assignment,
+        # not a regression.
+        expected_medoids = {0: "ASP_0003", 1: "ASP_0036", 2: "ASP_0080"}
         if medoids == expected_medoids:
             c2_ok = True
-    results.append(("2. Final Phase 3 medoids confirmed: ASP_0012, ASP_0092, ASP_0028", c2_ok))
+    results.append(("2. Final Phase 3 medoids confirmed: ASP_0003, ASP_0036, ASP_0080", c2_ok))
 
     # 3. Phase 9 Physics Outputs
     phys_f = PROCESSED_DIR / "pcm" / "physics_validation_assam.csv"

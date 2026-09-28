@@ -4,10 +4,11 @@
 
 **All 8 phases (Data Collection → Recommendation Cards) are now implemented and have been run
 end-to-end on real Rajasthan data**, via `run_all_rajasthan.py`, from one consistent Phase 4
-clustering pass. Phase 7 (Physics Validation) returns a genuine, honestly-reported NEGATIVE result
-(all three clusters' Spearman rho ≤ 0.4) — this is a real finding, not an implementation gap, and it
-changes what can be claimed about the pipeline's own MCDM ranking (see "What cannot yet be claimed"
-below).
+clustering pass. Phase 7 (Physics Validation) currently returns a MIXED result: Clusters 0–1 are a
+genuine, honestly-reported NEGATIVE validation (Spearman rho ≤ 0.4), and Cluster 2 is PARTIAL
+agreement (0.4<rho≤0.8) as of the 2026-09-19 correction below — this is a real finding, not an
+implementation gap, and it changes what can be claimed about the pipeline's own MCDM ranking (see
+"What cannot yet be claimed" below).
 
 **Update, 2026-08-12**: the PCM property database prerequisite that this report previously named as
 the single blocking gap has been closed — expanded from 18/25 rows to 55 rows, inside the 40–60-row
@@ -28,12 +29,13 @@ own (stale) figures above.** Current state (04b → 05 → 05a → 07 → 08 →
 - `Tm_target_C`: 57.0 → **67.0°C**; `L_required`: 285–344 → **410–469 kJ/kg**.
 - Phase 5 fixed-κ=0.7 survivors: back to **0/0/0** (raised ceiling); κ-calibrated survivors
   **4/8/11** (n=23 total, down from 39) — cluster 0 bottoms out `insufficient_even_at_kappa_0`.
-- Phase 7 Spearman rho: **0.105 / -0.095 / -0.091** (clusters 0/1/2) — still negative-band;
-  cluster 0's reading is on an undersized n=4 pool.
+- Phase 7 Spearman rho (as of this 2026-09-13 update; **superseded 2026-09-19, see CRITICAL UPDATE
+  #5 below**): 0.105 / -0.095 / -0.091 (clusters 0/1/2) — negative-band; cluster 0's reading is on
+  an undersized n=4 pool.
 - Phase 8 supercooling sweep: agreement still worsens as the penalty k rises at every cluster,
   same qualitative finding as pre-fix, now on the smaller n=4/8/11 pool.
-- Top-1 picks changed: Palmitic-stearic acid/Expanded graphite / PureTemp 60 / n-Heptacosane (C27)
-  (clusters 0/1/2) — see `outputs/recommendation_cards_rajasthan.md` for the full cards.
+- Top-1 picks at this point (**also superseded 2026-09-19**): Palmitic-stearic acid/Expanded
+  graphite / PureTemp 60 / n-Heptacosane (C27) (clusters 0/1/2).
 See `05_PHASE_3_AUDIT.md`, `07_PHASE_5_AUDIT.md`, `08_PHASE_6_AUDIT.md`, `09_PHASE_7_AUDIT.md`, and
 `10_PHASE_8_AUDIT.md` for each phase's detailed superseding section.
 
@@ -44,17 +46,41 @@ system that has no tank in the sense `M_W_KG` represents. Corrected 300→200 kg
 Eldokaishi et al. (2022)'s hybrid-PCM-SWH tank-sizing literature (50–240L for a 1–8 m² collector,
 matching this pipeline's own 4 m² design case). Required re-tuning `COLLECTOR_UL_WM2K` (2.5→2.0)
 and `NIGHT_ISOLATION_FRACTION` (0.05→0.03) to keep calibration in the 54–84% benchmark band (now
-64.0/65.8/64.3%, closer to the 69% target than before). Phase 7 rho: 0.105/-0.190/-0.091. See
-`09_PHASE_7_AUDIT.md` and `10_PHASE_8_AUDIT.md`.
+64.0/65.8/64.3%, closer to the 69% target than before). Phase 7 rho at this point (superseded
+2026-09-19, see CRITICAL UPDATE #5 below): 0.105/-0.190/-0.091. See `09_PHASE_7_AUDIT.md` and
+`10_PHASE_8_AUDIT.md`.
+
+✅ **CRITICAL UPDATE #5 (2026-09-19): `Tm_fitness` scoring fix, full re-run COMPLETE — supersedes
+every rho/Kendall's-W/dominant-criterion/Top-1 figure above.** `Tm_fitness` was being scored against
+the raw `Tm_target_C` (67.0°C) instead of each cluster's own achievable `Tm_target_capped_C`; fixed
+to score against the capped target. **Current on-disk state** (per
+`outputs/recommendation_cards_rajasthan.md` and `physics_validation_summary_rajasthan.txt`):
+- Phase 7 Spearman rho: **-0.200 / -0.168 / +0.569** (clusters 0/1/2), p=0.800/0.691/0.067.
+  Clusters 0–1 remain NEGATIVE (rho≤0.4); **Cluster 2 is now PARTIAL** (0.4<rho≤0.8) — the first
+  cluster in this project's history to clear the 0.4 threshold.
+- Kendall's W: **1.0000 / 0.7679 / 0.4170** (not 0.900/0.750/0.555 as the intervening 2026-09-13
+  reading had it).
+- Top-1 picks: **savE® OM55 (Cluster 0) / PureTemp 60 (Cluster 1) / Palmitic-stearic
+  acid/Expanded graphite (Cluster 2)**.
+- Dominant entropy-weighted criterion is NOT uniformly `Tm_fitness`: `vol_latent_heat` (47.5%,
+  Cluster 0), `Tm_fitness` (80.5%, Cluster 1), `thermal_conductivity` (41.4%, Cluster 2).
+- Seasonal sensitivity re-run the same day: **8/11 (cluster, season) cells now flip** the annual #1
+  pick — supersedes the "0/11 flip, seasonally robust" finding in CRITICAL UPDATE #4 below, which
+  was generated against the pre-fix Top-1 picks. Whether the O3-motivation reframing in that update
+  still holds is an open paper-framing question, not yet resolved.
+See `09_PHASE_7_AUDIT.md`'s and `08_PHASE_6_AUDIT.md`'s "UPDATE (2026-09-19)" sections for the full
+detail.
 
 ✅ **CRITICAL UPDATE #4 (2026-09-13, same session): seasonal PCM sensitivity degeneracy — root
 cause found and fixed; result reframed as a POSITIVE finding.** The "< 2 survivors everywhere"
 result above traced to a real bug in `11_seasonal_pcm_sensitivity.py`: it re-filtered each
 cluster's already-calibrated survivor pool with a hardcoded `LATENT_HEAT_FRACTION=0.7` instead of
 that cluster's own Phase 5 calibrated kappa (0.0/0.5/0.3). Fixed to use the per-cluster calibrated
-kappa. Re-run result: no longer degenerate (all 11 cluster-season cells rank cleanly, 4-11
-survivors each) — **0/11 flip from the annual #1 pick**, a genuine null finding, not censored data:
-Rajasthan's delivery-anchored `Tm_target` rule is seasonally robust.
+kappa. Re-run result (**superseded 2026-09-19, see CRITICAL UPDATE #5 above**): no longer degenerate
+(all 11 cluster-season cells rank cleanly, 4-11 survivors each) — 0/11 flip from the annual #1 pick,
+read at the time as a genuine null finding (Rajasthan's delivery-anchored `Tm_target` rule
+seasonally robust). **This did not survive the 2026-09-19 `Tm_fitness` fix — current result is
+8/11 cells flip; see CRITICAL UPDATE #5.**
 
 **This does NOT weaken Objective 3's case.** Re-checked against how comparable DRL-for-solar-
 thermal papers actually motivate their controllers: Emami et al. (2025/2026) — already an extracted
@@ -91,9 +117,13 @@ second one found while building Phase 7); Köppen-Geiger external validation now
 thresholds) directly exposes the PCM-database prerequisite gap; now stamps a cross-phase provenance
 fingerprint. Phase 6 (MCDM Ranking) — complete, three caught-and-fixed bugs, running on self-flagged
 provisional input; now hard-fails on a provenance mismatch. Phase 7 (Physics Validation) — complete,
-two caught-and-fixed bugs in the simulation solver itself, real calibration iteration, genuine
-negative result (rho = -0.900/-0.096/-0.198). Phase 8 (Recommendation Cards) — complete, pure
-aggregation with its own independent cross-phase consistency re-verification.
+two caught-and-fixed bugs in the simulation solver itself, real calibration iteration, current
+mixed result — **rho = -0.200 / -0.168 / +0.569** (clusters 0/1/2, current post-2026-09-19 numbers;
+see CRITICAL UPDATE #5 above — the intervening 2026-09-13 reading of 0.105/-0.190/-0.091, and an
+earlier pre-correction reading of -0.900/-0.096/-0.198, have both been superseded throughout this
+report). Clusters 0–1 remain a genuine negative validation; Cluster 2 is now PARTIAL agreement.
+Phase 8 (Recommendation Cards) — complete, pure aggregation with its own independent cross-phase
+consistency re-verification.
 
 ## Strongest components
 
@@ -110,10 +140,11 @@ aggregation with its own independent cross-phase consistency re-verification.
    (`self_test_energy_conservation()`, `self_test_draw_profile_integration()`) that must pass before
    the real simulation is even allowed to run. Each fix is documented in-code with the symptom, root
    cause, and verification. This is the kind of evidence a viva panel responds well to.
-3. **The honest reporting of ambiguous and negative results, now including a genuine negative
-   validation outcome.** Cluster 0's Kendall's W=0.4375, "insufficient even at κ=0" feasibility
-   status, AND Phase 7's negative Spearman rho across all three clusters (-0.900/-0.096/-0.198) are
-   all reported plainly, with caveat-aware interpretation logic (e.g. distinguishing "MCDM is wrong"
+3. **The honest reporting of ambiguous, negative, AND partial results, now including a mixed
+   validation outcome.** Cluster 0's Kendall's W=1.0000 on an undersized n=4 pool, "insufficient
+   even at κ=0" feasibility status, AND Phase 7's current Spearman rho (-0.200/-0.168/+0.569,
+   clusters 0/1/2 — see CRITICAL UPDATE #5: Clusters 0–1 negative, Cluster 2 now partial) are all
+   reported plainly, with caveat-aware interpretation logic (e.g. distinguishing "MCDM is wrong"
    from "MCDM was already unstable" for Cluster 0), not smoothed over or hidden. The PCM-vs-plain-
    tank comparator (measured ~0% against a cited +30%/+4-8% literature range) was reported as-is
    rather than tuned to match the citation.
@@ -128,17 +159,16 @@ aggregation with its own independent cross-phase consistency re-verification.
 
 ## Weakest components
 
-1. **The PCM property database — row-count gap now closed (2026-08-12), pipeline re-run still
-   pending.** Expanded from 18–25 rows to 55 rows, inside the 40–60-row target. The pre-expansion
-   database was structurally unable to satisfy its own nominal latent-heat feasibility constraint;
-   whether the expanded database still is remains unverified, because Phases 5–8 have not yet been
-   re-run against it, and the detailed imputation output
-   (`PCM_Properties_cleaned_mice_pmm_detailed.csv`) both scripts read is currently missing from disk.
-   This re-run is now the single item most likely to change Phase 5/6's actual numeric results.
+1. **The PCM property database — row-count gap closed (2026-08-12), pipeline re-run COMPLETE
+   (2026-09-13).** Expanded from 18–25 rows to a 62-row evaluated pool (55 manufacturer + 7
+   literature rows), inside the 40–60-row target. `PCM_Properties_cleaned_mice_pmm_detailed.csv`
+   exists on disk (`PCM_data/data/`, 34,909 bytes) and Phases 5–8 have been re-run against it — see
+   CRITICAL UPDATE #2/#3 above and `07_PHASE_5_AUDIT.md`. The remaining open item is not the database
+   size but Cluster 0's small κ-calibrated survivor pool (n=4/62) — see "Scientific risks" below.
 2. **AHP weighting is not actually elicited** — presented as a TODO in code, but this distinction
    needs to be equally explicit in any write-up that describes the weighting methodology.
 3. **External classification validation** — Köppen-Geiger is now wired in (real per-point lookup,
-   ARI=0.19/NMI=0.32 vs. GMM); NBC/ECBC remains stubbed. Phase 4's "these are real climate regimes"
+   ARI=0.2787/NMI=0.3817 vs. GMM, current on-disk value); NBC/ECBC remains stubbed. Phase 4's "these are real climate regimes"
    claim now rests on internal statistics PLUS one external classification, not internal statistics
    alone — a genuine improvement, though NBC/ECBC (the India-specific classification) is still open.
 4. **Two unsourced numeric choices** feed directly into load-bearing quantities: `T_mains_est_C`'s
@@ -167,12 +197,29 @@ and several silent-fallback patterns that are low-risk given current data but wo
 
 ## Scientific risks
 
-The two most consequential open scientific decisions are: (1) whether to apply the Phase-2
-quantile-mapping GHI correction upstream before Phase 3 consumes it (currently not applied), and (2)
-what the permanent policy should be for the latent-heat feasibility constraint given it is currently
-unreachable at its nominal threshold (accept calibrated-κ, or switch to rank-by-proximity). Neither
-is a defect in what exists — both are unresolved methodological choices that should be made
-explicitly, with a stated justification, before Phase 6's output is presented as final.
+**(1) GHI quantile-mapping — RESOLVED (confirmed 2026-09-17 audit).** This was previously listed as
+an open decision ("whether to apply the Phase-2 quantile-mapping GHI correction upstream before
+Phase 3 consumes it"), but code inspection shows it is already implemented and wired in:
+`04_preprocess_rajasthan.py` (Phase 2.5, ~lines 170–224) fits a per-season quantile mapper (ERA5 GHI
+→ NASA POWER GHI) and applies it **in place** to `era5_GHI` (propagating into `era5_CSI`), writing
+the corrected values into `rajasthan_cleaned_physical.csv`; `04b_climate_signature.py` reads that
+same file (`PHYSICAL_FILE = PREPROCESSED_DIR / "rajasthan_cleaned_physical.csv"`), so Phase 3
+**does** consume the quantile-mapped GHI, not raw ERA5. Before/after numbers are in
+`ghi_quantile_mapping_report.csv`. No further action needed; this superseded the identical stale
+claim previously repeated in `CONSOLIDATION_SUMMARY.md`.
+
+**(2) Latent-heat feasibility constraint policy — DECIDED (2026-09-17): accept calibrated-κ.**
+Cluster 0's n=4 κ-calibrated survivor pool (out of 62 evaluated candidates) is accepted as the
+Top-3 basis for that cluster, rather than switching to a rank-by-proximity fallback. Justification:
+per-cluster investigation (`07_PHASE_5_AUDIT.md`, and the follow-up check recorded in CLAUDE.md §3.4)
+confirmed Cluster 0's small pool is a genuine climate-driven finding, not a calibration artifact —
+only 4 of 62 candidates clear the melting-window/charging-feasibility gate regardless of κ, and
+`calibrated_kappa=0.0` correctly reports that latent heat was never the real bottleneck for this
+cluster. Rank-by-proximity was rejected because it would rank candidates that fail the physical
+feasibility gate rather than being transparent about the gate itself. **Stated limitation for the
+write-up:** a Top-3 claim drawn from an n=4 pool has materially less statistical support than
+Clusters 1/2's n=8/n=11 pools — the methodology section should flag this explicitly rather than
+presenting all three clusters' Top-3 rankings as equally well-supported.
 
 ## Reproducibility risks
 
@@ -185,8 +232,8 @@ resumability/provenance mechanisms are summarised in `00_MASTER_OVERVIEW.md` ("C
 
 ## Missing validation
 
-External climate-classification validation: Köppen-Geiger is now wired in (ARI=0.19, NMI=0.32 vs
-GMM); NBC/ECBC Indian climate-zone classification remains stubbed. Physics-based simulation
+External climate-classification validation: Köppen-Geiger is now wired in (ARI=0.2787, NMI=0.3817 vs
+GMM, current on-disk value); NBC/ECBC Indian climate-zone classification remains stubbed. Physics-based simulation
 validation (Phase 7) is now implemented and run — but returned a NEGATIVE result, which itself
 becomes a claims-boundary item (see below), not a gap to fill. The framework doc's own stated bar for
 a publishable result ("externally and physically validated") is now partially met: physically
@@ -219,40 +266,38 @@ kind of honest-negative-result reporting the framework doc's own §10 asked for.
 
 ## What cannot yet be claimed
 
-That the current Top-3 PCM recommendation per cluster is final (it is provisional pending re-run
-against the now-expanded 55-row database — the expansion itself is complete, the re-run is not), that
-the clustering result is externally validated against a complete set of independent
-classifications (Köppen only, NBC/ECBC still stubbed), that AHP pairwise elicitation informed the
-criterion weights (it did not — Table 13 priors were used unmodified), or — the change from the
-previous version of this report — **that the MCDM ranking has been confirmed by physics simulation**.
-It has been TESTED (Phase 7 exists and ran), but the result does not confirm it: Spearman rho is
-≤0.4 (a genuine negative result) for all three clusters. The correct claim is "the MCDM ranking was
-physics-validated and the validation returned a negative result at the pipeline's current PCM-
-database size," not "the MCDM ranking is physics-validated."
+That the current Top-3 PCM recommendation per cluster rests on an equally well-supported candidate
+pool in every cluster (Cluster 0's n=4 pool is accepted policy — see "Scientific risks" — but is
+smaller than Clusters 1/2's n=8/n=11), that the clustering result is externally validated against a
+complete set of independent classifications (Köppen only, NBC/ECBC still stubbed), that AHP pairwise
+elicitation informed the criterion weights (it did not — Table 13 priors were used unmodified), or
+**that the MCDM ranking has been confirmed by physics simulation for every cluster**. It has been
+TESTED (Phase 7 exists and has been re-run against the 62-row database, current numbers
+rho = -0.200/-0.168/+0.569, clusters 0/1/2 — see CRITICAL UPDATE #5), and the result is now mixed:
+Spearman rho is ≤0.4 (a genuine negative result) for Clusters 0–1, but Cluster 2's rho of +0.569 is
+PARTIAL agreement (0.4<rho≤0.8) — not a full confirmation (Kendall's W=0.4170 there is itself below
+the 0.6 ambiguous-agreement threshold, and Borda/Copeland disagree on that cluster's Top-3). The
+correct claim is "the MCDM ranking was physics-validated against the final 62-row database, with a
+negative result for two of three clusters and partial agreement for the third," not "the MCDM
+ranking is physics-validated" (nor "returned a uniformly negative result").
 
 ## Prerequisites for a FINAL (non-provisional) result
 
-(1) **PCM database expansion to the 40–60-row target — DONE (2026-08-12): 55 rows.** What is not yet
-done is propagating that expansion through the pipeline: regenerating
-`PCM_Properties_cleaned_mice_pmm_detailed.csv` (currently missing from disk) and re-running Phases
-5–8 against it. This is now the single blocking item, replacing the expansion task itself — with
-Phase 7 evidence that it matters even more than previously known: Cluster 0's negative rho may be
-attributable to its undersized (pre-expansion) candidate pool (n=5) rather than a genuine MCDM/physics
-mismatch, and the PCM-mass sensitivity check shows the physics ranking is stable regardless of PCM
-sizing — meaning the database, not a simulation parameter, is the likely lever that would actually
-change the result. (2) A settled feasibility-constraint policy (accept calibrated κ, or
-rank-by-proximity). (3) Ideally, resolution of the quantile-mapping-correction-application question,
-since Phase 7's calibration benchmarks are sensitive to the GHI values driving the simulated solar
-resource. (4) NBC/ECBC external validation, if time permits.
+(1) **PCM database expansion to the 40–60-row target — DONE (2026-08-12): 62-row evaluated pool.**
+`PCM_Properties_cleaned_mice_pmm_detailed.csv` is regenerated and on disk, and Phases 5–8 have been
+re-run against it (CRITICAL UPDATE #2/#3, 2026-09-13) — **DONE.** (2) A settled feasibility-constraint
+policy — **DONE (2026-09-17): accept calibrated-κ**, see "Scientific risks" above. (3) Resolution of
+the quantile-mapping-correction-application question — **DONE**, confirmed already implemented and
+consumed by Phase 3, see "Scientific risks" above. (4) NBC/ECBC external validation, if time permits
+— still open, non-blocking (Köppen-Geiger external validation is already wired in).
 
 ## Recommended next implementation
 
-All 8 phases exist and run end-to-end. The PCM database expansion is finished (55 rows). In order:
-regenerate `PCM_Properties_cleaned_mice_pmm_detailed.csv` (`python PCM_data/PCM_data/01_preprocess.py`
-— currently missing from disk) → re-run `07 → 08 → 09 → 10` (`python run_all_rajasthan.py --from
-07_feasibility_filter.py`) against the expanded database → see whether the negative Phase 7
-rho persists → decide and document the feasibility-constraint policy → (optional) wire in NBC/ECBC
-external validation for Phase 4.
+All 8 phases exist, run end-to-end, and have been re-run against the final 62-row PCM database
+(CRITICAL UPDATE #2/#3). The feasibility-constraint policy and the GHI quantile-mapping question are
+both now decided/resolved (see "Scientific risks"). What remains is non-blocking: (optional) wire in
+NBC/ECBC external validation for Phase 4, and reflect the "n=4 pool for Cluster 0" limitation
+explicitly wherever the Top-3 results table is presented in the write-up.
 
 ## Final verdict
 
@@ -262,20 +307,29 @@ cluster-relabeling fixes, and the overall two-tier signature/clustering methodol
 well-validated internally and (partially) externally, and substantively ready for a methodology
 write-up with the stated open citations added.
 
-**READY, WITH THE NEGATIVE RESULT STATED PLAINLY** for Phase 7 as a piece of methodology — the
+**READY, WITH THE MIXED RESULT STATED PLAINLY** for Phase 7 as a piece of methodology — the
 simulation code itself is now well-validated (self-tests, calibration against literature bands,
 two caught-and-fixed numerical bugs) and ready to describe in full. What is NOT ready is treating its
-OUTPUT (the negative Spearman rho) as final, because it rests on the same undersized PCM database
-that already limits Phases 5–6.
+OUTPUT (Spearman rho, currently negative for Clusters 0–1 and partial for Cluster 2 — see CRITICAL
+UPDATE #5) as final, because Cluster 0's reading in particular rests on the same undersized n=4 pool
+that already limits Phases 5–6, and Cluster 2's W=0.4170 flags its own MCDM-ranking ambiguity.
 
-**NOT READY YET, BUT THE BLOCKING FIX IS NOW ONE RE-RUN AWAY** for Phases 5–8 as a *final* result —
-not because the code is wrong (all four phases run correctly and their bugs are fixed), and no longer
-because the PCM database input is too small (that gap closed 2026-08-12, 18/25→55 rows). What remains
-is mechanical, not scientific: regenerate the missing `PCM_Properties_cleaned_mice_pmm_detailed.csv`
-and re-run Phases 5–8 against the expanded database. Every number currently on disk (zero survivors at
-nominal thresholds, provisional tags on every Phase 6/7/8 row, the negative physics-validation result)
-is from the pre-expansion run and should be treated as superseded, not final, until that re-run
-happens. This is not a discouraging finding: it is the pipeline correctly reporting its own current
-limitation, at every layer it was asked to check, which is exactly what a well-instrumented
-methodology should do — the limitation has just moved from "not enough data" to "haven't re-run with
-the new data yet."
+**READY, WITH TWO EXPLICIT CAVEATS STATED** for Phases 5–8 as a *final* result (updated 2026-09-17;
+supersedes the "NOT READY YET" verdict below, kept for change-history only). The blocking re-run is
+complete: Phases 5–8 have been run end-to-end against the final 62-row PCM database (CRITICAL UPDATE
+#2/#3, 2026-09-13), and both open scientific-risk items — the GHI quantile-mapping question and the
+latent-heat feasibility-constraint policy — are now resolved/decided (see "Scientific risks"). The
+two caveats that should still be stated plainly in the write-up: (a) Cluster 0's Top-3 rests on an
+n=4 candidate pool, smaller than Clusters 1/2's n=8/n=11 — accepted policy, but a genuinely weaker
+statistical basis; (b) Phase 7's physics validation currently returns a mixed result (rho =
+-0.200/-0.168/+0.569, clusters 0/1/2, per CRITICAL UPDATE #5) — negative for Clusters 0–1, partial
+agreement for Cluster 2 (itself qualified by that cluster's low Kendall's W=0.4170) — which is a
+real, honestly-reported finding, not a code defect, and should be described as such rather than as
+uniform confirmation or uniform rejection of the MCDM ranking.
+
+*(Historical verdict, superseded 2026-09-17 — kept for change-history only:)* "NOT READY YET, BUT THE
+BLOCKING FIX IS NOW ONE RE-RUN AWAY" for Phases 5–8 as a final result — not because the code was
+wrong, and no longer because the PCM database input was too small (that gap closed 2026-08-12,
+18/25→55 rows). What remained was mechanical, not scientific: regenerate the missing
+`PCM_Properties_cleaned_mice_pmm_detailed.csv` and re-run Phases 5–8 against the expanded database.
+That re-run is now complete, per the update above.

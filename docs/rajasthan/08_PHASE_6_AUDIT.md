@@ -25,6 +25,78 @@ Script: `08_mcdm_ranking.py`. **Updated 2026-08-11** — provenance fingerprint 
 > - **Monte Carlo draws** set to `N_DRAWS = 1000` in both states (one constant; raise both to
 >   5000 for the final reported run).
 
+## UPDATE (2026-09-19): HDD18/CDD24 annualization fix (no ranking effect) + Tm_fitness capped-target fix (real effect, unlike Tamil Nadu) + thermal_margin criterion tested and rejected
+
+Three changes made and evaluated in one pass, each ported from `era5-tamilnadu`'s equivalent fixes
+(`docs/tamilnadu/CHANGELOG.md`, `08_PHASE_6_AUDIT.md`, `09_PHASE_7_AUDIT.md` §3-§5) after checking
+whether Rajasthan had the same gap. Full re-run chain: `02b → 04 → 04b → 05 → 05a → 07 → 08 → 10 → 09`.
+
+**1. `02b_build_daily_aggregates.py`'s HDD18/CDD24 annualization bug, fixed** (divide by distinct
+years present, was summing the full ~10-year record — same bug TN fixed 2026-08). Confirmed a pure
+rescale for this dataset: all 320 points share the identical 2016-01-01–2025-12-31 date range (10
+years each), so dividing every point's HDD18/CDD24 by the same constant is invariant under the
+`StandardScaler` applied before PCA and before final clustering. **Verified empirically, not just
+argued**: Phase 5 survivor counts stayed exactly 4/8/11, bootstrap-ARI at k=3 stayed 0.8077, Köppen
+ARI/NMI stayed 0.2787/0.3817. Only the raw HDD18/CDD24 values themselves changed (÷10 — e.g.
+Cluster 0's population-weighted mean HDD18 moved from ~1100 to ~110; any doc or write-up quoting the
+old absolute figures is now wrong by ~10× and should cite the current `cluster_profile_cards_rajasthan.md`
+instead).
+
+**2. `Tm_fitness` scored against `Tm_target_capped_C` instead of raw `Tm_target_C`, fixed** (line
+~980 — was `prof.Tm_target_C`) — same bug TN fixed 2026-09-16. **Unlike Tamil Nadu, this was NOT
+inert here** — Rajasthan's capped ceilings sit much further below the raw 67°C target (55.5/61.1/59.2°C
+vs TN's 61.94°C, a ~6-12K gap here vs TN's ~5K), which materially changes the Gaussian's shape and
+which criterion dominates entropy weighting. Also added TN's asymmetric σ (4K below target, 2K
+above) — same rationale, and also expected-inert here (Constraint 6 already excludes every candidate
+above the cap), confirmed inert by the fact that results are identical whether or not the asymmetry
+branch can fire (no survivor ever sits above `Tm_target_capped_C`).
+
+| | Cluster 0 (n=4) | Cluster 1 (n=8) | Cluster 2 (n=11) |
+|---|---|---|---|
+| Before (raw `Tm_target_C`, this session's starting baseline) | | | |
+| Top-1 (Borda) | Palmitic-stearic acid/Expanded graphite | PureTemp 60 | n-Heptacosane (C27) |
+| Dominant entropy criterion | Tm_fitness 51.9% | Tm_fitness 83.3% | Tm_fitness 68.1% |
+| Kendall's W | 0.900 | 0.750 | 0.555 |
+| **After (`Tm_target_capped_C` + asymmetric σ, current default)** | | | |
+| Top-1 (Borda) | **savE® OM55** (changed) | PureTemp 60 (unchanged) | **Palmitic-stearic acid/Expanded graphite** (changed) |
+| Dominant entropy criterion | vol_latent_heat 47.5% | Tm_fitness 80.5% | thermal_conductivity 41.4% |
+| Kendall's W | 1.000 | 0.768 | 0.417 |
+
+Top-1 changed in 2 of 3 clusters — a genuinely different outcome from Tamil Nadu's fully-inert
+result, attributable to Rajasthan's wider raw-target-to-cap gap. See `09_PHASE_7_AUDIT.md` for the
+physics-validation Spearman ρ before/after (also not inert here).
+
+**3. `thermal_margin` criterion (`Tm_target_capped_C − Tm`, 9th criterion, TN's 2026-09-16 addition)
+— implemented behind a `USE_THERMAL_MARGIN` flag, tested once, kept OFF by default.** AHP prior
+carved out of `Tm_fitness`'s (0.24 → 0.14 Tm_fitness + 0.10 thermal_margin, combined "Tm-related"
+share unchanged), same as TN. Ran both variants from the identical Phase-5 survivor pool:
+
+| | Cluster 0 (n=4, descriptive only) | Cluster 1 (n=8) | Cluster 2 (n=11) |
+|---|---|---|---|
+| ρ, flag OFF (current default) | -0.200 | -0.168 | **+0.569** |
+| ρ, flag ON (`thermal_margin` added) | **-0.800** (worse) | +0.096 (still ≤0.4) | **+0.209** (worse — drops below 0.4) |
+| Dominant entropy criterion, flag ON | thermal_margin 71.2% | thermal_margin 63.8% | thermal_margin 48.5% |
+| Top-1, flag ON | Myristic acid/NBR-1.0 | RT57HC | savE® OM55 |
+
+**Decision: kept OFF.** Per the pre-agreed rule (if ρ stays ≤0.4 in clusters where n≥8, don't adopt),
+both n≥8 clusters stay ≤0.4 with the criterion on (C1: +0.096, C2: +0.209) — and Cluster 2 is
+actually worse than the flag-off baseline, which already exceeded 0.4 (+0.569) without this
+criterion. Cluster 0 (n=4, descriptive only per the pre-agreed caveat) also gets worse, not better,
+the opposite of Tamil Nadu's Cluster 0 result (-0.595→+0.381 there). **Top-1 does NOT converge to
+the same PCM across all three clusters** with thermal_margin on (Myristic acid/NBR-1.0 / RT57HC /
+savE® OM55 — three different PCMs), so Rajasthan does not reproduce TN's "same PCM everywhere"
+pattern either. This is one evaluation pass, not iterated further — see `09_PHASE_7_AUDIT.md` §3-§5
+for why TN's own investigation stopped at one pass and the same reasoning applies here: a static
+criterion that helps in one climate/PCM configuration and hurts in another is evidence the real
+driver is a climate-PCM interaction, not something the next criterion tweak will fix.
+
+Exact p-values (Spearman, vs Borda rank), flag OFF / current default: C0 p=0.800, C1 p=0.691,
+C2 p=0.067 (also vs Copeland rank: ρ=0.633, p=0.036 — the only nominally-significant reading in
+this whole investigation, and it's on an n=11 cluster's secondary consensus mechanism, not the
+primary Borda rank). None of the other readings (this update or the baseline above) are significant
+at any conventional threshold — treat every ρ in this section as descriptive, consistent with
+`09_PHASE_7_AUDIT.md`'s standing caveat.
+
 ## Purpose
 
 Rank each cluster's feasibility survivors using four independent MCDM methods (not one), aggregate

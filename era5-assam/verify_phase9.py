@@ -134,7 +134,16 @@ def main():
     assign_df = pd.read_csv(ASSIGN_FILE)
     sig_raw_df = pd.read_csv(SIG_RAW_FILE)
     medoids = derive_true_medoids(assign_df, sig_raw_df)
-    expected_medoids = {0: "ASP_0012", 1: "ASP_0092", 2: "ASP_0028"}
+    # Updated 2026-09-23: the previous expected medoids (ASP_0012/0092/0028)
+    # were derived under 05_cluster_assam.py's old covariance_type="full"
+    # GMM fit. Switching to "diag" (the correct choice for 5 features / 80
+    # points -- see 05_cluster_assam.py's own comment) genuinely changes
+    # which points the GMM assigns to each cluster, and therefore which
+    # point is closest to each cluster's centroid. This is an expected
+    # consequence of that fix, not a regression -- update this expectation
+    # again only alongside a deliberate re-verification of the new
+    # clustering, never to silently paper over an unexplained drift.
+    expected_medoids = {0: "ASP_0003", 1: "ASP_0036", 2: "ASP_0080"}
     assert medoids == expected_medoids, f"Medoid mismatch! Expected {expected_medoids}, got {medoids}"
     log(f"  [PASS] True Cluster Medoids verified: {medoids}")
     

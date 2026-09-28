@@ -103,7 +103,9 @@ identity, flipped cells red-outlined).
 **Köppen-Geiger is now wired in for real (updated 2026-08-11)** — Beck et al. (2018),
 doi:10.1038/sdata.2018.214, 1-km raster, genuine per-point classification lookup (not a stub).
 Rajasthan's 320 points classify as BSh=203, BWh=85, Aw=20, Cwa=12. Result: ARI(GMM cluster, Köppen
-class)=0.19, NMI=0.32 — low-to-moderate agreement, read as "the GMM finds climate structure at a
+class)=0.2787, NMI=0.3817 (current on-disk value, `cluster_profiles_rajasthan.csv`'s `koppen_ari`/
+`koppen_nmi` columns — matches this file's own "Status" section below; an earlier draft of this
+section cited 0.19/0.32, which was stale) — low-to-moderate agreement, read as "the GMM finds climate structure at a
 finer resolution than Köppen's broad classes capture within Rajasthan" (a plausible, legitimate
 finding in its own right, arguably the point of empirical clustering instead of applying Köppen
 directly) rather than evidence the clustering failed to find anything real. NBC/ECBC climate-zone
