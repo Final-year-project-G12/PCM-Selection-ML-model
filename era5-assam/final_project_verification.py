@@ -62,7 +62,7 @@ def run_master_verification():
         # Updated 2026-09-23 alongside the matching fix in verify_phase9.py:
         # these medoids shifted because 05_cluster_assam.py's GMM
         # covariance_type changed "full"->"diag" (the correct choice for 5
-        # features / 80 points), which genuinely changes cluster assignment,
+        # features / 129 points), which genuinely changes cluster assignment,
         # not a regression.
         expected_medoids = {0: "ASP_0003", 1: "ASP_0036", 2: "ASP_0080"}
         if medoids == expected_medoids:
