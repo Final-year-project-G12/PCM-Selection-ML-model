@@ -75,15 +75,10 @@ failure since every later stage reads an earlier stage's output, EXCEPT
                                        reading bic_selection_uttarakhand.csv
                                        — this runner just runs whatever
                                        K_FINAL is currently set to)
-  6.  11_level_b_seasonal_analysis.py — Phase 4: seasonal Top-k re-ranking
-                                       within each cluster (documented as
-                                       part of Phase 4's official output
-                                       alongside 05, unlike the purely
-                                       interactive 05b/05c/05d below)
-  7.  06_build_pcm_database.py      — Phase 5: builds the PCM candidate
+  6.  06_build_pcm_database.py      — Phase 5: builds the PCM candidate
                                        database -> pcm_database_
                                        uttarakhand.csv (see KNOWN GAP above)
-  8.  07b_charging_feasibility.py   — Phase 5, OPTIONAL: adds a regime-
+  7.  07b_charging_feasibility.py   — Phase 5, OPTIONAL: adds a regime-
                                        capped Tm_target column that 07
                                        prefers if present. Explicitly
                                        labeled optional in
@@ -92,12 +87,20 @@ failure since every later stage reads an earlier stage's output, EXCEPT
                                        is sequenced here rather than in
                                        the after-the-fact OPTIONAL group.
                                        Its failure does NOT stop the run.
-  9.  07_feasibility_filter.py      — Phase 5: hard-filters the PCM
+  8.  07_feasibility_filter.py      — Phase 5: hard-filters the PCM
                                        database per cluster ->
                                        feasibility_survivors_by_cluster.csv
-  10. 08_mcdm_ranking.py            — Phase 6: TOPSIS/GRA/PROMETHEE II/
+  9.  08_mcdm_ranking.py            — Phase 6: TOPSIS/GRA/PROMETHEE II/
                                        VIKOR + Monte Carlo ->
                                        mcdm_topk_by_cluster.csv
+  10. 11_level_b_seasonal_analysis.py — Phase 4 deliverable: seasonal
+                                       Top-k re-ranking within each cluster.
+                                       Documented as part of Phase 4's
+                                       output, but it reads 06's PCM
+                                       database and 08's
+                                       mcdm_full_scores_by_cluster.csv
+                                       (annual weights + annual #1), so it
+                                       has to run after 08
   11. 10_physics_validation.py      — Phase 7: grey-box tank simulation ->
                                        physics_validation_results.csv
                                        (numbered 10 but runs BEFORE 09 —
@@ -184,11 +187,14 @@ CORE_SCRIPTS = [
     ("04_preprocess_uttarakhand.py", True),
     ("04b_climate_signature.py", True),
     ("05_cluster_uttarakhand.py", True),
-    ("11_level_b_seasonal_analysis.py", True),
     ("06_build_pcm_database.py", True),
     ("07b_charging_feasibility.py", False),
     ("07_feasibility_filter.py", True),
     ("08_mcdm_ranking.py", True),
+    # 11 reads 06's pcm_database and 08's mcdm_full_scores_by_cluster.csv
+    # (annual weights + annual #1), so it must run AFTER 08 — running it
+    # straight after 05 silently used the PREVIOUS run's MCDM scores.
+    ("11_level_b_seasonal_analysis.py", True),
     ("10_physics_validation.py", True),
     ("09_recommendation_cards.py", True),
 ]

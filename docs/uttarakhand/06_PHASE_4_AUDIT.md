@@ -3,7 +3,8 @@
 **Scripts**: `05_cluster_uttarakhand.py` (single-state, **run**),
 `05b_cluster_interactive.py` (explorer), `05_cluster_regions.py` (multi-state, **not run**)
 
-**Status**: **COMPLETE at K = 5.** Cluster assignments for all 45 points are recoverable from
+**Status**: **COMPLETE at K = 4** (changed from K = 5 in 2026-10 — see "Choice of K" below).
+Cluster assignments for all 45 points are recoverable from
 `data/plots/uttarakhand_objective1/02_climate_regime_map_folium.html`.
 
 ---
@@ -58,7 +59,7 @@ reason." See "Soft membership" below for what this fixes in practice.
 
 ```python
 K_CANDIDATES = list(range(2, 11))                       # K = 2 … 10
-K_FINAL      = 5                                        # line 73 — set manually after review
+K_FINAL      = 4                                        # set manually after review (was 5 until 2026-10)
 SILHOUETTE_ACCEPT_LO, SILHOUETTE_ACCEPT_HI = 0.15, 0.40
 RANDOM_STATE = 42
 ```
@@ -73,8 +74,9 @@ the reason given inline: "no artificial between-state gaps inflating it here."
 > conservative about K: each additional cluster shrinks the average points-per-cluster fast, and a
 > GMM fit on very few points per component gets unstable.
 
-**The run used K = 5, one above the top of that recommended range.** With 45 points that is an
-average of 9 points per component, and the smallest component has only 3.
+**The current run uses K = 4, the top of that recommended range** (the previous run used K = 5,
+one above it). With 45 points that is an average of ~11 points per component; the smallest
+component still has only 3.
 
 ### Feature matrix
 
@@ -84,9 +86,8 @@ Only the `_z` (standardised) columns from `04b` are used. `lat`/`lon` are absent
 `04b` dropped them from the clustering column list, and `05` re-prints the reason at run time:
 "(lat/lon are NOT among these — never cluster on geography, plan v3.0 Section 6.2)."
 
-The exact number of `_z` columns is **not available in the source files**
-(`climate_signature_uttarakhand.csv` is git-ignored). From `04b`'s `DROP_FROM_CLUSTERING` logic it
-comprises: the non-PCA canonical indices (`GHI_mean`, `kt_mean`, `kt_std`, `SAI`, `CCI`,
+There are **24** `_z` columns in the current `climate_signature_uttarakhand.csv` (git-ignored, read
+locally). From `04b`'s `DROP_FROM_CLUSTERING` logic they comprise: the non-PCA canonical indices (`GHI_mean`, `kt_mean`, `kt_std`, `SAI`, `CCI`,
 `cloudy_frac`, `DTR`, `GHI_daily_kWh`, `seasonality`, `HSI`, `wind_mean`, `monsoon_index`), the
 constant `Tm_target_C`, `L_required_kJ_per_kg`, the 5 interaction terms, and `PC1…PCn`.
 
@@ -102,15 +103,53 @@ A K-Means comparison (`KMeans(n_clusters=k, random_state=42, n_init=10)`, silhou
 written to `kmeans_comparison_uttarakhand.csv`, to answer "the 'why not K-Means' question with a
 number instead of an assertion."
 
-**The contents of both CSVs are not available in the source files** — `data/processed/clustering/`
-is git-ignored, and no committed plot renders the BIC or K-Means selection curves for the actual
-run. (`05b_cluster_interactive.py` would render them, but its output directory is git-ignored too.)
+Both CSVs live under the git-ignored `data/processed/clustering/`; their current contents (read
+locally, 2026-10) are reproduced in the next section. `data/plots/verify_clustering/01_elbow_curves.png`
+now renders the same four curves in the same feature space (see "Choice of K").
+
+### Choice of K — K = 4 (2026-10)
+
+`bic_selection_uttarakhand.csv` (GMM, `diag`, `n_init=5`) and `kmeans_comparison_uttarakhand.csv`:
+
+| K | BIC | Silhouette | Davies-Bouldin ↓ | Calinski-Harabasz ↑ | K-Means silhouette |
+|---|---|---|---|---|---|
+| 2 | 308.5 | 0.262 | 1.064 | 12.3 | 0.254 |
+| 3 | 31.6 | 0.301 | 1.284 | 16.0 | 0.340 |
+| **4** | **−899.8** | **0.362** | **0.935** | **28.9** | 0.377 |
+| 5 | −1047.7 | 0.279 | 1.351 | 24.8 | 0.380 |
+| 6 | −2904.9 | 0.303 | 1.198 | 23.9 | 0.322 |
+| 7 | −1341.7 | 0.331 | 1.021 | 23.4 | 0.342 |
+| 8 | −3746.6 | 0.317 | 0.999 | 20.6 | 0.362 |
+| 9 | −3689.3 | 0.366 | 0.949 | 23.3 | 0.375 |
+| 10 | −4228.1 | 0.363 | 0.969 | 21.7 | 0.366 |
+
+Every K is inside the 0.15–0.40 silhouette band, so the band does not discriminate. The decision
+rests on the other evidence:
+
+- **K = 4 has the best Davies-Bouldin and Calinski-Harabasz of K = 2…10** and a silhouette tied
+  with the best (0.362 vs 0.366 at K = 9, which would leave ~5 points per component).
+- **K = 5 (the previous choice) is worse than K = 4 on all three** internal metrics.
+- **BIC is not used**: with diagonal covariance and only 45 points it keeps falling to K = 10 and
+  never reaches a minimum — the usual over-fitting behaviour of BIC at small N.
+- **K = 3 vs K = 4 is close and was checked explicitly.** With `n_init=10` (as in the final fit)
+  K = 3 reaches silhouette 0.362 and DB 0.80, so on those two metrics it ties or beats K = 4.
+  K = 4 was kept because (a) K = 3 is exactly K = 4 with Clusters 0 and 1 merged into one 33-point
+  cluster (Ta_mean ~24.7 °C plains vs ~20.5 °C mid-hills, ~770 m mean elevation apart);
+  (b) K = 4 is more stable across seeds — over 20 seeds silhouette 0.364 ± 0.004 vs 0.353 ± 0.020
+  for K = 3, and DB 0.935 ± 0.001 vs 0.877 ± 0.193; (c) on 100 refits of random 80 % subsamples the
+  adjusted Rand index against the full-data labels is mean 0.91 / 10th percentile 0.69 for K = 4,
+  vs 0.85 / 0.35 for K = 3 and 0.66 / 0.54 for K = 5.
+
+So K = 4 is the most internally consistent and the most stable choice for this data. That
+Uttarakhand gets one more regime than the other states (K = 3) is consistent with its far larger
+climatic range (~25 °C plains to ~14 °C high Himalaya, ~320 m to ~2,200 m mean elevation); K is
+chosen per state from its own data, not fixed across states.
 
 ### Final fit and outputs
 
 ```python
-k_final_safe = min(K_FINAL, len(X) - 1)      # = 5
-gmm_final    = GaussianMixture(5, covariance_type="diag", random_state=42, n_init=10)
+k_final_safe = min(K_FINAL, len(X) - 1)      # = 4
+gmm_final    = GaussianMixture(4, covariance_type="diag", random_state=42, n_init=10)
 hard_labels  = gmm_final.fit_predict(X)
 soft_probs   = gmm_final.predict_proba(X)
 ```
@@ -119,9 +158,9 @@ soft_probs   = gmm_final.predict_proba(X)
 |---|---|
 | `bic_selection_uttarakhand.csv` | K = 2…10 × {BIC, silhouette, DB, CH, in_accept_band} |
 | `kmeans_comparison_uttarakhand.csv` | K = 2…10 × K-Means silhouette |
-| `cluster_assignments_uttarakhand.csv` | `point_id, lat, lon, population, cluster_id, max_membership_prob, prob_cluster0…4` |
+| `cluster_assignments_uttarakhand.csv` | `point_id, lat, lon, population, cluster_id, max_membership_prob, prob_cluster0…3` |
 | `cluster_profiles_uttarakhand.csv` | one row per cluster: `cluster_id, n_points, total_population_covered`, plus the **population-weighted mean** of every non-`_z` numeric signature column |
-| `cluster_map_uttarakhand.png` | lon/lat scatter coloured by `cluster_id`, annotated `C0…C4` |
+| `cluster_map_uttarakhand.png` | lon/lat scatter coloured by `cluster_id`, annotated `C0…C3` |
 
 Population weighting uses `np.average(g[col], weights=g["population"])`, falling back to an
 unweighted mean if the weight sum is zero.
@@ -133,131 +172,101 @@ through — which is exactly what `07` checks for and errors on if absent.
 
 ---
 
-## Observed results
+## Observed results (current run, K = 4)
 
-**STALE-DATA WARNING (2026-09):** the tables in this "Observed results" section (cluster
-assignments, population/geographic extent, and the climate-profile-per-cluster table below) were
-recovered from `02_climate_regime_map_folium.html` / `A2_population_map.html` / `05_cluster_profiles.png`
-from a run that predates the `07b_charging_feasibility.py` regime-cap fix described in
-`00_MASTER_OVERVIEW.md` and `07_PHASE_5_AUDIT.md`, and reports sizes **12/9/3/7/14**. Every other
-current doc (`00_MASTER_OVERVIEW.md`, `01_PROJECT_CONTEXT.md`) — and this file's own "Silhouette"
-section below — states the **current, post-2026-09-fix run is K=5 with sizes 7/3/9/10/16** for
-Clusters 0-4, "not 12/9/3/7/14 — that was from an earlier signature version"
-(`01_PROJECT_CONTEXT.md`). This section was not regenerated against the current run. Since the
-underlying plot artefacts for the current run were not re-inspected as part of this pass, the
-specific per-cluster member `point_id` lists, population/geographic-extent figures, and the
-Tier-1-proxy climate-profile table immediately below are **left as a historical record of the
-superseded 12/9/3/7/14 run** — do not cite them as current-run numbers in a write-up. Use
-7/3/9/10/16 (from `00_MASTER_OVERVIEW.md`) for the current cluster sizes.
+Read directly from the current `cluster_assignments_uttarakhand.csv` and
+`cluster_profiles_uttarakhand.csv` (2026-10). This replaces the earlier K = 5 tables (sizes
+7/3/9/10/16, and before that 12/9/3/7/14), which are superseded.
 
-### Cluster assignments (all 45 points) — SUPERSEDED run (12/9/3/7/14), kept as historical record only
+### Cluster assignments (all 45 points)
 
-Recovered from the popups in `data/plots/uttarakhand_objective1/02_climate_regime_map_folium.html`:
-
-| Cluster | n_points | Member `point_id`s |
+| Cluster | n_points | Member `point_id`s (UKP_…) |
 |---|---|---|
-| **0** | **12** | 0003, 0004, 0005, 0006, 0007, 0014, 0019, 0020, 0031, 0034, 0037, 0044 |
-| **1** | **9** | 0002, 0008, 0011, 0021, 0024, 0025, 0026, 0033, 0036 |
-| **2** | **3** | 0023, 0040, 0041 |
-| **3** | **7** | 0001, 0009, 0010, 0012, 0013, 0016, 0017 |
-| **4** | **14** | 0015, 0018, 0022, 0027, 0028, 0029, 0030, 0032, 0035, 0038, 0039, 0042, 0043, 0045 |
+| **0** | **10** | 0001, 0003, 0009, 0010, 0012, 0013, 0014, 0016, 0017, 0034 |
+| **1** | **23** | 0004, 0005, 0006, 0007, 0015, 0018, 0019, 0020, 0022, 0027, 0028, 0029, 0030, 0031, 0032, 0035, 0037, 0038, 0039, 0042, 0043, 0044, 0045 |
+| **2** | **9** | 0002, 0008, 0011, 0021, 0024, 0025, 0026, 0033, 0036 |
+| **3** | **3** | 0023, 0040, 0041 |
 
-This table matches `data/plots/verify_clustering/06_cluster_sizes.png` at the time it was captured
-(12 / 9 / 3 / 7 / 14, total 45, max/min ratio 14/3 = 4.67) — **but that plot, like this table,
-predates the current 7/3/9/10/16 run** and has not been re-captured since.
+Clusters 2 and 3 have exactly the same members as the corresponding clusters of the earlier runs —
+they are robust to the choice of K. Moving from K = 5 only re-partitions the remaining 33 points
+into a warm-plains cluster (0) and a mid-hill cluster (1).
+`data/plots/verify_clustering/06_cluster_sizes.png` shows 10 / 23 / 9 / 3 (max/min ratio 7.67).
 
-### Population and geographic extent per cluster — SUPERSEDED run (12/9/3/7/14), kept as historical record only
+### Population and geographic extent per cluster
 
-Computed by joining the cluster assignments to the per-point populations and coordinates embedded
-in `data/plots/comprehensive/maps/A2_population_map.html`:
+| Cluster | n | Population covered | Share | Latitude range (mean) | Longitude range (mean) | Mean elevation |
+|---|---|---|---|---|---|---|
+| 0 | 10 | **3,700,876** | 35.3 % | 28.875 – 29.875 (29.400) | 77.875 – 79.875 (78.700) | ~323 m |
+| 1 | 23 | **3,993,013** | 38.1 % | 29.125 – 30.625 (29.625) | 77.875 – 80.125 (79.375) | ~1,090 m |
+| 2 | 9 | **2,451,044** | 23.4 % | 30.125 – 30.625 (30.292) | 78.125 – 78.875 (78.486) | ~1,299 m |
+| 3 | **3** | **330,780** | 3.2 % | 30.125 – 30.375 (30.292) | 79.125 – 79.375 (79.292) | ~2,219 m |
+| **Total** | **45** | **10,475,713** | 100 % | | | |
 
-| Cluster | n | Population covered | Share | Latitude range (mean) | Longitude range (mean) |
-|---|---|---|---|---|---|
-| 0 | 12 | **3,432,283** | 32.8 % | 29.125 – 30.375 (29.562) | 77.875 – 79.875 (78.854) |
-| 1 | 9 | **2,451,043** | 23.4 % | 30.125 – 30.625 (30.292) | 78.125 – 78.875 (78.486) |
-| 2 | **3** | **330,779** | 3.2 % | 30.125 – 30.375 (30.292) | 79.125 – 79.375 (79.292) |
-| 3 | 7 | **2,541,919** | 24.3 % | 28.875 – 29.875 (29.268) | 77.875 – 79.875 (78.804) |
-| 4 | 14 | **1,719,687** | 16.4 % | 29.125 – 30.625 (29.696) | 77.875 – 80.125 (79.625) |
-| **Total** | **45** | **10,475,711** | 100 % | | |
-
-Cluster 2 is the smallest by both point count (3) and population (3.2 %), and is the most spatially
+(Mean elevation is the population-weighted `elevation_m` from the cluster profiles.)
+Cluster 3 is the smallest by both point count (3) and population (3.2 %), and is the most spatially
 compact — a 0.25° × 0.25° neighbourhood around 30.25° N, 79.25° E.
 
-### Climate profile per cluster (observed medians) — SUPERSEDED run (12/9/3/7/14), kept as historical record only
+### Climate profile per cluster (population-weighted means)
 
-From the boxplots in `data/plots/verify_clustering/05_cluster_profiles.png`, which plot the first
-six numeric feature columns of the signature matrix. Values are read from the rendered chart and
-are therefore **approximate to the plotting resolution**:
+From `cluster_profiles_uttarakhand.csv` (exact values, not read off a chart):
 
-| Index (Tier-1 proxy) | C0 | C1 | C2 | C3 | C4 |
-|---|---|---|---|---|---|
-| `Ta_mean_proxy` (°C) | ~22.8 | ~19.0 | **~13.4** | **~25.0** | ~18.2 |
-| `Ta_p95_proxy` (°C) | ~29.8 | ~25.6 | ~20.4 | ~32.8 | ~24.3 |
-| `Ta_p05_proxy` (°C) | ~12.1 | ~9.1 | ~4.2 | ~13.8 | ~9.4 |
-| `DTR_proxy` (K) | ~7.9 | ~7.8 | ~7.1 | ~7.9 | ~7.2 |
-| `GHI_mean` (W/m², noon) | ~52.9 | ~44.5 | ~44.7 | ~55.1 | ~50.0 |
-| `GHI_daily_kWh_proxy` (kWh/m²/day) | ~0.404 | ~0.342 | ~0.335 | ~0.428 | ~0.380 |
+| Index (Tier-1 proxy) | C0 | C1 | C2 | C3 |
+|---|---|---|---|---|
+| `Ta_mean_proxy` (°C) | **24.7** | 20.5 | 19.2 | **13.8** |
+| `Ta_p95_proxy` (°C) | 32.4 | 27.3 | 25.8 | 20.7 |
+| `Ta_p05_proxy` (°C) | 13.4 | 10.6 | 9.3 | 4.4 |
+| `DTR_proxy` (K) | 8.0 | 7.5 | 7.8 | 7.2 |
+| `GHI_mean` (W/m², noon) | 724.8 | 702.6 | 705.5 | 683.2 |
+| `GHI_daily_kWh_proxy` (kWh/m²/day) | 5.65 | 5.47 | 5.49 | 5.30 |
+| `L_required_kJ_per_kg` | 118 | 132 | 138 | 178 |
+| `HSI` | 19.0 | 21.7 | 19.2 | 15.0 |
 
-The temperature ordering is monotone and coherent: **C3 (warmest) > C0 > C1 > C4 > C2 (coldest)**,
-spanning ~11.6 K of mean-temperature separation, with the same ordering reproduced in `Ta_p95` and
-`Ta_p05`. Combined with the geographic extents above — C3 southernmost, C2 a compact
-high-longitude/high-latitude pocket — the partition is internally consistent with an
-elevation/latitude gradient.
+The temperature ordering is monotone and coherent: **C0 (warmest) > C1 > C2 > C3 (coldest)**,
+spanning ~11 K of mean-temperature separation, reproduced in `Ta_p95` and `Ta_p05` and mirrored by
+a monotone rise in elevation (~323 → 1,090 → 1,299 → 2,219 m). Combined with the geographic
+extents above — C0 southernmost, C3 a compact high-elevation pocket — the partition is internally
+consistent with an elevation/latitude gradient, even though lat/lon/elevation are not clustering
+inputs.
 
 > **The source files do not assign geographic names to the clusters.** No committed artefact in
-> `era5-uttarakhand/` labels a cluster as "Terai", "Doon Valley" or "high Himalaya". Any such
-> labelling in a write-up is interpretation added on top of the pipeline, not a pipeline output.
+> `era5-uttarakhand/` labels a cluster as "Terai", "Doon Valley" or "high Himalaya". Descriptions
+> such as "warm plains" (C0) or "high Himalaya" (C3) in a write-up are interpretation added on top
+> of the pipeline, based on the elevation and temperature columns above.
 
-> **The `GHI_mean` and `GHI_daily_kWh_proxy` values above are affected by the ERA5 GHI magnitude
-> anomaly** documented in `04_PHASE_2_AUDIT.md` Part A.3. Their *relative* ordering across clusters
-> is still informative; their absolute magnitudes are not usable.
+> **`GHI_mean` enters the clustering matrix carrying the ERA5 GHI anomaly** documented in
+> `04_PHASE_2_AUDIT.md` Part A.3. The *relative* ordering across clusters is informative; treat
+> absolute magnitudes with that caveat.
 
-### Soft membership — PARTIALLY IMPROVED by the covariance fix, not fully resolved
+### Soft membership — effectively hard at K = 4
 
-This section originally reported that every one of the 45 popups showed `Prob: 1.000` —
-`max_membership_prob` rounding to 1.000 at three decimal places for **every point** — under the old
-`covariance_type="full"` fit, and attributed it to overdetermination (D*(D+1)/2 parameters per
-component vs. only 45 points).
-
-**After switching to `covariance_type="diag"`, checked directly against the current
-`cluster_assignments_uttarakhand.csv`:** `max_membership_prob` now ranges 0.9978-1.0000 (mean
-0.9999), with 43 of 45 points still rounding to 1.000 at three decimals and only 2 points showing a
-genuinely sub-1.000 value. So the fix is real (probabilities are no longer numerically pinned to
-exactly 1.000, which they likely were under `full`) but the **practical** finding stands: this run's
-5 climate regimes are similar to a hard partition regardless of covariance type, because they are
-well-separated relative to only 45 points, not primarily because of an overdetermined model. The
+Under the old `covariance_type="full"` fit every point's `max_membership_prob` was 1.000. After
+switching to `"diag"`, the K = 5 run showed a range of 0.9978–1.0000 (2 points below 1.000).
+**At K = 4, every one of the 45 points has `max_membership_prob` = 1.000** — the four regimes are
+well separated relative to only 45 points, so the partition is effectively hard. The
 soft-clustering rationale in the docstring ("a point near that boundary genuinely has partial
-membership in both") still does not materialise in practice for this specific run — `prob_cluster0…4`
-still carries little usable boundary information, and `05b_cluster_interactive.py`'s boundary-point
-feature (a faint ring where `max prob < 1.5/K`) would highlight at most 2 points.
+membership in both") does not materialise for this run: `prob_cluster0…3` carries no usable
+boundary information, and `05b_cluster_interactive.py`'s boundary-ring feature
+(`max prob < 1.5/K`) highlights no points.
 
 ### Silhouette
 
-`data/plots/verify_clustering/02_silhouette_plot.png` reports, for the **saved K = 5 labels, current
-post-2026-09-fix run** (sizes 7/3/9/10/16 for Clusters 0-4, not the earlier 12/9/3/7/14):
+`data/plots/verify_clustering/02_silhouette_plot.png` for the saved K = 4 labels. Since 2026-10
+`verify_02_clustering.py` uses the same `_z`-only feature matrix and `diag` covariance as
+`05_cluster_uttarakhand.py`, so its numbers now match `bic_selection_uttarakhand.csv`. (Before
+that it re-standardised every numeric column — raw, `_proxy`, `_true` and `_z` duplicates — and
+used `full` covariance, which produced curves that appeared to favour K = 5.)
 
 | Metric | Value |
 |---|---|
-| Average silhouette (`verify_02_clustering.py`, its own feature matrix — see caveat below) | **0.234** |
-| `05_cluster_uttarakhand.py`'s own reported silhouette (its `_z`-only matrix) | **0.28** |
+| Average silhouette (saved labels) | **0.362** |
+| Davies-Bouldin / Calinski-Harabasz | 0.935 / 28.9 |
 | Reference threshold drawn on the plot | 0.400 |
-| Per-cluster avg/min silhouette | C0: avg −0.01, min −0.20; C1: avg 0.53, min 0.31; C2: avg 0.39, min 0.22; C3: avg 0.26, min −0.02; C4: avg 0.20, min −0.11 |
+| Per-cluster avg/min silhouette | C0: avg 0.33, min 0.12; C1: avg 0.27, min −0.01; C2: avg 0.55, min 0.46; C3: avg 0.65, min 0.50 |
 
-~0.23-0.28 falls inside `05_cluster_uttarakhand.py`'s stated accept band of **0.15–0.40** — the
-script's own guidance is that a HIGHER silhouette at only 45 points would suggest an over-simplified
-signature, not a better result, so this is the expected/preferred range, not a shortfall. Clusters
-0, 3, and 4 all show some negative min-silhouette points in the current run (not only Cluster 4 as
-in the earlier 12/9/3/7/14 run this section originally described) — Cluster 1 (n=3) and Cluster 2
-(n=9) are the most cleanly separated.
-
-> **Caveat on this number.** `verify_02_clustering.py` computes silhouette on **its own** feature
-> matrix — every numeric column of `climate_signature_uttarakhand.csv` except
-> `point_id/cluster_id/lat/lon/population`, re-standardised — which includes the raw indices, the
-> `_proxy` and `_true` duplicates, the PCA-block members **and** the `_z` columns. That is a
-> different and much larger space than the `_z`-only matrix the GMM was fitted in. The 0.279 figure
-> is a valid independent diagnostic but is **not** the silhouette that `05_cluster_uttarakhand.py`
-> wrote to `bic_selection_uttarakhand.csv` at K = 5. That value is not available in the source
-> files.
+0.362 falls inside `05_cluster_uttarakhand.py`'s accept band of **0.15–0.40** — the script's own
+guidance is that a HIGHER silhouette at only 45 points would suggest an over-simplified
+signature, not a better result. Only Cluster 1 (the large mid-hill cluster) has a point with a
+(marginally) negative silhouette; Clusters 2 and 3 are cleanly separated.
 
 ---
 
@@ -265,11 +274,11 @@ in the earlier 12/9/3/7/14 run this section originally described) — Cluster 1 
 
 | Component | Status |
 |---|---|
-| Bootstrap / ARI cluster-stability analysis | **Not implemented.** No resampling of any kind appears in `05_cluster_uttarakhand.py`. |
+| Bootstrap / ARI cluster-stability analysis | **Not in the pipeline.** No resampling appears in `05_cluster_uttarakhand.py`; a one-off subsample check (100 × 80 %) was run by hand for the K choice — ARI mean 0.91 at K = 4 — but it is not a committed script. |
 | Fitted-model persistence (`joblib` scaler + GMM) | **Not implemented.** Neither `04b`'s `StandardScaler` nor `05`'s fitted `GaussianMixture` is saved; re-running Phases 5–8 requires re-fitting. |
 | `sklearn_version` recorded in outputs | **Not implemented.** |
 | Canonical cluster relabelling (e.g. by ascending latitude) | **Not implemented.** Cluster IDs come straight from `GaussianMixture.fit_predict` and are stable only because `random_state=42` is fixed. |
-| External climate classification (Köppen-Geiger, NBC/ECBC) | **Not implemented.** The K = 5 partition rests entirely on internal statistics. |
+| External climate classification (Köppen-Geiger, NBC/ECBC) | **Not implemented.** The K = 4 partition rests entirely on internal statistics. |
 | Automatic K selection | **Not implemented by design** — `K_FINAL` is a manually edited constant, and the script prints "update after reviewing this table, then re-run." |
 
 ---
@@ -318,30 +327,29 @@ Davies-Bouldin or Calinski-Harabasz appears anywhere in `era5-uttarakhand/`. See
 | Check | Result |
 |---|---|
 | lat/lon excluded from the clustering matrix | **Confirmed** — dropped by `04b`, re-announced by `05` at run time |
-| K selected from a four-metric table | **Implemented**; table contents not available in the source files |
-| K-Means reported as a comparison | **Implemented**; contents not available |
-| Silhouette inside the stated accept band | **PASS** — 0.279 in [0.15, 0.40] (verify-suite feature space) |
+| K selected from a four-metric table | **Implemented** — K = 4 best on DB and CH, silhouette tied-best (table above) |
+| K-Means reported as a comparison | **Implemented** — K-Means silhouette 0.377 at K = 4 |
+| Silhouette inside the stated accept band | **PASS** — 0.362 in [0.15, 0.40] |
 | Clusters spatially coherent | **PASS** — geographically contiguous despite geography being excluded |
 | Cluster profiles population-weighted | **Confirmed** — `np.average(..., weights=population)` |
-| Bootstrap stability | **Absent** |
+| Bootstrap stability | **Checked once by hand** (ARI mean 0.91, 10th pct 0.69); not part of the pipeline |
 | External classification agreement | **Absent** |
 
 ## Problems / risks
 
-1. **K = 5 exceeds the source files' own recommendation.** `README_PREPROCESSING.md` says
-   "realistically 2-4" for a 45-point single-state fit and warns that "a GMM fit on very few points
-   per component gets unstable." Cluster 2 has 3 points and cluster 3 has 7.
-2. **Soft membership collapsed to 1.000 everywhere**, so the stated methodological reason for
-   choosing GMM over K-Means is not realised in this run. This should be reported, not left
-   implicit.
-3. **No stability evidence exists.** With no bootstrap ARI, no model persistence and no external
-   classification, the only evidence for K = 5 is the (uncommitted) BIC/silhouette table and the
-   verification suite's 0.279 silhouette.
+1. **K = 4 is at the top of the source files' own recommendation.** `README_PREPROCESSING.md`
+   says "realistically 2-4" for a 45-point single-state fit. K = 4 is inside that range (the
+   previous K = 5 was not), but Cluster 3 still has only 3 points.
+2. **Soft membership is 1.000 for every point**, so the stated methodological reason for choosing
+   GMM over K-Means is not realised in this run. This should be reported, not left implicit.
+3. **Stability evidence is not part of the pipeline.** The K = 4 choice is backed by the four-metric
+   table, a 20-seed spread check and a one-off subsample ARI check (all reported above), but none
+   of these is a committed, re-runnable script and there is no external classification.
 4. **Cluster ID stability depends solely on `random_state=42`.** There is no canonical relabelling
    step, so any change to the signature matrix, sklearn version, or seed can permute cluster IDs
    and silently invalidate the `cluster_id`-keyed joins in `07`, `08` and `09` — none of which
    verify provenance.
-5. **Cluster 2 is a 3-point regime carrying 3.2 % of population.** Every per-cluster statistic for
+5. **Cluster 3 is a 3-point regime carrying 3.2 % of population.** Every per-cluster statistic for
    it — profile means, survivor counts, MCDM ranks — rests on three sampling points.
 6. **`Tm_target_C` enters the clustering matrix as a zero-variance column.** Harmless but untidy.
 7. **`GHI_mean` enters the clustering matrix carrying the ERA5 GHI anomaly** — the one solar column
@@ -353,5 +361,5 @@ Davies-Bouldin or Calinski-Harabasz appears anywhere in `era5-uttarakhand/`. See
 gradient, geography excluded, four selection metrics plus a K-Means control, population-weighted
 profiles) and the result is spatially coherent with a monotone temperature ordering — a genuine
 positive finding given that latitude and longitude were excluded from the fit. The open items are
-the aggressive K for N = 45, the total absence of stability evidence, and the unrealised soft
-membership.
+the 3-point Cluster 3, stability evidence that is not yet a committed script, and the unrealised
+soft membership.

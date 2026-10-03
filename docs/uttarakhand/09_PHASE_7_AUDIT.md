@@ -2,7 +2,7 @@
 
 **Script**: `10_physics_validation.py`
 
-**Status**: **COMPLETE.** Fully implemented, executed, and verified end-to-end against 10-year daily weather data across all 5 Uttarakhand climate regimes.
+**Status**: **COMPLETE.** Fully implemented, executed, and verified end-to-end against 10-year daily weather data across all 4 Uttarakhand climate regimes (K = 4 run, 2026-10).
 
 ---
 
@@ -69,7 +69,7 @@ Per plan v3.0 Section 10:
 ### 1. Benchmark Calibration Check (Plan v3.0 Table 16)
 **0% of all simulated PCM-cluster pairs** land within the published **54%–84%** annual solar fraction
 benchmark band for domestic solar water heating systems in India. The simulated annual solar
-fraction is, in fact, roughly **12%–19%** across all five clusters and all candidate PCMs
+fraction is, in fact, roughly **12%–20%** across all four clusters and all candidate PCMs
 (`data/processed/pcm/physics_validation_results.csv`) — an order-of-magnitude-scale shortfall
 against the benchmark, not a near-miss.
 
@@ -99,24 +99,23 @@ diagnostic note printed at the end of `10_physics_validation.py`'s `main()`.
 
 ### 2. Cluster-by-Cluster Physics vs. MCDM Rank Concordance
 
-| Cluster | Medoid Point | Annual Solar Fraction (all candidates) | Spearman $\rho$ | $p$-value | Interpretation |
-|:---:|:---:|:---:|:---:|:---:|:---|
-| **Cluster 0** | UKP_0007 | ≈15.9% | **+0.023** | 0.925 | Negligible, non-significant correlation |
-| **Cluster 1** | UKP_0023 | ≈12.0% | **−0.168** | 0.480 | Weak, non-significant inverse correlation |
-| **Cluster 2** | UKP_0002 | ≈15.9% | **−0.338** | 0.144 | Weak, non-significant inverse correlation |
-| **Cluster 3** | UKP_0001 | ≈19.1% | **+0.169** | 0.477 | Weak, non-significant positive correlation |
-| **Cluster 4** | UKP_0015 | ≈16.7% | **−0.140** | 0.556 | Weak, non-significant inverse correlation |
-| **Mean** | — | — | **≈−0.091** | — | Overall weak/no correlation across regimes; **no cluster reaches p < 0.05** |
+K = 4 run (2026-10), 20 candidates simulated per cluster (`MAX_PCMS_PER_CLUSTER = 20`):
 
-*(Rho values updated 2026-09 after a Phase 3/Phase 7 sizing reconciliation — see the note at the
-end of this section. Solar fractions were already correct and did not change.)*
+| Cluster | Medoid Point | Annual Solar Fraction (all candidates) | Hours target met / yr | Complete cycles / yr | Spearman $\rho$ | $p$-value | Interpretation |
+|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---|
+| **Cluster 0** | UKP_0001 | ≈19.1% | 1,006–1,022 | 13–121 | **+0.105** | 0.661 | Negligible, non-significant correlation |
+| **Cluster 1** | UKP_0004 | ≈20.2% | 1,051–1,070 | 25–121 | **−0.140** | 0.556 | Weak, non-significant inverse correlation |
+| **Cluster 2** | UKP_0002 | ≈15.9% | 480–486 | 1–62 | **−0.338** | 0.144 | Weak, non-significant inverse correlation |
+| **Cluster 3** | UKP_0023 | ≈12.0% | **0** | **0** | **−0.168** | 0.480 | Weak, non-significant inverse correlation |
+| **Mean** | — | — | — | — | **≈−0.135** | — | Overall weak/no correlation across regimes; **no cluster reaches p < 0.05** |
 
-Exact values are recorded in `data/processed/pcm/physics_validation_spearman.csv`. Within a given
-cluster, the simulated annual solar fraction barely varies across the ~20 candidate PCMs actually
-simulated (typically agreeing to 3–4 significant figures, e.g. Cluster 0's 20 candidates all land
-between 15.9434% and 15.9436%) — at this model's current parameterization, which PCM is installed
-has almost no effect on annual solar fraction next to the effect of the cluster's own weather driving
-data. That is itself a diagnostic finding, not a data error.
+Exact values are recorded in `data/processed/pcm/physics_validation_results.csv` and
+`physics_validation_spearman.csv`. Within a given cluster, the simulated annual solar fraction
+barely varies across the 20 candidate PCMs (identical to three decimal places in every cluster) —
+at this model's current parameterization, which PCM is installed has almost no effect on annual
+solar fraction next to the effect of the cluster's own weather driving data. That is itself a
+diagnostic finding, not a data error. The number of complete melt/freeze cycles per year, by
+contrast, does vary strongly between PCMs within a cluster (e.g. 13–121 in Cluster 0).
 
 ---
 
@@ -125,17 +124,22 @@ data. That is itself a diagnostic finding, not a data error.
 1. **Delivered Solar Fraction Differentiation**:
    Phase 7 still shows **regional performance differentiation** across clusters, even though the
    post-bug-fix absolute levels are far lower than the benchmark band:
-   - **Cluster 3** (medoid UKP_0001) achieves the highest solar fraction (≈19.1%), consistent with
-     stronger daily solar insolation at that medoid.
-   - **Cluster 1** (medoid UKP_0023) yields the lowest solar fraction (≈12.0%), reflecting weaker
-     insolation and/or lower ambient temperatures at that medoid.
+   - **Clusters 0 and 1** (medoids UKP_0001, UKP_0004) achieve the highest solar fractions
+     (≈19.1% and ≈20.2%) and ~1,000–1,070 delivery-target hours per year. This is where the two
+     regimes that the MCDM cannot separate (identical Top-3) do differ: Cluster 1's medoid delivers
+     slightly more, despite Cluster 0 being the warmer regime.
+   - **Cluster 2** (medoid UKP_0002) drops to ≈15.9% and ~480 target hours.
+   - **Cluster 3** (medoid UKP_0023, the high-elevation regime) yields the lowest solar fraction
+     (≈12.0%) and **never meets the delivery target and never completes a melt/freeze cycle** —
+     at ~2,200 m the simulated tank does not reach any candidate's melting point at this sizing.
+     That is the strongest regime-level physics finding of the K = 4 run.
    - This ordering is much smaller in absolute spread than an earlier draft of this section claimed
      (~78–81% vs. ~51–63%) — that older text predated the backward-Euler/latent-heat bug fixes and
      the sizing reconciliation described above, and has been corrected here to match the current,
      verified output.
 
 2. **Explanation of Low Rank Correlation**:
-   - Mean Spearman $\rho \approx -0.091$ across clusters (table above), none reaching $p<0.05$ — the
+   - Mean Spearman $\rho \approx -0.135$ across clusters (table above), none reaching $p<0.05$ — the
      MCDM consensus rank and simulated solar fraction are not meaningfully correlated in either
      direction at this model's current parameterization.
    - Within a cluster, simulated solar fraction barely varies across candidate PCMs (see the note

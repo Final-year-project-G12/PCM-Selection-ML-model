@@ -79,10 +79,10 @@ Kept here as a record of what the table used to say and why it was wrong at the 
 | 1. Data Collection | "**Done.** Points confirmed …, ~87.5% population coverage" | Confirmed — 45 points, 10,475,711 population; real per-point elevation attached |
 | 2. Preprocessing & QC | "`02b` confirmed run … `04` code delivered — confirm it's actually been run" | `04` run: 489,105 output rows, qc_report.txt 5/5 PASS |
 | 3. Climate Signature | "Code delivered …, **not yet confirmed run**" | Run — real `elevation_m` (~0.37 PCA loading on PC1), not the old pressure-derived `elev_proxy` |
-| 4. Clustering | "Code delivered …, **not yet confirmed run**" | Run at **K = 5**; sizes **7/3/9/10/16** (not 12/9/3/7/14 — that was from an earlier signature version) |
-| 5. Feasibility | "Code delivered, **not yet run**" | Run — survivor counts now **29/30/29/27/29** per cluster (not identical, since the regime-cap bug in `07b` is fixed) |
-| 6. MCDM Ranking | "Code delivered, **not yet run**" | Run — four methods (TOPSIS+GRA+PROMETHEE+VIKOR); Cluster 1 genuinely differs (PureTemp 53, not PureTemp 58) |
-| 7. Physics Validation | "**Not written.**" | Written and run (`10_physics_validation.py`) — two model bugs fixed; corrected result is 0% within the 54-84% benchmark band (~12-19% actual), down from a bug-inflated 92%. A later sizing reconciliation (Phase 3/Phase 7 tank/PCM/collector consistency) left this essentially unchanged — see `09_PHASE_7_AUDIT.md` |
+| 4. Clustering | "Code delivered …, **not yet confirmed run**" | Run at **K = 4** (re-chosen from K = 5 in 2026-10: best DB/CH, tied-best silhouette, most stable); sizes **10/23/9/3** |
+| 5. Feasibility | "Code delivered, **not yet run**" | Run — survivor counts **29/29/29/30** per cluster (Cluster 3 has its own set, since the regime-cap bug in `07b` is fixed) |
+| 6. MCDM Ranking | "Code delivered, **not yet run**" | Run — four methods (TOPSIS+GRA+PROMETHEE+VIKOR); the high-elevation Cluster 3 genuinely differs (PureTemp 53, not PureTemp 58); Clusters 0 and 1 rank identically |
+| 7. Physics Validation | "**Not written.**" | Written and run (`10_physics_validation.py`) — two model bugs fixed; corrected result is 0% within the 54-84% benchmark band (~12-20% actual), down from a bug-inflated 92%. A later sizing reconciliation (Phase 3/Phase 7 tank/PCM/collector consistency) left this essentially unchanged — see `09_PHASE_7_AUDIT.md` |
 | 8. Recommendation Cards | "Code delivered, **not yet run**" | Run — `recommendation_cards.md` regenerated against all current fixes (still git-ignored, so not in this repo) |
 
 ## Known internal inconsistency: PCM database size — RESOLVED in NEXT_STEPS.md (2026-09)
@@ -149,7 +149,7 @@ split" at this N, and that K should realistically be 2–4 rather than higher.
 anticipates that "the corrosion veto [will] bite for high-monsoon-humidity Uttarakhand clusters
 (Terai/valley points during Jun-Sep) … same veto, different physical mechanism, worth noting in
 text." `07_feasibility_filter.py` now implements the veto logic (a `corrosion_class="check_manually"`
-candidate fails if that cluster's HSI exceeds the 75th percentile across all 5 clusters) — but it
+candidate fails if that cluster's HSI exceeds the 75th percentile across all clusters) — but it
 still can't bite for the reason this section originally gave: every one of the 55 database
 candidates is organic (`corrosion_class="low_organic"`), so there's nothing for the veto to reject.
 It will activate automatically once an inorganic candidate (e.g. a salt hydrate) is added to the
@@ -159,16 +159,16 @@ database — a data-coverage gap now, not a missing-logic gap.
 `04b_climate_signature.py` sets a baseline `Tm_target_C = 57` for every point by design
 (`T_DELIVERY_C = 50` + `DT_APPROACH_C = 7`, "indirect-system assumption"). This claim used to be
 accurate: the melting-window filter and Gaussian Tm-fitness criterion, both driven by `Tm_target`,
-made all five regimes return identical survivor sets and an identical #1 PCM (PureTemp 58/RT60,
-depending on which pre-fix run). The actual cause was a bug in `07b_charging_feasibility.py`: its
+made every regime of the old K = 5 run return identical survivor sets and an identical #1 PCM
+(PureTemp 58/RT60, depending on which pre-fix run). The actual cause was a bug in `07b_charging_feasibility.py`: its
 regime-dependent Tm cap divided its own signal (`poor_day_kt`) by `kt_mean`, collapsing to a
 coefficient-of-variation measure that could never differentiate clusters — this is why it printed
 "0/5 clusters where the regime cap actually lowers Tm_target" on every run, not because the cap was
-disabled. Fixed to use `poor_day_kt` directly: Clusters 1 (55.16C) and 2 (56.51C) now get a real,
-lower `Tm_target`, and Cluster 1's MCDM consensus #1 is now genuinely different (PureTemp 53, not
-PureTemp 58). Clusters 0/3/4 still share `Tm_target=57C` and largely the same Top-1 pick — that part
-is a legitimate finding (those three climate regimes really don't need a different target), not a
-remaining bug. `08_mcdm_ranking.py` still detects and prints this explicitly.
+disabled. Fixed to use `poor_day_kt` directly: in the current K = 4 run Clusters 2 (56.51 °C) and
+3 (55.16 °C) get a real, lower `Tm_target`, and the high-elevation Cluster 3's MCDM consensus #1 is
+genuinely different (PureTemp 53, not PureTemp 58). Clusters 0 and 1 still share `Tm_target` =
+57 °C and an identical Top-3 — that part is a legitimate finding (those regimes really don't need
+a different target), not a remaining bug. `08_mcdm_ranking.py` still detects and prints this explicitly.
 
 ## What this documentation set does not claim
 

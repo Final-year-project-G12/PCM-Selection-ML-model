@@ -88,7 +88,12 @@ def main():
             if col in prof and prof[col] == prof[col]:
                 lines.append(f"| {col} | {prof[col]:.3f} |")
 
-        lines.append(f"\n**Derived targets:** Tm_target = {prof.get('Tm_target_C', float('nan')):.1f} C, "
+        # Show the Tm_target 07 actually filtered/ranked against: 07b's
+        # regime-capped value when present, else the Phase 3 constant.
+        tm_used = prof.get("Tm_target_C_regime_capped", float("nan"))
+        if tm_used != tm_used:
+            tm_used = prof.get("Tm_target_C", float("nan"))
+        lines.append(f"\n**Derived targets:** Tm_target = {tm_used:.2f} C, "
                       f"L_required = {prof.get('L_required_kJ_per_kg', float('nan')):.0f} kJ/kg")
         lines.append(f"\n**Candidates screened:** {n_survivors} survived Phase 5 feasibility filtering")
 

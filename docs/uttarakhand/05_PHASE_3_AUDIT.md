@@ -147,7 +147,7 @@ sig["L_required_kJ_per_kg"] = (q_total_kJ * SHARE_PCM) / ASSUMED_PCM_MASS_KG
 > temperature so heat flows PCM→water during discharge; the earlier subtract-based rule had the
 > sign backwards). Comes out to a constant 57 C here (50 + 7, indirect-system assumption) — held
 > constant across all points **by design, not tuned per cluster** (though regime-capped downward
-> for Clusters 1/2 — see `07_PHASE_5_AUDIT.md`).
+> for Clusters 2/3 in the K = 4 run — see `07_PHASE_5_AUDIT.md`).
 
 `04b`'s current run prints an `L_required` range of **approximately 113-190 kJ/kg** across the 45
 points. The minimum latent heat in the whole 55-row PCM database is 128 kJ/kg, so the 0.7x floor
@@ -338,7 +338,7 @@ None of Phase 3's own outputs are committed. The only surviving evidence of the 
    downstream bug**, not an inevitable consequence of a constant Phase-3 `Tm_target`.
    `07b_charging_feasibility.py`'s regime-dependent Tm cap (applied per-cluster, after clustering)
    was supposed to differentiate `Tm_target` per cluster but had a normalization bug that made it a
-   no-op; fixed, and Clusters 1/2 now get a genuinely lower `Tm_target` (55.16C/56.51C). See
+   no-op; fixed, and Clusters 2/3 (K = 4 run) now get a genuinely lower `Tm_target` (56.51C/55.16C). See
    `07_PHASE_5_AUDIT.md`.
 2. **`T_mains_est_C = Ta_mean − 2.0` is unsourced in-code** and drives `L_required` directly. Still
    an open, stated-but-uncited assumption, not a bug.

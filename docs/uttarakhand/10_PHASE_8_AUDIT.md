@@ -2,7 +2,7 @@
 
 **Script**: `09_recommendation_cards.py`
 
-**Status**: **COMPLETE.** The script has been executed and its output `recommendation_cards.md` is generated on disk under `data/processed/pcm/`. All five recommendation cards have been produced and verified.
+**Status**: **COMPLETE.** The script has been executed and its output `recommendation_cards.md` is generated on disk under `data/processed/pcm/`. All four recommendation cards (K = 4 run, 2026-10) have been produced and verified.
 
 ---
 
@@ -49,7 +49,7 @@ and **no partial output** — a design point `README.md` calls out explicitly:
 | **Population covered** | `prof["total_population_covered"]` | printed only if non-NaN |
 | **Approx. medoid point** | computed from `cluster_assignments` | nearest member to the cluster's mean lat/lon |
 | **Climate signature table** | `cluster_profiles`, `SIGNATURE_DISPLAY` list | population-weighted means, 3 dp |
-| **Derived targets** | `prof["Tm_target_C"]`, `prof["L_required_kJ_per_kg"]` | |
+| **Derived targets** | `prof["Tm_target_C_regime_capped"]` (falls back to `Tm_target_C`), `prof["L_required_kJ_per_kg"]` | capped value used since 2026-10 |
 | **Candidates screened** | `(survivors[cluster]["passes_all"]).sum()` | **correctly filters on `passes_all`** |
 | **Top-3 PCM table** | `mcdm_topk_by_cluster` | rank, name, family, Tm, latent heat, TOPSIS, GRA |
 | **Kendall's W + interpretation** | `cluster_top["kendall_w"].iloc[0]` | thresholded, see below |
@@ -88,21 +88,16 @@ agreement_note = ("strong agreement"                                            
 
 This matches `08_mcdm_ranking.py`'s own 0.6 threshold for printing its `[NOTE]` block.
 
-**STALE-DATA WARNING, now corrected:** the five W values and the "all trigger moderate agreement"
-claim below were from the pre-`07b`-fix, two-method (TOPSIS+GRA only) run. `08_PHASE_6_AUDIT.md`'s
-"MAJOR UPDATE" block gives the current, four-method (TOPSIS+GRA+PROMETHEE II+VIKOR) values, which
-are higher and cross the 0.8 "strong agreement" threshold in 3 of 5 clusters:
-
-**Current Kendall's W values across the 5 clusters** (per `08_PHASE_6_AUDIT.md`):
+**Current Kendall's W values across the 4 clusters** (four-method stack, K = 4 run — see
+`08_PHASE_6_AUDIT.md`):
 - **Cluster 0**: $W = 0.796$ (moderate agreement)
-- **Cluster 1**: $W = 0.842$ (strong agreement)
+- **Cluster 1**: $W = 0.796$ (moderate agreement)
 - **Cluster 2**: $W = 0.782$ (moderate agreement)
-- **Cluster 3**: $W = 0.708$ (moderate agreement)
-- **Cluster 4**: $W = 0.796$ (moderate agreement)
+- **Cluster 3**: $W = 0.842$ (strong agreement)
 
-All five values are comfortably above `08`'s own 0.6 "ambiguous regime" threshold, so the `[NOTE]`
+All four values are comfortably above `08`'s own 0.6 "ambiguous regime" threshold, so the `[NOTE]`
 block does not fire for any cluster in the current run — a materially healthier agreement picture
-than the old pooled TOPSIS-vs-GRA $\rho = -0.930$ this section previously cited as the explanation.
+than the old pooled TOPSIS-vs-GRA $\rho = -0.930$ of the earlier two-method run.
 
 ### Empty-Top-3 branch
 
@@ -111,7 +106,7 @@ If a cluster has no ranked candidates, the card prints:
 > **No ranked candidates** — this cluster had <2 feasibility survivors. Widen the PCM database or
 > relax the melting window for this Tm_target before finalising.
 
-This branch did not fire: all five clusters have 27–29 survivors.
+This branch did not fire: all four clusters have 29–30 survivors.
 
 ### Caveats block (hard-coded, printed on every card)
 
@@ -133,57 +128,56 @@ explainability value.
 
 ## Output Summary per Recommendation Card
 
-**STALE-DATA WARNING (2026-09):** the table below was assembled from a `recommendation_cards.md`
-generated **before** the `07b_charging_feasibility.py` regime-cap fix (it shows PureTemp 58 as
-Top-1 in every cluster including Cluster 1, and Cluster 1 with only 27 survivors). That directly
-contradicts the corrected results established elsewhere in this doc set: `07_PHASE_5_AUDIT.md`'s
-confirmed post-fix survivor counts are **29/30/29/27/29** (Cluster 1 = 30, not 27), and
-`08_PHASE_6_AUDIT.md`'s confirmed post-fix consensus Top-1 is **PureTemp 53 for Cluster 1**, not
-PureTemp 58 — exactly the "RESOLVED (2026-09)" note directly below this table already says. The
-`Tm_target_C`, `L_required`, Top-1/2/3, and Kendall's-W columns below are corrected using those
-two audits' verified numbers; **"Points in regime", "Population covered" and "Approx. medoid
-point" are left as the old, superseded-run values** (this section's original source) because they
-depend on the current 7/3/9/10/16 clustering run's actual per-point membership, which is not
-recoverable from a committed artefact in this pass — do not cite those three rows as current.
+Read directly from the current `data/processed/pcm/recommendation_cards.md` (K = 4 run, 2026-10):
 
-| Field | Cluster 0 | Cluster 1 | Cluster 2 | Cluster 3 | Cluster 4 |
-|---|---|---|---|---|---|
-| Points in regime *(stale — pre-fix run, see warning)* | 15 | 9 | 3 | 10 | 8 |
-| Population covered *(stale — pre-fix run, see warning)* | 2,729,553 | 2,451,044 | 330,780 | 3,700,876 | 1,263,461 |
-| Approx. medoid point *(stale — pre-fix run, see warning)* | UKP_0022 | UKP_0025 | UKP_0041 | UKP_0014 | UKP_0037 |
-| `Tm_target_C` | 57.0 °C | **55.16 °C** | **56.51 °C** | 57.0 °C | 57.0 °C |
-| Feasibility survivors | 29 | **30** | 29 | 27 | 29 |
-| **Top-1 PCM** | PureTemp 58 | **PureTemp 53** | PureTemp 58 | PureTemp 58 | PureTemp 58 |
-| **Top-2 PCM** | n-Octacosane (C28) | **n-Hexacosane (C26)** | savE® OM55 | savE® OM55 | n-Octacosane (C28) |
-| **Top-3 PCM** | PlusICE A58 | **Myristic acid (C14)** | n-Hexacosane (C26) | Palmitic-stearic acid/EG | PlusICE A58 |
-| Kendall's W | 0.796 | **0.842** | 0.782 | 0.708 | 0.796 |
+| Field | Cluster 0 | Cluster 1 | Cluster 2 | Cluster 3 |
+|---|---|---|---|---|
+| Points in regime | 10 | 23 | 9 | 3 |
+| Population covered | 3,700,876 | 3,993,013 | 2,451,044 | 330,780 |
+| Approx. medoid point | UKP_0014 | UKP_0029 | UKP_0025 | UKP_0041 |
+| `Tm_target_C` (as used by `07`/`08`) | 57.00 °C | 57.00 °C | **56.51 °C** | **55.16 °C** |
+| `L_required` | 118 kJ/kg | 132 kJ/kg | 138 kJ/kg | 178 kJ/kg |
+| Feasibility survivors | 29 | 29 | 29 | 30 |
+| **Top-1 PCM** | PureTemp 58 | PureTemp 58 | PureTemp 58 | **PureTemp 53** |
+| **Top-2 PCM** | n-Octacosane (C28) | n-Octacosane (C28) | savE® OM55 | **n-Hexacosane (C26)** |
+| **Top-3 PCM** | PlusICE A58 | PlusICE A58 | n-Hexacosane (C26) | **Myristic acid (C14)** |
+| Kendall's W | 0.796 | 0.796 | 0.782 | 0.842 |
 
-(Top-1/2/3 and Kendall's W corrected per `08_PHASE_6_AUDIT.md`'s "MAJOR UPDATE" block; feasibility
-survivors and `Tm_target_C` corrected per `07_PHASE_5_AUDIT.md`. `L_required` per-cluster values
-are not independently re-verified in this pass and have been removed rather than left stale.)
+**The high-elevation Cluster 3 names PureTemp 53 as its #1**; Clusters 0-2 share PureTemp 58, and
+Cluster 2 differs from Clusters 0/1 only in its Top-2/3. **Clusters 0 and 1 receive identical
+cards apart from the climate block** — same survivors, same Top-3, same W.
 
-**Cluster 1 now names PureTemp 53, not PureTemp 58, as its #1 consensus recommendation** — the
-other four clusters still share PureTemp 58, and Clusters 0/4 vs. 2/3 differ only in their Top-2/3
-combination.
+> **Fixed 2026-10:** the card's "Derived targets" line used to print the Phase 3 constant
+> `Tm_target_C` (57.0 °C for every cluster) even though `07`/`08` filter and rank against `07b`'s
+> regime-capped value. It now prints `Tm_target_C_regime_capped` when present, so Clusters 2 and 3
+> show the 56.51 / 55.16 °C they were actually ranked with.
+
+> **Medoid mismatch (open).** The card's "Approx. medoid point" (the member nearest the cluster's
+> mean lat/lon) is not the same point `10_physics_validation.py` simulates as the
+> cluster medoid (UKP_0001 / UKP_0004 / UKP_0002 / UKP_0023). Both are valid "representative
+> points", but a write-up quoting both should say they are computed differently.
 
 ## The finding a Phase 8 write-up must carry
 
 `08_mcdm_ranking.py` detects the degeneracy and prints it, but **`09` does not propagate it into
-the cards.** A reader of `recommendation_cards.md` alone sees five cards with the same top pick and
-no explanation of why. The `[FINDING]` text from `08` — and the two honest reporting options it
+the cards.** In the old K = 5 run a reader of `recommendation_cards.md` saw five cards with the
+same top pick and no explanation of why; in the K = 4 run three of four cards share a top pick,
+still without explanation. The `[FINDING]` text from `08` — and the two honest reporting options it
 offers — belongs in the cards, or at minimum in the paper section built from them:
 
 > Every cluster's #1 PCM is identical (`RT60`). This is a direct consequence of `Tm_target` being
 > held constant across all clusters (plan v3.0 Section 6.3's design rule) combined with every
 > candidate's latent heat comfortably clearing `L_required` in every cluster. **It is NOT a bug.**
 
+*(Quote from the old K = 5 two-method run.)*
+
 **RESOLVED (2026-09) — this quote's own claim ("NOT a bug") was wrong.** It WAS a bug, just not in
 `Tm_target`'s constancy itself: `07b_charging_feasibility.py`'s regime-dependent Tm cap (designed
 specifically to break this degeneracy) had a normalization error that made it a no-op regardless of
-how it was run. Fixed — Cluster 1 now gets a genuinely different #1 (PureTemp 53, `Tm_target=55.2C`)
-while Clusters 0/3/4 legitimately share PureTemp 58 and Cluster 2 shares it with a differentiated
-Top-2/3. Current `recommendation_cards.md` reflects this corrected, partially-differentiated result,
-not a flat identical-#1 across all five cards.
+how it was run. Fixed — in the K = 4 run the high-elevation Cluster 3 gets a genuinely different
+#1 (PureTemp 53, `Tm_target` = 55.16 °C), Cluster 2 shares PureTemp 58 with a differentiated
+Top-2/3, and Clusters 0 and 1 share an identical Top-3. Current `recommendation_cards.md` reflects
+this partially-differentiated result.
 
 ## Dependencies
 
@@ -220,10 +214,11 @@ computes nothing new."
 4. **`any_property_imputed`, `n_properties_imputed` and `cycles_confidence_imputed` are available
    per candidate and are not surfaced** on the cards.
 5. **~~The identical-#1 finding is not propagated~~ from `08`'s console output into the cards** —
-   moot for Cluster 1 now (2026-09), which has a genuinely different #1; still applies to Clusters
-   0/3/4's legitimately shared pick, which the cards still don't explain.
-6. **Every recommended #1 is a Borda tie**, and the cards render `consensus_rank` without noting
-   the tie — a reader sees "1" and "1" in clusters 0/2/4 without explanation.
+   moot for Cluster 3, which has a genuinely different #1; still applies to Clusters 0-2's shared
+   pick (and Clusters 0/1's fully identical Top-3), which the cards still don't explain.
+6. **Borda ties were common in the old two-method run** (two candidates sharing rank 1); the
+   four-method K = 4 run has a single #1 in every cluster, but the cards still render
+   `consensus_rank` without any margin, so a near-tie would not be visible.
 7. **No analytical criterion-contribution breakdown.** `mcdm_full_scores_by_cluster.csv` is written
    by `08` precisely so a card can show per-criterion contributions — `08`'s docstring says "keep
    this — it's what a recommendation card's 'criterion contributions' field needs" — but `09`
@@ -239,6 +234,6 @@ computes nothing new."
 **CODE COMPLETE, OUTPUT REGENERATED (2026-09) against all current fixes.** The script is well
 constructed: it validates all inputs up-front, refuses to write partial output, correctly filters on
 `passes_all`, handles NaNs, and carries a recorded bug fix. Its shortcomings are still all about
-what it does *not* say — the imputation scope, the tied ranks in Clusters 0/3/4's legitimately
-shared pick, and the per-criterion/physics-validation contributions it has the data for but doesn't
-surface on the card.
+what it does *not* say — the imputation scope, why Clusters 0-2 share a pick, and the
+per-criterion/physics-validation contributions it has the data for but doesn't surface on the
+card.

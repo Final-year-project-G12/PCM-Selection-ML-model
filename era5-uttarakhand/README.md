@@ -86,7 +86,7 @@ PHASE 5 — PCM DATABASE + FEASIBILITY FILTERING
 PHASE 6 — MULTI-CRITERIA RANKING
   08_mcdm_ranking.py              →  data/processed/pcm/mcdm_topk_by_cluster.csv
                                      data/processed/pcm/mcdm_full_scores_by_cluster.csv
-  09b_monte_carlo_stability.py    →  (5,000-draw Monte Carlo rank-stability results)
+  09b_monte_carlo_stability.py    →  (Monte Carlo rank-stability results, 2,000 draws default)
 
 PHASE 7 — PHYSICS-BASED VALIDATION
   10_physics_validation.py        →  data/processed/pcm/physics_validation_results.csv
@@ -618,7 +618,7 @@ survivor counts per cluster.
 
 - Output: `data/processed/pcm/feasibility_survivors_by_cluster.csv`
 - **Corrosion veto — implemented (2026-09).** Compares each cluster's HSI
-  against the 75th percentile across all 5 clusters, vetoing any
+  against the 75th percentile across all clusters, vetoing any
   `corrosion_class="check_manually"` (inorganic) candidate in a
   high-humidity cluster. Currently a documented no-op: all 55 database
   candidates are organic (`corrosion_class="low_organic"`), so nothing is
@@ -643,8 +643,9 @@ supplied, entropy-only otherwise). Ranks are aggregated to a
 reported per cluster as an explicit agreement/disagreement signal — a low
 W is treated as a genuine, reportable finding (that regime's PCM choice is
 ambiguous), not hidden. A companion script, `09b_monte_carlo_stability.py`,
-runs a 5,000-draw Monte Carlo perturbation of weights/properties per
-cluster to report Top-3-inclusion and Top-1-retention probabilities.
+runs a Monte Carlo perturbation of weights/properties per cluster (2,000
+draws by default, `--draws 5000` for the full spec) to report
+Top-3-inclusion and Top-1-retention probabilities.
 
 - Output: `data/processed/pcm/mcdm_topk_by_cluster.csv`,
   `data/processed/pcm/mcdm_full_scores_by_cluster.csv`
@@ -752,8 +753,9 @@ random-forest imputation).
   wrong thing, and a cloudy-run-counting contiguity gap — all three
   currently latent given this dataset's 100% Tier-2 coverage and zero
   missing hours, but real defects fixed for future runs). Consequences:
-  Cluster 1 now gets a genuinely different consensus PCM (PureTemp 53, not
-  PureTemp 58), and the physics-validation benchmark match dropped from a
+  the high-elevation cluster gets a genuinely different consensus PCM
+  (PureTemp 53, not PureTemp 58 — Cluster 3 in the current K = 4 run), and
+  the physics-validation benchmark match dropped from a
   bug-inflated 92% to a bug-fixed 0% (see `NEXT_STEPS.md` for the full
   writeup and exact numbers).
 - **WorldPop download size**: ~1.5-2GB, one-time, cached in

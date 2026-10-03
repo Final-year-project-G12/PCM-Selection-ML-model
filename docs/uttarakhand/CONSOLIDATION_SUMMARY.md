@@ -146,8 +146,8 @@ Content:
 - **UPDATED (2026-09):** the original finding here — "this run does not demonstrate
   regime-differentiated PCM recommendation" — was itself a symptom of a real bug in
   `07b_charging_feasibility.py` (its regime-dependent Tm cap was a mathematical no-op, dividing away
-  its own signal). Fixed: Cluster 1 now gets a genuinely lower `Tm_target` (55.2C vs the constant
-  57C) and a different consensus PCM (PureTemp 53). See `00_MASTER_OVERVIEW.md`'s novelty-mapping
+  its own signal). Fixed: in the current K = 4 run the high-elevation Cluster 3 gets a genuinely
+  lower `Tm_target` (55.16 °C vs the constant 57 °C) and a different consensus PCM (PureTemp 53). See `00_MASTER_OVERVIEW.md`'s novelty-mapping
   section for the corrected verdict.
 - Phase -> broader-project mapping
 - What the mapping explicitly does not claim
@@ -249,15 +249,16 @@ tree**, by one of four methods:
 | Parsing a committed CSV | `C_era5_vs_power_stats.csv` (cross-source statistics); `C_qc_flag_counts.csv` (QC counts) |
 | Decoding embedded Plotly base64 payloads | Top-3 PCM ranks and properties from `13_recommended_pcm_summary_interactive.html` |
 | Parsing Folium popup HTML | 45 point IDs, coordinates, populations and cluster assignments |
-| Reading a rendered summary panel | 493,155 -> 489,105 rows; silhouette 0.279 (superseded pre-fix run; current run 0.234, see `06_PHASE_4_AUDIT.md`); pooled TOPSIS-vs-GRA Spearman −0.930 (superseded two-method-era figure; current 4-method Kendall's W is 0.708-0.842 per cluster, see `08_PHASE_6_AUDIT.md`) |
-| Reproducing a computation against a committed source CSV | The feasibility survivor counts (29/30/29/27/29 per cluster, post-2026-09 fix — no longer identical across clusters), from the committed PCM database |
+| Reading a rendered summary panel | 493,155 -> 489,105 rows; silhouette 0.362 for the current K = 4 run (earlier K = 5 captures: 0.279, 0.234), see `06_PHASE_4_AUDIT.md`; pooled TOPSIS-vs-GRA Spearman −0.930 (superseded two-method-era figure; current 4-method Kendall's W is 0.782-0.842 per cluster, see `08_PHASE_6_AUDIT.md`) |
+| Reproducing a computation against a committed source CSV | The feasibility survivor counts (29/29/29/30 per cluster in the K = 4 run), from the committed PCM database |
 
 Values recovered from a rendered chart rather than parsed from a file are marked **approximate** at
 the point of use. Values that could not be recovered are marked **"not available in the source
-files"** — principally the BIC/silhouette selection table, per-point `L_required`, and the VIF
-report. **Two items originally in this list are no longer missing**: Kendall's W per cluster was
-later verified directly from `08_mcdm_ranking.py`'s current output (0.796/0.842/0.782/0.708/0.796
-for Clusters 0-4, see `08_PHASE_6_AUDIT.md`), and the PCA component count was recovered (2
+files"** — principally per-point `L_required` and the VIF report. **Three items originally in this
+list are no longer missing**: the BIC/silhouette/DB/CH selection table (read locally and reproduced
+in `06_PHASE_4_AUDIT.md`, 2026-10); Kendall's W per cluster, verified directly from
+`08_mcdm_ranking.py`'s current output (0.796/0.796/0.782/0.842 for Clusters 0-3, see
+`08_PHASE_6_AUDIT.md`); and the PCA component count was recovered (2
 components, PC1 90.7%/PC2 6.8% of variance, see `05_PHASE_3_AUDIT.md`).
 
 **The single highest-value fix for this documentation set** is to commit the roughly ten small

@@ -16,11 +16,11 @@ readiness verdict for the `era5-uttarakhand/` pipeline.
 | 2 QA — Raw checks | `03`, `03b`, `03b_agreement_analysis` | **COMPLETE, RESOLVED 2026-09** | Noon peaks GHI (timezone OK); post-deaccumulation-fix **GHI MBE +19.55 W/m², r = 0.759**, `03b_agreement_analysis.py` decision branch **QUANTILE_MAP** (was MBE −211.4/−602 W/m², r = 0.432/-0.03 pre-fix, branch MANUAL_REVIEW) |
 | 2 — Preprocessing & QC | `04`, `04c` ×2 | **COMPLETE** | 493,155 → **489,105 rows** (99.2 %); 36 → 89 columns; **zero residual NaN** |
 | 3 — Climate Signature | `04b`, `04d` | **COMPLETE** | Two-tier merge; `Tm_target` fixed at **57 °C** for every point; real per-point `elevation_m` (196-2510m) replaces the old pressure-derived `elev_proxy` |
-| 4 — Regime Clustering | `05`, `05b` | **COMPLETE** | **K = 5**, GMM **diagonal** covariance (fixed from `full`); sizes **7 / 3 / 9 / 10 / 16**; silhouette **0.28** (was sizes 12/9/3/7/14, silhouette 0.279, `full` covariance, from an earlier signature version) |
-| 5 — Feasibility Filtering | `06`, `07`, `07b` | **COMPLETE, RESOLVED 2026-09** | 55-candidate database; window [52, 65] °C at Tm_target=57; **29/30/29/27/29 survivors — no longer identical**, since `07b`'s regime-cap bug is fixed (Clusters 1/2 get 55.16C/56.51C) |
-| 6 — MCDM Ranking | `08` | **COMPLETE, RESOLVED 2026-09** | TOPSIS + GRA + PROMETHEE II + VIKOR + Borda (was TOPSIS+GRA only); **PureTemp 58 #1 in Clusters 0/2/3/4, PureTemp 53 in Cluster 1**; Kendall's W 0.708-0.842 per cluster (was pooled TOPSIS-vs-GRA ρ = −0.930, a two-method-era figure) |
-| 7 — Physics Validation | `10_physics_validation.py` | **COMPLETE, RESOLVED 2026-09** | Backward-Euler grey-box tank model, two solver bugs fixed (verified against `scipy.integrate.solve_ivp`); **0% in [54%, 84%] SF band** (actual ~12-19%) — the previous 92%/+0.124 figures were inflated by those bugs and are not valid; current per-cluster ρ ranges −0.338 to +0.169, none significant. A later Phase 3/Phase 7 tank/PCM/collector sizing reconciliation (also 2026-09) left this result essentially unchanged, confirming it as a genuine climate-vs-design finding rather than a sizing bug — see `09_PHASE_7_AUDIT.md` |
-| 8 — Recommendation Cards | `09` | **CODE COMPLETE, OUTPUT REGENERATED 2026-09 (still not committed — git-ignored)** | 5 cards; #1 is PureTemp 58 in four clusters (a legitimate shared result, not identical-by-bug) and PureTemp 53 in Cluster 1 |
+| 4 — Regime Clustering | `05`, `05b` | **COMPLETE, K revised 2026-10** | **K = 4** (was 5), GMM **diagonal** covariance; sizes **10 / 23 / 9 / 3**; silhouette **0.362**, DB 0.935, CH 28.9 — best DB/CH of K = 2…10, tied-best silhouette, most seed/subsample-stable (K = 5 was worse on all three metrics) |
+| 5 — Feasibility Filtering | `06`, `07`, `07b` | **COMPLETE** | 55-candidate database; window [52, 65] °C at Tm_target=57; **29/29/29/30 survivors**; `07b`'s regime cap gives Clusters 2/3 56.51/55.16 °C, but only Cluster 3's survivor set changes. A floating-point edge in the window comparison (made Cluster 0 drop two `Tm` = 52.0 °C candidates) fixed 2026-10 |
+| 6 — MCDM Ranking | `08` | **COMPLETE** | TOPSIS + GRA + PROMETHEE II + VIKOR + Borda (was TOPSIS+GRA only); **PureTemp 58 #1 in Clusters 0/1/2, PureTemp 53 in Cluster 3** (high Himalaya); Clusters 0 and 1 rank identically; Kendall's W 0.782-0.842 per cluster (was pooled TOPSIS-vs-GRA ρ = −0.930, a two-method-era figure) |
+| 7 — Physics Validation | `10_physics_validation.py` | **COMPLETE, RESOLVED 2026-09** | Backward-Euler grey-box tank model, two solver bugs fixed (verified against `scipy.integrate.solve_ivp`); **0% in [54%, 84%] SF band** (actual ~12-20%) — the previous 92%/+0.124 figures were inflated by those bugs and are not valid; current per-cluster ρ ranges −0.338 to +0.105, none significant. The high-elevation Cluster 3 never meets the delivery target (0 h/yr). A later Phase 3/Phase 7 tank/PCM/collector sizing reconciliation (also 2026-09) left this result essentially unchanged, confirming it as a genuine climate-vs-design finding rather than a sizing bug — see `09_PHASE_7_AUDIT.md` |
+| 8 — Recommendation Cards | `09` | **CODE COMPLETE, OUTPUT REGENERATED 2026-10 (still not committed — git-ignored)** | 4 cards; #1 is PureTemp 58 in Clusters 0-2 and PureTemp 53 in Cluster 3; cards now print the regime-capped `Tm_target` actually used for ranking |
 
 ---
 
@@ -47,9 +47,10 @@ readiness verdict for the `era5-uttarakhand/` pipeline.
    4,050-row structural lag warm-up (45 × 3 × 30), and 100 % complete cases afterwards.
 
 5. **Spatially coherent clusters found without clustering on geography.** `lat`/`lon` are excluded
-   from the clustering matrix by construction, yet the five regimes are geographically contiguous
-   and their temperature ordering is monotone (C3 25.0 °C > C0 22.8 > C1 19.0 > C4 18.2 > C2
-   13.4 °C) across an ~11.6 K span. That is a real result for the signature's discriminating power.
+   from the clustering matrix by construction, yet the four regimes are geographically contiguous
+   and their temperature ordering is monotone (C0 24.7 °C > C1 20.5 > C2 19.2 > C3 13.8 °C, an
+   ~11 K span), mirrored by mean elevation (~320 → 1,090 → 1,300 → 2,220 m). That is a real result
+   for the signature's discriminating power.
 
 6. **Honesty is built into the code, not retrofitted.** `07_feasibility_filter.py` lists the three
    Table-12 filters it does *not* apply. `07b_charging_feasibility.py` opens with "IMPORTANT
@@ -66,7 +67,7 @@ readiness verdict for the `era5-uttarakhand/` pipeline.
 
 ---
 
-## Weakest components — ALL FIVE RESOLVED (2026-09), kept as a historical record of what was found
+## Weakest components — items 1-5 RESOLVED (2026-09), kept as a historical record of what was found
 
 1. **~~The ERA5 all-sky GHI is roughly an order of magnitude below physical expectation~~ RESOLVED.**
    Confirmed mechanism: `deaccumulate()` assumed ERA5's old cumulative-since-reset convention; the
@@ -77,16 +78,16 @@ readiness verdict for the `era5-uttarakhand/` pipeline.
 
 2. **~~Phase 5 and Phase 6 produce zero climate differentiation.~~ RESOLVED.** The root cause was a
    real bug in `07b_charging_feasibility.py`'s regime-cap normalization, not an inevitable
-   consequence of a constant `Tm_target`. Fixed: Clusters 1 (Tm_target=55.16C, 30 survivors, #1 =
-   PureTemp 53) and 2 (56.51C, 29 survivors) now genuinely differ from Clusters 0/3/4 (57C, 29/27/29
-   survivors, #1 = PureTemp 58).
+   consequence of a constant `Tm_target`. Fixed: in the K = 4 run the high-elevation Cluster 3
+   (Tm_target = 55.16 °C, 30 survivors, #1 = PureTemp 53) genuinely differs; Cluster 2 (56.51 °C)
+   differs in its Top-2/3; Clusters 0 and 1 (57 °C, 29 survivors each) still rank identically.
 
 3. **TOPSIS and GRA's pooled anti-correlation (ρ = −0.930) was itself partly a bug artifact —
    RESOLVED.** TOPSIS was applying an inconsistent second normalization on top of the shared
    min-max-normalized matrix the other three methods (GRA/PROMETHEE/VIKOR) use — fixed. The current
-   four-method Kendall's W is 0.708-0.842 per cluster, a materially healthier agreement picture.
+   four-method Kendall's W is 0.782-0.842 per cluster, a materially healthier agreement picture.
    VIKOR's compromise check (also fixed — it was only testing one of two standard conditions) now
-   correctly reports genuine ties as compromise sets (Clusters 1 and 2) rather than false winners.
+   correctly reports genuine ties as compromise sets (Clusters 2 and 3) rather than false winners.
 
 4. **~~The 850 hPa pressure bound is mis-specified~~ — the bound itself is still open, but it no
    longer contaminates elevation.** `era5_P_atm`'s 37.1% one-sided NaN/imputation issue is real and
@@ -100,15 +101,16 @@ readiness verdict for the `era5-uttarakhand/` pipeline.
    suntimes.py` still uses a flat 0m altitude for sun-event timing, not yet updated to use
    `elevation_m` — a minor, still-open gap (see `03_PHASE_1_AUDIT.md`).
 
-6. **K = 5 exceeds the source files' own recommendation** of "realistically 2-4" for a 45-point
-   single-state fit, and cluster 2 has only 3 points carrying 3.2 % of population.
+6. **~~K = 5 exceeds the source files' own recommendation~~ RESOLVED (2026-10).** K was re-chosen
+   from the selection table as **K = 4**, inside the "realistically 2-4" range — but Cluster 3 still
+   has only 3 points carrying 3.2 % of population (see `06_PHASE_4_AUDIT.md`).
 
 7. **Soft membership collapsed to 1.000 for all 45 points**, so the stated reason for choosing GMM
    over K-Means (partial membership at regime boundaries) is not realised in this run.
 
-8. **No Phase 7, no Monte Carlo, no bootstrap stability, no external climate classification.** The
-   K = 5 partition and the Top-3 ranking have no external validation of any kind — only internal
-   method agreement, which is itself poor.
+8. **No committed bootstrap stability and no external climate classification.** Phase 7 and Monte
+   Carlo now exist (both give weak-agreement results), and the K = 4 choice was checked once by hand
+   with a subsample ARI (mean 0.91), but the partition still has no external validation.
 
 9. **59.1 % of the PCM database's flagged property cells are MICE-RF-PMM estimates**, and three of
    the five MCDM criteria (`TC_W_mK` 34–39/55 imputed, `cycles_confidence` 48/55,
@@ -146,10 +148,10 @@ readiness verdict for the `era5-uttarakhand/` pipeline.
    What HAS changed: it no longer feeds `elev_proxy`/the clustering matrix, since elevation now
    comes from `00c_attach_elevation.py`'s real per-point value instead.
 
-5. **~~Constant `Tm_target = 57 °C` produces identical results across all five regimes.~~
+5. **~~Constant `Tm_target = 57 °C` produces identical results across all regimes.~~ PARTLY
    RESOLVED.** `07b_charging_feasibility.py` was already being run before `07` — the remedy this
-   section suggested — but a normalization bug made it a no-op. Fixed; Clusters 1/2 now get a real,
-   differentiated `Tm_target`.
+   section suggested — but a normalization bug made it a no-op. Fixed; in the K = 4 run Clusters 2/3
+   get a real, lower `Tm_target`. Clusters 0 and 1 still share 57 °C and an identical ranking.
 
 6. **Three of the five plan Table-12 filters are unimplemented** — 5th-percentile-day charging
    feasibility, corrosion veto, safety exclusion. Additionally, **the corrosion veto could not
@@ -157,9 +159,8 @@ readiness verdict for the `era5-uttarakhand/` pipeline.
    `low_organic` for every row. `NEXT_STEPS.md`'s expectation that the veto would "bite for
    high-monsoon-humidity Uttarakhand clusters" cannot be realised with this database.
 
-7. **27-30 survivors per cluster (was 29 identically) still exceeds the pipeline's own comfort
-   bound** (`07` status `HIGH` above 25; `VERIFICATION_METHODOLOGY.md` wants 10–50 % survival,
-   actual ~49-55%). The 13 K-wide melting window admits over half the database in every cluster —
+7. **29-30 survivors per cluster still exceeds the pipeline's own comfort bound** (`07` status
+   `HIGH` above 25; `VERIFICATION_METHODOLOGY.md` wants 10–50 % survival, actual 52.7-54.5 %). The 13 K-wide melting window admits over half the database in every cluster —
    this width itself, not the now-fixed identical-count bug, is the remaining open item.
 
 ### Open, medium priority
@@ -293,18 +294,18 @@ readiness verdict for the `era5-uttarakhand/` pipeline.
   with its 10,475,711-person coverage and the verified 493,155-row full-coverage result.
 - The **two-tier climate signature** and the Repair-1 rationale — including the demonstrable finding
   that Tier 2 insulated the clustering matrix from the pipeline's largest data defect.
-- The **K = 5 clustering result** with its sizes, populations, geographic extents and the
-  temperature-ordered profile — plus the genuinely interesting observation that spatially coherent
-  regimes emerged *without* clustering on geography.
+- The **K = 4 clustering result** with its selection table, sizes, populations, geographic extents
+  and the temperature/elevation-ordered profile — plus the genuinely interesting observation that
+  spatially coherent regimes emerged *without* clustering on geography.
 - The **55-row PCM database** with its full composition and its verified 59.1 % imputation
   footprint.
 - The **feasibility filter design**, with the three unimplemented Table-12 filters named explicitly.
 - The **MCDM methodology** — Gaussian Tm fitness, entropy/AHP blending, TOPSIS + GRA, Borda,
   Kendall's W — with the AHP component correctly described as a placeholder.
 - **UPDATED (2026-09):** the identical-#1-across-regimes finding no longer holds as originally
-  stated — it was traced to a real bug (`07b`'s regime-cap normalization error), now fixed. Cluster
-  1 gets a genuinely different #1 (PureTemp 53); Clusters 0/3/4 legitimately share PureTemp 58 as a
-  real finding, not a bug artifact.
+  stated — it was traced to a real bug (`07b`'s regime-cap normalization error), now fixed. In the
+  K = 4 run the high-elevation Cluster 3 gets a genuinely different #1 (PureTemp 53); Clusters 0-2
+  share PureTemp 58 as a real finding, not a bug artifact.
 - Every caveat in this documentation set, stated plainly (and updated where resolved).
 
 ## What cannot yet be claimed (updated 2026-09 — several items below ARE now resolved)
@@ -314,23 +315,25 @@ readiness verdict for the `era5-uttarakhand/` pipeline.
   (r=0.759). The ERA5 pressure/`era5_P_atm` 850 hPa truncation remains a separate, still-open issue
   for anything reading that column.
 - ~~That different Uttarakhand climate regimes require different PCMs — this run shows the
-  opposite.~~ **Partially resolved**: Cluster 1 now demonstrably needs a different PCM
-  (Tm_target=55.16C vs 57C); Clusters 0/3/4 sharing a pick is a legitimate finding for those three
-  regimes specifically, not evidence against the framework generally.
+  opposite.~~ **Partially resolved**: the high-elevation Cluster 3 now gets a different PCM
+  (Tm_target = 55.16 °C vs 57 °C); Clusters 0-2 sharing a pick is a legitimate finding for those
+  three regimes specifically, not evidence against the framework generally.
 - That the Top-3 ranking is stable, externally validated, or physics-confirmed — **still true**;
-  Monte Carlo now quantifies stability (37.8-39.3% Top-3 inclusion) and physics validation now runs
-  (0% within the literature benchmark band, per-cluster ρ −0.338 to +0.169, none significant) —
+  Monte Carlo now quantifies stability (best Top-3 inclusion 36.4-39.3 % per cluster) and physics
+  validation now runs (0% within the literature benchmark band, per-cluster ρ −0.338 to +0.105,
+  none significant) —
   both are honest, weak-agreement results, not confirmation.
 - ~~That RT60 is a clear winner~~ — RT60 is no longer even the consensus pick in the current
   four-method run (PureTemp 58/53 are). The current pick is decided across four methods with
-  Kendall's W 0.708-0.842, materially more agreement than the old two-method Borda tie.
-- That the K = 5 partition is stable (no bootstrap) or externally valid (no Köppen-Geiger) — still
-  true, unaddressed by the 2026-09 fixes.
+  Kendall's W 0.782-0.842, materially more agreement than the old two-method Borda tie.
+- That the K = 4 partition is externally valid (no Köppen-Geiger) — still true. Its internal
+  stability was checked once by hand (subsample ARI mean 0.91), but no stability check is part of
+  the pipeline.
 - That AHP informed the weights (it did not — a fixed placeholder prior was used) — still true.
 - ~~That soft cluster membership captured boundary behaviour (all 45 points came back at 1.000).~~
   **Marginally improved**: `covariance_type` was fixed from `full` to `diag` (addressing genuine
-  overdetermination), but 43/45 points still round to 1.000 in the current run — the practical
-  finding is largely unchanged, see `06_PHASE_4_AUDIT.md`.
+  overdetermination), but all 45 points have membership 1.000 in the K = 4 run — the practical
+  finding is unchanged, see `06_PHASE_4_AUDIT.md`.
 
 ## Prerequisites for a final, non-provisional result
 
@@ -341,12 +344,12 @@ open.
 1. **~~Verify and, if necessary, fix `deaccumulate()`~~ RESOLVED.** The raw `*_accum.nc` files were
    inspected (2016/2020/2025); the bug was confirmed and fixed. See `04_PHASE_2_AUDIT.md` Part A.3.
 2. **~~Break the constant-`Tm_target` degeneracy~~ RESOLVED.** `07b` was already being run before
-   `07`; its regime-cap normalization bug was found and fixed instead. Clusters 1/2 now get a real,
-   differentiated `Tm_target`.
+   `07`; its regime-cap normalization bug was found and fixed instead. Clusters 2/3 (K = 4) now get
+   a real, differentiated `Tm_target`.
 3. **Fix the `era5_P_atm` bound** — still open, not touched by the 2026-09 fixes. **Attach real
    elevation — RESOLVED** via `00c_attach_elevation.py` (196-2510 m from ERA5 geopotential); the
-   K = 5 partition has since been re-run on the corrected signature (sizes now 7/3/9/10/16, not
-   12/9/3/7/14).
+   clustering has since been re-run on the corrected signature and K re-chosen as 4 (sizes
+   10/23/9/3).
 4. **Commit the small result CSVs** so the numbers in a paper are traceable to files rather than to
    plot internals — still open; `data/processed/` remains git-ignored.
 5. **~~Implement a minimal Phase 7~~ RESOLVED.** `10_physics_validation.py` exists, has been run,
@@ -365,9 +368,10 @@ sections above, which already reflect the 2026-09 fixes.**
 **READY, WITH SMALL REMAINING OPEN ITEMS — Phases 1 through 4.** The sampling design, the merge
 (with `deaccumulate()` now verified and fixed), the Tier-2 repair, the two-tier signature and the
 clustering are methodologically sound, well documented in-code, and produced clean, internally
-consistent, cross-checkable results. Remaining open items (K=5 above the source files' own
-"realistically 2-4" recommendation, the still-unfixed 850 hPa `era5_P_atm` bound, no bootstrap
-stability) are specific and documented, not blocking.
+consistent, cross-checkable results. K was re-chosen as 4 in 2026-10 (inside the source files'
+own "realistically 2-4" range, best DB/CH and most stable). Remaining open items (the 3-point
+Cluster 3, the still-unfixed 850 hPa `era5_P_atm` bound, no committed stability script) are
+specific and documented, not blocking.
 
 **LARGELY READY — solar-magnitude claims.** The ERA5 all-sky GHI deaccumulation bug (roughly an
 order-of-magnitude deflation) is fixed and independently verified against NASA POWER
@@ -378,18 +382,18 @@ any use other than the clustering matrix (which no longer derives elevation from
 **READY, WITH A HONEST NEGATIVE/PARTIAL FINDING — Phases 5 and 6.** The identical-survivors,
 identical-#1-everywhere result was traced to a real bug in `07b_charging_feasibility.py`'s
 regime-cap normalization (dividing away its own signal), not an inevitable consequence of the
-constant Phase-3 `Tm_target=57C`. Fixed: Cluster 1 (`Tm_target=55.16C`) and Cluster 2
-(`Tm_target=56.51C`) now get genuinely differentiated survivor sets and, for Cluster 1, a different
-consensus #1 (PureTemp 53 vs. PureTemp 58 elsewhere). Clusters 0/3/4 still sharing `Tm_target=57C`
-and mostly the same Top-1 pick is now a legitimate finding, not a bug. The four-method MCDM stack
-(TOPSIS+GRA+PROMETHEE II+VIKOR) with Kendall's W 0.708-0.842 per cluster replaces the old two-method
+constant Phase-3 `Tm_target=57C`. Fixed: in the K = 4 run Cluster 3 (`Tm_target` = 55.16 °C) gets
+its own survivor set and a different consensus #1 (PureTemp 53 vs. PureTemp 58 elsewhere), and
+Cluster 2 (56.51 °C) a different Top-2/3. Clusters 0 and 1 share `Tm_target` = 57 °C and an
+identical ranking — a legitimate finding, not a bug. The four-method MCDM stack
+(TOPSIS+GRA+PROMETHEE II+VIKOR) with Kendall's W 0.782-0.842 per cluster replaces the old two-method
 Borda tie at pooled ρ = −0.930.
 
 **IMPLEMENTED AND RUN, WITH AN HONEST NEGATIVE RESULT — Phase 7.** `10_physics_validation.py` is
 implemented, was run, and had two solver bugs fixed (a backward-Euler numerator error and a
 one-directional latent-heat accumulator). The corrected result — 0% of simulations land in the
-54-84% literature solar-fraction benchmark band, actual ~15-19%, per-cluster Spearman rho −0.227 to
-+0.171 with none significant — is a genuine, reportable finding once the bugs were fixed, not
+54-84% literature solar-fraction benchmark band, actual ~12-20%, per-cluster Spearman rho −0.338 to
++0.105 with none significant — is a genuine, reportable finding once the bugs were fixed, not
 evidence the model is still broken.
 
 The pipeline's defining characteristic is that **it documents its own limitations in code rather

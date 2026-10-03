@@ -41,14 +41,16 @@ noon, sunset) rather than a uniform grid on fixed clock hours."
    (Tier 1 sun-event proxies + Tier 2 true daily integrals), plus 5 interaction terms and a PCA of
    the correlated temperature/elevation block (`04b_climate_signature.py`).
 5. Clusters the 45 points into climate regimes with a **Gaussian Mixture Model, diagonal
-   covariance, K_FINAL = 5** (`05_cluster_uttarakhand.py`).
+   covariance, K_FINAL = 4** (`05_cluster_uttarakhand.py`; re-chosen from 5 in 2026-10 — see
+   `06_PHASE_4_AUDIT.md` "Choice of K").
 6. Screens a **55-row PCM property database** against each regime's `Tm_target` / `L_required`
    (`06_build_pcm_database.py`, `07_feasibility_filter.py`, with `07b_charging_feasibility.py`'s
-   regime-dependent Tm cap now materially lowering the target for 2 of the 5 clusters), then ranks
+   regime-dependent Tm cap now materially lowering the target for 2 of the 4 clusters), then ranks
    survivors with a **four-method MCDM stack (TOPSIS + GRA + PROMETHEE II + VIKOR)**,
    entropy/AHP-blended weights, a Gaussian Tm-fitness transform, and a **Borda consensus with
    Kendall's W** (`08_mcdm_ranking.py`).
-7. Stress-tests the ranking with a **5,000-draw Monte Carlo** over weight/property perturbations
+7. Stress-tests the ranking with a **Monte Carlo** over weight/property perturbations (2,000
+   draws/cluster by default, 5,000 with `--draws 5000`)
    (`09b_monte_carlo_stability.py`) and validates it against a **grey-box lumped-enthalpy PCM tank
    physics simulation** (`10_physics_validation.py`), then aggregates the result into one markdown
    recommendation card per regime (`09_recommendation_cards.py`).
@@ -120,7 +122,7 @@ PHASE 5 — PCM DATABASE + FEASIBILITY FILTERING
 PHASE 6 — MULTI-CRITERIA RANKING (TOPSIS + GRA + PROMETHEE II + VIKOR)
   08_mcdm_ranking.py              -> data/processed/pcm/mcdm_topk_by_cluster.csv
                                      data/processed/pcm/mcdm_full_scores_by_cluster.csv
-  09b_monte_carlo_stability.py    -> 5,000-draw Monte Carlo rank-stability results (Top-3-inclusion /
+  09b_monte_carlo_stability.py    -> Monte Carlo rank-stability results, 2,000 draws default (Top-3-inclusion /
                                      Top-1-retention probability per candidate per cluster)
         |
 PHASE 7 — PHYSICS-BASED VALIDATION
@@ -148,11 +150,11 @@ FIGURE / VERIFICATION LAYER (not part of the numbered phase chain)
 | 2 QA — Raw checks | `03`, `03b`, `03b_agreement_analysis` | **RUN** | Noon peaks GHI (timezone check passes); post-fix ERA5-vs-POWER GHI cross-source agreement: **MBE = +19.6 W/m², r = 0.759**, decision branch **QUANTILE_MAP** (before the deaccumulation fix this was MBE = −602 W/m², r = −0.03, branch MANUAL_REVIEW) |
 | 2 — Preprocessing & QC | `04`, `04c` ×2 | **RUN** | 493,155 -> **489,105 rows** (99.2 % retention); 36 -> 89 columns; 0 residual NaN; `qc_report.txt` 5/5 checks PASS |
 | 3 — Climate Signature | `04b`, `04d` | **RUN** | `Tm_target` fixed at **57 °C** for every point (50 + 7, indirect-system rule); PCA temperature/elevation block now uses real `elevation_m` (balanced ~0.37 loading on PC1, which explains 90.7% of variance) instead of the old pressure-derived `elev_proxy` (which had an outsized, unexplained −0.33/0.59 loading) |
-| 4 — Regime Clustering | `05`, `05b` | **RUN** | **K_FINAL = 5**, GMM **diagonal** covariance; sizes **7 / 3 / 9 / 10 / 16** (Clusters 0–4 respectively); silhouette **0.28** (within the documented 0.15–0.40 expected band for a 45-point state) |
-| 5 — Feasibility Filtering | `06`, `07` (`07b`) | **RUN** | 55-candidate database; melting window [52, 65] °C; **29/30/29/27/29 candidates survive in Clusters 0–4 respectively** — no longer identical, because `07b`'s regime cap (once its `poor_day_kt` normalization bug was fixed) genuinely lowers `Tm_target` for Clusters 1 and 2 |
-| 6 — MCDM Ranking | `08` | **RUN** | Four-method stack — TOPSIS + GRA + PROMETHEE II + VIKOR + Borda consensus; Top-1 is **PureTemp 58** in Clusters 0/3/4 but **PureTemp 53** in Cluster 1 and **PureTemp 58** (with a VIKOR compromise set) in Cluster 2 — see the Phase 6 table below; Kendall's W ranges 0.708–0.842 per cluster |
-| 6b — Monte Carlo Stability | `09b_monte_carlo_stability.py` | **RUN** | 5,000 draws/cluster; `n-Octacosane (C28)` has the highest Top-3-inclusion probability in every cluster (37.8%–39.3%); Top-1 retention 16.2%–18.3% — lower than other states because Uttarakhand's feasible pool (27–30 candidates/cluster) is much larger and more homogeneous |
-| 7 — Physics Validation | `10_physics_validation.py` | **RUN** | Grey-box lumped-enthalpy tank model (backward-Euler); after fixing a spurious term in the tank-temperature solve and a one-directional `Qp` latent-heat accumulator, **0% of simulations land in the published 54–84% solar-fraction benchmark band** (actual ~15–19% across all 5 clusters) — the previously-reported 92%-in-band figure was an artifact of those two bugs and is not valid. Per-cluster Spearman rho (consensus rank vs. simulated solar fraction): Cluster 0 = −0.097, Cluster 1 = −0.168, Cluster 2 = −0.227, Cluster 3 = +0.171, Cluster 4 = −0.140 — none significant at p<0.05 |
+| 4 — Regime Clustering | `05`, `05b` | **RUN** | **K_FINAL = 4** (was 5 until 2026-10), GMM **diagonal** covariance; sizes **10 / 23 / 9 / 3** (Clusters 0–3); silhouette **0.362**, DB 0.935, CH 28.9 — best DB/CH of K = 2…10 and most stable; regimes ordered by temperature/elevation (~24.7 °C / 320 m → ~13.8 °C / 2,220 m) |
+| 5 — Feasibility Filtering | `06`, `07` (`07b`) | **RUN** | 55-candidate database; melting window [52, 65] °C; **29/29/29/30 candidates survive in Clusters 0–3** — `07b`'s regime cap lowers `Tm_target` for Clusters 2 (56.51 °C) and 3 (55.16 °C), but only Cluster 3's survivor set changes |
+| 6 — MCDM Ranking | `08` | **RUN** | Four-method stack — TOPSIS + GRA + PROMETHEE II + VIKOR + Borda consensus; Top-1 is **PureTemp 58** in Clusters 0/1/2 (Clusters 0 and 1 rank identically; Cluster 2 has a VIKOR compromise set) and **PureTemp 53** in Cluster 3 (high Himalaya); Kendall's W ranges 0.782–0.842 per cluster |
+| 6b — Monte Carlo Stability | `09b_monte_carlo_stability.py` | **RUN** | 2,000 draws/cluster; `n-Octacosane (C28)` has the highest Top-3-inclusion probability in every cluster (36.4%–39.3%); best Top-1 retention 16.3%–18.6% — lower than other states because Uttarakhand's feasible pool (29–30 candidates/cluster) is much larger and more homogeneous |
+| 7 — Physics Validation | `10_physics_validation.py` | **RUN** | Grey-box lumped-enthalpy tank model (backward-Euler); after fixing a spurious term in the tank-temperature solve and a one-directional `Qp` latent-heat accumulator, **0% of simulations land in the published 54–84% solar-fraction benchmark band** (actual ~12–20% across the 4 clusters) — the previously-reported 92%-in-band figure was an artifact of those two bugs and is not valid. Per-cluster Spearman rho (consensus rank vs. simulated solar fraction): Cluster 0 = +0.105, Cluster 1 = −0.140, Cluster 2 = −0.338, Cluster 3 = −0.168 — none significant at p<0.05. The high-elevation Cluster 3 never meets the delivery target (0 h/yr) |
 | 8 — Recommendation Cards | `09` | **RUN, OUTPUT NOT COMMITTED** | `recommendation_cards.md` exists on disk (regenerated against the current, corrected Phase 5–7 results) but `data/processed/` remains git-ignored, so it is not present in this repository |
 
 ## Current architecture
@@ -182,11 +184,11 @@ FIGURE / VERIFICATION LAYER (not part of the numbered phase chain)
 | Accumulated-field handling | `deaccumulate()` — now a pass-through returning ERA5's per-step (already-hourly) value directly; the old `diff()`-against-prior-hour logic assumed a since-reset accumulation convention ERA5 does not actually use here, and was deflating GHI ~10x | `02_combine_uttarakhand.py` |
 | `Tm_target` | Constant **57 °C** (`T_DELIVERY_C = 50` + `DT_APPROACH_C = 7`) for every point; regime-capped downward for Clusters 1 (55.16 °C) and 2 (56.51 °C) by `07b_charging_feasibility.py` | `04b_climate_signature.py`; `07b_charging_feasibility.py` |
 | GMM covariance | **`diag`** (diagonal) — deliberately not `full`, to avoid overfitting a high-dimensional covariance with only 45 samples | `05_cluster_uttarakhand.py` |
-| K_FINAL | **5** | `05_cluster_uttarakhand.py` line 73 |
-| Silhouette accept band | 0.15 – 0.40 (widened from the 4-state 0.15 – 0.35); the actual run scores **0.28** | `05_cluster_uttarakhand.py` |
+| K_FINAL | **4** (was 5 until 2026-10) | `05_cluster_uttarakhand.py` |
+| Silhouette accept band | 0.15 – 0.40 (widened from the 4-state 0.15 – 0.35); the actual run scores **0.362** | `05_cluster_uttarakhand.py` |
 | PCM database size | **55 rows** (31 manufacturer + 24 literature) | `06_build_pcm_database.py`; verified against the CSV |
 | MCDM methods | **TOPSIS + GRA + PROMETHEE II + VIKOR** (four methods) | `08_mcdm_ranking.py` |
-| Monte Carlo draws | **Implemented** — 5,000 draws/cluster (Dirichlet-perturbed weights + property jitter) | `09b_monte_carlo_stability.py` |
+| Monte Carlo draws | **Implemented** — 2,000 draws/cluster by default, `--draws 5000` for the full spec (Dirichlet-perturbed weights + property jitter) | `09b_monte_carlo_stability.py` |
 | Physics validation | **Implemented** — backward-Euler grey-box lumped-enthalpy PCM tank model | `10_physics_validation.py` |
 
 ## Main datasets produced
@@ -208,11 +210,11 @@ scripts' own constants.
 | `uttarakhand_cleaned_scaled.csv` | 489,105 | same rows, MinMax-scaled | `04` | expected |
 | `climate_signature_uttarakhand.csv` | 45 | 1 row/point | `04b` | expected |
 | `cluster_assignments_uttarakhand.csv` | 45 | 1 row/point | `05` | observed (folium popups) |
-| `cluster_profiles_uttarakhand.csv` | 5 | 1 row/cluster | `05` | observed; sizes 7/3/9/10/16 for Clusters 0–4 |
+| `cluster_profiles_uttarakhand.csv` | 4 | 1 row/cluster | `05` | observed; sizes 10/23/9/3 for Clusters 0–3 |
 | `pcm_database_uttarakhand.csv` | 55 | 1 row/PCM | `06` | observed (source CSV + plot counts) |
-| `feasibility_survivors_by_cluster.csv` | **275** (55 × 5, all rows kept with `passes_all` flag) | 1 row/cluster × PCM | `07` | observed (verify summary); survivor counts per cluster are now 29/30/29/27/29, not identical |
-| `mcdm_topk_by_cluster.csv` | **15** (5 clusters × Top-3) | 1 row/cluster × PCM | `08` | observed (verify summary) |
-| `mcdm_full_scores_by_cluster.csv` | varies (5 clusters × 27–30 survivors each) | 1 row/cluster × survivor | `08` | expected |
+| `feasibility_survivors_by_cluster.csv` | **220** (55 × 4, all rows kept with `passes_all` flag) | 1 row/cluster × PCM | `07` | observed (verify summary); survivor counts per cluster 29/29/29/30 |
+| `mcdm_topk_by_cluster.csv` | **12** (4 clusters × Top-3) | 1 row/cluster × PCM | `08` | observed (verify summary) |
+| `mcdm_full_scores_by_cluster.csv` | 117 (29 + 29 + 29 + 30) | 1 row/cluster × survivor | `08` | observed |
 | `recommendation_cards.md` | 5 cards | 1 card/cluster | `09` | exists on disk, regenerated against current results — output still not committed to the repo |
 
 ## Main algorithms
@@ -234,7 +236,7 @@ Shannon-entropy criterion weighting blended 0.5/0.5 with an AHP-style prior · T
 normalization basis, no extra vector renormalization) · Grey Relational Analysis (zeta = 0.5) ·
 PROMETHEE II · VIKOR (with both the C1 advantage and C2 stability compromise checks) · Borda count ·
 Kendall's W · regime-dependent clear-sky-reliability charging cap (`07b`, now genuinely
-regime-differentiating for 2 of 5 clusters) · 5,000-draw Monte Carlo rank-stability analysis (`09b`)
+regime-differentiating for 2 of 4 clusters) · Monte Carlo rank-stability analysis (`09b`, 2,000 draws default)
 · backward-Euler grey-box lumped-enthalpy PCM tank physics simulation (`10`).
 
 ## Validation strategy actually present
@@ -250,7 +252,7 @@ Four layers now exist in `era5-uttarakhand/`:
 2. **Internal statistical** — `04` step 13 hard gate; `05`'s BIC / silhouette / Davies-Bouldin /
    Calinski-Harabasz table plus a K-Means silhouette comparison; `08`'s Kendall's W per cluster and
    VIKOR compromise checks (C1 advantage + C2 stability, both now actually evaluated).
-3. **Monte Carlo rank stability** — `09b_monte_carlo_stability.py`, 5,000 draws/cluster over
+3. **Monte Carlo rank stability** — `09b_monte_carlo_stability.py`, 2,000 draws/cluster (default) over
    Dirichlet-perturbed weights and jittered PCM properties, reporting Top-3-inclusion and Top-1-
    retention probabilities per candidate per cluster.
 4. **Physics-based simulation** — `10_physics_validation.py`, a backward-Euler grey-box
@@ -284,17 +286,17 @@ what the Uttarakhand pipeline demonstrably does.
 | 1 — Data Collection | Population-weighted sampling | 45 points, 87.5 % coverage target, 10,475,711 people, ERA5-lattice-aligned, sun-event-aligned | **Delivered** |
 | 2 — Combine + Tier-2 | Two independent sources cross-checked | ERA5 + NASA POWER at identical points/instants; full agreement statistics computed | **Delivered, but the disagreement is never acted upon** |
 | 3 — Climate Signature | Two-tier signature (sun-event + true daily integral) | 18 indices; Tier-2 canonical where available; PCA on the thermodynamic block only | **Delivered — and it insulated the clustering matrix from the pipeline's largest data defect** |
-| 4 — Regime Clustering | Discovered regimes, not hand-picked zones | GMM **diagonal** covariance, K = 5 by manual selection from a BIC/silhouette table; lat/lon excluded | **Delivered** — clusters are spatially coherent without clustering on geography (silhouette 0.28). **But** no bootstrap stability and no external classification |
-| 5 — Feasibility Filtering | Corrected 42–70 °C SWH-specific PCM band | Band enforced; melting window [52, 65] °C at `Tm_target = 57` (regime-capped to 55.16/56.51 for Clusters 1/2) | **Delivered, with one filter still a documented no-op.** Corrosion veto is now implemented (2026-09) — the database DOES carry `corrosion_class` data (assigned in `06`), it's just that all 55 current candidates are organic (`low_organic`), so the veto has nothing to reject yet; it activates automatically once an inorganic candidate is added. The 5th-percentile-day charging-feasibility filter is still unimplemented (needs a daily GHI percentile per cluster). Regime-capping genuinely differentiates survivor counts (29/30/29/27/29) |
-| 6 — MCDM Ranking | Top-3 with explicit method-agreement reporting | TOPSIS + GRA + PROMETHEE II + VIKOR, entropy/AHP weights, Gaussian Tm fitness, Borda, Kendall's W | **Delivered** — four independent methods, Kendall's W 0.708–0.842 per cluster, VIKOR now correctly reports compromise sets (Clusters 1 and 2) instead of false single winners |
-| 7 — Physics Validation | Physics-validated ranking | Backward-Euler grey-box lumped-enthalpy tank model (`10_physics_validation.py`), Spearman rho of consensus rank vs. simulated solar fraction per cluster | **Delivered, and an honest negative result** — 0% of simulations land in the 54–84% literature benchmark band (actual ~12–19%); per-cluster rho ranges −0.338 to +0.169, none significant. This is a genuine finding once two solver bugs were fixed (and later a Phase 3/Phase 7 sizing inconsistency reconciled — see `09_PHASE_7_AUDIT.md`), not evidence the model is broken |
-| 8 — Recommendation Cards | Per-regime explainable output | 5 cards; population-weighted profiles; Top-3 with per-method scores and Kendall's W | **Delivered**; regenerated against the current, corrected results; output still not committed (git-ignored) |
+| 4 — Regime Clustering | Discovered regimes, not hand-picked zones | GMM **diagonal** covariance, K = 4 by manual selection from a BIC/silhouette/DB/CH table; lat/lon excluded | **Delivered** — clusters are spatially coherent and elevation-ordered without clustering on geography (silhouette 0.362). Stability checked once by hand (subsample ARI 0.91), not in the pipeline; no external classification |
+| 5 — Feasibility Filtering | Corrected 42–70 °C SWH-specific PCM band | Band enforced; melting window [52, 65] °C at `Tm_target = 57` (regime-capped to 56.51/55.16 for Clusters 2/3) | **Delivered, with one filter still a documented no-op.** Corrosion veto is now implemented (2026-09) — the database DOES carry `corrosion_class` data (assigned in `06`), it's just that all 55 current candidates are organic (`low_organic`), so the veto has nothing to reject yet; it activates automatically once an inorganic candidate is added. The 5th-percentile-day charging-feasibility filter is still unimplemented (needs a daily GHI percentile per cluster). Regime-capping differentiates Cluster 3's survivor set (29/29/29/30) |
+| 6 — MCDM Ranking | Top-3 with explicit method-agreement reporting | TOPSIS + GRA + PROMETHEE II + VIKOR, entropy/AHP weights, Gaussian Tm fitness, Borda, Kendall's W | **Delivered** — four independent methods, Kendall's W 0.782–0.842 per cluster, VIKOR now correctly reports compromise sets (Clusters 2 and 3) instead of false single winners |
+| 7 — Physics Validation | Physics-validated ranking | Backward-Euler grey-box lumped-enthalpy tank model (`10_physics_validation.py`), Spearman rho of consensus rank vs. simulated solar fraction per cluster | **Delivered, and an honest negative result** — 0% of simulations land in the 54–84% literature benchmark band (actual ~12–20%); per-cluster rho ranges −0.338 to +0.105, none significant. This is a genuine finding once two solver bugs were fixed (and later a Phase 3/Phase 7 sizing inconsistency reconciled — see `09_PHASE_7_AUDIT.md`), not evidence the model is broken |
+| 8 — Recommendation Cards | Per-regime explainable output | 4 cards; population-weighted profiles; Top-3 with per-method scores and Kendall's W | **Delivered**; regenerated against the current, corrected results; output still not committed (git-ignored) |
 
-### The central finding against the novelty claim — RESOLVED (2026-09)
+### The central finding against the novelty claim — PARTLY RESOLVED (2026-09, K = 4 since 2026-10)
 
 The framework's core proposition is that **different climate regimes should receive different PCM
 recommendations.** This section used to report that Uttarakhand did **not** demonstrate it: all
-five regimes returned the same feasibility survivors and the same #1 PCM (RT60, in that run). That
+regimes of the old K = 5 run returned the same feasibility survivors and the same #1 PCM (RT60, in that run). That
 was traced to a real bug, not a mathematical inevitability of a constant `Tm_target`: the
 regime-dependent Tm cap in `07b_charging_feasibility.py` divided its own signal (`poor_day_kt`) by
 `kt_mean`, collapsing to a coefficient-of-variation measure that could never differentiate clusters
@@ -302,19 +304,18 @@ regardless of how sunny or cloudy they actually were — this is why the script 
 clusters where the regime cap actually lowers Tm_target," not because the cap was disabled or
 optional.
 
-**Fixed.** Using `poor_day_kt` directly, Clusters 1 (Tm_target=55.16C) and 2 (Tm_target=56.51C) now
-get a genuinely lower, climate-driven target instead of sharing the constant 57C. Consequence:
-Cluster 1's MCDM consensus #1 is now **PureTemp 53**, not PureTemp 58/RT60 — a real, different
-recommendation driven by that cluster's climate. Clusters 0, 3, and 4 still share `Tm_target=57C`
-and mostly the same Top-1 pick (PureTemp 58) — that remaining overlap is now a legitimate finding
-(those three regimes genuinely don't need a different melting-window target), not a bug. Phase 7's
-physics simulation (once its own two bugs were fixed — see `09_PHASE_7_AUDIT.md`) provides the
-further differentiation this section previously said was missing: per-cluster Spearman rho between
-MCDM rank and simulated solar fraction ranges from -0.338 to +0.169, a real, cluster-specific signal
-even though none reach statistical significance. (A later Phase 3/Phase 7 sizing reconciliation —
-see `09_PHASE_7_AUDIT.md` — moved these rho values slightly from an earlier -0.227..+0.171 but did
-not change the qualitative finding: solar fraction is a ratio-based metric that proportional system
-scaling can't move.)
+**Fixed.** Using `poor_day_kt` directly, the regime cap now lowers the target for the two
+cloudier/higher regimes. In the current K = 4 run: Cluster 3 (high Himalaya, `Tm_target` =
+55.16 °C) gets its own survivor set and a different MCDM consensus #1, **PureTemp 53** — a real,
+climate-driven recommendation. Cluster 2 (56.51 °C) keeps PureTemp 58 at #1 but gets a different
+Top-2/3. **Clusters 0 and 1 share `Tm_target` = 57 °C and an identical Top-3** (PureTemp 58 /
+n-Octacosane (C28) / PlusICE A58) — that overlap is a legitimate finding (the warm plains and the
+mid-hills don't need a different melting-window target), not a bug. Phase 7's physics simulation
+(once its own two bugs were fixed — see `09_PHASE_7_AUDIT.md`) is where those two regimes do
+differ (≈19.1 % vs ≈20.2 % solar fraction), and it shows the starkest regime difference of all:
+Cluster 3 never reaches the delivery target in the simulated year. Per-cluster Spearman rho between
+MCDM rank and simulated solar fraction ranges from −0.338 to +0.105, none statistically
+significant.
 
 ### Phase -> broader-project mapping
 
@@ -331,14 +332,14 @@ scaling can't move.)
 
 - That Objective 1 addresses the DRL-control, design-optimisation or hardware-prototype gaps — it
   does not; it produces the input they consume.
-- That the K = 5 partition is externally validated — no Köppen-Geiger or NBC/ECBC comparison exists.
+- That the K = 4 partition is externally validated — no Köppen-Geiger or NBC/ECBC comparison exists.
 - That the Top-3 ranking is physics-confirmed — Phase 7 was built and run, but per-cluster Spearman
-  rho (-0.338 to +0.169, none significant) shows only weak/no agreement between the MCDM rank and
+  rho (−0.338 to +0.105, none significant) shows only weak/no agreement between the MCDM rank and
   simulated solar fraction; report this honestly rather than as confirmation.
 - That the once-identical-across-regimes result was a correct mathematical outcome of a constant
   `Tm_target` — it was traced to a real bug (`07b`'s regime cap dividing away its own signal) and is
-  now fixed for Clusters 1 and 2; Clusters 0/3/4 sharing a target and a Top-1 pick is the remaining,
-  legitimate part of that finding.
+  now fixed; in the K = 4 run Clusters 2 and 3 get a lower target, and Clusters 0-2 sharing a Top-1
+  pick (Clusters 0 and 1 a full Top-3) is the remaining, legitimate part of that finding.
 
 ## What remains
 
@@ -359,14 +360,14 @@ Kept here as a record, with each item's resolution noted:
    real per-point elevation (196m-2510m) from ERA5's time-invariant geopotential field.
 3. **~~Restore differentiation between regimes.~~ RESOLVED.** The root cause was the `07b`
    regime-cap normalization bug described above, not a need to simply "run 07b before 07" (it was
-   already being run — it just couldn't produce a differentiating result). Fixed; Clusters 1 and 2
-   now get a real, lower `Tm_target`.
+   already being run — it just couldn't produce a differentiating result). Fixed; in the K = 4
+   run Clusters 2 and 3 get a real, lower `Tm_target`.
 4. **~~Implement Phase 7~~ RESOLVED.** `10_physics_validation.py` exists, has been run, and had two
    solver bugs fixed (backward-Euler numerator error, one-directional latent-heat accumulator) —
    see `09_PHASE_7_AUDIT.md`.
 5. **~~Add PROMETHEE II / VIKOR and Monte Carlo stability~~ RESOLVED.** Both implemented and run —
-   `08_mcdm_ranking.py` now uses all four methods, and `09b_monte_carlo_stability.py` runs 5,000
-   draws/cluster.
+   `08_mcdm_ranking.py` now uses all four methods, and `09b_monte_carlo_stability.py` runs 2,000
+   draws/cluster by default (5,000 with `--draws 5000`).
 6. **Commit the ~10 small result CSVs** so paper numbers trace to files rather than plot internals —
    still open; `data/processed/` remains git-ignored.
 7. **Fix `monsoon_index`** by adding `PRECTOTCORR` to `01b`'s `POWER_PARAMETERS`, or keep reporting

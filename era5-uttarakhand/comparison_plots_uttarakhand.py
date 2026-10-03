@@ -320,9 +320,9 @@ if topk is not None and "consensus_rank" in topk.columns:
                      fontsize=13, fontweight="bold")
         plt.tight_layout()
         sfig("07_comparison_cross_cluster_top_pcm.png")
-        # Your audit found RT60 is consensus rank 1 in ALL 5 clusters — if
-        # every bar above is identical across clusters, that's this
-        # finding made visible, not a bug in this plot.
+        # Tm_target is near-identical across clusters, so the same PCM can
+        # be rank 1 in every cluster — if every bar above is identical,
+        # that's this finding made visible, not a bug in this plot.
         if top1["name"].nunique() == 1:
             print(f"    NOTE: the same PCM ({top1['name'].iloc[0]}) is rank 1 in every "
                   f"cluster shown — matches your audit's finding, not a plotting error.")

@@ -70,7 +70,13 @@ OUT_DIR = PROCESSED_DIR / "clustering"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 K_CANDIDATES = list(range(2, 11))     # smaller state -> smaller upper bound than the 4-state script
-K_FINAL = 5                            # <-- set after reviewing bic_selection_uttarakhand.csv, re-run
+# K_FINAL = 4, chosen from bic_selection_uttarakhand.csv (45 points, 24 z-features, diag GMM):
+#   K=4 has the best Davies-Bouldin (0.935) and Calinski-Harabasz (28.9) of K=2..10 and a
+#   silhouette (0.362) tied with the best; K=5 is worse on all three (0.279 / 1.351 / 24.8).
+#   K=4 is also the most seed-stable (mean pairwise ARI 0.95 over 10 seeds vs 0.82 at K=5,
+#   0.87 at K=3). BIC is not used: it falls monotonically to K=10 because diag-GMM
+#   overfits 45 points, so it never reaches a minimum.
+K_FINAL = 4                            # <-- set after reviewing bic_selection_uttarakhand.csv, re-run
 SILHOUETTE_ACCEPT_LO, SILHOUETTE_ACCEPT_HI = 0.15, 0.40   # single-state band is a bit wider than
                                                             # the 4-state 0.15-0.35 (no artificial
                                                             # between-state gaps inflating it here)

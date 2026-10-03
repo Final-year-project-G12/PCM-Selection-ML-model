@@ -131,14 +131,14 @@ INPUT  : data/processed/daily_aggregates_uttarakhand.csv   (02b's output)
          data/processed/suntimes.csv                       (00b's output)
          data/processed/clustering/cluster_assignments_uttarakhand.csv
          data/processed/pcm/mcdm_full_scores_by_cluster.csv
-           (confirmed to exist, ~145 rows = 5 clusters x 29 survivors)
+           (confirmed to exist, ~115 rows = 4 clusters x 27-30 survivors)
 
          IMPORTANT CONTEXT this file's rows will carry into this script:
-         your Phase 5/6 audit found that all 5 clusters return the SAME
-         29 feasibility survivors and the SAME #1 consensus PCM (RT60),
-         because Tm_target is held constant at 57C across every cluster
-         by design. That means every cluster's candidate list going into
-         this script is identical — any differentiation between clusters
+         with K=4 the clusters' Tm_target values sit within ~2C of each
+         other (55.2-57.0C), so the 27-30 feasibility survivors per
+         cluster overlap heavily and the #1 consensus PCM is shared by
+         most clusters. That means the candidate lists going into
+         this script are near-identical — any differentiation between clusters
          this script finds has to come purely from each cluster's own
          GHI/temperature driving data, not from different PCMs being
          simulated. That is exactly the role this phase is meant to play
@@ -244,7 +244,7 @@ T_DELIVERY_C = 50.0
 MAX_PCMS_PER_CLUSTER = 20      # safety cap. Your audited database has 55
                                 # total candidates, but every cluster's
                                 # feasibility survivor count is 29
-                                # (identical across all 5 clusters — see
+                                # (27-30 across the 4 clusters — see
                                 # the docstring note above on why). 20 < 29,
                                 # so THIS CAP DOES BIND for you, unlike
                                 # what an earlier version of this comment

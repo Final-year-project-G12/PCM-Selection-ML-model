@@ -2,18 +2,18 @@
 
 **Script**: `08_mcdm_ranking.py`
 
-**Status**: **COMPLETE.** The Top-3 result for all five clusters, with per-method ranks and all
-five candidates' properties, is fully recoverable from committed plot artefacts.
+**Status**: **COMPLETE (K = 4).** The Top-3 result for all four clusters, with per-method ranks,
+is in `mcdm_topk_by_cluster.csv` and the committed `data/plots/uttarakhand_objective1/` plots.
 
 ---
 
 > ## MAJOR UPDATE (2026-09) — this entire file describes a superseded, two-method version
 >
-> Everything in this file's walkthrough (TOPSIS+GRA only, RT60 as consensus #1 in all five
-> clusters, no Monte Carlo) reflects `08_mcdm_ranking.py`'s state at an earlier point in the
+> Everything in this file's walkthrough (TOPSIS+GRA only, RT60 as consensus #1 in every
+> cluster of the old K = 5 run, no Monte Carlo) reflects `08_mcdm_ranking.py`'s state at an earlier point in the
 > project. The script has since been extended to a **four-method stack (TOPSIS + GRA + PROMETHEE II
-> + VIKOR)** with a companion `09b_monte_carlo_stability.py` (5,000-draw Dirichlet weight
-> perturbation), and two real bugs in that four-method stack were found and fixed in 2026-09:
+> + VIKOR)** with a companion `09b_monte_carlo_stability.py` (Dirichlet weight perturbation;
+> 2,000 draws/cluster by default, `--draws 5000` for the full spec), and two real bugs in that four-method stack were found and fixed in 2026-09:
 > - **VIKOR's compromise check only tested "acceptable advantage," never "acceptable stability"**
 >   (the second condition needs S/R, which weren't even passed to the function) — a genuine gap vs.
 >   the standard method. Fixed to check both.
@@ -21,16 +21,22 @@ five candidates' properties, is fully recoverable from committed plot artefacts.
 >   by the caller (the same basis GRA/PROMETHEE/VIKOR use) — put TOPSIS on a different effective
 >   basis, manufacturing spurious method disagreement. Fixed to use the shared basis directly.
 >
-> **Current, correct MCDM consensus Top-3 per cluster** (not RT60 everywhere as the rest of this
-> file describes): Cluster 0: PureTemp 58 / n-Octacosane (C28) / PlusICE A58 (Kendall's W=0.796);
-> Cluster 1: **PureTemp 53** / n-Hexacosane (C26) / Myristic acid (C14) (W=0.842, VIKOR reports a
-> compromise set) — genuinely different from every other cluster, because `07b_charging_
-> feasibility.py`'s regime cap (a separate bug, see `07_PHASE_5_AUDIT.md`) now gives Cluster 1 a
-> real, lower `Tm_target`; Cluster 2: PureTemp 58 / savE(R) OM55 / n-Hexacosane (C26) (W=0.782,
-> VIKOR compromise set); Cluster 3: PureTemp 58 / savE(R) OM55 / Palmitic-stearic acid/Expanded
-> graphite (W=0.708); Cluster 4: PureTemp 58 / n-Octacosane (C28) / PlusICE A58 (W=0.796). The
-> "identical #1 everywhere" finding this file documents below was itself downstream of the `07b`
-> bug, not an inherent property of a constant `Tm_target`.
+> **Current MCDM consensus Top-3 per cluster (K = 4 run, 2026-10)** (not RT60 everywhere as the
+> rest of this file describes):
+>
+> | Cluster | Tm_target | #1 | #2 | #3 | Kendall's W | VIKOR |
+> |---|---|---|---|---|---|---|
+> | 0 (warm plains, 10 pts) | 57.0 °C | PureTemp 58 | n-Octacosane (C28) | PlusICE A58 | 0.796 | single winner |
+> | 1 (mid-hills, 23 pts) | 57.0 °C | PureTemp 58 | n-Octacosane (C28) | PlusICE A58 | 0.796 | single winner |
+> | 2 (higher valleys, 9 pts) | 56.51 °C | PureTemp 58 | savE® OM55 | n-Hexacosane (C26) | 0.782 | compromise set PureTemp 53 / PureTemp 58 |
+> | 3 (high Himalaya, 3 pts) | 55.16 °C | **PureTemp 53** | n-Hexacosane (C26) | Myristic acid (C14) | 0.842 | compromise set PureTemp 53 / Myristic acid (C14) |
+>
+> Cluster 3 is genuinely different from the rest because `07b_charging_feasibility.py`'s regime cap
+> (a separate bug, see `07_PHASE_5_AUDIT.md`) gives it a real, lower `Tm_target` and a different
+> survivor set. **Clusters 0 and 1 produce identical rankings**: same 29 survivors, same
+> `Tm_target`, and `L_required` (118 vs 132 kJ/kg) is not a ranking criterion, so the MCDM cannot
+> separate them — their difference shows up only in Phase 7 physics (see `09_PHASE_7_AUDIT.md`).
+> Cluster 2's slightly lower `Tm_target` changes its #2/#3 but not its #1.
 >
 > The rest of this file is kept as a historical record of the pipeline's earlier state and the
 > (still methodologically sound) reasoning used at the time — read the walkthrough below with that
@@ -52,8 +58,8 @@ VIKOR), plus a companion Monte Carlo script — not "two methods, no Monte Carlo
 
 ## Inputs
 
-`data/processed/pcm/feasibility_survivors_by_cluster.csv` — `07`'s 275-row output, filtered to
-`passes_all == True` per cluster (29 rows each).
+`data/processed/pcm/feasibility_survivors_by_cluster.csv` — `07`'s 220-row output (55 × 4),
+filtered to `passes_all == True` per cluster (29/29/29/30 rows).
 
 ## Processing
 
@@ -177,28 +183,33 @@ and then offers two honest reporting options in full text:
 > (b) Run `07b_charging_feasibility.py` (optional, heuristic regime-dependent upper bound on Tm)
 > before 07/08 to see if a real charging-feasibility constraint changes this.
 
-Given the observed result (identical #1 in all five clusters), **this diagnostic fired.**
+In the old K = 5 two-method run (identical #1 in every cluster) **this diagnostic fired.** In the current K = 4 run it does not: the #1 set is {PureTemp 58, PureTemp 53}.
 
 ### Outputs
 
 | File | Contents |
 |---|---|
-| `data/processed/pcm/mcdm_topk_by_cluster.csv` | Top-3 per cluster = **15 rows** |
-| `data/processed/pcm/mcdm_full_scores_by_cluster.csv` | every survivor's full breakdown, approx. 5 × 29 = **145 rows** |
+| `data/processed/pcm/mcdm_topk_by_cluster.csv` | Top-3 per cluster = **12 rows** (4 × 3) |
+| `data/processed/pcm/mcdm_full_scores_by_cluster.csv` | every survivor's full breakdown, 29 + 29 + 29 + 30 = **117 rows** |
 
 Both are git-ignored. Clusters with fewer than 2 survivors are skipped with a message; that did not
 occur here.
 
 ---
 
-## Observed results
+## Observed results — HISTORICAL (two-method, K = 5 run)
 
-Recovered from four independent committed artefacts:
+> Everything from here to "What is absent from Phase 6" describes the superseded two-method K = 5
+> run. The current K = 4 result is the table in the update notice at the top of this file. The
+> `data/plots/objective1/` directory these numbers were recovered from had no generator script and
+> has been deleted (2026-10); the `uttarakhand_objective1/` plots now show the K = 4 result.
+
+These numbers were recovered from four artefacts of that run:
 `data/plots/objective1/recommended_pcm_summary.html` (consensus ranks),
 `data/plots/objective1/consensus_vs_topsis_agreement.html` (consensus vs TOPSIS rank pairs),
 `data/plots/uttarakhand_objective1/07_bump_chart_ranks.html` (TOPSIS / GRA / consensus per
 cluster), and `data/plots/uttarakhand_objective1/13_recommended_pcm_summary_interactive.html`
-(per-candidate properties). **All four agree.**
+(per-candidate properties). **All four agreed.**
 
 ### Clusters 0, 2 and 4 — identical Top-3
 
@@ -232,9 +243,9 @@ PCM reached the Top-3, not a probability — see the note below):
 | savE® OM55 | 2 |
 | Palmitic-stearic acid/Expanded graphite | 2 |
 
-### Method agreement
+### Method agreement (historical two-method run)
 
-From `data/plots/verify_ranking/06_summary.png` and
+From `data/plots/verify_ranking/06_summary.png` (as captured then) and
 `data/plots/uttarakhand_objective1/08_method_rank_correlation_heatmap_interactive.html`
 (identical values):
 
@@ -279,7 +290,7 @@ a tie, not by a margin.**
 | VIKOR | Was "not implemented" — **now implemented and run**; its compromise-check bug (see the update notice) is fixed |
 | CoCoSo | Still not implemented |
 | Copeland pairwise consensus | Still not implemented (Borda only) |
-| Monte Carlo weight/property perturbation | Was "not implemented" — **now implemented in `09b_monte_carlo_stability.py` and run** (5,000 draws/cluster) |
+| Monte Carlo weight/property perturbation | Was "not implemented" — **now implemented in `09b_monte_carlo_stability.py` and run** (2,000 draws/cluster by default; `--draws 5000` for the full spec) |
 | Top-3 inclusion probability | Was "not computed" — **now computed**; `09_monte_carlo_top3_probability.png` exists and is populated |
 | Analytical criterion contributions | Still not implemented in `08` or `09` |
 | AHP pairwise elicitation | Still not performed — a fixed prior is used and labelled a placeholder |
@@ -302,40 +313,45 @@ references. See `13_LITERATURE_MAPPING.md`.
 | Missing `cycles_confidence` flagged, not silently filled | **PASS** — `cycles_confidence_imputed` retained |
 | Excluded criteria declared | **PASS** — corrosion and cost named explicitly |
 | AHP status declared | **PASS** — labelled "an honest placeholder, not a claimed AHP result" |
-| Inter-method agreement reported | **Implemented** (Kendall's W per cluster); **value not recoverable** |
-| Degenerate-result diagnostic | **PASS** — fired, with two reporting options offered |
-| Method agreement acceptable | Was **FAIL** (pooled TOPSIS vs GRA rho = −0.930, two-method version); current 4-method Kendall's W is 0.708-0.842 per cluster — a materially healthier agreement picture |
-| Per-regime differentiation | Was **FAIL** (identical #1 in all five clusters) — **RESOLVED (2026-09)**: Cluster 1 now gets a genuinely different #1 (PureTemp 53) once the `07b` regime-cap bug was fixed |
-| Rank stability under perturbation | Was **Absent** — **now present**: `09b_monte_carlo_stability.py`, 5,000 draws/cluster |
+| Inter-method agreement reported | **PASS** — Kendall's W per cluster: 0.796 / 0.796 / 0.782 / 0.842 |
+| Degenerate-result diagnostic | **PASS** — fired in the old run with two reporting options offered; correctly silent in the K = 4 run |
+| Method agreement acceptable | Was **FAIL** (pooled TOPSIS vs GRA rho = −0.930, two-method version); current 4-method Kendall's W is 0.782-0.842 per cluster — a materially healthier agreement picture |
+| Per-regime differentiation | **PARTIAL** — Cluster 3 (high Himalaya) gets a different #1 (PureTemp 53) and Cluster 2 a different #2/#3; Clusters 0 and 1 rank identically |
+| Rank stability under perturbation | Was **Absent** — **now present**: `09b_monte_carlo_stability.py`, 2,000 draws/cluster (default) |
 
 ## Problems / risks
 
-1. **~~RT60 is consensus rank 1 in all five clusters.~~ RESOLVED (2026-09), and the root cause was
-   different from what this section concluded.** This was NOT a correct, unavoidable mathematical
-   outcome of a constant `Tm_target` — it was downstream of a real bug in
+1. **~~RT60 is consensus rank 1 in every cluster.~~ RESOLVED (2026-09), and the root cause was
+   different from what this section concluded.** It was downstream of a real bug in
    `07b_charging_feasibility.py`'s regime cap (a normalization step erased its own signal). Fixed;
-   Cluster 1 now gets a real, differentiated #1 (PureTemp 53). See `07_PHASE_5_AUDIT.md`.
+   in the K = 4 run the high-elevation Cluster 3 gets a real, differentiated #1 (PureTemp 53).
+   Clusters 0 and 1 still rank identically (same `Tm_target`, same survivors) — a genuine
+   limitation of a near-constant `Tm_target`, reported rather than hidden. See
+   `07_PHASE_5_AUDIT.md`.
 2. **~~TOPSIS and GRA are strongly anti-correlated~~ (pooled Spearman −0.930, in the two-method
-   version).** The current four-method version's Kendall's W (0.708-0.842) is a much healthier
+   version).** The current four-method version's Kendall's W (0.782-0.842) is a much healthier
    agreement signal — partly because a genuine TOPSIS normalization bug (see the update notice) was
    also fixed, removing spurious method disagreement that wasn't real multi-criteria disagreement.
 3. **Ties in the two-method Borda consensus** were a real concern in the earlier version; the
    four-method version's VIKOR compromise-check (now correctly checking both standard conditions)
-   provides a more principled way to flag genuine ambiguity — it currently does so for Clusters 1
-   and 2.
+   provides a more principled way to flag genuine ambiguity — it currently does so for Clusters 2
+   and 3.
 4. **RT60's earlier win despite being mid-ranked by both methods** was specific to the two-method
    TOPSIS+GRA version described in this file's walkthrough; the current consensus pick (PureTemp 58
-   in most clusters, PureTemp 53 in Cluster 1) comes from four methods and is not directly
+   in Clusters 0-2, PureTemp 53 in Cluster 3) comes from four methods and is not directly
    comparable to this analysis.
 5. **~~No uncertainty quantification exists.~~ RESOLVED** — Monte Carlo now quantifies exactly how
    stable these near-tied ranks are under small perturbations of the weights and of the
-   substantially-imputed `TC_W_mK` / `cycles_confidence` / `rho_H_MJ_m3` values. Result: Top-3
-   inclusion probability is 37.8-39.3% and Top-1 retention 16.2-18.3% across clusters — much lower
-   than other states (Assam ~95-96%), because Uttarakhand's feasible pool (27-30 candidates/cluster)
-   is far larger and more homogeneous than Assam's (2-6/cluster). A real finding, not an error.
+   substantially-imputed `TC_W_mK` / `cycles_confidence` / `rho_H_MJ_m3` values. Result (K = 4,
+   2,000 draws): the best Top-3 inclusion probability in any cluster is 36.4-39.3 % and the best
+   Top-1 retention 16.3-18.6 % — much lower than other states (Assam ~95-96%), because
+   Uttarakhand's feasible pool (29-30 candidates/cluster) is far larger and more homogeneous than
+   Assam's (2-6/cluster). The consensus #1 itself is not the most perturbation-robust candidate:
+   n-Octacosane (C28) has the highest Top-3 inclusion in every cluster (36-39 %), while PureTemp 58
+   reaches the Top-3 in only 13-14 % of draws in Clusters 0-2. A real finding, not an error.
 6. **~~Kendall's W is not recoverable from any committed artefact.~~ RESOLVED — current values
-   verified directly:** 0.796 (Cluster 0), 0.842 (Cluster 1), 0.782 (Cluster 2), 0.708 (Cluster 3),
-   0.796 (Cluster 4) — all comfortably above `08`'s own 0.6 "ambiguous regime" threshold, so the
+   verified directly (K = 4):** 0.796 (Cluster 0), 0.796 (Cluster 1), 0.782 (Cluster 2), 0.842
+   (Cluster 3) — all comfortably above `08`'s own 0.6 "ambiguous regime" threshold, so the
    `[NOTE]` block does not fire for any cluster in the current run.
 7. **An earlier generation of this phase is preserved in the plot tree** with a completely
    different Top-3 (RT54HC / RT55 / RT64HC) and a TOPSIS-vs-GRA Spearman of −1.000, from a run with
@@ -344,14 +360,15 @@ references. See `13_LITERATURE_MAPPING.md`.
 
 ## Status
 
-**COMPLETE, and RESOLVED (2026-09) — the degenerate result this section describes is fixed.** The
+**COMPLETE (K = 4) — the fully degenerate result this file's walkthrough describes is fixed.** The
 methodology was already sound in its construction — the Gaussian target transform applied before
 anything else touches melting temperature, weights half data-driven and half declared-placeholder,
 missing values flagged rather than hidden, and the script actively detecting the degeneracy it
 produced. The two changes this file's earlier version recommended have both since happened:
 PROMETHEE II (and VIKOR) were added as independent methods, and `07b`'s regime cap was fixed so it
-actually runs before `07` and produces a real effect. Result: a differentiated recommendation
-(Cluster 1 genuinely different from the rest), Kendall's W of 0.708-0.842 (a much healthier
-agreement picture than the old pooled −0.930), and Monte Carlo-quantified stability. The remaining
+actually runs before `07` and produces a real effect. Result: a partly differentiated
+recommendation (the high-elevation Cluster 3 genuinely different; Clusters 0 and 1 identical),
+Kendall's W of 0.782-0.842 (a much healthier agreement picture than the old pooled −0.930), and
+Monte Carlo-quantified stability. The remaining
 open items are the ones listed above that were never about the degeneracy (CoCoSo, Copeland
 consensus, a real AHP elicitation) — genuine future work, not correctness bugs.
