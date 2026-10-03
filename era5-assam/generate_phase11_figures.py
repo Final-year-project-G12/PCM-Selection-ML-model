@@ -5,9 +5,15 @@ PHASE 11 — GENERATION OF THE TWO MISSING FINAL FIGURES
 
 1. Figure 1: Final K=3 Assam Climate Regime Geographic Map
    - Data sources: population_grid_points.csv, cluster_assignments_assam.csv
-   - 129 population-weighted grid points
-   - Clusters 0 (N=33), 1 (N=61), 2 (N=35)
-   - Prominent medoids: ASP_0012, ASP_0092, ASP_0028
+   - 80 population-weighted grid points (every actual run of this pipeline,
+     before and after the covariance_type="diag" GMM fix, has processed 80
+     points -- "129" was a stale, never-actually-produced figure in older
+     docstrings/scripts; see era5-assam/PLOTS_GUIDE.md's "Known pre-existing
+     issue" note)
+   - Clusters 0 (N=27), 1 (N=28), 2 (N=25)
+   - Prominent medoids: ASP_0003, ASP_0036, ASP_0080 (post-diag-covariance-fix
+     medoids -- see PLOTS_GUIDE.md point 3; the old ASP_0012/0092/0028 medoids
+     were from the pre-fix full-covariance clustering)
    - Outputs:
      * final_outputs/visuals/fig09_final_k3_climate_regime_map.png
      * final_outputs/visuals/fig09_final_k3_climate_regime_map.html
@@ -15,7 +21,7 @@ PHASE 11 — GENERATION OF THE TWO MISSING FINAL FIGURES
 2. Figure 2: Final K=3 PCA 2D Projection (5 Final GMM Features)
    - Data sources: climate_signatures_raw.csv, cluster_assignments_assam.csv
    - Features: GHI_mean, Ta_mean, DTR, RH_mean, wind_mean (StandardScaler normalized)
-   - 129 grid points, clusters 0, 1, 2
+   - 80 grid points, clusters 0, 1, 2
    - Explained variance labels for PC1 and PC2
    - Prominent medoids highlighted
    - Output:
@@ -44,11 +50,14 @@ GRID_FILE = PROCESSED_DIR / "population_grid_points.csv"
 ASSIGN_FILE = PROCESSED_DIR / "clustering" / "cluster_assignments_assam.csv"
 SIG_RAW_FILE = PROCESSED_DIR / "climate_signatures_raw.csv"
 
-# True medoids confirmed from Phase 9
+# True medoids, programmatically re-derived (min sum-of-pairwise-distance in
+# the 5 standardized GMM features), same method as 10_physics_validation.py's
+# derive_true_medoids(). These are the post-covariance_type="diag"-fix medoids
+# (ASP_0012/0092/0028 were the pre-fix full-covariance clustering's medoids).
 MEDOIDS = {
-    0: {"id": "ASP_0012", "name": "Cluster 0 (Medoid: ASP_0012)"},
-    1: {"id": "ASP_0092", "name": "Cluster 1 (Medoid: ASP_0092)"},
-    2: {"id": "ASP_0028", "name": "Cluster 2 (Medoid: ASP_0028)"},
+    0: {"id": "ASP_0003", "name": "Cluster 0 (Medoid: ASP_0003)"},
+    1: {"id": "ASP_0036", "name": "Cluster 1 (Medoid: ASP_0036)"},
+    2: {"id": "ASP_0080", "name": "Cluster 2 (Medoid: ASP_0080)"},
 }
 
 # Color palette (distinct, publication quality)
@@ -64,10 +73,11 @@ def generate_figure_09():
     assign_df = pd.read_csv(ASSIGN_FILE)
 
     merged = pd.merge(grid_df, assign_df, on="point_id")
-    assert len(merged) == 129, f"Expected 129 points, got {len(merged)}"
+    n_total = len(merged)
+    assert n_total == 80, f"Expected 80 points (every actual pipeline run has processed 80 -- see PLOTS_GUIDE.md), got {n_total}"
     counts = merged["cluster"].value_counts().to_dict()
-    assert counts[0] == 33 and counts[1] == 61 and counts[2] == 35, f"Unexpected cluster counts: {counts}"
-    print(f"  Verified 129 points: Cluster 0={counts[0]}, Cluster 1={counts[1]}, Cluster 2={counts[2]}")
+    assert counts[0] == 27 and counts[1] == 28 and counts[2] == 25, f"Unexpected cluster counts: {counts}"
+    print(f"  Verified {n_total} points: Cluster 0={counts[0]}, Cluster 1={counts[1]}, Cluster 2={counts[2]}")
 
     # Static Matplotlib Map (PNG, 300 DPI)
     fig, ax = plt.subplots(figsize=(12, 8), dpi=300)
@@ -76,7 +86,7 @@ def generate_figure_09():
     for c_id in [0, 1, 2]:
         sub = merged[merged["cluster"] == c_id]
         med_id = MEDOIDS[c_id]["id"]
-        label = f"Cluster {c_id} (N={len(sub)}, {len(sub)/129*100:.1f}%) — Medoid: {med_id}"
+        label = f"Cluster {c_id} (N={len(sub)}, {len(sub)/n_total*100:.1f}%) — Medoid: {med_id}"
         ax.scatter(sub["lon"], sub["lat"], color=COLORS[c_id], s=90, alpha=0.85,
                    edgecolors="black", linewidths=0.6, label=label, zorder=3)
 
@@ -97,7 +107,7 @@ def generate_figure_09():
     ax.set_ylim(24.0, 28.3)
     ax.set_xlabel("Longitude (°E)", fontsize=11, fontweight="bold")
     ax.set_ylabel("Latitude (°N)", fontsize=11, fontweight="bold")
-    ax.set_title("Final Assam Climate Regime Map (GMM K=3)\n129 Population-Weighted Grid Points & Key Cluster Medoids",
+    ax.set_title(f"Final Assam Climate Regime Map (GMM K=3, Diagonal Covariance)\n{n_total} Population-Weighted Grid Points & Key Cluster Medoids",
                  fontsize=13, fontweight="bold", pad=12)
     ax.grid(True, linestyle="--", alpha=0.45, color="gray", zorder=1)
     ax.legend(loc="lower right", fontsize=9.5, framealpha=0.95, edgecolor="gray", title="Final Climate Regimes", title_fontsize=10)
@@ -149,7 +159,8 @@ def generate_figure_10():
     assign_df = pd.read_csv(ASSIGN_FILE)
 
     merged = pd.merge(sig_raw, assign_df, on="point_id")
-    assert len(merged) == 129, f"Expected 129 points, got {len(merged)}"
+    n_total = len(merged)
+    assert n_total == 80, f"Expected 80 points (every actual pipeline run has processed 80 -- see PLOTS_GUIDE.md), got {n_total}"
 
     # 5 Final Phase 3 GMM features
     features = ["GHI_mean", "Ta_mean", "DTR", "RH_mean", "wind_mean"]
@@ -189,7 +200,7 @@ def generate_figure_10():
 
     ax.set_xlabel(f"Principal Component 1 ({var_exp[0]:.1f}% explained variance)", fontsize=11, fontweight="bold")
     ax.set_ylabel(f"Principal Component 2 ({var_exp[1]:.1f}% explained variance)", fontsize=11, fontweight="bold")
-    ax.set_title("Final Phase 3 PCA 2D Projection (5 Physical Climate Features)\nFull-Covariance GMM K=3 Cluster Structure (N=129)",
+    ax.set_title(f"Final Phase 3 PCA 2D Projection (5 Physical Climate Features)\nDiagonal-Covariance GMM K=3 Cluster Structure (N={n_total})",
                  fontsize=13, fontweight="bold", pad=12)
     ax.grid(True, linestyle="--", alpha=0.45, color="gray", zorder=1)
     ax.legend(loc="upper left", fontsize=9.5, framealpha=0.95, edgecolor="gray", title="Climate Regimes", title_fontsize=10)
@@ -214,7 +225,7 @@ def update_manifest_and_report():
     df_man.loc[mask_fig09, "status"] = "ACTIVE"
     df_man.loc[mask_fig09, "final_or_historical"] = "FINAL"
     df_man.loc[mask_fig09, "thesis_ready"] = "YES"
-    df_man.loc[mask_fig09, "notes"] = "Generated from 129 population grid points & final K=3 cluster assignments; includes interactive HTML"
+    df_man.loc[mask_fig09, "notes"] = "Generated from 80 population grid points & final K=3 cluster assignments; includes interactive HTML"
 
     # Update Fig 10 entry
     mask_fig10 = df_man["output_name"].str.contains("PCA 2D Projection")
@@ -222,7 +233,7 @@ def update_manifest_and_report():
     df_man.loc[mask_fig10, "status"] = "ACTIVE"
     df_man.loc[mask_fig10, "final_or_historical"] = "FINAL"
     df_man.loc[mask_fig10, "thesis_ready"] = "YES"
-    df_man.loc[mask_fig10, "notes"] = "Generated from 5 final standardized GMM features across 129 points (PC1=38.0%, PC2=25.5%)"
+    df_man.loc[mask_fig10, "notes"] = "Generated from 5 final standardized GMM features across 80 points (PC1/PC2 variance printed by this script's own run)"
 
     df_man.to_csv(manifest_file, index=False)
     print(f"  Updated manifest saved: {manifest_file}")
@@ -240,7 +251,7 @@ def update_manifest_and_report():
         )
         rep_text = rep_text.replace(
             "B. Documented Missing Visual Figures:\n  1. Assam Final K=3 Climate Regime Map:\n     - Current status: MISSING for active K=3 model.\n     - Cause: Existing figure (data/plots/verify_clustering/04_geographic_map.png) is an\n       historical K=4 artifact from an earlier iteration.\n     - Remediation: Readily generable by plotting lat/lon from population_grid_points.csv\n       colored by 'cluster' from cluster_assignments_assam.csv.\n  2. Final 5-Feature K=3 PCA Projection:\n     - Current status: MISSING for active K=3 model.\n     - Cause: Existing figure (data/plots/verify_clustering/03_pca_projection.png) is historical K=4.\n     - Remediation: Readily generable by applying PCA to the 5 core clustering features.",
-            "B. Completed Final Visual Figures (Formerly Missing, Now Fully Generated):\n  1. Assam Final K=3 Climate Regime Map (fig09_final_k3_climate_regime_map.png & .html):\n     - Fully generated from population_grid_points.csv and cluster_assignments_assam.csv (129 points, K=3).\n  2. Final 5-Feature K=3 PCA Projection (fig10_final_k3_pca_projection.png):\n     - Fully generated from the 5 standardized GMM features (PC1=38.0%, PC2=25.5%, total=63.5%)."
+            "B. Completed Final Visual Figures (Formerly Missing, Now Fully Generated):\n  1. Assam Final K=3 Climate Regime Map (fig09_final_k3_climate_regime_map.png & .html):\n     - Fully generated from population_grid_points.csv and cluster_assignments_assam.csv (80 points, K=3).\n  2. Final 5-Feature K=3 PCA Projection (fig10_final_k3_pca_projection.png):\n     - Fully generated from the 5 standardized GMM features (80 points; PC1/PC2 variance printed by this script's own run)."
         )
         rep_text = rep_text.replace(
             "## PHASE 11 VERDICT\nCOMPLETE WITH DOCUMENTED MISSING OUTPUTS\n================================================================================\nRationale: All primary analytical, numerical, thermodynamic, and governance deliverables\nare 100% complete, locked, and verified across Phases 1 through 10. All 10 thesis tables\nare compiled in final_outputs/tables/. Two visual figures (final K=3 geographic cluster map\nand final 5-feature PCA projection) are documented as missing from the active pipeline\n(only historical K=4 versions exist on disk) and are clearly recorded for thesis production.",

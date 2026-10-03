@@ -54,7 +54,7 @@ FEAS_CSV = os.path.join(BASE_DIR, "data", "processed", "pcm", "feasibility_survi
 TOPK_CSV = os.path.join(BASE_DIR, "data", "processed", "pcm", "mcdm_topk_assam.csv")
 FULL_MCDM_CSV = os.path.join(BASE_DIR, "data", "processed", "pcm", "mcdm_full_scores_assam.csv")
 MC_CSV = os.path.join(BASE_DIR, "data", "processed", "pcm", "monte_carlo_stability_assam.csv")
-PHYS_VAL_CSV = os.path.join(BASE_DIR, "data", "processed", "pcm", "physics_validation_results_assam.csv")
+PHYS_VAL_CSV = os.path.join(BASE_DIR, "data", "processed", "pcm", "physics_validation_assam.csv")
 
 PAL = ["#e6194b", "#3cb44b", "#4363d8", "#f58231", "#911eb4", "#42d4f4", "#f032e6", "#bfef45"]
 
@@ -605,8 +605,14 @@ def build_all():
     save_html(fig_px_corr, os.path.join(dir_p5, "08_method_rank_correlation_heatmap_interactive.html"))
 
     # 09_monte_carlo_top3_probability.png & interactive
-    if os.path.exists(MC_CSV):
-        mc_df = pd.read_csv(MC_CSV)
+    # Reads TOPK_CSV (historical K=4 chain's 5,000-draw Monte Carlo, has a
+    # "name" column with real data), NOT MC_CSV (the final K=3 governed
+    # chain's monte_carlo_stability_assam.csv, which is intentionally
+    # governance-skipped -- n_draws=0, "product_name" column, all-NaN
+    # probabilities -- see run_all_assam.py's docstring on the two parallel
+    # PCM chains).
+    if os.path.exists(TOPK_CSV):
+        mc_df = pd.read_csv(TOPK_CSV)
         if "top3_inclusion_probability" in mc_df.columns:
             m_top = mc_df.sort_values("top3_inclusion_probability", ascending=False).copy()
             scale = 100 if m_top["top3_inclusion_probability"].max() <= 1.0 else 1
@@ -675,7 +681,10 @@ def build_all():
     # ---------------------------------------------------------
     print("\n--- [PHASE 6] 6 PCM Recommendation and Output/Assam ---")
     phys_df = pd.read_csv(PHYS_VAL_CSV)
-    mg_agr = full_df.merge(phys_df[["cluster_id", "name", "hours_target_met_per_year"]].drop_duplicates(subset=["cluster_id", "name"]), on=["cluster_id", "name"], how="left")
+    phys_slim = phys_df[["cluster_id", "pcm_name", "hours_Tw_ge_50C_per_year"]].rename(
+        columns={"pcm_name": "name", "hours_Tw_ge_50C_per_year": "hours_target_met_per_year"}
+    ).drop_duplicates(subset=["cluster_id", "name"])
+    mg_agr = full_df.merge(phys_slim, on=["cluster_id", "name"], how="left")
     mg_agr["sim_rank"] = mg_agr.groupby("cluster_id")["hours_target_met_per_year"].rank(ascending=False, method="min")
 
     # 11_agreement_plot.png & interactive
