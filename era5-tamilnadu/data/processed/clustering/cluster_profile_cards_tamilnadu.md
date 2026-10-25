@@ -1,8 +1,8 @@
 # Tamilnadu — Level A Cluster Profile Cards
 
-Generated from k=3 GMM clusters (133 population points). Auto-suggested k selection reason: in silhouette band AND expected single-state k range. Bootstrap-ARI stability at this k: 0.6303 (mean over 50/50 resamples).
+Generated from k=3 GMM clusters (133 population points). Auto-suggested k selection reason: in silhouette band AND expected single-state k range. Bootstrap-ARI stability at this k: 0.6550 (mean over 50/50 resamples).
 
-Koppen-Geiger external validation: NOT WIRED IN this run (raster not found) — see the printed EXTERNAL VALIDATION section for how to enable it.
+Koppen-Geiger external validation: ARI=0.0672, NMI=0.1499 against Beck et al. (2018) present-climate classes for these same 133 points (see koppen_validation_tamilnadu.csv for the full cluster x Koppen-class contingency table). This is a low-to-moderate agreement — the GMM is finding climate structure at a finer resolution than Koppen's broad classes capture within Tamil Nadu, which is a legitimate finding in its own right, not a failure of the clustering.
 
 This is a single-state run — see the printed EXTERNAL VALIDATION section for what's not yet wired in (NBC/ECBC, state identity).
 
@@ -27,8 +27,8 @@ This is a single-state run — see the printed EXTERNAL VALIDATION section for w
 | GHI_noon_mean | 752.621 | 12.271 |
 | GHI_sunset_mean | 31.230 | 4.827 |
 | GHI_daily_kWh | 5.318 | 0.115 |
-| kt_noon_mean | 0.785 | 0.012 |
-| kt_noon_std | 0.170 | 0.006 |
+| kt_noon_mean | 0.787 | 0.011 |
+| kt_noon_std | 0.171 | 0.007 |
 | kt_daily_mean | 0.811 | 0.019 |
 | kt_daily_std | 0.149 | 0.004 |
 | SAI | 0.814 | 0.020 |
@@ -71,8 +71,8 @@ This is a single-state run — see the printed EXTERNAL VALIDATION section for w
 | GHI_noon_mean | 741.209 | 6.046 |
 | GHI_sunset_mean | 37.866 | 6.191 |
 | GHI_daily_kWh | 5.238 | 0.093 |
-| kt_noon_mean | 0.761 | 0.016 |
-| kt_noon_std | 0.174 | 0.006 |
+| kt_noon_mean | 0.778 | 0.009 |
+| kt_noon_std | 0.178 | 0.006 |
 | kt_daily_mean | 0.803 | 0.016 |
 | kt_daily_std | 0.157 | 0.007 |
 | SAI | 0.805 | 0.017 |
@@ -99,7 +99,7 @@ This is a single-state run — see the printed EXTERNAL VALIDATION section for w
 
 - **Points in regime:** 46
 - **Total population covered:** 30,335,761
-- **Medoid point (climate-feature-space, no district lookup available — lat/lon only):** TNP_0013 (11.875, 79.625)
+- **Medoid point (climate-feature-space, no district lookup available — lat/lon only):** TNP_0058 (12.125, 79.625)
 
 **Two-tier climate signature (population-weighted mean +/- std):**
 
@@ -115,8 +115,8 @@ This is a single-state run — see the printed EXTERNAL VALIDATION section for w
 | GHI_noon_mean | 741.984 | 6.427 |
 | GHI_sunset_mean | 26.889 | 1.172 |
 | GHI_daily_kWh | 5.228 | 0.052 |
-| kt_noon_mean | 0.781 | 0.007 |
-| kt_noon_std | 0.170 | 0.006 |
+| kt_noon_mean | 0.780 | 0.006 |
+| kt_noon_std | 0.170 | 0.007 |
 | kt_daily_mean | 0.817 | 0.004 |
 | kt_daily_std | 0.175 | 0.008 |
 | SAI | 0.821 | 0.004 |

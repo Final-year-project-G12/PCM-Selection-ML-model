@@ -154,6 +154,30 @@ Monte Carlo per cluster, and 10_physics_validation.py simulates a full
 representative year for every feasibility survivor per cluster. Expect
 anywhere from several minutes to well over 30 minutes for the full core
 chain depending on machine speed; this is not a hang.
+cd "D:\Final Year Project\PCM-Selection-ML-model\era5-uttarakhand"
+
+# A. Stage-level plots (the runner's optional set)
+python 03_plots_raw.py
+python 03b_agreement_analysis.py
+python 03b_interactive_raw_qa.py
+python 03e_interactive_raw_plotly.py
+python 04c_postprocess_plots.py
+python 04c_interactive_postprocess_qc.py
+python 04d_signature_interactive.py
+python 04e_interactive_preprocessed_plotly.py
+python 04f_interactive_preprocessed_folium.py
+python 05b_cluster_interactive.py
+python 05d_plots_comprehensive.py
+python 12_mcdm_interactive_plots.py       # needs 08_mcdm_ranking.py output first
+
+# B. Objective 1 figures, comparison charts, verification
+python generate_objective1_plots.py
+python comparison_plots_uttarakhand.py
+python verify_01_preprocessing.py
+python verify_02_clustering.py
+python verify_03_feasibility.py
+python verify_04_ranking.py
+
 """
 
 import argparse

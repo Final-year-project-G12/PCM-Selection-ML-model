@@ -160,6 +160,28 @@ Monte Carlo per cluster, and 10_physics_validation.py simulates a full
 representative year for every feasibility survivor per cluster. Expect
 anywhere from several minutes to well over 30 minutes for the full core
 chain depending on machine speed; this is not a hang.
+
+To run the plots:
+
+# 1. Pipeline-stage plots (these sit in the runner's optional set)
+python 03_plots_raw.py                    # raw-data QA plots
+python 03b_agreement_analysis.py          # ERA5 vs NASA POWER agreement
+python 04c_postprocess_plots.py           # post-preprocessing plots
+python 05d_plots_comprehensive.py         # comprehensive clustering plots
+
+# 2. Interactive HTML plots
+python 03b_interactive_raw_qa.py
+python 04c_interactive_postprocess_qc.py
+python 05b_cluster_interactive.py
+
+# 3. Objective 1 figures, comparison charts, and verification plots (in plots/)
+python plots/generate_tamilnadu_plots.py       # the 13 Objective 1 figures, PNG and HTML
+python plots/comparison_plots_tamilnadu.py     # step-vs-step comparison charts
+python plots/verify_01_preprocessing_tamilnadu.py
+python plots/verify_02_clustering_tamilnadu.py
+python plots/verify_03_feasibility_tamilnadu.py
+python plots/verify_04_ranking_tamilnadu.py
+
 """
 
 import argparse

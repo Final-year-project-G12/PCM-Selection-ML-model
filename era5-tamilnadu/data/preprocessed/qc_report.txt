@@ -3,36 +3,36 @@
 ====================================================================
 
 [1/13] Dataset inspection ...
-  Shape: (1457547, 37)
+  Shape: (1457547, 36)
   Dtypes:
-float64           28
+float64           27
 int64              4
-str                3
-datetime64[us]     1
+object             3
+datetime64[ns]     1
 category           1
   Duplicate (point_id, date, event) rows: 0
 
   Missing % (top 15, before any cleaning):
-lat            0.0
-lon            0.0
-population     0.0
-weight         0.0
-elevation_m    0.0
-grid_lat       0.0
-grid_lon       0.0
-era5_T_amb     0.0
-era5_T_dew     0.0
-era5_RHum      0.0
-era5_W_spd     0.0
-era5_W_dir     0.0
-era5_GHI       0.0
-era5_DNI       0.0
-era5_DHI       0.0
+lat             0.0
+lon             0.0
+population      0.0
+weight          0.0
+grid_lat        0.0
+grid_lon        0.0
+era5_T_amb      0.0
+era5_T_dew      0.0
+era5_RHum       0.0
+era5_W_spd      0.0
+era5_W_dir      0.0
+era5_GHI        0.0
+era5_DNI        0.0
+era5_DHI        0.0
+era5_LW_down    0.0
 
 [2/13] Physical validation ...
   era5_GHI: 274,165 values forced to 0 (SZA >= 90, sun below horizon)
   era5_DHI: 274,165 values forced to 0 (SZA >= 90, sun below horizon)
-  era5_GHI_clearsky: 38,403 values forced to 0 (SZA >= 90, sun below horizon)
+  era5_GHI_clearsky: 39,458 values forced to 0 (SZA >= 90, sun below horizon)
 
   Total values NaN'd by physical validation: 0
 
@@ -66,7 +66,7 @@ era5_precipitation        9.701            -10.2199       1.534
   Remaining after point/zone/global median: 0
   No residual missing cells — MICE not needed.
 
-  Total imputed cells (steps a-d combined): 334,374 (1.043% of the imputable matrix)
+  Total imputed cells (steps a-d combined): 334,374 (1.092% of the imputable matrix)
 
 [5/13] Temporal validation ...
   Duplicate (point_id, date, event) after all cleaning: 0
@@ -88,29 +88,29 @@ era5_precipitation        9.701            -10.2199       1.534
   Saved: correlation_pearson.csv, correlation_spearman.csv, correlation_heatmaps.png
 
 [11/13] Variance Inflation Factor ...
-           feature     VIF
-        era5_P_atm 1874.08
-        era5_T_amb 1020.54
-        era5_T_dew  437.43
-         era5_RHum  346.40
-          era5_SZA  178.29
- era5_GHI_clearsky  124.37
-          era5_GHI   44.68
-  era5_cloud_cover   10.07
-          era5_DNI    6.83
-        era5_W_spd    5.24
-          era5_CSI    4.29
-          era5_DHI    2.70
-era5_precipitation    1.15
+           feature   VIF
+ era5_GHI_clearsky 68.14
+          era5_SZA 63.24
+         era5_RHum 34.27
+        era5_T_amb 25.77
+          era5_GHI 20.67
+        era5_T_dew 10.05
+          era5_DNI  3.01
+          era5_DHI  2.42
+        era5_P_atm  2.08
+          era5_CSI  1.73
+  era5_cloud_cover  1.47
+        era5_W_spd  1.30
+era5_precipitation  1.08
   Excluded from VIF (deliberate arithmetic identities, still in the correlation report): ['era5_T_depression', 'era5_cloud_opacity']
   Saved: vif_report.csv  (VIF > 10 = high multicollinearity — reported, nothing dropped)
 
-  Saved (physical units, for Phase 3): C:\Users\jaswi\OneDrive\Desktop\ALL\SEM_7\project\jammalamadugu\new_obj\tamilnadu_pipeline\data\preprocessed\tamilnadu_cleaned_physical.csv
+  Saved (physical units, for Phase 3): D:\Final Year Project\PCM-Selection-ML-model\era5-tamilnadu\data\preprocessed\tamilnadu_cleaned_physical.csv
 
 [12/13] MinMax scaling (train-only fit, leakage-safe) ...
-  Scaled 73 columns, fit on first 70% of rows (1,011,903/1,445,577)
-  Saved: C:\Users\jaswi\OneDrive\Desktop\ALL\SEM_7\project\jammalamadugu\new_obj\tamilnadu_pipeline\data\preprocessed\tamilnadu_cleaned_scaled.csv
-  Saved: C:\Users\jaswi\OneDrive\Desktop\ALL\SEM_7\project\jammalamadugu\new_obj\tamilnadu_pipeline\data\preprocessed\scalers.pkl
+  Scaled 72 columns, fit on first 70% of rows (1,011,903/1,445,577)
+  Saved: D:\Final Year Project\PCM-Selection-ML-model\era5-tamilnadu\data\preprocessed\tamilnadu_cleaned_scaled.csv
+  Saved: D:\Final Year Project\PCM-Selection-ML-model\era5-tamilnadu\data\preprocessed\scalers.pkl
 
 [13/13] Final validation ...
   [PASS] Physical file: zero NaN in imputable columns  (0 NaN cells remain)

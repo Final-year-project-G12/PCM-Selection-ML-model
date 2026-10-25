@@ -190,10 +190,24 @@ HOW TO RUN:
                                              # resume the CORE chain
                                              # starting at a given script
                                              # (skips everything before it)
+                                             
+python verify_01_preprocessing_assam.py
+python verify_02_clustering_assam.py
+python verify_03_feasibility_assam.py
+python verify_04_ranking_assam.py
+"generate_assam_plots.py","comparison_plots_assam.py","generate_era5_nasa_comparison_plots.py","generate_missing_assam_diagrams.py","generate_phase11_figures.py","build_plots_assam_ppt.py" | ForEach-Object { python $_ }
+
+python generate_assam_plots.py                    # 13 Objective-1 figures
+python comparison_plots_assam.py                  # 9 cross-pipeline comparison charts
+python generate_era5_nasa_comparison_plots.py     # ERA5 vs NASA POWER plots
+python generate_missing_assam_diagrams.py
+python generate_phase11_figures.py
+python build_plots_assam_ppt.py                   # run LAST
 
 This can take a while end to end — 08_mcdm_ranking.py runs a 5,000-draw
 Monte Carlo, and 10_physics_validation.py simulates 10 full years
-sub-hourly (dt=300s) for 8 PCMs across 3 medoids (24 simulation runs).
+sub-hourly (dt=300s) for every Phase 6 survivor PCM (36 as of 2026-10-25)
+across 3 medoids (108 simulation runs).
 Expect anywhere from several minutes to well over 30 minutes for the full
 core chain depending on machine speed; this is not a hang.
 """

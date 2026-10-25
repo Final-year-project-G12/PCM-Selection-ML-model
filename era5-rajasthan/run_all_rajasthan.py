@@ -181,6 +181,30 @@ This can take a while end to end — 02_combine_rajasthan.py alone processes
 a multi-GB combined events file, and 08 (Monte Carlo) + 10 (full-year
 hourly simulation) are each minutes. Expect several minutes to ~30+ minutes
 for the full core chain depending on machine speed; this is not a hang.
+
+cd "D:\Final Year Project\PCM-Selection-ML-model\era5-rajasthan"
+
+# A. Stage-level QA and interactive plots (the runner's optional set)
+python 00d_population_grid_viz.py
+python 03_verify_climate_csv.py
+python 03_plots_raw.py
+python 03b_agreement_analysis.py
+python 03b_quality_check_plots_rajasthan.py
+python 03b_interactive_raw_qa.py
+python 04c_postprocess_plots.py
+python 04c_interactive_postprocess_qc.py
+python 05b_cluster_interactive.py
+python 05d_plots_comprehensive.py
+
+# B. Main plot set, via the orchestrator
+cd PLOTSV2
+python run_all_plots_v2.py              # everything, then assemble Plots/
+python run_all_plots_v2.py objective1   # the 13 objective-1 plots
+python run_all_plots_v2.py verify       # the 4 verification suites
+python run_all_plots_v2.py phases       # phase 1 and phase 3 figures
+python run_all_plots_v2.py comparison   # the 8 comparison plots plus agreement and before/after charts
+python run_all_plots_v2.py plots        # only re-assemble the curated Plots/ folder
+
 """
 
 import argparse

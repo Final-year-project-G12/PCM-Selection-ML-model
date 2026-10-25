@@ -150,7 +150,20 @@ def main():
     log("\n[SECTION 3] Verifying Output CSV Schema & Non-MCDM Candidate Labels...")
     assert OUT_RESULTS_CSV.exists(), f"Results CSV missing: {OUT_RESULTS_CSV}"
     res_df = pd.read_csv(OUT_RESULTS_CSV)
-    assert len(res_df) == 24, f"Expected 24 simulation results (8 PCMs x 3 clusters), got {len(res_df)}"
+    # Expected row count is derived from the Phase 6 survivors file the
+    # simulator itself draws candidates from (every unique passes_all PCM is
+    # simulated at every medoid), not hardcoded -- it was 24 (8 PCMs x 3)
+    # before the survivor pool was regenerated.
+    feas_df = pd.read_csv(phys_val.FEAS_FILE)
+    n_pcm_expected = feas_df[feas_df["passes_all"] == True]["name"].nunique()
+    n_clusters_expected = len(expected_medoids)
+    assert len(res_df) == n_pcm_expected * n_clusters_expected, (
+        f"Expected {n_pcm_expected * n_clusters_expected} simulation results "
+        f"({n_pcm_expected} PCMs x {n_clusters_expected} clusters), got {len(res_df)}"
+    )
+    assert res_df["pcm_name"].nunique() == n_pcm_expected, (
+        f"Expected {n_pcm_expected} unique PCMs, got {res_df['pcm_name'].nunique()}"
+    )
     
     req_cols = [
         "cluster_id", "medoid_point_id", "pcm_name", "candidate_status_label",
