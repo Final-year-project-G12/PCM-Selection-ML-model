@@ -149,7 +149,7 @@ separate action needed).
 ### Plots, round 2 — two more orphaned/stale directories found and removed
 - `data/plots/interactive_explorer/` (Sep 2, stale) — `05c_explore_interactive.py`'s
   cached Streamlit map; regenerates automatically next time that app runs.
-- `data/processed/signatures/interactive/` (Sep 12, stale, genuinely
+- `data/plots/signatures/interactive/` (Sep 12, stale, genuinely
   orphaned) — `04b_climate_signature.py` does not write to this path at
   all; it was dead output left behind by `04d_signature_interactive.py`
   (already deleted 2026-09-08). Current signature interactive plots are
@@ -501,10 +501,10 @@ band) even after v3.1 shipped.
 ### `11_seasonal_pcm_sensitivity.py` (renamed 2026-09-08 from `11_level_b_seasonal_analysis.py`)
 - **Draw volume aligned with 04b.** Seasonal `L_required` now uses 300 L/day formula (was still using buggy `DRAW_RATE_KG_PER_S`).
 - **Renamed** — it is a *post-Phase-6* re-ranking, not a Phase-4 clustering step. The actual Phase-4 Level B (per-point-per-season GMM re-clustering) is the new `05a_level_b_regime_shift_tamilnadu.py`.
-- **New**: `outputs/qc_seasonal_pcm_flip_heatmap_tamilnadu.html` — (cluster × season) grid coloured by #1-PCM identity, flipped cells red-outlined against the annual baseline.
+- **New**: `data/plots/qc/qc_seasonal_pcm_flip_heatmap.html` — (cluster × season) grid coloured by #1-PCM identity, flipped cells red-outlined against the annual baseline.
 
 ### `05a_level_b_regime_shift_tamilnadu.py` (NEW 2026-09-08)
-- Phase 4 **Level B — Regime Shift**, ported from Rajasthan's `05a`. Per-point-per-season Tier-1 signature (via shared `signature_lib.build_tier1_signature`), fresh GMM (k-scan 2–8), regime-shift fraction + season-tautology check, `outputs/qc_level_b_regime_shift_sankey_tamilnadu.html` alluvial plot.
+- Phase 4 **Level B — Regime Shift**, ported from Rajasthan's `05a`. Per-point-per-season Tier-1 signature (via shared `signature_lib.build_tier1_signature`), fresh GMM (k-scan 2–8), regime-shift fraction + season-tautology check, `data/plots/qc/qc_level_b_regime_shift_sankey.html` alluvial plot.
 
 ### `cluster_lib.py` (NEW 2026-09-08)
 - Shared Phase-4 machinery (`bootstrap_ari_stability`, 3-tier `suggest_k`, `fit_k_range`, `canonical_relabel_by_latitude`) — one implementation for both states and both clustering levels. `05_cluster_tamilnadu.py`'s hardcoded `K_FINAL=5` replaced by the cascade (now selects **k=3**); k-scan widened 2–10 → 2–12; Köppen-Geiger external validation + canonical latitude relabel + `provenance_lib` hard-fail checks wired in.

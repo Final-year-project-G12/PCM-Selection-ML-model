@@ -21,15 +21,15 @@ from it. This file records what each plot is, which are trustworthy, and which a
 | `data/plots/post_preprocess/` | 5 PNG + `C_qc_flag_counts.png` + **`C_qc_flag_counts.csv`** | `04c_postprocess_plots.py` | Yes |
 | `data/plots/post_preprocess_interactive/` | 5 HTML | `04c_interactive_postprocess_qc.py` | Yes |
 | `data/plots/comprehensive/{maps,timeseries,statistics,solar_resource}` | 4 HTML + 8 PNG | `05d_plots_comprehensive.py` | Yes |
-| `data/plots/uttarakhand_objective1/` | 13 PNG + 9 HTML | `generate_objective1_plots.py` | Yes |
+| `data/plots/objective1/` | 13 PNG + 9 HTML | `generate_objective1_plots.py` | Yes |
 | `data/plots/objective1/` | 5 PNG + 7 HTML | **no script in `era5-uttarakhand/`** | Yes |
 | `data/plots/verify_preprocessing/` | 7 PNG | `verify_01_preprocessing.py` | Yes |
 | `data/plots/verify_clustering/` | 6 PNG | `verify_02_clustering.py` | Yes |
 | `data/plots/verify_feasibility/` | 7 PNG | `verify_03_feasibility.py` (6) + 1 orphan | Yes |
 | `data/plots/verify_ranking/` | 7 PNG | `verify_04_ranking.py` (6) + 1 orphan | Yes |
 | `data/plots/comparison/` | 8 PNG | `comparison_plots_uttarakhand.py` | **RESOLVED (2026-09)** — a path bug that made this "never produced" is fixed; now runs and populates this directory |
-| `data/processed/signatures/interactive/` | — | `04d_signature_interactive.py` | git-ignored |
-| `data/processed/clustering/interactive/` | — | `05b_cluster_interactive.py` | git-ignored |
+| `data/plots/signatures/interactive/` | — | `04d_signature_interactive.py` | git-ignored |
+| `data/plots/clustering/interactive/` | — | `05b_cluster_interactive.py` | git-ignored |
 
 ---
 
@@ -81,7 +81,7 @@ One remaining stale-text item in the same pair of scripts (cosmetic, no output i
 
 ## `generate_objective1_plots.py` — the 13-plot Objective 1 set
 
-Outputs to `data/plots/uttarakhand_objective1/`. Reads the Phase 2–6 CSVs directly (not via
+Outputs to `data/plots/objective1/`. Reads the Phase 2–6 CSVs directly (not via
 `config.py`).
 
 ### What each plot actually shows
@@ -93,7 +93,7 @@ Outputs to `data/plots/uttarakhand_objective1/`. Reads the Phase 2–6 CSVs dire
 | 03 | `03_melting_point_vs_latent_heat.*` | `feasibility_survivors` | **RESOLVED** — was misleading (plotted all 275 rows); current code filters `passes_all` first |
 | 04 | `04_feasible_candidates_highlighted.png` | `feasibility_survivors` + `pcm_database` | **RESOLVED** — same fix applies |
 | 05 | `05_pcm_survivors_per_cluster.*` | `df.groupby("cluster_id").size()` | **RESOLVED** — now filters `passes_all` before counting; reports the true 29/30/29/27/29, not a flat 55 |
-| 06 | `06_pcm_feasibility_scatter_and_survivors.png`, `pcm_feasibility_scatter.png`, `pcm_survivors_per_cluster.png` | same | **RESOLVED** — same fix applies |
+| 06 | `06_pcm_feasibility_scatter_and_survivors.png`, `06a_pcm_feasibility_scatter.png`, `06b_pcm_survivors_per_cluster.png` | same | **RESOLVED** — same fix applies |
 | 07 | `07_bump_chart_ranks.*` | `mcdm_topk`/`mcdm_full_scores` | **Yes** — now four-method (TOPSIS/GRA/PROMETHEE/VIKOR) + consensus rank per cluster; source of the per-method ranks in `08_PHASE_6_AUDIT.md` |
 | 08 | `08_method_rank_correlation_heatmap.*` | `mcdm_topk` | Yes, **but pooled across all clusters** — see the caveat below |
 | 09 | `09_monte_carlo_top3_probability.*` | `monte_carlo_stability.csv` | **RESOLVED — now produced.** `09b_monte_carlo_stability.py` exists and is run (5,000 draws/cluster); this plot is populated |
@@ -138,7 +138,7 @@ not a flat 55.
 
 **No script in `era5-uttarakhand/` writes to `data/plots/objective1/`** — a grep for `objective1`
 across all `.py` files matches only `generate_objective1_plots.py`, which writes to
-`uttarakhand_objective1/`. This directory was produced by a generator that is not in the folder.
+`objective1/`. This directory was produced by a generator that is not in the folder.
 
 Its contents **are Uttarakhand data** (5 clusters 0–4; the same five PCMs), and two of its files
 were essential to this audit:
@@ -153,7 +153,7 @@ is `Top3_count` — how many of the 5 clusters each PCM appears in (RT60 5, Pure
 n-Hexacosane C26 3, savE® OM55 2, Palmitic-stearic/EG 2, from that old run). **This is now stale in
 a second way, not just the naming**: Monte Carlo HAS since been implemented and run
 (`09b_monte_carlo_stability.py`, see `08_PHASE_6_AUDIT.md`'s update notice), and the correctly-named
-`09_monte_carlo_top3_probability.html` in `data/plots/uttarakhand_objective1/` (produced by
+`09_monte_carlo_top3_probability.html` in `data/plots/objective1/` (produced by
 `generate_objective1_plots.py`, not this orphaned directory) is the real inclusion-probability plot
 to cite.
 
@@ -320,9 +320,9 @@ single run's numbers as provisional until independently reproduced.
 | 493,155 input rows | `C_era5_vs_power_stats.csv` (n); `07_preprocessing_summary.png` | **Yes** |
 | 5 clusters, sizes 12/9/3/7/14 *(pre-2026-09-fix run; current run is 7/3/9/10/16 per `06_PHASE_4_AUDIT.md` and this file's own `verify_02_clustering.py` section above)* | `02_climate_regime_map_folium.html`; `06_cluster_sizes.png`; `02_silhouette_plot.png` (k=5) | **Yes, internally, but all three artefacts are from the same superseded run** |
 | 55-row PCM database | `06_summary.png`; `05_pcm_survivors_per_cluster_interactive.html`; the committed source CSV | **Yes** |
-| Top-3 per cluster | `objective1/recommended_pcm_summary.html`; `objective1/consensus_vs_topsis_agreement.html`; `uttarakhand_objective1/07_bump_chart_ranks.html`; `uttarakhand_objective1/13_recommended_pcm_summary_interactive.html` | **Yes — all four** |
+| Top-3 per cluster | `objective1/recommended_pcm_summary.html`; `objective1/consensus_vs_topsis_agreement.html`; `objective1/07_bump_chart_ranks.html`; `objective1/13_recommended_pcm_summary_interactive.html` | **Yes — all four** |
 | Top-3 PCM properties | `13_recommended_pcm_summary_interactive.html` `customdata` vs `PCM_Properties_cleaned_mice_pmm_detailed.csv` | **Yes — exact match** |
-| Spearman ρ values | `verify_ranking/06_summary.png`; `08_method_rank_correlation_heatmap_interactive.html` | **Yes** |
+| Spearman ρ values | `verify_ranking/06_ranking_summary.png`; `08_method_rank_correlation_heatmap_interactive.html` | **Yes** |
 
 The plot layer is internally consistent. Where it misleads, it does so systematically (the
 `passes_all` filter) rather than randomly.

@@ -92,10 +92,8 @@ out high, given only 45 points). Outputs both hard cluster labels and full
 soft membership probabilities per point, plus population-weighted cluster
 profiles.
 
-`05_cluster_regions.py` (the original multi-state script) still exists,
-already state-parameterised, for later — if you add Rajasthan/Assam/
-Tamil Nadu's Phase 3 output, that's what you switch to. Nothing downstream
-(Phase 5/6) needs to change if/when you do, since the output shapes match.
+The original multi-state script (`05_cluster_regions.py`) was deleted in the
+2026-10-27 cleanup; it is in git history if cross-state clustering is ever needed.
 
 ---
 
@@ -108,5 +106,4 @@ Tamil Nadu's Phase 3 output, that's what you switch to. Nothing downstream
 04_preprocess_uttarakhand.py    -> Phase 2                              (this doc)
 04b_climate_signature.py        -> Phase 3                              (this doc)
 05_cluster_uttarakhand.py       -> Phase 4, single-state                (this doc — runs now)
-05_cluster_regions.py           -> Phase 4, multi-state                 (waits on other states)
 ```

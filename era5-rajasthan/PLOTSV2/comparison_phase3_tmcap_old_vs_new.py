@@ -21,7 +21,7 @@ import plotly.graph_objects as go
 # Configuration
 _HERE = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(_HERE, "..", "data", "processed")
-OUTPUT_DIR = os.path.join(_HERE, "comparison_plots", "phase3_tmcap_old_vs_new")
+OUTPUT_DIR = os.path.join(_HERE, "..", "data", "plots", "comparison", "phase3_tmcap_old_vs_new")
 
 # Create output directory
 os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -129,6 +129,6 @@ fig.update_layout(
 fig.update_yaxes(scaleanchor="x", scaleratio=1)
 
 # Save
-output_file = os.path.join(OUTPUT_DIR, "tmcap_methodology_comparison_rajasthan.html")
+output_file = os.path.join(OUTPUT_DIR, "tmcap_methodology_comparison.html")
 fig.write_html(output_file)
 print(f"\n[OK] Comparison plot saved to: {output_file}")

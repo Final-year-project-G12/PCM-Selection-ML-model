@@ -329,7 +329,7 @@ and `verify_03_feasibility.py` do not (see
 
 ### Confirmed from committed artefacts
 
-`data/plots/verify_feasibility/06_summary.png`:
+`data/plots/verify_feasibility/06_feasibility_summary.png`:
 
 ```
 Total Survivors: 275

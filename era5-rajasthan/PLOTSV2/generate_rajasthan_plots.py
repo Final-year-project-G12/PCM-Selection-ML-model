@@ -1,7 +1,7 @@
 """
 Rajasthan PCM Pipeline - Objective 1 Plot Generator
 Generates all 13 required plots (static PNG + interactive Plotly/Folium)
-Output: PLOTSV2/rajasthan_objective1/
+Output: data/plots/objective1/
 
 Direct port of era5-uttarakhand/generate_objective1_plots.py and
 tamilnadu_pipeline/plots/generate_tamilnadu_plots.py - same 13 plots, same
@@ -40,7 +40,7 @@ FEAS_PRIMARY = os.path.join(BASE,"data","processed","feasibility_survivors_by_cl
 TOPK         = os.path.join(BASE,"data","processed","mcdm_full_rankings.csv")
 MC_STABILITY = os.path.join(BASE,"data","processed","mcdm_full_rankings.csv")
 PHYS_VAL     = os.path.join(BASE,"data","processed","physics_validation_rajasthan.csv")
-OUT          = os.path.join(os.path.dirname(os.path.abspath(__file__)),"rajasthan_objective1")
+OUT          = os.path.join(BASE, "data", "plots", "objective1")
 os.makedirs(OUT, exist_ok=True)
 
 METHODS = ["topsis","gra","promethee","vikor"]
@@ -249,7 +249,7 @@ def p05():
                   color_discrete_sequence=px.colors.qualitative.Set1)
     fig_px.update_traces(textposition="outside"); shtml(fig_px,"05_pcm_survivors_per_cluster_interactive.html")
 
-# ---- Plot 6: pcm_feasibility_scatter.png + pcm_survivors_per_cluster.png ----
+# ---- Plot 6a/6b: 06a_pcm_feasibility_scatter.png + 06b_pcm_survivors_per_cluster.png ----
 def p06():
     print("[6/13] pcm_feasibility_scatter + pcm_survivors_per_cluster")
     df=load_feasibility()
@@ -267,11 +267,11 @@ def p06():
     for cid,g in df.groupby("cluster_id"):
         ax2.scatter(g["Tm_C"],g["latent_heat_kJ_kg"],color=PAL[int(cid)%len(PAL)],s=70,alpha=0.85,label=f"Cluster {cid}")
     ax2.set(title="PCM Feasibility Scatter - Rajasthan",xlabel="Melting Temp (C)",ylabel="Latent Heat (kJ/kg)"); ax2.legend(); ax2.grid(alpha=0.25)
-    sfig("pcm_feasibility_scatter.png")
+    sfig("06a_pcm_feasibility_scatter.png")
     fig3,ax3=plt.subplots(figsize=(8,5))
     sns.barplot(data=cnt,x="cluster_id",y="n",hue="cluster_id",palette=PAL[:len(cnt)],dodge=False,legend=False,ax=ax3)
     ax3.set(title="Survivors per Cluster - Rajasthan",xlabel="Cluster ID",ylabel="Feasible PCM count"); ax3.grid(alpha=0.3,axis="y")
-    sfig("pcm_survivors_per_cluster.png")
+    sfig("06b_pcm_survivors_per_cluster.png")
 
 # ---- Plot 7: Bump Chart (one per climate regime) ----
 def p07():
@@ -470,7 +470,7 @@ def p12():
         a1.set_title(f"Cluster {cid} - Tank Profile (Tm={Tm:.0f}C)",fontweight="bold")
         l1,lb1=a1.get_legend_handles_labels(); l2,lb2=a2.get_legend_handles_labels()
         a1.legend(l1+l2,lb1+lb2,fontsize=8,loc="upper right"); a1.grid(alpha=0.25); a1.set_xlim(0,24); a1.set_xticks(range(0,25,2))
-    plt.suptitle("Rajasthan - Representative Day-Night Tank Temperature and Melt-Fraction",fontsize=13,fontweight="bold")
+    plt.suptitle("Rajasthan - Representative Day-Night Tank Temperature and Melt-Fraction\nILLUSTRATIVE SCHEMATIC (idealised sine curves) - not simulation output",fontsize=13,fontweight="bold")
     plt.tight_layout(); sfig("12_tank_temperature_melt_fraction.png")
     fig_int=make_subplots(rows=nc,cols=1,subplot_titles=[f"Cluster {cid} (Tm={Tm:.0f}C)" for cid,Tm in sorted(ci.items())],
                           specs=[[{"secondary_y":True}] for _ in ci])
@@ -478,7 +478,7 @@ def p12():
         Ta=28+14*np.sin((hrs-6)*np.pi/12); tank=Tm-6+18*np.sin((hrs-6)*np.pi/12); melt=np.clip((tank-Tm+5)/10,0,1)
         fig_int.add_trace(go.Scatter(x=hrs,y=tank,name=f"C{cid} Tank",line=dict(color="#e07b39")),row=idx,col=1,secondary_y=False)
         fig_int.add_trace(go.Scatter(x=hrs,y=melt,name=f"C{cid} Melt",line=dict(color="#3b7dd8",dash="dot")),row=idx,col=1,secondary_y=True)
-    fig_int.update_layout(height=400*nc,title="Rajasthan - Tank Temperature and Melt Fraction",template="plotly_white")
+    fig_int.update_layout(height=400*nc,title="Rajasthan - Tank Temperature and Melt Fraction<br>ILLUSTRATIVE SCHEMATIC (idealised sine curves) - not simulation output",template="plotly_white")
     shtml(fig_int,"12_tank_temperature_melt_fraction_interactive.html")
 
 # ---- Plot 13: Recommended PCM Summary ----

@@ -1,7 +1,7 @@
 """
 Assam PCM Pipeline - Objective 1 Plot Generator
 Generates all 13 required plots (static PNG + interactive Plotly/Folium)
-Output: data/plots/assam_objective1/
+Output: data/plots/objective1/
 """
 
 import os, sys, warnings, numpy as np, pandas as pd
@@ -35,7 +35,7 @@ FEASIBILITY  = os.path.join(BASE, "data", "processed", "pcm", "feasibility_survi
 TOPK         = os.path.join(BASE, "data", "processed", "pcm", "mcdm_topk_assam.csv")
 MC_STABILITY = os.path.join(BASE, "data", "processed", "pcm", "monte_carlo_stability_assam.csv")
 PHYS_VAL     = os.path.join(BASE, "data", "processed", "pcm", "physics_validation_results_assam.csv")
-OUT          = os.path.join(BASE, "data", "plots", "assam_objective1")
+OUT          = os.path.join(BASE, "data", "plots", "objective1")
 os.makedirs(OUT, exist_ok=True)
 
 METHODS = ["topsis", "gra", "promethee", "vikor"]

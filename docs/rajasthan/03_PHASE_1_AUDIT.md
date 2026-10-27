@@ -75,7 +75,7 @@ full-grid archive and the new points archive.
 
 ### Sampling-grid visualization (`00d_population_grid_viz.py`) — audit stub
 Read-only Plotly renderer for the population-weighted sampling grid: one self-contained
-`outputs/grid_plot.html` (`scatter_mapbox`-style, tokenless carto-darkmatter basemap) with a dropdown
+`data/plots/qc/qc_population_grid.html` (`scatter_mapbox`-style, tokenless carto-darkmatter basemap) with a dropdown
 to switch which metric — `population` / `weight` / `elevation_m` — drives marker size and colour.
 Folium map output was dropped 2026-08-12; a colour-contrast fix the same day moved it off the light
 carto-positron basemap. Produces no data, reads `population_grid_points.csv` only — pure visual

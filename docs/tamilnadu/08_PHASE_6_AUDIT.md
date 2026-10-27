@@ -88,7 +88,7 @@ Table-13 prior** (supercooling ≤ 0.16) and the remaining criteria rescaled to 
 all 4 method ranks + raw scores, Borda/consensus/Copeland, Kendall's W, entropy-dominant flag,
 λ-ablation flags, MC columns, plus legacy aliases so Phase 7/8 read it unchanged),
 `mcdm_topk_by_cluster.csv` (rows with `consensus_rank ≤ 3`), `monte_carlo_stability.csv`,
-`mcdm_method_agreement.csv`, `outputs/qc_montecarlo_inclusion.html`. All carry
+`mcdm_method_agreement.csv`, `data/plots/qc/qc_montecarlo_inclusion.html`. All carry
 `upstream_cluster_profile_fingerprint`.
 
 ## Results — 2026-09-16 final run (3 clusters, 8/10/8 survivors, n=26; `Tm_target_C=67`, 9 criteria, `N_DRAWS=5000`)

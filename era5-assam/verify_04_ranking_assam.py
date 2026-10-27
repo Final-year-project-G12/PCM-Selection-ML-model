@@ -22,9 +22,7 @@ TOPK = os.path.join(BASE, "data", "processed", "pcm", "mcdm_topk_assam.csv")
 FULL = os.path.join(BASE, "data", "processed", "pcm", "mcdm_full_scores_assam.csv")
 MC_CSV = os.path.join(BASE, "data", "processed", "pcm", "monte_carlo_stability_assam.csv")
 OUT = os.path.join(BASE, "data", "plots", "verify_ranking")
-ALT_OUT = os.path.join(BASE, "plots", "verify_ranking")
 os.makedirs(OUT, exist_ok=True)
-os.makedirs(ALT_OUT, exist_ok=True)
 
 PAL = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd"]
 
@@ -41,9 +39,7 @@ def ensure_ranks(df):
     return df
 
 def sfig(name):
-    for target_dir in [OUT, ALT_OUT]:
-        path = os.path.join(target_dir, name)
-        plt.savefig(path, dpi=150, bbox_inches="tight")
+    plt.savefig(os.path.join(OUT, name), dpi=150, bbox_inches="tight")
     plt.close()
     print(f"  {name}")
 
@@ -128,5 +124,5 @@ ax.text(0.05, 0.5, summary_text, fontsize=10.5, family="monospace", va="center",
         bbox=dict(boxstyle="round,pad=0.8", facecolor="#f8f9fa", edgecolor="#ced4da", linewidth=1.5))
 sfig("06_ranking_summary.png")
 
-print(f"Verify 04 complete! Outputs saved in: {OUT} and {ALT_OUT}")
+print(f"Verify 04 complete! Outputs saved in: {OUT}")
 

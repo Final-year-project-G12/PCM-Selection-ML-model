@@ -196,8 +196,8 @@ occur here.
 Recovered from four independent committed artefacts:
 `data/plots/objective1/recommended_pcm_summary.html` (consensus ranks),
 `data/plots/objective1/consensus_vs_topsis_agreement.html` (consensus vs TOPSIS rank pairs),
-`data/plots/uttarakhand_objective1/07_bump_chart_ranks.html` (TOPSIS / GRA / consensus per
-cluster), and `data/plots/uttarakhand_objective1/13_recommended_pcm_summary_interactive.html`
+`data/plots/objective1/07_bump_chart_ranks.html` (TOPSIS / GRA / consensus per
+cluster), and `data/plots/objective1/13_recommended_pcm_summary_interactive.html`
 (per-candidate properties). **All four agree.**
 
 ### Clusters 0, 2 and 4 — identical Top-3
@@ -234,8 +234,8 @@ PCM reached the Top-3, not a probability — see the note below):
 
 ### Method agreement
 
-From `data/plots/verify_ranking/06_summary.png` and
-`data/plots/uttarakhand_objective1/08_method_rank_correlation_heatmap_interactive.html`
+From `data/plots/verify_ranking/06_ranking_summary.png` and
+`data/plots/objective1/08_method_rank_correlation_heatmap_interactive.html`
 (identical values):
 
 | Pair | Spearman rho |

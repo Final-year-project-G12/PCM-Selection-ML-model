@@ -32,7 +32,7 @@ warnings.filterwarnings("ignore")
 # Configuration
 _HERE = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(_HERE, "..", "data", "processed")
-OUTPUT_DIR = os.path.join(_HERE, "physics_validation")
+OUTPUT_DIR = os.path.join(_HERE, "..", "data", "plots", "objective1")
 MCDM_FILE = os.path.join(DATA_DIR, "mcdm_full_rankings.csv")
 PHYSICS_FILE = os.path.join(DATA_DIR, "physics_validation_rajasthan.csv")
 RHO_FILE = os.path.join(DATA_DIR, "spearman_rho_by_cluster_rajasthan.csv")
@@ -216,6 +216,6 @@ fig.update_layout(
 )
 
 # Save
-output_file = os.path.join(OUTPUT_DIR, "mcdm_vs_physics_agreement_rajasthan.html")
+output_file = os.path.join(OUTPUT_DIR, "11b_physics_vs_mcdm_all_clusters.html")
 fig.write_html(output_file)
 print(f"\n[OK] Agreement plot saved to: {output_file}")

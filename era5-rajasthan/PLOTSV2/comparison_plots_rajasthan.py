@@ -2,7 +2,7 @@
 Comparison Plots - Rajasthan PCM Pipeline (PLOTSV2)
 ===================================================
 Generates cross-step comparison plots to help verify results make sense.
-Output: PLOTSV2/comparison_plots/
+Output: data/plots/comparison/
 
 Direct port of era5-tamilnadu/plots/comparison_plots_tamilnadu.py - same 8
 comparisons, same figure sizes, same palette, same filenames. Only the input
@@ -52,7 +52,7 @@ TOPK    = os.path.join(BASE,"data","processed","mcdm_full_rankings.csv")
 MC_CSV  = os.path.join(BASE,"data","processed","mcdm_full_rankings.csv")
 PHYS    = os.path.join(BASE,"data","processed","physics_validation_rajasthan.csv")
 CPROF   = os.path.join(BASE,"data","processed","cluster_profiles_rajasthan.csv")
-OUT     = os.path.join(os.path.dirname(os.path.abspath(__file__)),"comparison_plots")
+OUT     = os.path.join(BASE, "data", "plots", "comparison")
 os.makedirs(OUT, exist_ok=True)
 
 PAL=["#e6194b","#3cb44b","#4363d8","#f58231","#911eb4","#42d4f4","#f032e6","#bfef45"]

@@ -101,7 +101,7 @@ Three source files in `era5-uttarakhand/` used to disagree about the PCM databas
 **Resolution from the artefacts:** the committed
 `PCM_data/PCM_data/data/PCM_Properties_cleaned_mice_pmm_detailed.csv` has exactly **55 rows** with
 exactly the manufacturer breakdown `06` claims, and the committed plot
-`data/plots/verify_feasibility/06_summary.png` reports 55 PCM rows per cluster. The 25-row figures
+`data/plots/verify_feasibility/06_feasibility_summary.png` reports 55 PCM rows per cluster. The 25-row figures
 in `NEXT_STEPS.md` and `07`'s warning string are stale text from an earlier database generation.
 
 An earlier 25-row generation is independently evidenced: `data/plots/verify_feasibility/` and

@@ -12,7 +12,7 @@ Requires: pip install plotly folium
 INPUT  : data/processed/cluster_assignments_rajasthan_levelA.csv
          data/processed/cluster_profiles_rajasthan.csv
          data/processed/bic_selection_rajasthan.csv
-OUTPUT : PLOTSV2/clustering_interactive/*.html
+OUTPUT : data/plots/clustering/interactive/*.html
 
 HOW TO RUN:
   python 05b_cluster_interactive.py
@@ -29,7 +29,7 @@ import folium
 
 from config import PROCESSED_DIR, BASE_DIR
 
-OUT_DIR = BASE_DIR / "PLOTSV2" / "clustering_interactive"
+OUT_DIR = BASE_DIR / "data" / "plots" / "clustering" / "interactive"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 ASSIGN_FILE = PROCESSED_DIR / "cluster_assignments_rajasthan_levelA.csv"

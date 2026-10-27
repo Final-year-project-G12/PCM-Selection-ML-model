@@ -33,7 +33,7 @@ Scripts: `cluster_lib.py`, `05_cluster_tamilnadu.py`, `05a_level_b_regime_shift_
 
   k=3 was selected by the tier-1 rule (k ∈ {2,3,4} all clear the silhouette band + expected single-state range; k=3 has the highest bootstrap-ARI among them, 0.630 vs 0.571/0.577 for k=2/4). **Not** a hand-pick. Full k=2..12 comparison table: `data/processed/clustering/bic_selection_tamilnadu.csv`. Point/population counts are unchanged from the pre-elevation 2026-09-08 run (elevation affects solar geometry, not which points fall in the population-weighted sample or how they cluster spatially); bootstrap-ARI shifted marginally (0.6277→0.6303).
 - **Köppen-Geiger external validation**: **currently NOT WIRED IN in this `new_obj/tamilnadu_pipeline` copy** — `data/raw/koppen/Beck_KG_V1_present_0p0083.tif` is not present here (nor in the canonical `PCM-Selection-ML-model/era5-tamilnadu/`; it was apparently only ever downloaded into whatever environment produced the earlier ARI=0.0672/NMI=0.1499 numbers, which should NOT be quoted as current until the raster is re-sourced — see this doc's own TODO print for the download link). NBC/ECBC still stubbed; state-identity check not meaningful for a single state.
-- **QC plots** (inline, no separate script): `outputs/qc_cluster_map_tamilnadu.html` (colour by cluster, opacity by membership confidence, **marker size by population** — new), `qc_k_selection_curve_tamilnadu.html` (BIC + silhouette + **bootstrap-ARI** overlaid, chosen k marked — new), `qc_cluster_profile_bars_tamilnadu.html`, `qc_cluster_population_share_tamilnadu.html`, plus `data/processed/clustering/cluster_map_tamilnadu.png` kept for continuity.
+- **QC plots** (inline, no separate script): `data/plots/qc/qc_cluster_map.html` (colour by cluster, opacity by membership confidence, **marker size by population** — new), `qc_k_selection_curve.html` (BIC + silhouette + **bootstrap-ARI** overlaid, chosen k marked — new), `qc_cluster_profile_bars.html`, `qc_cluster_population_share.html`, plus `data/plots/clustering/cluster_map.png` kept for continuity.
 
 ## Level B — regime shift (`05a_level_b_regime_shift_tamilnadu.py`)
 
@@ -42,7 +42,7 @@ A genuine Phase-4 **clustering** step, ported unchanged from Rajasthan's `05a`. 
 - **Regime-shift fraction** *(2026-09-16 re-run, post-elevation)*: **114 / 133 points (85.7%)** have a different seasonal cluster label in at least one season. (2026-09-08 pre-elevation run: 120/133, 90.2% — the shift is real but modest; Level A's k also moved underneath this analysis between the two runs.)
 - **Season-tautology check**: ARI(cluster, season) = **0.371**, NMI = 0.447 — *moderate* agreement, same reading as before: some season-tracking, but with real cross-season structure (unlike Rajasthan, whose k=8 Level B recovers "season" almost outright at ARI 0.691). ANOVA feature importance: all top-5 drivers (Ta_mean, T_noon_mean, Ta_p95, T_sunset_mean, Ta_p05) are temperature/GHI (season-defining) variables — RH/wind/daylength are not meaningfully separating the clusters.
 - k chosen = **3** (was 4 in the 2026-09-08 run), bootstrap-ARI 0.8095 (50/50).
-- **New plot**: `outputs/qc_level_b_regime_shift_sankey_tamilnadu.html` — an alluvial of every point's cluster membership across the 4 seasons, shifting flows drawn orange against grey non-shifting flows.
+- **New plot**: `data/plots/qc/qc_level_b_regime_shift_sankey.html` — an alluvial of every point's cluster membership across the 4 seasons, shifting flows drawn orange against grey non-shifting flows.
 - Outputs: `data/processed/clustering/{bic_selection_tamilnadu_levelB, cluster_assignments_tamilnadu_levelB, level_b_feature_importance_tamilnadu, level_b_season_tautology_tamilnadu, level_b_season_contingency_tamilnadu}.csv`.
 
 ## Seasonal PCM sensitivity (`11_seasonal_pcm_sensitivity.py`)
@@ -51,7 +51,7 @@ A genuine Phase-4 **clustering** step, ported unchanged from Rajasthan's `05a`. 
 
 - **2026-09-08 result** (`Tm_target_C=57`, now superseded): **3 / 12** (cluster, season) combinations flipped the #1 PCM — Cluster 0 Summer (`PureTemp 58` replaced `n-Octacosane (C28)`), Cluster 2 Summer and Monsoon (`savE® OM55` replaced `n-Octacosane (C28)`); Cluster 1 stable across all four seasons.
 - **2026-09-16 result** (`Tm_target_C=67`, corrected — see `CHANGELOG.md`): **every season in every cluster now has fewer than 2 survivors** once `L_required` is recomputed per-season, so the seasonal re-rank produces no meaningful comparison. This is a legitimate consequence of the corrected, higher delivery target shrinking each season's admissible PCM pool below what a re-rank needs, not a script failure (exit 0). The 3/12 number above should not be quoted as current.
-- **New plot**: `outputs/qc_seasonal_pcm_flip_heatmap_tamilnadu.html` — a (cluster × season) grid coloured by #1-PCM identity, with flipped cells red-outlined against the annual baseline.
+- **New plot**: `data/plots/qc/qc_seasonal_pcm_flip_heatmap.html` — a (cluster × season) grid coloured by #1-PCM identity, with flipped cells red-outlined against the annual baseline.
 - Execution order: runs **after Phase 6** (reads `08`'s `mcdm_full_rankings.csv` — renamed 2026-09-08 from `mcdm_full_scores_by_cluster.csv` — and `06`'s PCM database); `run_all_tamilnadu.py` sequences it last, non-blocking. `05a` (Level B regime shift) runs in Phase-4 order, also non-blocking.
 
 ## Status

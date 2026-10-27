@@ -103,6 +103,6 @@ if hf and "cluster_id" in alc.columns:
     osr=100*ts/len(alc); q="OK (10-50%)" if 10<=osr<=50 else ("TOO STRICT (<10%)" if osr<10 else "TOO LOOSE (>50%)")
     txt+=f"\nOverall survival: {osr:.1f}%  [{q}]"
 ax.text(0.05,0.95,txt,transform=ax.transAxes,va="top",ha="left",fontsize=12,family="monospace"); ax.axis("off")
-plt.tight_layout(); plt.savefig(os.path.join(OUT,"06_summary.png"),dpi=150); plt.close(); print("  06_summary.png")
+plt.tight_layout(); plt.savefig(os.path.join(OUT,"06_feasibility_summary.png"),dpi=150); plt.close(); print("  06_feasibility_summary.png")
 
 print("\nFeasibility verification done. Plots:", OUT)

@@ -1,6 +1,6 @@
 """
 Verification Script 3: PCM Feasibility - Rajasthan
-Output: PLOTSV2/verify_feasibility/
+Output: data/plots/verify_feasibility/
 Run AFTER: 07_feasibility_filter_rajasthan.py
 
 Port of tamilnadu_pipeline/plots/verify_03_feasibility_tamilnadu.py and
@@ -29,7 +29,7 @@ except Exception:
 BASE    = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 ALL_CSV = os.path.join(BASE,"..","PCM_data","data","PCM_Properties_cleaned_mice_pmm_detailed.csv")
 SUR_CSV = os.path.join(BASE,"data","processed","feasibility_survivors_by_cluster_kappa_calibrated.csv")
-OUT     = os.path.join(os.path.dirname(os.path.abspath(__file__)),"verify_feasibility")
+OUT     = os.path.join(BASE, "data", "plots", "verify_feasibility")
 os.makedirs(OUT, exist_ok=True)
 
 print("Loading data...")
@@ -156,6 +156,6 @@ osr=100*ts/len(evald)
 q="OK (10-50%)" if 10<=osr<=50 else ("TOO STRICT (<10%)" if osr<10 else "TOO LOOSE (>50%)")
 txt+=f"\nOverall survival: {osr:.1f}%  [{q}]"
 ax.text(0.05,0.95,txt,transform=ax.transAxes,va="top",ha="left",fontsize=12,family="monospace"); ax.axis("off")
-plt.tight_layout(); plt.savefig(os.path.join(OUT,"06_summary.png"),dpi=150); plt.close(); print("  06_summary.png")
+plt.tight_layout(); plt.savefig(os.path.join(OUT,"06_feasibility_summary.png"),dpi=150); plt.close(); print("  06_feasibility_summary.png")
 
 print("\nFeasibility verification done. Plots:", OUT)

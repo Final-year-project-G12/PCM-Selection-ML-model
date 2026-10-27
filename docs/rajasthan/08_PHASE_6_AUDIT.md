@@ -271,7 +271,7 @@ cross-method-agreement check. No external/physics validation yet (that is Phase 
 
 `mcdm_full_rankings.csv` (full per-survivor audit trail), `mcdm_topk_by_cluster.csv` (Top-3 subset),
 `monte_carlo_stability.csv` (MC columns), `mcdm_method_agreement.csv` (method-pair ρ/τ),
-`outputs/qc_montecarlo_inclusion.html`. All carry `upstream_cluster_profile_fingerprint`. The full
+`data/plots/qc/qc_montecarlo_inclusion.html`. All carry `upstream_cluster_profile_fingerprint`. The full
 file also carries legacy column aliases (`name`, `topsis_score`, `gra_grade`, `kendall_w`,
 `top3_inclusion_probability`, …) so Phase 7/8 / seasonal scripts read it unchanged.
 

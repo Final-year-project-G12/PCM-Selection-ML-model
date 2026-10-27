@@ -51,7 +51,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-from config import PREPROCESSED_DIR, PROCESSED_DIR, SHARE_PCM
+from config import PREPROCESSED_DIR, PROCESSED_DIR, SHARE_PCM, SIGNATURE_PLOTS_DIR
 
 SIGNATURE_DIR = PROCESSED_DIR / "signatures"
 SIGNATURE_DIR.mkdir(parents=True, exist_ok=True)
@@ -350,7 +350,7 @@ sns.heatmap(sig[INDEX_COLS].corr(), ax=ax, annot=True, fmt=".2f", cmap="coolwarm
             center=0, vmin=-1, vmax=1, annot_kws={"size": 7})
 ax.set_title("Climate Signature Correlation (Tier1+Tier2 canonical) — Uttarakhand points")
 plt.tight_layout()
-plt.savefig(SIGNATURE_DIR / "signature_correlation_heatmap.png", dpi=140, bbox_inches="tight")
+plt.savefig(SIGNATURE_PLOTS_DIR / "signature_correlation_heatmap.png", dpi=140, bbox_inches="tight")
 plt.close()
 
 n_idx = len(INDEX_COLS)
@@ -372,7 +372,7 @@ for ax, col in zip(axes, INDEX_COLS):
 for ax in axes[n_idx:]:
     ax.axis("off")
 plt.tight_layout()
-plt.savefig(SIGNATURE_DIR / "signature_distributions.png", dpi=130, bbox_inches="tight")
+plt.savefig(SIGNATURE_PLOTS_DIR / "signature_distributions.png", dpi=130, bbox_inches="tight")
 plt.close()
 
 fig, axes = plt.subplots(1, 2, figsize=(14, 8))
@@ -385,7 +385,7 @@ for ax, col, title in zip(axes, ["GHI_daily_kWh", "monsoon_index"],
     ax.set_xlabel("Longitude"); ax.set_ylabel("Latitude")
     ax.set_aspect("equal")
 plt.tight_layout()
-plt.savefig(SIGNATURE_DIR / "point_signature_map.png", dpi=140, bbox_inches="tight")
+plt.savefig(SIGNATURE_PLOTS_DIR / "point_signature_map.png", dpi=140, bbox_inches="tight")
 plt.close()
 
 print("  Saved: signature_correlation_heatmap.png, signature_distributions.png, "

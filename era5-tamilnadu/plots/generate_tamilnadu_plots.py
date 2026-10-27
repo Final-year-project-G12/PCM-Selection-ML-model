@@ -1,7 +1,7 @@
 ﻿"""
 Tamil Nadu PCM Pipeline - Objective 1 Plot Generator
 Generates all 13 required plots (static PNG + interactive Plotly/Folium)
-Output: data/plots/tamilnadu_objective1/
+Output: data/plots/objective1/
 """
 import os, sys, warnings, numpy as np, pandas as pd
 import matplotlib; matplotlib.use("Agg")
@@ -36,7 +36,7 @@ FULL_SCORES  = os.path.join(BASE,"data","processed","pcm","mcdm_full_rankings.cs
 MC_STABILITY = os.path.join(BASE,"data","processed","pcm","monte_carlo_stability.csv")
 PHYS_VAL     = os.path.join(BASE,"data","processed","pcm","physics_validation_results.csv")
 PHYS_SPEARMAN= os.path.join(BASE,"data","processed","pcm","physics_validation_spearman.csv")
-OUT          = os.path.join(BASE,"data","plots","tamilnadu_objective1")
+OUT          = os.path.join(BASE,"data","plots","objective1")
 os.makedirs(OUT, exist_ok=True)
 
 METHODS = ["topsis","gra","promethee","vikor"]
@@ -189,7 +189,7 @@ def p05():
                   color_discrete_sequence=px.colors.qualitative.Set1)
     fig_px.update_traces(textposition="outside"); shtml(fig_px,"05_pcm_survivors_per_cluster_interactive.html")
 
-# ---- Plot 6: pcm_feasibility_scatter.png + pcm_survivors_per_cluster.png ----
+# ---- Plot 6a/6b: 06a_pcm_feasibility_scatter.png + 06b_pcm_survivors_per_cluster.png ----
 def p06():
     print("[6/13] pcm_feasibility_scatter + pcm_survivors_per_cluster")
     df=load(FEASIBILITY,"feasibility")
@@ -207,11 +207,11 @@ def p06():
     for cid,g in df.groupby("cluster_id"):
         ax2.scatter(g["Tm_C"],g["latent_heat_kJ_kg"],color=PAL[int(cid)%len(PAL)],s=70,alpha=0.85,label=f"Cluster {cid}")
     ax2.set(title="PCM Feasibility Scatter - Tamil Nadu",xlabel="Melting Temp (C)",ylabel="Latent Heat (kJ/kg)"); ax2.legend(); ax2.grid(alpha=0.25)
-    sfig("pcm_feasibility_scatter.png")
+    sfig("06a_pcm_feasibility_scatter.png")
     fig3,ax3=plt.subplots(figsize=(8,5))
     sns.barplot(data=cnt,x="cluster_id",y="n",hue="cluster_id",palette=PAL[:len(cnt)],dodge=False,legend=False,ax=ax3)
     ax3.set(title="Survivors per Cluster - Tamil Nadu",xlabel="Cluster ID",ylabel="Feasible PCM count"); ax3.grid(alpha=0.3,axis="y")
-    sfig("pcm_survivors_per_cluster.png")
+    sfig("06b_pcm_survivors_per_cluster.png")
 
 # ---- Plot 7: Bump Chart ----
 def p07():
@@ -298,7 +298,7 @@ def p07():
                       title=f"Tamil Nadu PCM - Rank Across MCDM Methods — Cluster {cid} (Top {per_cluster_depth})",
                       template="plotly_white",color_discrete_sequence=px.colors.qualitative.Light24)
         fig_c.update_yaxes(autorange="reversed",title="Rank (1=best)"); fig_c.update_layout(height=500,legend_title="PCM")
-        shtml(fig_c,f"07_bump_chart_ranks_cluster{cid}.html")
+        shtml(fig_c,f"07_bump_chart_ranks_cluster_{cid}.html")
 
         cands_c=sub_ld["Name"].unique(); pal_c=sns.color_palette("tab10",len(cands_c))
         fig_sc,ax_sc=plt.subplots(figsize=(9,6))
@@ -312,8 +312,8 @@ def p07():
         # drawn outside the axes instead of on top of the converging lines
         ax_sc.legend(fontsize=8,loc="upper left",bbox_to_anchor=(1.01,1.0),borderaxespad=0)
         ax_sc.grid(alpha=0.25)
-        sfig(f"07_bump_chart_ranks_cluster{cid}.png")
-        print(f"    07_bump_chart_ranks_cluster{cid}.png/.html")
+        sfig(f"07_bump_chart_ranks_cluster_{cid}.png")
+        print(f"    07_bump_chart_ranks_cluster_{cid}.png/.html")
 
 # ---- Plot 8: Method Correlation Heatmap ----
 def p08():
@@ -536,7 +536,7 @@ def p12():
         a1.set_title(f"Cluster {cid} - Tank Profile (Tm={Tm:.0f}C)",fontweight="bold")
         l1,lb1=a1.get_legend_handles_labels(); l2,lb2=a2.get_legend_handles_labels()
         a1.legend(l1+l2,lb1+lb2,fontsize=8,loc="upper right"); a1.grid(alpha=0.25); a1.set_xlim(0,24); a1.set_xticks(range(0,25,2))
-    plt.suptitle("Tamil Nadu - Representative Day-Night Tank Temperature and Melt-Fraction",fontsize=13,fontweight="bold")
+    plt.suptitle("Tamil Nadu - Representative Day-Night Tank Temperature and Melt-Fraction\nILLUSTRATIVE SCHEMATIC (idealised sine curves) - not simulation output",fontsize=13,fontweight="bold")
     plt.tight_layout(); sfig("12_tank_temperature_melt_fraction.png")
     fig_int=make_subplots(rows=nc,cols=1,subplot_titles=[f"Cluster {cid} (Tm={Tm:.0f}C)" for cid,Tm in sorted(ci.items())],
                           specs=[[{"secondary_y":True}] for _ in ci])
@@ -544,7 +544,7 @@ def p12():
         Ta=28+14*np.sin((hrs-6)*np.pi/12); tank=Tm-6+18*np.sin((hrs-6)*np.pi/12); melt=np.clip((tank-Tm+5)/10,0,1)
         fig_int.add_trace(go.Scatter(x=hrs,y=tank,name=f"C{cid} Tank",line=dict(color="#e07b39")),row=idx,col=1,secondary_y=False)
         fig_int.add_trace(go.Scatter(x=hrs,y=melt,name=f"C{cid} Melt",line=dict(color="#3b7dd8",dash="dot")),row=idx,col=1,secondary_y=True)
-    fig_int.update_layout(height=400*nc,title="Tamil Nadu - Tank Temperature and Melt Fraction",template="plotly_white")
+    fig_int.update_layout(height=400*nc,title="Tamil Nadu - Tank Temperature and Melt Fraction<br>ILLUSTRATIVE SCHEMATIC (idealised sine curves) - not simulation output",template="plotly_white")
     shtml(fig_int,"12_tank_temperature_melt_fraction_interactive.html")
 
 # ---- Plot 13: Recommended PCM Summary ----

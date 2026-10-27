@@ -42,6 +42,13 @@ COMBINED_POINTS_FILE = PROCESSED_DIR / "climate_uttarakhand_points.csv"
 
 PREPROCESSED_DIR = DATA_DIR / "preprocessed"
 PLOTS_DIR = DATA_DIR / "plots"
+# Figure folders shared by all four states - see ../docs/PLOT_NAMING.md.
+QC_PLOTS_DIR = PLOTS_DIR / "qc"
+PREPROCESS_PLOTS_DIR = PLOTS_DIR / "preprocess"
+SIGNATURE_PLOTS_DIR = PLOTS_DIR / "signatures"
+CLUSTER_PLOTS_DIR = PLOTS_DIR / "clustering"
+for _plot_dir in (QC_PLOTS_DIR, PREPROCESS_PLOTS_DIR, SIGNATURE_PLOTS_DIR, CLUSTER_PLOTS_DIR):
+    _plot_dir.mkdir(parents=True, exist_ok=True)
 OUTPUTS_DIR = BASE_DIR / "outputs"
 
 CDSAPI_RC = BASE_DIR / ".cdsapirc"

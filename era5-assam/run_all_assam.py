@@ -55,9 +55,11 @@ CHAINS (read this before running unattended):
   Both chains are REQUIRED — this is not "historical = dead code". Phase 9
   (10_physics_validation.py) simulates the historical 8-PCM K=4 survivor
   set, and Phase 10 (10_validation_comparison.py) explicitly compares the
-  historical MCDM ranking against that physics result (Spearman rho =
-  -0.52 to -0.64, verdict "NOT PHYSICALLY SUPPORTED" — an intentional,
-  documented finding, not a bug). The final K=3 chain is run independently
+  historical MCDM ranking against that physics result. The verdict is
+  computed per physics dimension on every run (2026-10-25 run: delivery
+  rho = -0.30, solar fraction rho = +0.62, both "PARTIALLY SUPPORTED /
+  INCONCLUSIVE"); read data/preprocessed/validation_comparison_report.txt
+  for the current values rather than quoting them from here. The final K=3 chain is run independently
   alongside it to produce the governed, audit-clean Phase 5-8 record. This
   runner therefore runs BOTH 06/07/08 (historical) AND
   06_final/07_final/08_final/08b_final (governed) before Phase 9.
@@ -104,7 +106,7 @@ chain and --with-optional:
   9. generate_phase11_figures.py         — the 2 final K=3 thesis figures
                                             (regime map + PCA projection)
   10. build_plots_assam_ppt.py           — assembles the curated PPT-ready
-                                            plots_assam_ppt/ folder from
+                                            data/plots/ppt/ folder from
                                             everything generated above
                                             (run LAST — it copies existing
                                             plot files, so it must run after
@@ -167,8 +169,8 @@ required failure since every later stage reads an earlier stage's output):
                                          recommendation_cards_assam.md
   17. 10_validation_comparison.py     — Phase 10: dual-level MCDM-vs-physics
                                          comparison -> validation_comparison
-                                         outputs, verdict "NOT PHYSICALLY
-                                         SUPPORTED"
+                                         outputs, per-dimension verdict
+                                         computed from the run
   18. generate_phase11_consolidation.py — Phase 11: builds final_output_
                                          manifest.csv + final_outputs/
                                          tables + report

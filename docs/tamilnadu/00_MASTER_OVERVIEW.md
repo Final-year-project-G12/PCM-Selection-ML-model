@@ -80,7 +80,7 @@ Phase 5 — FEASIBILITY FILTERING
         ↓
 Phase 6 — MULTI-CRITERIA RANKING ENGINE  (UNIFIED with Rajasthan 2026-09-08 — byte-identical engine)
   08_mcdm_ranking.py            → mcdm_full_rankings.csv, mcdm_topk_by_cluster.csv, monte_carlo_stability.csv,
-                                  mcdm_method_agreement.csv, outputs/qc_montecarlo_inclusion.html
+                                  mcdm_method_agreement.csv, data/plots/qc/qc_montecarlo_inclusion.html
                                   (9 criteria — 8 Table-13 + thermal_margin, added 2026-09-16;
                                    climate-relative latent heat; log-scaled cycling;
                                    supercooling entropy weight capped at 2× prior; PROMETHEE native Tm;

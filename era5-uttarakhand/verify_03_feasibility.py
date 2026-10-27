@@ -194,9 +194,9 @@ ax.text(0.05, 0.95, summary, transform=ax.transAxes, va='top', ha='left',
         fontsize=12, family='monospace', color='black')
 ax.axis('off')
 plt.tight_layout()
-plt.savefig(os.path.join(OUTPUT_DIR, '06_summary.png'), dpi=150)
+plt.savefig(os.path.join(OUTPUT_DIR, '06_feasibility_summary.png'), dpi=150)
 plt.close()
-print('  ✓ Saved: 06_summary.png')
+print('  ✓ Saved: 06_feasibility_summary.png')
 
 print('\n' + '=' * 70)
 print('FEASIBILITY VALIDATION SUMMARY')

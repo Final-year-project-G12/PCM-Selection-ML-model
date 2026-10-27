@@ -43,7 +43,7 @@ Location: `data/plots/raw/`
 | `E_seasonal_boxplots.png` | Noon GHI and ambient-temperature distributions by Winter, Summer, Monsoon, and Retreat seasons. | Seasonal spread, outliers, and whether the broad Tamil Nadu hot/monsoon pattern is plausible. |
 | `F_yearly_trend.png` | Mean noon GHI and ambient temperature for each year from 2016 to 2025. | Abrupt year-to-year steps that could indicate a download, unit, or processing discontinuity. |
 
-Interactive equivalents are written by `03b_interactive_raw_qa.py` to `data/plots/raw_interactive/` with the same A-F names and `.html` extensions. `03b_agreement_analysis.py` additionally writes `data/processed/era5_power_agreement_tamilnadu.csv`, `outputs/qc_era5_power_scatter_tamilnadu.html`, and `outputs/bias_decision_tamilnadu.txt`.
+Interactive equivalents are written by `03b_interactive_raw_qa.py` to `data/plots/raw_interactive/` with the same A-F names and `.html` extensions. `03b_agreement_analysis.py` additionally writes `data/processed/era5_power_agreement_tamilnadu.csv`, `data/plots/qc/qc_era5_power_scatter.html`, and `outputs/bias_decision_tamilnadu.txt`.
 
 ---
 
@@ -82,7 +82,7 @@ Location: `data/processed/signatures/`
 | `signature_distributions.png` | Distributions of signature variables such as temperature, GHI, cloudiness, and humidity indices. | Skew, outliers, and the range of climate conditions passed into regime discovery. |
 | `point_signature_map.png` | Spatial maps of mean GHI and monsoon-related signature indices. | Geographic gradients in solar resource and monsoon behavior that may explain different climate regimes. |
 
-Interactive equivalents are written directly by `04b_climate_signature.py` to `outputs/`: `signature_correlation_heatmap_tamilnadu.html`, `signature_distributions_tamilnadu.html`, `signature_point_map_tamilnadu.html`. (The old `data/processed/signatures/interactive/{A_signature_layers,B_correlation,C_distributions,D_scatter_matrix}.html` path was dead output from `04d_signature_interactive.py`, deleted 2026-09-08 — `04b` never wrote there itself; that stale directory was removed 2026-09-16.)
+Interactive equivalents are written directly by `04b_climate_signature.py` to `outputs/`: `signature_correlation_heatmap.html`, `signature_distributions.html`, `signature_point_map.html`. (The old `data/plots/signatures/interactive/{A_signature_layers,B_correlation,C_distributions,D_scatter_matrix}.html` path was dead output from `04d_signature_interactive.py`, deleted 2026-09-08 — `04b` never wrote there itself; that stale directory was removed 2026-09-16.)
 
 The signature stage also derives `Tm_target` and `L_required`. Current sizing uses a 300 L/day draw and `SHARE_PCM=0.5`; the generated `L_required` values are run-specific and should be read from the signature or feasibility CSV rather than inferred from a plot.
 
@@ -94,11 +94,11 @@ Location: `data/processed/clustering/`
 
 | File | What it shows | What it helps infer |
 |---|---|---|
-| `cluster_map_tamilnadu.png` | GMM cluster labels mapped to the population-weighted points. | The geographic arrangement and spatial continuity of the climate regimes used for PCM recommendations. | 
+| `cluster_map.png` | GMM cluster labels mapped to the population-weighted points. | The geographic arrangement and spatial continuity of the climate regimes used for PCM recommendations. | 
 
 The non-plot files `bic_selection_tamilnadu.csv` and `kmeans_comparison_tamilnadu.csv` support the choice of `K=5`; they are evidence for model selection, not visualizations.
 
-Interactive cluster outputs from `05b_cluster_interactive.py` are in `data/processed/clustering/interactive/`:
+Interactive cluster outputs from `05b_cluster_interactive.py` are in `data/plots/clustering/interactive/`:
 
 | File | What it shows | What it helps infer |
 |---|---|---|
@@ -145,7 +145,7 @@ These maps show spatial coverage and gradients. They do not establish that clima
 
 ## 6. Objective 1 PCM Plots: `plots/generate_tamilnadu_plots.py`
 
-Location: `data/plots/tamilnadu_objective1/`. Each numbered plot has a static PNG where implemented and usually an interactive HTML counterpart.
+Location: `data/plots/objective1/`. Each numbered plot has a static PNG where implemented and usually an interactive HTML counterpart.
 
 | Plot | What it shows | What it helps infer |
 |---|---|---|
@@ -157,7 +157,7 @@ Location: `data/plots/tamilnadu_objective1/`. Each numbered plot has a static PN
 | `06_pcm_feasibility_scatter_and_survivors` | Combined scatter and count summary. | Compact view of candidate properties and cluster-level filtering. |
 | `07_bump_chart_ranks` | Rank of leading PCMs across TOPSIS, GRA, PROMETHEE, VIKOR, and consensus. | Agreement or rank reversal between decision methods. |
 | `08_method_rank_correlation_heatmap` | Spearman and Kendall correlations among method ranks. | Whether methods produce broadly consistent orderings. |
-| `09_monte_carlo_top3_probability` | Top-3 inclusion probability from Monte Carlo uncertainty draws (N_DRAWS=5000, raised 2026-09-16 for the final reported run). | Ranking stability under perturbed weights and PCM properties. `08_mcdm_ranking.py` also writes `outputs/qc_montecarlo_inclusion.html` directly. |
+| `09_monte_carlo_top3_probability` | Top-3 inclusion probability from Monte Carlo uncertainty draws (N_DRAWS=5000, raised 2026-09-16 for the final reported run). | Ranking stability under perturbed weights and PCM properties. `08_mcdm_ranking.py` also writes `data/plots/qc/qc_montecarlo_inclusion.html` directly. |
 | `10_rank_reversal_violin_bar` | Rank distributions and rank spread across methods. | Which candidates are sensitive to the MCDM method. |
 | `11_agreement_plot` | Simulated performance rank versus consensus rank. | Whether higher MCDM rank tends to correspond to better simulated performance. |
 | `12_tank_temperature_melt_fraction` | Synthetic daily tank temperature and melt-fraction profile. | Illustrates intended charging/melting/discharging phases (explanatory profile). |

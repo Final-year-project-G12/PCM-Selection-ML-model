@@ -250,11 +250,11 @@ section above.
 `data/processed/climate_signature_rajasthan.csv` — **320 rows × 88 columns** (87 as counted by the
 script, which carries `point_id` as the index). Schema name/order/dtype-identical to
 `climate_signature_tamilnadu.csv` (133 rows × 88 columns). Plus `outputs/
-signature_distributions_rajasthan.html` (histogram of every clustering-input column across all 320
+signature_distributions.html` (histogram of every clustering-input column across all 320
 points — a bimodal column here previews a possible Level-A cluster split on that feature alone) and
-`outputs/signature_point_map_rajasthan.html` (geographic view of `GHI_daily_kWh` and `monsoon_index`)
+`data/plots/signatures/signature_point_map.html` (geographic view of `GHI_daily_kWh` and `monsoon_index`)
 — both pure visualization of data this script already computes, in addition to the pre-existing
-`outputs/signature_correlation_heatmap_rajasthan.html`. Correlation `|r| > 0.9` flags on the final
+`data/plots/signatures/signature_correlation_heatmap.html`. Correlation `|r| > 0.9` flags on the final
 feature set: **37 pairs** (vs. 16 for Tamil Nadu), printed only, not auto-acted-upon.
 
 ## Dependencies

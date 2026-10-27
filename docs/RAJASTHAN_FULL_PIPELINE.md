@@ -226,7 +226,7 @@ Phase 2.5 — QUALITY CHECK (undocumented until 2026-08-11 — see
  re-verification (re-runs Phase 3)
  03c_plots_raw_rajasthan.py → outputs/qc_raw_*.html (raw pre-QC visual sanity
  checks)
- 03b_quality_check_plots_rajasthan.py → outputs/qc_clean_*.html (post-QC visual
+ 03b_quality_check_plots_rajasthan.py → data/plots/qc/qc_clean_*.html (post-QC visual
  sanity checks)
  ↓ Phase 3 now reads climate_rajasthan_points_CLEAN.csv, not 02's raw output
  directly
@@ -259,14 +259,14 @@ independently)
 Phase 6 — MULTI-CRITERIA RANKING ENGINE
  08_mcdm_ranking.py → mcdm_full_rankings.csv,
  mcdm_method_agreement.csv
- (TOPSIS + PROMETHEE II + VIKOR + GRA, Borda/Copeland/Kendall's W, 1000-draw
+ (TOPSIS + PROMETHEE II + VIKOR + GRA, Borda/Copeland/Kendall's W, 5000-draw
  Monte Carlo)
  ↓
 Phase 7 — PHYSICS-BASED VALIDATION (complete)
  physics_lib.py + 10_physics_validation.py →
  physics_validation_rajasthan.csv,
  spearman_rho_by_cluster_rajasthan.csv,
- outputs/qc_calibration_check_rajasthan.html
+ data/plots/qc/qc_calibration_check.html
  (lumped-enthalpy PCM+tank model, real hourly NASA POWER weather, cited draw
  profile, full calibration;
  PRE-UNIFICATION RESULT: rho = -0.385 / +0.125 / -0.097 across 3 clusters, when
@@ -310,7 +310,7 @@ failure — see 21_REPRODUCIBILITY.md.
 | 3 — Climate Signature | signature_lib.py, 04 | COMPLETE — 5 documented corrections | Tm_target=57°C fixed; Tm_target_capped varies by regime; now reads the Phase 2.5 CLEAN file |
 | 4 — Regime Clustering | 05 | COMPLETE — with 2 caught-and-fixed bugs | k=3 (GMM diag covariance, fixed from full); GMM cluster-index instability fixed via canonical relabeling (2026-08-11); Koppen-Geiger external validation wired in (ARI=0.19, NMI=0.32 vs GMM) |
 | 5 — Feasibility Filtering | 01_preprocess, 07 | PCM database prerequisite now COMPLETE (55 rows); Phase 5 output on disk is STALE, pending re-run | Database expanded 18→55 rows (2026-08-12), inside the 40–60 target; feasibility_survivors_by_cluster.csv still reflects the pre-expansion 25-candidate pool and the old 0-survivors-at-κ=0.7 finding — re-run required, see "What remains" |
-| 6 — MCDM Ranking | 08 | COMPLETE — with 3 caught-and-fixed bugs, 1 documented deviation | Runs on κ-relaxed survivor pool; N_DRAWS=1000 not 5000 (documented); AHP pairwise elicitation still a TODO stub; now hard-fails on a provenance mismatch |
+| 6 — MCDM Ranking | 08 | COMPLETE — with 3 caught-and-fixed bugs, 1 documented deviation | Runs on κ-relaxed survivor pool; N_DRAWS=5000 (raised from 1000 on 2026-10-28; top-3 inclusion moved by at most 2.3 points); AHP pairwise elicitation still a TODO stub; now hard-fails on a provenance mismatch |
 | 7 — Physics Validation | physics_lib.py, 09 | COMPLETE — 2 caught-and-fixed bugs, real calibration, genuine NEGATIVE result | Spearman rho = -0.385 (Cluster 0) / +0.125 (Cluster 1) / -0.097 (Cluster 2); MCDM ranking weakly/negatively correlates with simulated solar fraction; dominant criterion is supercooling (48–64%) but model cannot simulate it — see 09_PHASE_7_AUDIT.md |
 | 8 — Supercooling Penalty | physics_lib.py, 08_phase8_supercooling_sweep.py | COMPLETE — Sensitivity sweep k ∈ [0.0,0.1,0.2,0.3], honest negative result | Penalty implementation is correct (energy conservation passes); but worsens physics/MCDM agreement instead of improving it — rho degrades Cluster 1 from +0.125 to +0.059, and Cluster 2 from -0.097 to -0.136; suggests supercooling weight is over-estimated or mechanism is incorrect — see 10_PHASE_8_AUDIT.md |
 | 9 — Recommendation Cards | 10 | COMPLETE | Pure aggregation of Phases 4/6/7 into recommendation_cards_rajasthan.md, hard-fails on cross-phase cluster-identity mismatch |
@@ -2079,7 +2079,7 @@ layer — see §B.2.
 climate_rajasthan_points.csv, daily_aggregates_rajasthan{,_summary}.csv,
 
 era5_power_agreement_rajasthan.csv,
-outputs/qc_era5_power_scatter_rajasthan.html,
+data/plots/qc/qc_era5_power_scatter.html,
 
 outputs/bias_decision_rajasthan.txt, 8 QC HTML files.
 
@@ -2328,7 +2328,7 @@ quality_report_rajasthan.{md,json}
 (human-readable + structured report), outputs/qc_raw_*.html (8 pre-cleaning
 plots),
 
-outputs/qc_clean_*.html (8 post-cleaning plots), validation confirmation stdout.
+data/plots/qc/qc_clean_*.html (8 post-cleaning plots), validation confirmation stdout.
 
 ## B.10 Dependencies
 
@@ -2864,19 +2864,19 @@ the clusters.
 climate_signature_rajasthan.csv — 320 rows × 86 columns. Plus, added 2026-08-11:
 `outputs/
 
-signature_distributions_rajasthan.html` (histogram of every clustering-input
+signature_distributions.html` (histogram of every clustering-input
 column across all 320
 
 points — a bimodal column here previews a possible Level-A cluster split on that
 feature alone) and
 
-outputs/signature_point_map_rajasthan.html (geographic view of GHI_daily_kWh and
+data/plots/signatures/signature_point_map.html (geographic view of GHI_daily_kWh and
 monsoon_index)
 
 — both pure visualization of data this script already computes, in addition to
 the pre-existing
 
-outputs/signature_correlation_heatmap_rajasthan.html.
+data/plots/signatures/signature_correlation_heatmap.html.
 
 ## Dependencies
 
@@ -3276,7 +3276,7 @@ never persisted),
 
 cluster_profiles_rajasthan.csv, cluster_profile_cards_rajasthan.md,
 
-outputs/qc_cluster_map_rajasthan.html, koppen_validation_rajasthan.csv
+data/plots/qc/qc_cluster_map.html, koppen_validation_rajasthan.csv
 (cluster_id x Köppen-class
 
 contingency counts), level_b_feature_importance_rajasthan.csv,
@@ -3284,13 +3284,13 @@ contingency counts), level_b_feature_importance_rajasthan.csv,
 level_b_season_tautology_rajasthan.csv,
 level_b_season_contingency_rajasthan.csv. Plus, added
 
-2026-08-11: outputs/qc_k_selection_curve_rajasthan.html (BIC + silhouette vs. k,
+2026-08-11: data/plots/qc/qc_k_selection_curve.html (BIC + silhouette vs. k,
 chosen k marked),
 
-outputs/qc_cluster_profile_bars_rajasthan.html (headline signature indices by
+data/plots/qc/qc_cluster_profile_bars.html (headline signature indices by
 cluster),
 
-outputs/qc_cluster_population_share_rajasthan.html (population-share pie chart)
+data/plots/qc/qc_cluster_population_share.html (population-share pie chart)
 — pure
 
 visualization of data this script already computes.
@@ -4278,7 +4278,7 @@ cross-method-agreement check. No external/physics validation yet (that is Phase
 
 mcdm_full_rankings.csv, mcdm_method_agreement.csv,
 
-outputs/qc_montecarlo_inclusion.html.
+data/plots/qc/qc_montecarlo_inclusion.html.
 
 ## Cross-phase provenance stamping and hard-fail check (added 2026-08-11)
 

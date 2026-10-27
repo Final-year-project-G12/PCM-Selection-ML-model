@@ -7,6 +7,6 @@ answers — is now in **[`../PLOTSV2/PLOTS_GUIDE.md`](../PLOTSV2/PLOTS_GUIDE.md)
 cd ../PLOTSV2 && python run_all_plots_v2.py comparison
 ```
 
-Figures land in `../PLOTSV2/comparison_plots/`.
+Figures land in `../data/plots/comparison/`.
 
 See [`README.md`](README.md) for why this folder was retired.

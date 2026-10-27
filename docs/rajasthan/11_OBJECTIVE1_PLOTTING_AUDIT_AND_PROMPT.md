@@ -29,13 +29,13 @@ for the current, on-disk-verified numbers.
 | # | Plot | Status | Location if it exists |
 |---|---|---|---|
 | 1 | Raw vs. preprocessed radiation | **MISSING** (close cousins exist, not this exact chart) | see §2.1 |
-| 2 | Climate-regime map | **EXISTS** | `outputs/qc_cluster_map_rajasthan.html` |
+| 2 | Climate-regime map | **EXISTS** | `data/plots/qc/qc_cluster_map.html` |
 | 3 | Melting point vs. latent heat, feasible highlighted | **MISSING** | — |
 | 4 | Number of feasible PCM candidates per regime | **MISSING** | — |
-| 5 | *(→ #3 and #4, exact filenames)* `pcm_feasibility_scatter.png`, `pcm_survivors_per_cluster.png` | **MISSING** | — |
+| 5 | *(→ #3 and #4, exact filenames)* `06a_pcm_feasibility_scatter.png`, `06b_pcm_survivors_per_cluster.png` | **MISSING** | — |
 | 6 | Bump chart — rank per method + consensus | **MISSING** | — |
 | 7 | Heatmap — Spearman/Kendall correlation between the 4 methods | **MISSING** (underlying numbers exist) | data in `mcdm_method_agreement.csv` |
-| 8 | Histogram/bar — Monte Carlo Top-3 inclusion probability | **EXISTS** | `outputs/qc_montecarlo_inclusion.html` |
+| 8 | Histogram/bar — Monte Carlo Top-3 inclusion probability | **EXISTS** | `data/plots/qc/qc_montecarlo_inclusion.html` |
 | 9 | Violin/bar — rank-reversal frequency across draws | **MISSING** (underlying numbers exist) | data persisted per-candidate in Phase 6 output, no plot |
 | 10 | Agreement plot — simulated rank vs. MCDM consensus rank, per cluster | **MISSING** | — |
 | 11 | Tank temperature / melt-fraction profile, representative day–night cycle | **MISSING**, requires a small simulator instrumentation change | — |
@@ -61,12 +61,12 @@ variance or clips its cloudy-day dips, that's the same over-correction bug the p
 and fixed once, resurfacing. By contrast, T_amb/RHum/W_spd **should** show visible tail-trimming
 post-clean — those three are the ones actually Hampel-filtered.
 
-**Closest existing material:** Phase 2.5's `outputs/qc_raw_*.html` and `outputs/qc_clean_*.html` (8
+**Closest existing material:** Phase 2.5's `outputs/qc_raw_*.html` and `data/plots/qc/qc_clean_*.html` (8
 files each) contain the raw and clean distributions separately, but not side-by-side in one figure.
 
 ### 2.2 Climate-regime map
 
-**Status: EXISTS** — `outputs/qc_cluster_map_rajasthan.html` (Phase 4, folium).
+**Status: EXISTS** — `data/plots/qc/qc_cluster_map.html` (Phase 4, folium).
 
 **Why plotted:** This is the visual proof of novelty claim N1 — that climate regimes were
 *discovered* (GMM) rather than hand-drawn.
@@ -124,7 +124,7 @@ healthy sample size, so this would be a genuine, still-open finding, not a data-
 
 ### 2.7 Monte Carlo Top-3 inclusion probability
 
-**Status: EXISTS** — `outputs/qc_montecarlo_inclusion.html`.
+**Status: EXISTS** — `data/plots/qc/qc_montecarlo_inclusion.html`.
 
 **Why plotted:** Quantifies how robust each candidate's Top-3 status is to ±weight and ±property
 perturbation (Dirichlet/Gaussian draws), so the final Top-3 isn't presented as more certain than it
@@ -225,17 +225,17 @@ not in your numbered list but follow naturally from what each phase's audit alre
 ```
 outputs/objective1_plots_rajasthan/
 ├── 01_raw_vs_preprocessed/
-├── 02_climate_regime_map/          (points to existing qc_cluster_map_rajasthan.html, not regenerated)
+├── 02_climate_regime_map/          (points to existing qc_cluster_map.html, not regenerated)
 ├── 03_feasibility/
-│   ├── pcm_feasibility_scatter.png
-│   └── pcm_survivors_per_cluster.png
+│   ├── 06a_pcm_feasibility_scatter.png
+│   └── 06b_pcm_survivors_per_cluster.png
 ├── 04_mcdm_agreement/
 │   ├── bump_chart_rajasthan.html
 │   └── method_correlation_heatmap_rajasthan.html
 ├── 05_montecarlo/
 │   └── rank_reversal_frequency_rajasthan.html
 ├── 06_physics_validation/
-│   ├── mcdm_vs_physics_agreement_rajasthan.html
+│   ├── 11b_physics_vs_mcdm_all_clusters.html
 │   └── tank_profile_{cluster0,cluster1,cluster2}_rajasthan.html
 ├── 07_recommendation_summary/
 │   └── summary_cards_rajasthan.png
@@ -279,7 +279,7 @@ Output folder structure exactly as below. Use plotly for anything with more than
 per-point hover detail, or where a reader would want to zoom/filter (bump chart, correlation
 heatmap, rank-reversal, agreement scatter, tank profile); use folium only where already established
 (the existing regime map). Static matplotlib/seaborn PNG is fine only for the two explicitly-named
-PNG outputs (pcm_feasibility_scatter.png, pcm_survivors_per_cluster.png) and the summary card figure.
+PNG outputs (06a_pcm_feasibility_scatter.png, 06b_pcm_survivors_per_cluster.png) and the summary card figure.
 
 For every plot, include a short in-code VERIFICATION block (printed to console, not just the figure)
 that checks the plotted data against the specific known result documented in the audit files, and
@@ -300,14 +300,14 @@ PART A — the 13 requested plots
      as the verification block. Output: outputs/objective1_plots_rajasthan/01_raw_vs_preprocessed/
 
 2. Climate-regime map
-   - Already exists at outputs/qc_cluster_map_rajasthan.html (Phase 4). Do not regenerate; instead
+   - Already exists at data/plots/qc/qc_cluster_map.html (Phase 4). Do not regenerate; instead
      write a short script that copies/symlinks it into
      outputs/objective1_plots_rajasthan/02_climate_regime_map/ for a single consolidated delivery
      folder, and prints the k, cluster sizes, and canonical-relabeling confirmation (cluster 0 =
      lowest mean latitude) as its verification block.
 
 3. Melting point vs. latent heat scatter, feasible candidates highlighted
-   → outputs/objective1_plots_rajasthan/03_feasibility/pcm_feasibility_scatter.png
+   → outputs/objective1_plots_rajasthan/03_feasibility/06a_pcm_feasibility_scatter.png
    - Read the full PCM candidate pool (PCM_Properties_cleaned_mice_pmm_detailed.csv +
      literature_rows(), or however 07_feasibility_filter.py assembles its candidate set —
      import and call its own loader function rather than re-implementing it) and
@@ -321,7 +321,7 @@ PART A — the 13 requested plots
      indicate the stale pre-correction file is being read).
 
 4. Number of feasible PCM candidates per climate regime
-   → outputs/objective1_plots_rajasthan/03_feasibility/pcm_survivors_per_cluster.png
+   → outputs/objective1_plots_rajasthan/03_feasibility/06b_pcm_survivors_per_cluster.png
    - Simple grouped bar: primary run (kappa=0.7 fixed) survivor count vs. kappa-calibrated survivor
      count, per cluster, from feasibility_survivors_by_cluster.csv vs.
      feasibility_survivors_by_cluster_kappa_calibrated.csv. Annotate each cluster's calibrated kappa
@@ -349,7 +349,7 @@ PART A — the 13 requested plots
      it matches the audit's own finding (GRA, all three clusters).
 
 7. Histogram/bar — Monte Carlo Top-3 inclusion probability per candidate
-   - Already exists at outputs/qc_montecarlo_inclusion.html (Phase 6). Copy into
+   - Already exists at data/plots/qc/qc_montecarlo_inclusion.html (Phase 6). Copy into
      outputs/objective1_plots_rajasthan/05_montecarlo/ alongside the new plot below rather than
      regenerating. Verification block: print correlation between inclusion probability and
      any_property_imputed flag (should be negative — imputed-property candidates should show lower/
@@ -369,7 +369,7 @@ PART A — the 13 requested plots
      highest rank-reversal frequency, since this is a specific documented prediction.
 
 9. Agreement plot — simulated performance rank vs. MCDM consensus rank, per cluster
-   → outputs/objective1_plots_rajasthan/06_physics_validation/mcdm_vs_physics_agreement_rajasthan.html
+   → outputs/objective1_plots_rajasthan/06_physics_validation/11b_physics_vs_mcdm_all_clusters.html
      (plotly, one panel per cluster)
    - Join mcdm_full_rankings.csv (Borda/Copeland rank) with physics_validation_rajasthan.csv
      (simulated annual solar fraction) on cluster_id + candidate identity — confirm the join key by

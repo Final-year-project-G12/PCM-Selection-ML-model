@@ -68,7 +68,7 @@ Collapse each point's 10-year hourly and daily weather data into a single, physi
 
 ## Outputs
 
-`data/processed/signatures/climate_signature_tamilnadu.csv` — **133 rows × 88 columns** (single `processed/`; the former doubled `data/processed/processed/signatures/` path is fixed). Column schema byte-for-byte name/order/dtype-identical to `climate_signature_rajasthan.csv` (320 rows × 88 columns). Plus QC HTML in `outputs/` (`signature_correlation_heatmap_tamilnadu.html`, `signature_distributions_tamilnadu.html`, `signature_point_map_tamilnadu.html`).
+`data/processed/signatures/climate_signature_tamilnadu.csv` — **133 rows × 88 columns** (single `processed/`; the former doubled `data/processed/processed/signatures/` path is fixed). Column schema byte-for-byte name/order/dtype-identical to `climate_signature_rajasthan.csv` (320 rows × 88 columns). Plus QC HTML in `outputs/` (`signature_correlation_heatmap.html`, `signature_distributions.html`, `signature_point_map.html`).
 
 Correlation `|r| > 0.9` flags on the final feature set: **16 pairs** for Tamil Nadu (vs. 37 for Rajasthan) — all in the same families (daylength_mean↔amplitude r=1.0, SAI↔kt_daily_mean r≈1.0, each interaction term vs. its dominant factor, L_required↔PC1). Printed only, not auto-acted-upon.
 

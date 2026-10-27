@@ -3,7 +3,8 @@
 =========================
 FINAL PHASE 3 — CLIMATE REGIME CLUSTERING (Assam Project)
 
-Clusters the 129 Assam population-weighted grid points into 3 climate regimes using
+Clusters the Assam population-weighted grid points (every row of
+climate_signatures_raw.csv; 80 in the 2026-10-25 run) into 3 climate regimes using
 a Gaussian Mixture Model (GMM) with diagonal covariance trained on 5 core physical
 climate features:
   1. GHI_mean  (Mean daytime solar irradiance, W/m²)
@@ -12,29 +13,32 @@ climate features:
   4. RH_mean   (Mean relative humidity, %)
   5. wind_mean (Mean 10m wind speed, m/s)
 
-WHY THE PREVIOUS 19-FEATURE MODEL WAS REJECTED:
+WHY THE PREVIOUS 19-FEATURE MODEL WAS REJECTED (earlier run, n=129 points):
 ------------------------------------------------
 The 19-feature full-covariance GMM fit 839 free parameters on n=129 samples (6.50 params/sample)
 and contained 22 multicollinear feature pairs (|r| >= 0.70), causing ill-conditioned matrices,
 overfitting, and severe bootstrap instability (mean ARI = 0.3281 - 0.3603).
 
-WHY THE 5-FEATURE K=3 DIAGONAL-COVARIANCE MODEL WAS SELECTED:
+WHY THE 5-FEATURE K=3 DIAGONAL-COVARIANCE MODEL IS USED:
 ---------------------------------------------------------
-1. Reduces parameters per component from 209 to 20 (total params for K=3 = 62, ratio = 0.48 params/sample).
-2. Completely eliminates severe multicollinearity (all 5-feature pairwise correlations |r| < 0.50).
-3. Achieves the lowest BIC (1574.94) and peak bootstrap stability (mean ARI = 0.6289, median ARI = 0.6542,
-   38.6% of runs ARI >= 0.75).
+1. Few parameters: 10 per component (5 means + 5 variances), so the K=3 model
+   fits far fewer parameters than there are points.
+2. No severe multicollinearity among the 5 features (checked and printed at [2]).
+3. K=3 is a locked choice (see run_all_assam.py). The BIC/silhouette/DB/CH grid
+   and the bootstrap ARI are recomputed and reported on every run, including
+   which K has the lowest BIC - do not quote numbers from this docstring.
 
 INPUT:  data/processed/climate_signatures_raw.csv
 OUTPUT: data/processed/clustering/
             gmm_k_comparison.csv
-            gmm_bic.png
-            gmm_silhouette.png
-            gmm_davies_bouldin.png
-            gmm_calinski_harabasz.png
             gmm_cluster_assignments.csv
             gmm_cluster_profiles.csv
             gmm_bootstrap_stability.csv
+        data/plots/clustering/
+            k_selection_bic.png
+            k_selection_silhouette.png
+            k_selection_davies_bouldin.png
+            k_selection_calinski_harabasz.png
         data/preprocessed/clustering_report.txt
 """
 
@@ -69,6 +73,8 @@ GRID_POINTS_FILE = BASE_DIR / "data" / "processed" / "population_grid_points.csv
 CLUSTERING_DIR = BASE_DIR / "data" / "processed" / "clustering"
 PREPROCESSED_DIR = BASE_DIR / "data" / "preprocessed"
 CLUSTERING_DIR.mkdir(parents=True, exist_ok=True)
+CLUSTER_PLOTS_DIR = BASE_DIR / "data" / "plots" / "clustering"
+CLUSTER_PLOTS_DIR.mkdir(parents=True, exist_ok=True)
 PREPROCESSED_DIR.mkdir(parents=True, exist_ok=True)
 
 OUT_K_COMP = CLUSTERING_DIR / "gmm_k_comparison.csv"
@@ -150,7 +156,7 @@ def main():
         # choice here. A full covariance matrix requires D*(D+1)/2
         # parameters PER component; with 5 standardized core features and
         # up to K=10 components, that overdetermines the fit relative to
-        # 129 points, which is exactly what caused every point's
+        # the ~80-129 points, which is exactly what caused every point's
         # max_membership_prob to saturate near 1.000 in the original run
         # (soft clustering silently degenerating to hard clustering -- 62/80
         # points in the prior assignment file had prob > 0.999, median
@@ -186,10 +192,10 @@ def main():
 
     # Plots
     metrics_to_plot = [
-        ("BIC", "BIC vs K (Lower is better)", "gmm_bic.png", "green"),
-        ("Silhouette", "Silhouette Score vs K (Higher is better)", "gmm_silhouette.png", "blue"),
-        ("Davies-Bouldin", "Davies-Bouldin Index vs K (Lower is better)", "gmm_davies_bouldin.png", "red"),
-        ("Calinski-Harabasz", "Calinski-Harabasz Score vs K (Higher is better)", "gmm_calinski_harabasz.png", "purple"),
+        ("BIC", "BIC vs K (Lower is better)", "k_selection_bic.png", "green"),
+        ("Silhouette", "Silhouette Score vs K (Higher is better)", "k_selection_silhouette.png", "blue"),
+        ("Davies-Bouldin", "Davies-Bouldin Index vs K (Lower is better)", "k_selection_davies_bouldin.png", "red"),
+        ("Calinski-Harabasz", "Calinski-Harabasz Score vs K (Higher is better)", "k_selection_calinski_harabasz.png", "purple"),
     ]
     for col_name, title, fig_name, color in metrics_to_plot:
         plt.figure(figsize=(7, 4.5))
@@ -200,7 +206,7 @@ def main():
         plt.grid(True, linestyle="--", alpha=0.6)
         plt.xticks(list(range(2, 11)))
         plt.tight_layout()
-        plt.savefig(CLUSTERING_DIR / fig_name, dpi=300)
+        plt.savefig(CLUSTER_PLOTS_DIR / fig_name, dpi=300)
         plt.close()
 
     # 5. Fit Final K=3 Diagonal-Covariance GMM (see [4]'s comment for why not "full")
@@ -237,13 +243,15 @@ def main():
     cluster_counts = assign_df["cluster"].value_counts().sort_index().to_dict()
     log(f"  - Cluster sizes (K=3)     : {cluster_counts} (Sum = {sum(cluster_counts.values())})")
 
-    if len(assign_df) == 129 and assign_df["cluster"].isnull().sum() == 0 and np.allclose(prob_sums, 1.0) and sum(cluster_counts.values()) == 129:
-        log("  [PASS] Exactly 129 points assigned, 0 missing, prob sum = 1.0 ± 1e-5, cluster count sum = 129.")
+    if len(assign_df) == n_samples and assign_df["cluster"].isnull().sum() == 0 and np.allclose(prob_sums, 1.0) and sum(cluster_counts.values()) == n_samples:
+        log(f"  [PASS] All {n_samples} points assigned, 0 missing, prob sum = 1.0 ± 1e-5, cluster count sum = {n_samples}.")
+    else:
+        log(f"  [FAIL] Assignment check failed for {n_samples} input points.")
 
-    # 6. Bootstrap Stability Analysis (500 iterations predicting all 129 original points)
+    # 6. Bootstrap Stability Analysis (500 iterations predicting all original points)
     log("\n[7] Assessing Bootstrap Clustering Stability (500 iterations)...")
-    log("  Methodology: Resample 129 grid points with replacement, fit K=3 diag GMM,")
-    log("  predict labels for ALL 129 original points, calculate ARI against full-data reference.")
+    log(f"  Methodology: Resample the {n_samples} grid points with replacement, fit K=3 diag GMM,")
+    log(f"  predict labels for ALL {n_samples} original points, calculate ARI against full-data reference.")
 
     n_bootstraps = 500
     ari_scores = []
@@ -346,48 +354,52 @@ def main():
     profile_df.to_csv(OUT_PROFILES, index=False)
     profile_df.to_csv(OUT_PROFILES_ALIAS, index=False)
     log(f"  Saved cluster profiles to: {OUT_PROFILES}")
-    log(f"  Represented points in profiles = {profile_df['n_points'].sum()} / 129")
+    log(f"  Represented points in profiles = {profile_df['n_points'].sum()} / {n_samples}")
 
-    # 8. Save Comprehensive Final Summary Report
+    # 8. Save Comprehensive Final Summary Report. Every number below is taken
+    # from this run - nothing is hard-coded from an earlier run.
     log("\n[9] Generating Final Phase 3 Summary Report...")
+    n_params = final_gmm._n_parameters()
+    k_row = comp_df.loc[comp_df["K"] == K_FINAL].iloc[0]
+    k_min_bic = int(comp_df.loc[comp_df["BIC"].idxmin(), "K"])
+    k_max_sil = int(comp_df.loc[comp_df["Silhouette"].idxmax(), "K"])
+    regime_lines = "\n".join(
+        f"  - Cluster {int(r.cluster_id)} ({int(r.n_points)} points, {r.pct_points:.1f}%): "
+        f"GHI {r.GHI_mean_mean:.0f} W/m², Ta {r.Ta_mean_mean:.1f} °C, RH {r.RH_mean_mean:.0f}%, "
+        f"DTR {r.DTR_mean:.1f} K, wind {r.wind_mean_mean:.2f} m/s"
+        for r in profile_df.itertuples())
     report_text = f"""
 ========================================================================
   FINAL PHASE 3 — CLIMATE REGIME CLUSTERING REPORT (Assam Project)
 ========================================================================
 
-REJECTION OF PREVIOUS 19-FEATURE MODEL:
+REJECTION OF PREVIOUS 19-FEATURE MODEL (earlier run, n=129 points):
 ----------------------------------------
 The initial 19-feature full-covariance GMM fit 839 free parameters on n=129
 observations (6.50 parameters/sample) and contained 22 pairs of features with
 high correlation (|r| >= 0.70). This caused ill-conditioned sample covariance
 matrices, overfitting, and severe bootstrap instability (mean ARI = 0.3281 - 0.3603).
 
-SELECTION OF THE 5-FEATURE K=3 DIAGONAL-COVARIANCE MODEL:
+THE 5-FEATURE K={K_FINAL} DIAGONAL-COVARIANCE MODEL (this run):
 ------------------------------------------------------
-The model was simplified to 5 core physical climate features:
-  GHI_mean, Ta_mean, DTR, RH_mean, wind_mean
+Features: GHI_mean, Ta_mean, DTR, RH_mean, wind_mean
+  - Free parameters      : {n_params} on {n_samples} points ({n_params / n_samples:.2f} per point)
+  - K={K_FINAL} metrics         : BIC {k_row['BIC']:.2f}, silhouette {k_row['Silhouette']:.4f},
+                           Davies-Bouldin {k_row['Davies-Bouldin']:.4f}, Calinski-Harabasz {k_row['Calinski-Harabasz']:.2f}
+  - Lowest BIC over K=2..10: K={k_min_bic}; highest silhouette: K={k_max_sil}
+    (K={K_FINAL} is a locked choice, not the BIC minimum unless these match)
+  - Bootstrap ARI        : mean {mean_ari:.4f}, median {median_ari:.4f},
+                           {pct_ge_075:.1f}% of runs >= 0.75
 
-Benefits & Empirical Justification:
-  1. Zero Severe Redundancy: All pairwise feature correlations satisfy |r| < 0.50.
-  2. Solves Over-Parameterization: Parameters per component reduced from 209 to 20
-     (total params for K=3 = 62, ratio = 0.48 parameters per sample).
-  3. Minimum BIC & Peak Stability: Achieves the absolute minimum BIC (1574.94) and
-     highest bootstrap stability across all tested combinations (mean ARI = 0.6289,
-     median ARI = 0.6542, 38.6% of runs ARI >= 0.75).
-
-CLIMATE REGIME INTERPRETATION (NOT ADMINISTRATIVE BOUNDARIES):
+CLIMATE REGIMES (cluster means, this run):
 ---------------------------------------------------------------
-The 3 clusters represent data-driven climate regimes across Assam:
-  - Cluster 0 ({cluster_counts.get(0, 0)} points, {cluster_counts.get(0, 0)/129*100:.1f}%): Moderate-Irradiance Moist Valley Regime
-  - Cluster 1 ({cluster_counts.get(1, 0)} points, {cluster_counts.get(1, 0)/129*100:.1f}%): High-Irradiance Warm Valley Regime
-  - Cluster 2 ({cluster_counts.get(2, 0)} points, {cluster_counts.get(2, 0)/129*100:.1f}%): Cooler Elevated Hill Regime
+{regime_lines}
 
 ROLE OF SOFT GMM MEMBERSHIP PROBABILITIES:
 -------------------------------------------
-While K=3 achieves solid bootstrap stability (mean ARI = 0.6289), Assam's climate
-features vary along continuous geographical gradients rather than discrete steps.
-Soft GMM membership probabilities are therefore retained for all 129 points to enable
-weighted PCM selection at boundary locations.
+Assam's climate features vary along continuous geographical gradients rather
+than discrete steps, so soft GMM membership probabilities are retained for all
+{n_samples} points to enable weighted PCM selection at boundary locations.
 
 VERIFICATION SUMMARY:
 ---------------------

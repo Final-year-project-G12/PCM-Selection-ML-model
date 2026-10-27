@@ -122,5 +122,5 @@ if "name" in topk.columns and "consensus_rank" in topk.columns:
     t3=topk[topk["consensus_rank"]<=3][["name","consensus_rank"]].drop_duplicates().sort_values("consensus_rank").head(5)
     for _,row in t3.iterrows(): txt+=f"  {int(row['consensus_rank'])}. {row['name']}\n"
 ax.text(0.05,0.95,txt,transform=ax.transAxes,va="top",ha="left",fontsize=11,family="monospace"); ax.axis("off")
-plt.tight_layout(); plt.savefig(os.path.join(OUT,"06_summary.png"),dpi=150); plt.close(); print("  06_summary.png")
+plt.tight_layout(); plt.savefig(os.path.join(OUT,"06_ranking_summary.png"),dpi=150); plt.close(); print("  06_ranking_summary.png")
 print("\nRanking verification done. Plots:", OUT)

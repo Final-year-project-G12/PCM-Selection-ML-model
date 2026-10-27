@@ -9,7 +9,7 @@ heatmap and distribution plots 04b already saves as PNG.
 Requires: pip install plotly folium branca
 
 INPUT  : data/processed/signatures/climate_signature_uttarakhand.csv
-OUTPUT : data/processed/signatures/interactive/*.html
+OUTPUT : data/plots/signatures/interactive/*.html
 
 HOW TO RUN:
   python 04d_signature_interactive.py
@@ -31,10 +31,10 @@ import folium
 # pyrefly: ignore [missing-import]
 import branca.colormap as cm
 
-from config import PROCESSED_DIR
+from config import PROCESSED_DIR, SIGNATURE_PLOTS_DIR
 
 SIGNATURE_FILE = PROCESSED_DIR / "signatures" / "climate_signature_uttarakhand.csv"
-OUT_DIR = PROCESSED_DIR / "signatures" / "interactive"
+OUT_DIR = SIGNATURE_PLOTS_DIR / "interactive"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 # Indices worth toggling through on the map — edit this list freely.

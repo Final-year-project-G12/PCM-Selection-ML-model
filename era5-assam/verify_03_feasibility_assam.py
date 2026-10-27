@@ -22,15 +22,12 @@ BASE = os.path.abspath(os.path.dirname(os.path.abspath(__file__)))
 FEAS = os.path.join(BASE, "data", "processed", "pcm", "feasibility_survivors_assam.csv")
 PCM_DB = os.path.join(BASE, "data", "processed", "pcm", "pcm_database_assam.csv")
 OUT  = os.path.join(BASE, "data", "plots", "verify_feasibility")
-ALT_OUT = os.path.join(BASE, "plots", "verify_feasibility")
 os.makedirs(OUT, exist_ok=True)
-os.makedirs(ALT_OUT, exist_ok=True)
 
 PAL = ["#e6194b", "#3cb44b", "#4363d8", "#f58231", "#911eb4", "#42d4f4", "#f032e6", "#bfef45"]
 
 def sfig(name):
-    for d in [OUT, ALT_OUT]:
-        plt.savefig(os.path.join(d, name), dpi=150, bbox_inches="tight")
+    plt.savefig(os.path.join(OUT, name), dpi=150, bbox_inches="tight")
     plt.close()
     print(f"  {name}")
 
@@ -252,4 +249,4 @@ ax.text(0.02, 0.5, summary_text, fontsize=9.2, family="monospace", va="center",
         bbox=dict(boxstyle="round,pad=0.8", facecolor="#f8f9fa", edgecolor="#4363d8", lw=1.5))
 sfig("06_feasibility_summary.png")
 
-print(f"Verify 03 complete! Outputs saved in: {OUT} and {ALT_OUT}")
+print(f"Verify 03 complete! Outputs saved in: {OUT}")

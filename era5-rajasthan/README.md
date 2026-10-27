@@ -21,9 +21,9 @@ independent sources can be cross-checked against each other.
 
 ── QA / QC — read-only, safe to run anytime, not part of the linear chain ──
 03_verify_climate_csv.py       →  (stdout report on climate_rajasthan_points.csv)
-00d_population_grid_viz.py     →  outputs/grid_plot.html  (Plotly, sampling-grid sanity check)
-03_plots_raw.py                →  PLOTSV2/raw/*.png  (raw-data QA, checks A-F)
-03b_interactive_raw_qa.py      →  PLOTSV2/raw_interactive/*.html  (same checks, interactive)
+00d_population_grid_viz.py     →  data/plots/qc/qc_population_grid.html  (Plotly, sampling-grid sanity check)
+03_plots_raw.py                →  data/plots/raw/*.png  (raw-data QA, checks A-F)
+03b_interactive_raw_qa.py      →  data/plots/raw_interactive/*.html  (same checks, interactive)
 ```
 
 NOTE: no script named `03_qc_plots.py` exists in this pipeline — see the corrected section below
@@ -233,7 +233,7 @@ population/elevation/download-status maps + several separate plotly QC charts un
 
 What actually exists for this sanity-check role is `00d_population_grid_viz.py`: a read-only Plotly
 renderer for the population-weighted sampling grid, producing ONE self-contained
-`outputs/grid_plot.html` (`scatter_mapbox`-style, tokenless carto-darkmatter basemap) with a dropdown
+`data/plots/qc/qc_population_grid.html` (`scatter_mapbox`-style, tokenless carto-darkmatter basemap) with a dropdown
 to switch which metric — `population` / `weight` / `elevation_m` — drives marker size and colour.
 Reads `population_grid_points.csv` only; produces no data. Not in the core chain. A prior Folium
 version of this map was dropped 2026-08-12 in favor of the current Plotly-only renderer.

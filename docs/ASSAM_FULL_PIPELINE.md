@@ -119,7 +119,7 @@ numbers, so several of them resolve to nothing. This document uses filenames thr
 | `09_recommendation_cards.py` | 8 | Per-cluster markdown cards + criterion contributions |
 | `10_physics_validation.py` | 7 | Grey-box lumped-enthalpy tank simulation |
 | `10_validation_comparison.py` | 7 | Cross-validation comparison metrics |
-| `build_plots_assam_ppt.py` | 1–6 | Master PPT orchestration & curation suite (`plots_assam_ppt/`) |
+| `build_plots_assam_ppt.py` | 1–6 | Master PPT orchestration & curation suite (`data/plots/ppt/`) |
 | `comparison_plots_assam.py` | — | Cross-step comparison figures |
 | `generate_assam_plots.py` | — | Objective-1 figure set (Plotly/Folium) |
 | `generate_era5_nasa_comparison_plots.py` | — | Comprehensive ERA5 vs NASA POWER validation figures |
@@ -284,7 +284,7 @@ PHASE 4 — CLIMATE REGIME CLUSTERING
                                      clustering/cluster_profiles_assam.csv
                                      clustering/scaler_assam.joblib
                                      clustering/gmm_model_assam.joblib
-                                     plots/cluster_map_assam.png
+                                     plots/cluster_map.png
   05b_level_b_seasonal_assam.py    → [never executes — inputs do not exist, §3.4]
         ↓
 PHASE 5 — PCM DATABASE + FEASIBILITY FILTERING
@@ -307,7 +307,7 @@ PHASE 8 — RECOMMENDATION CARDS
   09_recommendation_cards.py       → pcm/recommendation_cards_assam.md
         ↓
 MASTER VISUALIZATION & PPT ORCHESTRATION
-  build_plots_assam_ppt.py         → plots_assam_ppt/ (Phases 1–6 complete curated PPT suite)
+  build_plots_assam_ppt.py         → data/plots/ppt/ (Phases 1–6 complete curated PPT suite)
 ```
 
 For visualization and presentation deliverables, **`build_plots_assam_ppt.py`** acts as the automated orchestration engine, producing the structured PPT visual assets and interactive dashboards matching the Tamil Nadu and Rajasthan repositories.
@@ -1624,7 +1624,7 @@ misnomer**: several of these compute nothing and one fabricates its data.
 |---|---|---|
 | `03_plots_raw.py` | `plots/raw/` × 6 | **Best of the set.** Real checks with explicit stop criteria. Stale "117 points" in labels. |
 | `05_plot_assam.py` | `plots/{maps,timeseries,statistics,features,solar_resource}/` × 17 | Comprehensive; 5 Folium maps + 12 figures. D-plots partly vestigial (below). |
-| `generate_assam_plots.py` | `plots/assam_objective1/` × 9 (of "13") | Plotly + Folium interactive cards. |
+| `generate_assam_plots.py` | `plots/objective1/` × 9 (of "13") | Plotly + Folium interactive cards. |
 | `comparison_plots_assam.py` | `plots/comparison/` × 8 | Cross-step sanity figures. |
 | `verify_01..04_*.py` | `plots/verify_*/` × 19 | See defects below. |
 
@@ -1657,7 +1657,7 @@ misnomer**: several of these compute nothing and one fabricates its data.
 `verify_04_ranking_assam.py`
 - Summary card hardcodes **"Monte Carlo Iterations : 1,000 runs"**. The pipeline uses 5,000 —
   and "5,000 draws, matching the plan spec, unlike Rajasthan's 1,000" is one of Assam's
-  headline claims. This figure contradicts it.
+  headline claims (Rajasthan has used 5,000 too since 2026-10-28). This figure contradicts it.
 - Hardcodes `Status: PASS`.
 
 `comparison_plots_assam.py`
@@ -1918,4 +1918,4 @@ the individual audit files should be corrected to match.
 - **Physical Dataset Verified**: Confirmed `assam_cleaned_physical.csv` is fully present on disk (1.69 GB, 1,402,101 rows × 91 cols, verified by `phase1_data_audit_report.txt`). Updated `04_preprocess_assam.py` to explicitly write `assam_cleaned_physical.csv` alongside per-site parquet files.
 - **Preprocessing Verification Card**: Upgraded `verify_01_preprocessing_assam.py` and `07_preprocessing_summary.png` to the standardized 12×8 console card matching Tamil Nadu and Rajasthan templates.
 - **MCDM Bump Chart Resolution**: Identified that the previous bump chart plotted candidates across all clusters simultaneously, causing zig-zagging cross-connections and duplicate points for candidates shared across clusters (such as `RT44HC`). Corrected in `build_plots_assam_ppt.py` by generating **cluster-specific bump charts** (`07_bump_chart_ranks_cluster_0.png` through `_cluster_3.png` + matching interactive Plotly HTMLs) with integer rank ticks, outside legend, and strict duplicate validation checks matching Rajasthan's reference design.
-- **Master PPT Curation Suite**: Added `build_plots_assam_ppt.py` and documented `plots_assam_ppt/` (Phases 1–6 complete visual set) matching `plots_tamilnadu_ppt/` and `plots_rajasthan_ppt/`.
+- **Master PPT Curation Suite**: Added `build_plots_assam_ppt.py` and documented `data/plots/ppt/` (Phases 1–6 complete visual set) matching `plots_tamilnadu_ppt/` and `plots_rajasthan_ppt/`.

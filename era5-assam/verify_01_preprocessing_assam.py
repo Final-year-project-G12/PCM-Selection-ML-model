@@ -65,7 +65,7 @@ if sig is not None:
         corr = num_df.corr()
         sns.heatmap(corr, annot=False, cmap="coolwarm", ax=ax)
         ax.set_title("Verify Preprocessing 06: Feature Correlation Heatmap (Assam)", fontsize=12)
-        plt.tight_layout(); sfig("06_correlation_analysis.png")
+        plt.tight_layout(); sfig("05_correlation_analysis.png")
 
     # 4. Preprocessing Summary Text Card (Matching Tamil Nadu & Rajasthan template)
     print("[4/4] Generating summary text card")

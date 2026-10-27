@@ -189,7 +189,7 @@ ANOVA vs the season labels). **Outputs:**
 `data/processed/clustering/{bic_selection_tamilnadu_levelB,
 cluster_assignments_tamilnadu_levelB, level_b_feature_importance_tamilnadu,
 level_b_season_tautology_tamilnadu, level_b_season_contingency_tamilnadu}.csv`
-+ `outputs/qc_level_b_regime_shift_sankey_tamilnadu.html`.
++ `data/plots/qc/qc_level_b_regime_shift_sankey.html`.
 
 ### `11_seasonal_pcm_sensitivity.py`
 *Renamed 2026-09-08 from `11_level_b_seasonal_analysis.py`.* A

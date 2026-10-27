@@ -44,8 +44,8 @@ cosmetic differences:
 | `06_method_correlation_heatmap.py` | → `08_method_rank_correlation_heatmap.*` |
 | `08_rank_reversal_frequency.py` | → `10_rank_reversal_violin_bar.*` |
 | `11_summary_cards.py` | → `13_recommended_pcm_summary.*` |
-| `comparison_plots_rajasthan.py` | `../PLOTSV2/comparison_plots_rajasthan.py` |
-| `verify_01`–`04_*.py` | `../PLOTSV2/verify_01`–`04_*.py` |
+| `comparison_plots_rajasthan.py` | `../data/plots/comparison_rajasthan.py` |
+| `verify_01`–`04_*.py` | `../data/plots/verify_01`–`04_*.py` |
 | `run_all_plots.py` | `../PLOTSV2/run_all_plots_v2.py` |
 
 **Moved into PLOTSV2 unchanged** — these had no PLOTSV2 equivalent, so deleting
@@ -57,7 +57,7 @@ them would have lost capability rather than removed duplication:
 - `comparison_phase3_tmcap_old_vs_new.py`
 - `comparison_phase5_lrequired_before_after.py` — the `L_required` methodology
   correction figure (see CLAUDE.md §3.1)
-- `fix_unicode_issues.py`
+- `fix_unicode_issues.py` (one-off repair utility; deleted in the 2026-10-27 cleanup)
 
 ## Two caveats
 
@@ -70,7 +70,7 @@ them would have lost capability rather than removed duplication:
 
 2. **`../outputs/` is not a plotting folder.** Only `objective1_plots_rajasthan/`
    (~211 MB) came from here. The other ~399 MB is main-pipeline QC output
-   (`qc_clean_distributions_rajasthan.html` alone is 235 MB). Do not delete
+   (`qc_clean_distributions.html` alone is 235 MB). Do not delete
    `outputs/` wholesale.
 
 The other `.md` files in this folder are stubs pointing into

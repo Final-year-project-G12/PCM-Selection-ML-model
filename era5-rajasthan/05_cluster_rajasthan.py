@@ -46,16 +46,16 @@ OUTPUTS:
       x koppen_class contingency counts)
   outputs/cluster_profile_cards_rajasthan.md                   (one card
       per Level-A cluster)
-  outputs/qc_cluster_map_rajasthan.html                        (folium —
+  data/plots/qc/qc_cluster_map.html                        (folium —
       colour by cluster, opacity by max membership probability, and — new
       2026-09-08 — marker SIZE by population)
-  outputs/qc_k_selection_curve_rajasthan.html                  (BIC +
+  data/plots/qc/qc_k_selection_curve.html                  (BIC +
       silhouette + — new 2026-09-08 — bootstrap-ARI vs k, chosen k marked;
       bootstrap-ARI is the actual tiebreaker in suggest_k()'s rule and was
       previously not visualised anywhere)
-  outputs/qc_cluster_profile_bars_rajasthan.html               (headline
+  data/plots/qc/qc_cluster_profile_bars.html               (headline
       signature indices by cluster)
-  outputs/qc_cluster_population_share_rajasthan.html           (population
+  data/plots/qc/qc_cluster_population_share.html           (population
       share by cluster)
 
 EXTERNAL VALIDATION: Koppen-Geiger (Beck et al. 2018, doi:10.1038/
@@ -87,6 +87,7 @@ from plotly.subplots import make_subplots
 from config import (
     PROCESSED_DIR, OUTPUTS_DIR,
     KOPPEN_RASTER_FILE, KOPPEN_LEGEND_FILE, ensure_data_dirs,
+    QC_PLOTS_DIR,
 )
 # Shared Phase-4 machinery — ONE implementation across both states and both
 # clustering levels (see cluster_lib.py's docstring).
@@ -116,7 +117,7 @@ ASSIGN_A_FILE = PROCESSED_DIR / f"cluster_assignments_{STATE_NAME}_levelA.csv"
 # _rajasthan.csv, plus the new regime-shift Sankey) are produced there, not
 # here. Nothing in this script reads them.
 
-MAP_FILE = OUTPUTS_DIR / f"qc_cluster_map_{STATE_NAME}.html"
+MAP_FILE = QC_PLOTS_DIR / "qc_cluster_map.html"
 CARDS_FILE = OUTPUTS_DIR / f"cluster_profile_cards_{STATE_NAME}.md"
 # Numeric companion to CARDS_FILE — same population-weighted per-cluster
 # aggregates (including Tm_target_C / Tm_target_capped_C / L_required_
@@ -675,7 +676,7 @@ fig.update_yaxes(title_text="Silhouette / bootstrap-ARI", secondary_y=True)
 fig.update_xaxes(title_text="k (number of clusters)")
 fig.update_layout(title=f"Level A — K-Selection Curve (BIC + Silhouette + bootstrap-ARI) — "
                          f"{STATE_NAME.title()}")
-kcurve_path = OUTPUTS_DIR / f"qc_k_selection_curve_{STATE_NAME}.html"
+kcurve_path = QC_PLOTS_DIR / "qc_k_selection_curve.html"
 fig.write_html(str(kcurve_path))
 print(f"  Saved: {kcurve_path}")
 
@@ -692,7 +693,7 @@ for i, col in enumerate(PROFILE_BAR_COLS, start=1):
                           showlegend=False, marker_color="#4c72b0"), row=1, col=i)
 fig.update_layout(title=f"Level A — Cluster Profile, Headline Indices (population-weighted means) — "
                          f"{STATE_NAME.title()}")
-profile_bar_path = OUTPUTS_DIR / f"qc_cluster_profile_bars_{STATE_NAME}.html"
+profile_bar_path = QC_PLOTS_DIR / "qc_cluster_profile_bars.html"
 fig.write_html(str(profile_bar_path))
 print(f"  Saved: {profile_bar_path}")
 
@@ -704,7 +705,7 @@ fig = go.Figure(data=go.Pie(
     values=cluster_profiles["total_population"], hole=0.35,
 ))
 fig.update_layout(title=f"Level A — Population Share by Climate Regime — {STATE_NAME.title()}")
-pop_pie_path = OUTPUTS_DIR / f"qc_cluster_population_share_{STATE_NAME}.html"
+pop_pie_path = QC_PLOTS_DIR / "qc_cluster_population_share.html"
 fig.write_html(str(pop_pie_path))
 print(f"  Saved: {pop_pie_path}")
 

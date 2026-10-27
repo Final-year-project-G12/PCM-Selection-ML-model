@@ -1,6 +1,6 @@
 """
 Phase 3 (Climate Feature Engineering / Climate Signature) plots - Rajasthan
-Output: PLOTSV2/phase3_climate_signature/
+Output: data/plots/signatures/
 
 Port of the diagnostic-plot block at the end of
 era5-uttarakhand/04b_climate_signature.py (and its Tamil Nadu twin) - same
@@ -33,7 +33,7 @@ except Exception:
 
 BASE = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 SIG_CSV = os.path.join(BASE, "data", "processed", "climate_signature_rajasthan.csv")
-OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "phase3_climate_signature")
+OUT = os.path.join(BASE, "data", "plots", "signatures")
 os.makedirs(OUT, exist_ok=True)
 
 # Uttarakhand's canonical Tier1+Tier2 index list, mapped onto Rajasthan's

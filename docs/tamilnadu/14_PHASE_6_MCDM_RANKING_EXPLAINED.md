@@ -14,7 +14,7 @@
 # 14 — Phase 6 MCDM Ranking: Detailed Explanation + Plot-by-Plot Guide
 
 Script: `08_mcdm_ranking.py` (repo root). Plots: `plots/generate_tamilnadu_plots.py`
-→ `data/plots/tamilnadu_objective1/`. Data used below is the **actual on-disk output**
+→ `data/plots/objective1/`. Data used below is the **actual on-disk output**
 (`data/processed/pcm/mcdm_full_scores_by_cluster.csv`, `mcdm_topk_by_cluster.csv`,
 `monte_carlo_stability.csv`, all last generated **2026-09-14**).
 
@@ -219,7 +219,7 @@ outcome by itself. The bottom of the ranking (`PlusICE A52`, `RT62HC`,
 
 ## 9. Plot-by-plot guide (Phase 6 / MCDM-relevant plots)
 
-All in `data/plots/tamilnadu_objective1/` (PNG static + matching `.html` Plotly
+All in `data/plots/objective1/` (PNG static + matching `.html` Plotly
 interactive, unless noted). Source: `plots/generate_tamilnadu_plots.py`.
 
 | # | File(s) | Reads | Shows |

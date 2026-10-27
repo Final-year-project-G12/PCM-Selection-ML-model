@@ -4,8 +4,8 @@
 > against the actual `era5-assam/` folder contents — the pre-2026-09-22
 > version of this file described a `data/plots/` output root that is now
 > empty, several subfolders/files that don't exist, and omitted several
-> real, undocumented output folders (`plots_assam_ppt/`, `final_outputs/`,
-> `phase10_visualizations/`, `outputs/`). It also never mentioned the
+> real, undocumented output folders (`data/plots/ppt/`, `final_outputs/`,
+> `data/plots/objective1/`, `outputs/`). It also never mentioned the
 > single most important fact about this pipeline's results: **there are
 > two parallel PCM-selection chains on disk, an older K=4 one and the
 > current, authoritative K=3 one — see "The two-pipeline story" below
@@ -55,28 +55,27 @@ as a Top-3 table the way you would for another state; read
 `mcdm_cluster_eligibility_summary.csv` first.
 
 Phase 9/10 (`10_physics_validation.py`, `10_validation_comparison.py`)
-then deliberately cross the two chains: they physics-simulate the 8
-historical K=4 survivors against the 3 final K=3 climate medoids
-(**ASP_0003, ASP_0036, ASP_0080** as of the 2026-09-23 re-run — see the
-GMM covariance fix below for why these medoid IDs changed) —
-`physics_validation_assam.csv`, 24 rows — and compare the result against
-the historical K=4 MCDM consensus rank. **This is no longer a single
-uniform "NOT PHYSICALLY SUPPORTED" finding.** The two physics dimensions
-now disagree with each other about whether MCDM is supported:
+then deliberately cross the two chains: they physics-simulate the
+historical survivors against the 3 final K=3 climate medoids
+(**ASP_0003, ASP_0036, ASP_0080** — see the GMM covariance fix below for
+why these medoid IDs changed) and compare the result against the
+historical MCDM consensus rank. In the 2026-10-25 run that is 36 PCMs ×
+3 clusters = 108 rows in `physics_validation_assam.csv`. Aggregate
+Spearman ρ against the MCDM rank
+(`data/preprocessed/validation_comparison_report.txt` §7 and §11):
 
-- **vs. delivery success rate**: aggregate Spearman ρ = **+0.38**,
-  Top-1 agreement **3/3 clusters** (RT44HC is #1 in both MCDM and
-  delivery-rank physics) — a genuine positive result.
-- **vs. solar fraction**: aggregate Spearman ρ = **−0.61**, Top-1
-  agreement **0/3 clusters** — still an inverse-ordering finding.
+- **vs. delivery success rate**: ρ = **−0.30** (p = 0.083), Top-1
+  agreement no, Top-3 overlap 0/3. Verdict: partially supported / inconclusive.
+- **vs. solar fraction**: ρ = **+0.62** (p = 0.0001), Top-1 agreement no,
+  Top-3 overlap 0/3. Verdict: partially supported / inconclusive.
+- **vs. cycling**: ρ = **−0.39** (p = 0.021).
 
-Report both dimensions separately, not as one summary verdict — see
-`data/preprocessed/validation_comparison_report.txt` §11 for the full
-per-dimension verdict language. This is a genuinely more nuanced finding
-than the old single-direction result: static MCDM screening predicts
-*which PCM reaches delivery temperature most often*, but not *which PCM
-maximizes annual solar fraction* — worth stating plainly in the paper
-rather than defaulting to the old "not physically supported" framing.
+Report the dimensions separately, not as one summary verdict. **Note the
+direction is not stable across reruns:** the 2026-09-23 run (8 PCMs,
+24 rows) gave the opposite pattern (delivery ρ = +0.38, solar fraction
+ρ = −0.61). Re-read the report after every rerun instead of quoting
+numbers from this guide, and say in the paper that the MCDM-vs-physics
+agreement for Assam depends on the candidate pool.
 See `phase10_preimplementation_audit.txt` for the pre-fix reasoning this
 result builds on (still valid background — the K=4-vs-K=3 governance
 split it explains didn't change).
@@ -165,8 +164,8 @@ pass (fixing it means figuring out whether "129" or "80" is the intended
 population-grid size, a data-provenance question, not a code bug). The
 same hardcoded `== 129` assertion also blocks `generate_phase11_figures.py`
 from regenerating Figure 9 (climate regime map) and Figure 10 (PCA
-projection) — **`final_outputs/visuals/fig09_final_k3_climate_regime_map.png`/`.html`
-and `fig10_final_k3_pca_projection.png` are stale, dated 2026-09-07,
+projection) — **`final_outputs/visuals/cluster_map.png`/`.html`
+and `pca_projection.png` are stale, dated 2026-09-07,
 predating every fix in this pass** (they still show the old K=3 clustering
 from before the GMM covariance fix). Figures 1-8 were successfully
 regenerated 2026-09-23 and are current.
@@ -182,7 +181,7 @@ earlier cleanup pass, see `cleanup_audit_report.txt`).
 
 ```
 era5-assam/plots/                          [34 files total — the post-cleanup "keep" set]
-├── assam_objective1/                      3 files: 01_raw_vs_preprocessed_radiation.png,
+├── objective1/                      3 files: 01_raw_vs_preprocessed_radiation.png,
 │                                           02_climate_regime_map.png(+.html)
 │                                           NOTE: generate_assam_plots.py's own docstring
 │                                           claims "13 required plots" — 10 were deliberately
@@ -198,7 +197,7 @@ era5-assam/plots/                          [34 files total — the post-cleanup 
 
 era5-assam/data/plots/                     EMPTY. Do not point anyone here.
 
-era5-assam/plots_assam_ppt/                [53 files — UNDOCUMENTED until now. The
+era5-assam/data/plots/ppt/                [53 files — UNDOCUMENTED until now. The
                                             PPT-curated deliverable set, mirrors Tamil
                                             Nadu's plots_tamilnadu_ppt/ layout, built by
                                             build_plots_assam_ppt.py]
@@ -221,16 +220,16 @@ era5-assam/final_outputs/                  [21 files — thesis-ready deliverabl
                                             until now, and arguably the MOST authoritative
                                             single output set — see table below]
 ├── tables/                                 table01_climate_signatures.csv ... table10_mcdm_vs_physics_comparison.csv
-└── visuals/                                 fig01_gmm_bic_selection.png ... fig10_final_k3_pca_projection.png
+└── visuals/                                 k_selection_bic.png ... pca_projection.png
                                             (fig09 has both .png and .html; 10 figures, 11 files)
 
 era5-assam/phase10_visualizations/         [4 files — UNDOCUMENTED until now, content
                                             duplicated as fig05-fig08 in final_outputs/visuals/]
-    01_mcdm_vs_delivery_rank.png, 02_mcdm_vs_solar_fraction_rank.png,
-    03_mcdm_vs_cycling_rank.png, 04_tm_vs_physics_delivery.png
+    11b_physics_vs_mcdm_delivery_rank.png, 11b_physics_vs_mcdm_solar_fraction_rank.png,
+    11b_physics_vs_mcdm_cycling_rank.png, 11c_tm_vs_physics_delivery.png
 
 era5-assam/outputs/                        [2 files — small, UNDOCUMENTED, orphan folder]
-    bias_decision_assam.txt, qc_era5_power_scatter_assam.html
+    bias_decision_assam.txt, qc_era5_power_scatter.html
 ```
 
 ### `final_outputs/tables/*.csv` — what each one actually contains
@@ -275,7 +274,7 @@ python era5-assam/verify_02_clustering_assam.py
 python era5-assam/verify_03_feasibility_assam.py
 python era5-assam/verify_04_ranking_assam.py
 
-# 9. PPT-curated plot set (plots_assam_ppt/)
+# 9. PPT-curated plot set (data/plots/ppt/)
 python era5-assam/build_plots_assam_ppt.py
 
 # 10. Thesis-ready consolidated tables + figures (final_outputs/)
@@ -301,7 +300,7 @@ python era5-assam/final_project_verification.py
 | **Verify 02** | GMM Clustering | BIC curve inflection, non-overlapping PCA space, clear climate profiles | ✅ PASS |
 | **Verify 03** | Feasibility Filter | Bounded physical property space, per-cluster survivor accounting | ✅ PASS (mechanically) — but see "two-pipeline story" above: the final K=3 chain's honest result is **zero confirmed feasible PCMs**, not a failure of this check |
 | **Verify 04** | MCDM Ranking | High inter-method Spearman correlation (>0.85), stable Monte Carlo rank probabilities | Applies to the **historical K=4** ranking only — the final K=3 chain never reached a formal ranking to check (see above) |
-| **Phase 10** | MCDM-vs-physics comparison | Spearman ρ between historical MCDM consensus rank and physics-simulated delivery rank | Verdict: **NOT PHYSICALLY SUPPORTED** (ρ = −0.52 to −0.64) — documented as a genuine finding |
+| **Phase 10** | MCDM-vs-physics comparison | Spearman ρ between historical MCDM consensus rank and physics-simulated delivery rank | Verdict per dimension, 2026-10-25 run: **partially supported / inconclusive** for both delivery (ρ = −0.30) and solar fraction (ρ = +0.62) — see the Phase 9/10 paragraph above |
 
 This table stops one level short of the pipeline's actual headline
 result on purpose — the individual Verify 01-04 suites check internal

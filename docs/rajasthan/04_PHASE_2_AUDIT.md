@@ -338,7 +338,7 @@ Check 6 recurs, essentially unchanged, as part of Phase 2.5's Part 1 sanity laye
 ## A.12 Outputs
 
 `climate_rajasthan_points.csv`, `daily_aggregates_rajasthan{,_summary}.csv`,
-`era5_power_agreement_rajasthan.csv`, `outputs/qc_era5_power_scatter_rajasthan.html`,
+`era5_power_agreement_rajasthan.csv`, `data/plots/qc/qc_era5_power_scatter.html`,
 `outputs/bias_decision_rajasthan.txt`, 8 QC HTML files.
 
 ## A.13 Dependencies
@@ -503,7 +503,7 @@ caught.
 
 `climate_rajasthan_points_clean.csv` (for Phase 3), `quality_report_rajasthan.{md,json}`
 (human-readable + structured report), `outputs/qc_raw_*.html` (8 pre-cleaning plots),
-`outputs/qc_clean_*.html` (8 post-cleaning plots), validation confirmation stdout.
+`data/plots/qc/qc_clean_*.html` (8 post-cleaning plots), validation confirmation stdout.
 
 ## B.10 Dependencies
 
@@ -578,7 +578,7 @@ inputs and exist for visual sanity-checking.
   distribution sanity, etc. — the cleaned-data counterpart to `03_plots_raw.py`.
 - **`04c_interactive_postprocess_qc.py`** — interactive (Plotly) version of `04c_postprocess_plots.py`
   (checks A, B, D, E, F), reading `rajasthan_cleaned_physical.csv` with a `usecols` filter (the file
-  is large). Output to `PLOTSV2/post_preprocess_interactive/*.html`.
+  is large). Output to `data/plots/post_preprocess_interactive/*.html`.
 
 ---
 

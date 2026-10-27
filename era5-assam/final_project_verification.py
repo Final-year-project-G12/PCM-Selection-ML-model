@@ -162,16 +162,16 @@ def run_master_verification():
 
     # 9. Final Visual Outputs (All 10 thesis figures)
     expected_visuals = [
-        "fig01_gmm_bic_selection.png",
-        "fig02_gmm_silhouette_curve.png",
-        "fig03_gmm_davies_bouldin.png",
-        "fig04_gmm_calinski_harabasz.png",
-        "fig05_mcdm_vs_delivery_rank.png",
-        "fig06_mcdm_vs_solar_fraction_rank.png",
-        "fig07_mcdm_vs_cycling_rank.png",
-        "fig08_tm_vs_physics_delivery_mechanism.png",
-        "fig09_final_k3_climate_regime_map.png",
-        "fig10_final_k3_pca_projection.png"
+        "k_selection_bic.png",
+        "k_selection_silhouette.png",
+        "k_selection_davies_bouldin.png",
+        "k_selection_calinski_harabasz.png",
+        "11b_physics_vs_mcdm_delivery_rank.png",
+        "11b_physics_vs_mcdm_solar_fraction_rank.png",
+        "11b_physics_vs_mcdm_cycling_rank.png",
+        "11c_tm_vs_physics_delivery.png",
+        "cluster_map.png",
+        "pca_projection.png"
     ]
     c9_ok = all((VISUALS_DIR / v).exists() and (VISUALS_DIR / v).stat().st_size > 5000 for v in expected_visuals)
     results.append(("9. All 10 final publication-quality visuals exist in final_outputs/visuals/", c9_ok))

@@ -15,8 +15,8 @@ PHASE 11 — GENERATION OF THE TWO MISSING FINAL FIGURES
      medoids -- see PLOTS_GUIDE.md point 3; the old ASP_0012/0092/0028 medoids
      were from the pre-fix full-covariance clustering)
    - Outputs:
-     * final_outputs/visuals/fig09_final_k3_climate_regime_map.png
-     * final_outputs/visuals/fig09_final_k3_climate_regime_map.html
+     * final_outputs/visuals/cluster_map.png
+     * final_outputs/visuals/cluster_map.html
 
 2. Figure 2: Final K=3 PCA 2D Projection (5 Final GMM Features)
    - Data sources: climate_signatures_raw.csv, cluster_assignments_assam.csv
@@ -25,9 +25,10 @@ PHASE 11 — GENERATION OF THE TWO MISSING FINAL FIGURES
    - Explained variance labels for PC1 and PC2
    - Prominent medoids highlighted
    - Output:
-     * final_outputs/visuals/fig10_final_k3_pca_projection.png
+     * final_outputs/visuals/pca_projection.png
 """
 
+import shutil
 import sys
 from pathlib import Path
 import folium
@@ -45,6 +46,10 @@ BASE_DIR = Path(__file__).resolve().parent
 PROCESSED_DIR = BASE_DIR / "data" / "processed"
 VISUALS_DIR = BASE_DIR / "final_outputs" / "visuals"
 VISUALS_DIR.mkdir(parents=True, exist_ok=True)
+# Figures are written to the shared plot tree and copied into the Phase 11
+# package under the same name (see ../docs/PLOT_NAMING.md).
+CLUSTER_PLOTS_DIR = BASE_DIR / "data" / "plots" / "clustering"
+CLUSTER_PLOTS_DIR.mkdir(parents=True, exist_ok=True)
 
 GRID_FILE = PROCESSED_DIR / "population_grid_points.csv"
 ASSIGN_FILE = PROCESSED_DIR / "clustering" / "cluster_assignments_assam.csv"
@@ -113,8 +118,9 @@ def generate_figure_09():
     ax.legend(loc="lower right", fontsize=9.5, framealpha=0.95, edgecolor="gray", title="Final Climate Regimes", title_fontsize=10)
 
     plt.tight_layout()
-    out_png = VISUALS_DIR / "fig09_final_k3_climate_regime_map.png"
+    out_png = CLUSTER_PLOTS_DIR / "cluster_map.png"
     plt.savefig(out_png)
+    shutil.copy2(out_png, VISUALS_DIR / out_png.name)
     plt.close()
     print(f"  Saved PNG to: {out_png}")
 
@@ -148,8 +154,9 @@ def generate_figure_09():
                 popup=popup_txt
             ).add_to(m)
 
-    out_html = VISUALS_DIR / "fig09_final_k3_climate_regime_map.html"
+    out_html = CLUSTER_PLOTS_DIR / "cluster_map.html"
     m.save(str(out_html))
+    shutil.copy2(out_html, VISUALS_DIR / out_html.name)
     print(f"  Saved Interactive HTML to: {out_html}")
 
 
@@ -206,8 +213,9 @@ def generate_figure_10():
     ax.legend(loc="upper left", fontsize=9.5, framealpha=0.95, edgecolor="gray", title="Climate Regimes", title_fontsize=10)
 
     plt.tight_layout()
-    out_png = VISUALS_DIR / "fig10_final_k3_pca_projection.png"
+    out_png = CLUSTER_PLOTS_DIR / "pca_projection.png"
     plt.savefig(out_png)
+    shutil.copy2(out_png, VISUALS_DIR / out_png.name)
     plt.close()
     print(f"  Saved PNG to: {out_png}")
 
@@ -221,7 +229,8 @@ def update_manifest_and_report():
     
     # Update Fig 09 entry
     mask_fig09 = df_man["output_name"].str.contains("Assam Climate Regime Map")
-    df_man.loc[mask_fig09, "file_path"] = "final_outputs/visuals/fig09_final_k3_climate_regime_map.png"
+    df_man.loc[mask_fig09, "file_path"] = "data/plots/clustering/cluster_map.png"
+    df_man.loc[mask_fig09, "source_script"] = "generate_phase11_figures.py"
     df_man.loc[mask_fig09, "status"] = "ACTIVE"
     df_man.loc[mask_fig09, "final_or_historical"] = "FINAL"
     df_man.loc[mask_fig09, "thesis_ready"] = "YES"
@@ -229,7 +238,8 @@ def update_manifest_and_report():
 
     # Update Fig 10 entry
     mask_fig10 = df_man["output_name"].str.contains("PCA 2D Projection")
-    df_man.loc[mask_fig10, "file_path"] = "final_outputs/visuals/fig10_final_k3_pca_projection.png"
+    df_man.loc[mask_fig10, "file_path"] = "data/plots/clustering/pca_projection.png"
+    df_man.loc[mask_fig10, "source_script"] = "generate_phase11_figures.py"
     df_man.loc[mask_fig10, "status"] = "ACTIVE"
     df_man.loc[mask_fig10, "final_or_historical"] = "FINAL"
     df_man.loc[mask_fig10, "thesis_ready"] = "YES"
@@ -251,7 +261,7 @@ def update_manifest_and_report():
         )
         rep_text = rep_text.replace(
             "B. Documented Missing Visual Figures:\n  1. Assam Final K=3 Climate Regime Map:\n     - Current status: MISSING for active K=3 model.\n     - Cause: Existing figure (data/plots/verify_clustering/04_geographic_map.png) is an\n       historical K=4 artifact from an earlier iteration.\n     - Remediation: Readily generable by plotting lat/lon from population_grid_points.csv\n       colored by 'cluster' from cluster_assignments_assam.csv.\n  2. Final 5-Feature K=3 PCA Projection:\n     - Current status: MISSING for active K=3 model.\n     - Cause: Existing figure (data/plots/verify_clustering/03_pca_projection.png) is historical K=4.\n     - Remediation: Readily generable by applying PCA to the 5 core clustering features.",
-            "B. Completed Final Visual Figures (Formerly Missing, Now Fully Generated):\n  1. Assam Final K=3 Climate Regime Map (fig09_final_k3_climate_regime_map.png & .html):\n     - Fully generated from population_grid_points.csv and cluster_assignments_assam.csv (80 points, K=3).\n  2. Final 5-Feature K=3 PCA Projection (fig10_final_k3_pca_projection.png):\n     - Fully generated from the 5 standardized GMM features (80 points; PC1/PC2 variance printed by this script's own run)."
+            "B. Completed Final Visual Figures (Formerly Missing, Now Fully Generated):\n  1. Assam Final K=3 Climate Regime Map (cluster_map.png & .html):\n     - Fully generated from population_grid_points.csv and cluster_assignments_assam.csv (80 points, K=3).\n  2. Final 5-Feature K=3 PCA Projection (pca_projection.png):\n     - Fully generated from the 5 standardized GMM features (80 points; PC1/PC2 variance printed by this script's own run)."
         )
         rep_text = rep_text.replace(
             "## PHASE 11 VERDICT\nCOMPLETE WITH DOCUMENTED MISSING OUTPUTS\n================================================================================\nRationale: All primary analytical, numerical, thermodynamic, and governance deliverables\nare 100% complete, locked, and verified across Phases 1 through 10. All 10 thesis tables\nare compiled in final_outputs/tables/. Two visual figures (final K=3 geographic cluster map\nand final 5-feature PCA projection) are documented as missing from the active pipeline\n(only historical K=4 versions exist on disk) and are clearly recorded for thesis production.",

@@ -4,7 +4,7 @@
 `05b_cluster_interactive.py` (explorer), `05_cluster_regions.py` (multi-state, **not run**)
 
 **Status**: **COMPLETE at K = 5.** Cluster assignments for all 45 points are recoverable from
-`data/plots/uttarakhand_objective1/02_climate_regime_map_folium.html`.
+`data/plots/objective1/02_climate_regime_map_folium.html`.
 
 ---
 
@@ -121,7 +121,7 @@ soft_probs   = gmm_final.predict_proba(X)
 | `kmeans_comparison_uttarakhand.csv` | K = 2…10 × K-Means silhouette |
 | `cluster_assignments_uttarakhand.csv` | `point_id, lat, lon, population, cluster_id, max_membership_prob, prob_cluster0…4` |
 | `cluster_profiles_uttarakhand.csv` | one row per cluster: `cluster_id, n_points, total_population_covered`, plus the **population-weighted mean** of every non-`_z` numeric signature column |
-| `cluster_map_uttarakhand.png` | lon/lat scatter coloured by `cluster_id`, annotated `C0…C4` |
+| `cluster_map.png` | lon/lat scatter coloured by `cluster_id`, annotated `C0…C4` |
 
 Population weighting uses `np.average(g[col], weights=g["population"])`, falling back to an
 unweighted mean if the weight sum is zero.
@@ -152,7 +152,7 @@ superseded 12/9/3/7/14 run** — do not cite them as current-run numbers in a wr
 
 ### Cluster assignments (all 45 points) — SUPERSEDED run (12/9/3/7/14), kept as historical record only
 
-Recovered from the popups in `data/plots/uttarakhand_objective1/02_climate_regime_map_folium.html`:
+Recovered from the popups in `data/plots/objective1/02_climate_regime_map_folium.html`:
 
 | Cluster | n_points | Member `point_id`s |
 |---|---|---|
@@ -295,7 +295,7 @@ version lag in an unrun file.
 
 Reads `cluster_assignments_uttarakhand.csv`, `cluster_profiles_uttarakhand.csv` and
 `bic_selection_uttarakhand.csv`; writes Folium/Plotly HTML to
-`data/processed/clustering/interactive/`. Features per the docstring: a cluster map whose popups
+`data/plots/clustering/interactive/`. Features per the docstring: a cluster map whose popups
 show the full soft-membership probability vector with boundary points (max membership below
 `1.5/K`) drawn with a faint ring, a grouped-bar comparison of population-weighted profiles, a
 population-share pie per regime, and BIC/silhouette K-selection curves.

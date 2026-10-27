@@ -135,7 +135,7 @@ Phase 2.5 — PREPROCESSING & QUALITY CONTROL (restructured 2026-09-08 onto the 
                                            GHI/CSI excluded — + point-local imputation; SUPERSEDED,
                                            follow-up: check the GHI-Hampel trade-off, 04_PHASE_2_AUDIT.md Part C/D)
   03c_plots_raw_rajasthan.py            → outputs/qc_raw_*.html (raw pre-QC visual sanity checks)
-  03b_quality_check_plots_rajasthan.py  → outputs/qc_clean_*.html (post-QC visual sanity checks)
+  03b_quality_check_plots_rajasthan.py  → data/plots/qc/qc_clean_*.html (post-QC visual sanity checks)
         ↓  Phase 3 now reads data/preprocessed/rajasthan_cleaned_physical.csv, not 02's raw output directly
 Phase 3 — CLIMATE SIGNATURE CONSTRUCTION
   signature_lib.py + 04b_climate_signature.py → climate_signature_rajasthan.csv
@@ -158,15 +158,15 @@ Phase 5 — FEASIBILITY FILTERING  (+ shared PCM property database, run independ
             (n=23) — see 07_PHASE_5_AUDIT.md for the full re-run numbers.]
 Phase 6 — MULTI-CRITERIA RANKING ENGINE
   08_mcdm_ranking.py → mcdm_full_rankings.csv, mcdm_topk_by_cluster.csv,
-    monte_carlo_stability.csv, mcdm_method_agreement.csv, outputs/qc_montecarlo_inclusion.html
+    monte_carlo_stability.csv, mcdm_method_agreement.csv, data/plots/qc/qc_montecarlo_inclusion.html
   (TOPSIS + PROMETHEE II + VIKOR + GRA, Borda/Copeland/Kendall's W, pairwise method-agreement,
-   1000-draw Monte Carlo; 8 Table-13 criteria; climate-relative latent heat; log-scaled cycling;
+   5000-draw Monte Carlo; 8 Table-13 criteria; climate-relative latent heat; log-scaled cycling;
    supercooling entropy weight capped at 2× prior; UNIFIED with Tamil Nadu 2026-09-08)
         ↓
 Phase 7 — PHYSICS-BASED VALIDATION
   physics_lib.py + 10_physics_validation.py (was 10_physics_validation.py) →
     physics_validation_rajasthan.csv, spearman_rho_by_cluster_rajasthan.csv,
-    outputs/qc_calibration_check_rajasthan.html
+    data/plots/qc/qc_calibration_check.html
   (lumped-enthalpy PCM+tank model, real hourly NASA POWER weather, cited draw profile, full
    calibration. Pre-unification RESULT: rho = -0.385 / +0.125 / -0.097; re-run pending against
    the unified, entropy-capped Phase 6 output — see 09_PHASE_7_AUDIT.md)
@@ -199,7 +199,7 @@ failure — see "Current architecture" → Resumability below.
 | 3 — Climate Signature | `signature_lib.py`, `04b_climate_signature` | **COMPLETE — 5 documented corrections; re-run COMPLETE (2026-09-13)** | Tm_target=**67°C** (raised from 57°C, 2026-09-13 — see banner above); Tm_target_capped varies by regime; now reads `data/preprocessed/rajasthan_cleaned_physical.csv` |
 | 4 — Regime Clustering | `05` | **COMPLETE — with 2 caught-and-fixed bugs** | k=3 (GMM `diag` covariance, fixed from `full`); GMM cluster-index instability fixed via canonical relabeling (2026-08-11); Koppen-Geiger external validation wired in (ARI=0.2787, NMI=0.3817 vs GMM, per `cluster_profiles_rajasthan.csv`'s current on-disk `koppen_ari`/`koppen_nmi` columns) |
 | 5 — Feasibility Filtering | `01_preprocess`, `07` | **UNIFIED with Tamil Nadu 2026-09-08; re-run COMPLETE (2026-09-13)** | 8 constraints in canonical order; Constraint 6 = `Tm ≤ Tm_target_capped_C` (replaces retired `07b_charging_feasibility.py`); κ-calibration; outputs `feasibility_survivors_by_cluster{,_kappa_calibrated}.csv`. 62-row shared PCM pool. Current κ-calibrated survivors: **4/8/11 per cluster (n=23)**, κ = 0.0/0.5/0.3. |
-| 6 — MCDM Ranking | `08` | **UNIFIED with Tamil Nadu 2026-09-08 (byte-identical engine); re-run COMPLETE (2026-09-13)** | 8 Table-13 criteria; climate-relative latent heat (`L/L_required`); log-scaled cycling; **supercooling entropy weight capped at 2× prior (0.16)** — fixes the entropy-formula overweighting Phase 7/8 diagnosed as the negative-correlation cause. Current dominant criterion is Tm_fitness (entropy weight 51.9%/83.3%/68.1% per cluster), not supercooling. PROMETHEE handles Tm natively (q=2K/p=8K). N_DRAWS=1000 (both states). Provenance hard-fail. AHP pairwise elicitation still a TODO stub. |
+| 6 — MCDM Ranking | `08` | **UNIFIED with Tamil Nadu 2026-09-08 (byte-identical engine); re-run COMPLETE (2026-09-13)** | 8 Table-13 criteria; climate-relative latent heat (`L/L_required`); log-scaled cycling; **supercooling entropy weight capped at 2× prior (0.16)** — fixes the entropy-formula overweighting Phase 7/8 diagnosed as the negative-correlation cause. Current dominant criterion is Tm_fitness (entropy weight 51.9%/83.3%/68.1% per cluster), not supercooling. PROMETHEE handles Tm natively (q=2K/p=8K). N_DRAWS=5000 in both states (Rajasthan raised from 1000 on 2026-10-28). Provenance hard-fail. AHP pairwise elicitation still a TODO stub. |
 | 7 — Physics Validation | `physics_lib.py`, `10_physics_validation.py` | **RE-RUN COMPLETE (2026-09-19, Tm_fitness scoring fix)** | Current Spearman rho (Borda vs. simulated solar fraction) = **-0.200 / -0.168 / +0.569** (clusters 0/1/2), p=0.800/0.691/0.067 — Clusters 0–1 still NEGATIVE (≤0.4), Cluster 2 now PARTIAL (was NEGATIVE pre-2026-09-19 fix). Kendall's W = 1.0000/0.7679/0.4170. Calibration medoid SF = 64.0/65.8/64.3% (in the 54–84% benchmark band). |
 | 8 — Supercooling Penalty | `physics_lib.py`, `08_phase8_supercooling_sweep.py` | **RE-RUN COMPLETE (2026-09-19)** | Current sweep still worsens physics/MCDM agreement as k rises in every cluster (k=0.0→0.1–0.3: cluster 0 -0.200→-1.000, cluster 1 -0.168→-0.311, cluster 2 +0.569→+0.387) — same qualitative conclusion as earlier sweeps, now on the Tm_fitness-corrected n=4/8/11 pool. Energy conservation passes; 100% of medoids stay in-band across all k. |
 | 8 (deliverable) — Recommendation Cards | `09_recommendation_cards.py` | **RE-RUN COMPLETE (2026-09-13, renumbered 10→09)** | Pure aggregation of Phases 4/6/7 into `recommendation_cards_rajasthan.md`; hard-fails on cross-phase cluster-identity mismatch. Numbered 09 to match Tamil Nadu; runs LAST. |

@@ -5,7 +5,7 @@ PHASE 1 — INTERACTIVE VISUALIZATION OF THE POPULATION-WEIGHTED SAMPLING GRID
 
 Plotly-only (folium map generation removed 2026-08-12 — see git history if
 the earlier grid_map.html version is ever needed again): a single
-self-contained outputs/grid_plot.html, scatter_mapbox-style, one trace per
+self-contained data/plots/qc/qc_population_grid.html, scatter_mapbox-style, one trace per
 metric (population / weight / elevation_m) with a dropdown to switch which
 metric drives both marker size AND color.
 
@@ -46,13 +46,13 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 
-from config import POPULATION_GRID_FILE, OUTPUTS_DIR, ensure_data_dirs
+from config import POPULATION_GRID_FILE, OUTPUTS_DIR, ensure_data_dirs, QC_PLOTS_DIR
 
 ensure_data_dirs()
 
 COVERAGE_TARGET_PCT = 87.5   # 00a_build_population_grid.py's COVERAGE_TARGET = 0.875
 
-GRID_PLOT_FILE = OUTPUTS_DIR / "grid_plot.html"
+GRID_PLOT_FILE = QC_PLOTS_DIR / "qc_population_grid.html"
 
 REQUIRED_COLUMNS = ["point_id", "lat", "lon", "population", "weight", "elevation_m"]
 

@@ -16,7 +16,7 @@ The Tamil Nadu recommendation pipeline is **implemented from Phase 1 through Pha
 
 ## Strongest Components
 - **Full Phase Implementation**: Complete operational loop from data download to physics-based grey-box validation and card generation.
-- **Uncertainty Propagation**: The Monte Carlo stack (N_DRAWS=1000; 5000 for the final reported run) provides a robust confidence metric for the Top-3 ranks. Phase 6 unified with Rajasthan 2026-09-08 (8 Table-13 criteria; supercooling entropy weight capped at 2× prior; PROMETHEE native Tm; Kendall's W + pairwise method-agreement).
+- **Uncertainty Propagation**: The Monte Carlo stack (N_DRAWS=5000) provides a robust confidence metric for the Top-3 ranks. Phase 6 unified with Rajasthan 2026-09-08 (8 Table-13 criteria; supercooling entropy weight capped at 2× prior; PROMETHEE native Tm; Kendall's W + pairwise method-agreement).
 - **Level B Seasonal Sensitivity**: Analyzes monsoon-dependent PCM rank flips (`11_level_b_seasonal_analysis.py`).
 - **Current PCM Run**: 62 records are screened, ranked, physics-tested, and summarized in recommendation cards.
 - **Level B Seasonal Sensitivity Findings** *(2026-09-08 unified run, k=3)*: 4 of 12 (cluster, season) combinations change their #1 PCM — Cluster 0's annual pick flips to `n-Tetracosane (C24)` in all four seasons. (Pre-unification, k=5: 4 of 20, `savE® OM55` in Summer/Monsoon for clusters 2–3.)

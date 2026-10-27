@@ -197,9 +197,9 @@ for bar in bars:
             f'{int(width)}', ha='left', va='center', fontsize=10)
 
 plt.tight_layout()
-plt.savefig(os.path.join(OUTPUT_DIR, "05_data_quality_metrics.png"), dpi=150)
+plt.savefig(os.path.join(OUTPUT_DIR, "06_data_quality_metrics.png"), dpi=150)
 plt.close()
-print("  ✓ Saved: 05_data_quality_metrics.png")
+print("  ✓ Saved: 06_data_quality_metrics.png")
 
 # ============================================================================
 # Plot 6: Correlation Analysis
@@ -214,9 +214,9 @@ sns.heatmap(corr_matrix, annot=True, fmt='.2f', cmap='coolwarm', center=0,
 ax.set_title("Climate Variable Correlations (Preprocessed)")
 
 plt.tight_layout()
-plt.savefig(os.path.join(OUTPUT_DIR, "06_correlation_analysis.png"), dpi=150)
+plt.savefig(os.path.join(OUTPUT_DIR, "05_correlation_analysis.png"), dpi=150)
 plt.close()
-print("  ✓ Saved: 06_correlation_analysis.png")
+print("  ✓ Saved: 05_correlation_analysis.png")
 
 # ============================================================================
 # Plot 7: Preprocessing Summary Report

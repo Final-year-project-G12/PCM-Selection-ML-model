@@ -1,6 +1,6 @@
 """
 Verification Script 4: MCDM Ranking Validation - Rajasthan
-Output: PLOTSV2/verify_ranking/
+Output: data/plots/verify_ranking/
 Run AFTER: 08_mcdm_ranking_rajasthan.py
 
 Port of tamilnadu_pipeline/plots/verify_04_ranking_tamilnadu.py and
@@ -28,7 +28,7 @@ except Exception:
 
 BASE    = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 TOPK    = os.path.join(BASE,"data","processed","mcdm_full_rankings.csv")
-OUT     = os.path.join(os.path.dirname(os.path.abspath(__file__)),"verify_ranking")
+OUT     = os.path.join(BASE, "data", "plots", "verify_ranking")
 os.makedirs(OUT, exist_ok=True)
 
 print("Loading data...")
@@ -171,6 +171,6 @@ if pcm_col and "consensus_rank" in topk.columns:
             txt+=f"    {int(row['consensus_rank'])}. {row[pcm_col]}\n"
 
 ax.text(0.05,0.98,txt,transform=ax.transAxes,va="top",ha="left",fontsize=10,family="monospace"); ax.axis("off")
-plt.tight_layout(); plt.savefig(os.path.join(OUT,"06_summary.png"),dpi=150); plt.close(); print("  06_summary.png")
+plt.tight_layout(); plt.savefig(os.path.join(OUT,"06_ranking_summary.png"),dpi=150); plt.close(); print("  06_ranking_summary.png")
 
 print("\nRanking verification done. Plots:", OUT)

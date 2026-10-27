@@ -572,8 +572,9 @@ Fuzzy membership could give partial credit to PCMs near the melting window bound
 >   correlation.
 > - **Diagnostics added:** Kendall's W (plan-doc thresholds), pairwise method-agreement + outlier
 >   detection, λ=0 vs λ=0.5 Top-3 ablation, provenance hard-fail.
-> - **Monte Carlo `N_DRAWS = 1000`** in both states (raise both to 5000 for the final reported
+> - **Monte Carlo `N_DRAWS = 1000`** in both states at the time (raise both to 5000 for the final reported
 >   run) — the 606 s wall-clock of a 5000-draw run is impractical for iteration.
+>   *Update: both states now use 5000 (Tamil Nadu since 2026-09-16, Rajasthan since 2026-10-28).*
 > - Outputs renamed: `mcdm_full_rankings.csv`, `mcdm_topk_by_cluster.csv`,
 >   `monte_carlo_stability.csv`, `mcdm_method_agreement.csv`, `qc_montecarlo_inclusion.html`.
 > "5000-draw" / "5-cluster" references below are pre-unification.

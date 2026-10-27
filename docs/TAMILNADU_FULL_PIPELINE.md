@@ -61,7 +61,7 @@ Phase 5 — FEASIBILITY FILTERING
   07_feasibility_filter.py      → feasibility_survivors_by_cluster.csv (8 Table-12 filters)
         ↓
 Phase 6 — MULTI-CRITERIA RANKING ENGINE
-  08_mcdm_ranking.py            → mcdm_full_rankings.csv, mcdm_topk_by_cluster.csv, monte_carlo_stability.csv, mcdm_method_agreement.csv, outputs/qc_montecarlo_inclusion.html  (UNIFIED with Rajasthan; 8 criteria + supercooling entropy cap)
+  08_mcdm_ranking.py            → mcdm_full_rankings.csv, mcdm_topk_by_cluster.csv, monte_carlo_stability.csv, mcdm_method_agreement.csv, data/plots/qc/qc_montecarlo_inclusion.html  (UNIFIED with Rajasthan; 8 criteria + supercooling entropy cap)
         ↓
 Phase 7 — PHYSICS-BASED VALIDATION
   10_physics_validation.py      → physics_validation_results.csv (UA_TANK=2.0 W/K, v3.1)
@@ -77,7 +77,7 @@ Phase 8 — RECOMMENDATION CARDS
 | 3 — Climate Signature | `04b`, `04d` | **COMPLETE** | 300 L/day draw with `SHARE_PCM=0.5`; current generated cluster targets are approximately 301-326 kJ/kg. |
 | 4 — GMM Clustering | `05`, `05b`, `11` | **COMPLETE (v3.1 fixes applied)** | K=5 regimes, `covariance_type="diag"`. Level B seasonal re-rank uses corrected draw volume. |
 | 5 — Feasibility | `06`, `07` | **COMPLETE** | 62 PCM records are audited per cluster; current pass counts are 9-15 and vary by cluster. |
-| 6 — MCDM Ranking | `08` | **UNIFIED with Rajasthan 2026-09-08; re-run pending** | 8 Table-13 criteria; climate-relative latent heat; log-scaled cycling; supercooling entropy weight capped at 2× prior; PROMETHEE native Tm; Kendall's W + pairwise agreement; N_DRAWS=1000. |
+| 6 — MCDM Ranking | `08` | **UNIFIED with Rajasthan 2026-09-08; re-run pending** | 8 Table-13 criteria; climate-relative latent heat; log-scaled cycling; supercooling entropy weight capped at 2× prior; PROMETHEE native Tm; Kendall's W + pairwise agreement; N_DRAWS=5000. |
 | 7 — Physics Validation | `10` | **COMPLETE (v3.1 fixes applied)** | Tank ambient heat loss active (`UA_TANK_W_K=2.0`). Re-run for updated Spearman ρ. |
 | 8 — Rec Cards | `09` | **COMPLETE** | Aggregates Phases 4–7 into `recommendation_cards.md`. |
 
@@ -387,12 +387,12 @@ TOPSIS + GRA + PROMETHEE II + VIKOR, missing values excluded-by-omission. **PROM
 natively** (`|Tm − Tm_target|`, q=2K/p=8K), not the Gaussian `f_Tm`. Borda (primary) + Copeland
 (cross-check) + Top-3 disagreement flag. Kendall's W with plan-doc thresholds. Pairwise
 method-agreement + structural-outlier detection. λ=0 vs λ=0.5 Top-3 ablation. Provenance
-hard-fail. Monte Carlo `N_DRAWS = 1000` (raise both states to 5000 for the final reported run).
+hard-fail. Monte Carlo `N_DRAWS = 5000` (raised from 1000 on 2026-09-16; Rajasthan raised to match on 2026-10-28).
 
 ## Outputs
 `mcdm_full_rankings.csv` (full per-survivor audit trail + legacy aliases for Phase 7/8),
 `mcdm_topk_by_cluster.csv` (`consensus_rank ≤ 3`), `monte_carlo_stability.csv`,
-`mcdm_method_agreement.csv`, `outputs/qc_montecarlo_inclusion.html`. All carry
+`mcdm_method_agreement.csv`, `data/plots/qc/qc_montecarlo_inclusion.html`. All carry
 `upstream_cluster_profile_fingerprint`.
 
 ## Results — 2026-09-08 run (k=3, 13/13/16 survivors; INDICATIVE, re-run pending)

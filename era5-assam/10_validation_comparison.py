@@ -31,10 +31,10 @@ Inputs:
 Outputs:
   - data/processed/pcm/mcdm_vs_physics_comparison.csv
   - data/preprocessed/validation_comparison_report.txt
-  - phase10_visualizations/01_mcdm_vs_delivery_rank.png
-  - phase10_visualizations/02_mcdm_vs_solar_fraction_rank.png
-  - phase10_visualizations/03_mcdm_vs_cycling_rank.png
-  - phase10_visualizations/04_tm_vs_physics_delivery.png
+  - data/plots/objective1/11b_physics_vs_mcdm_delivery_rank.png
+  - data/plots/objective1/11b_physics_vs_mcdm_solar_fraction_rank.png
+  - data/plots/objective1/11b_physics_vs_mcdm_cycling_rank.png
+  - data/plots/objective1/11c_tm_vs_physics_delivery.png
 """
 
 import sys
@@ -54,7 +54,7 @@ sys.stdout.reconfigure(encoding="utf-8")
 BASE_DIR = Path(__file__).resolve().parent
 PROCESSED_PCM_DIR = BASE_DIR / "data" / "processed" / "pcm"
 PREPROCESSED_DIR = BASE_DIR / "data" / "preprocessed"
-VIS_DIR = BASE_DIR / "phase10_visualizations"
+VIS_DIR = BASE_DIR / "data" / "plots" / "objective1"
 
 PROCESSED_PCM_DIR.mkdir(parents=True, exist_ok=True)
 PREPROCESSED_DIR.mkdir(parents=True, exist_ok=True)
@@ -320,7 +320,7 @@ def main():
     ax.grid(True, linestyle=":", alpha=0.6)
     ax.legend(loc="upper left")
     plt.tight_layout()
-    p1 = VIS_DIR / "01_mcdm_vs_delivery_rank.png"
+    p1 = VIS_DIR / "11b_physics_vs_mcdm_delivery_rank.png"
     plt.savefig(p1)
     plt.close()
     log(f"  Saved: {p1}")
@@ -341,7 +341,7 @@ def main():
     ax.grid(True, linestyle=":", alpha=0.6)
     ax.legend(loc="upper left")
     plt.tight_layout()
-    p2 = VIS_DIR / "02_mcdm_vs_solar_fraction_rank.png"
+    p2 = VIS_DIR / "11b_physics_vs_mcdm_solar_fraction_rank.png"
     plt.savefig(p2)
     plt.close()
     log(f"  Saved: {p2}")
@@ -362,7 +362,7 @@ def main():
     ax.grid(True, linestyle=":", alpha=0.6)
     ax.legend(loc="upper left")
     plt.tight_layout()
-    p3 = VIS_DIR / "03_mcdm_vs_cycling_rank.png"
+    p3 = VIS_DIR / "11b_physics_vs_mcdm_cycling_rank.png"
     plt.savefig(p3)
     plt.close()
     log(f"  Saved: {p3}")
@@ -401,7 +401,7 @@ def main():
     ax.grid(True, linestyle=":", alpha=0.6)
     ax.legend(loc="upper left")
     plt.tight_layout()
-    p4 = VIS_DIR / "04_tm_vs_physics_delivery.png"
+    p4 = VIS_DIR / "11c_tm_vs_physics_delivery.png"
     plt.savefig(p4)
     plt.close()
     log(f"  Saved: {p4}")
@@ -583,15 +583,18 @@ def main():
     rep("The SWH specification enforces a strict delivery temperature threshold of")
     rep("T_delivery >= 50.0 °C. Hot water draw events (07:00 and 19:00 IST) only count as")
     rep("successful if the tank water reaches or exceeds 50.0 °C at draw time. The historical")
+    # Target range and correlation direction are read from this run, not hard-coded.
+    tm_lo, tm_hi = mcdm_full["Tm_target_C"].min(), mcdm_full["Tm_target_C"].max()
+    del_dir = "positive" if agg_rho_del > 0 else "negative"
     rep("MCDM matrix scored candidates against a fixed Tm_target that, prior to the")
     rep("Tm_target_capped_C fix (2026-09-23), was an uncapped 44.0 °C constant -- now a")
-    rep("per-cluster, poor-period-clearness-capped value (~37-42 °C in this run, see")
-    rep("04b_climate_signature.py). Either way, the MCDM target sits well below the 50.0 °C")
-    rep("delivery floor: a PCM whose Tm matches the MCDM target discharges its latent heat")
-    rep("below the temperature the system actually needs to deliver, so a strong MCDM/delivery")
-    rep("correlation is not guaranteed by construction -- whether it appears, as in this run's")
-    rep("mostly-positive delivery-rank correlations (see Section 7), or not, is itself the")
-    rep("finding, not an assumption.")
+    rep(f"per-cluster, poor-period-clearness-capped value ({tm_lo:.1f}-{tm_hi:.1f} °C in this run, see")
+    rep("04b_climate_signature.py). Where that target sits at or below the 50.0 °C")
+    rep("delivery floor, a PCM whose Tm matches it discharges its latent heat below the")
+    rep("temperature the system actually needs to deliver, so a strong MCDM/delivery")
+    rep("correlation is not guaranteed by construction -- whether it appears or not is itself")
+    rep(f"the finding, not an assumption. In this run the aggregate delivery-rank correlation")
+    rep(f"is {del_dir} (rho = {agg_rho_del:+.4f}, see Section 7).")
     rep()
 
     rep("11. FINAL SCIENTIFIC VERDICT")

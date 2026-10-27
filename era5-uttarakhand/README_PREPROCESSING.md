@@ -237,13 +237,8 @@ their own regimes (Gaussian Mixture, BIC-selected K, K-Means reported as
 comparison) already gives you "different PCMs for different locations"
 within Uttarakhand.
 
-`05_cluster_regions.py` (the original multi-state script) still exists and
-is already state-parameterised — if you add Rajasthan/Assam/Tamil Nadu's
-Phase 3 output later, switch to it. Until then, this single-state version
-produces the same output shapes (`cluster_assignments_uttarakhand.csv`
-with soft membership probabilities, `cluster_profiles_uttarakhand.csv`
-population-weighted per regime) so nothing downstream (Phase 5/6) needs to
-change when/if you extend to more states later.
+The original multi-state script (`05_cluster_regions.py`) was deleted in the
+2026-10-27 cleanup; it is in git history if cross-state clustering is ever needed.
 
 Expected K for one state, and with only 45 points to work with: probably
 smaller than Tamil Nadu's 3-6 — realistically 2-4 (e.g. high-Himalaya vs.

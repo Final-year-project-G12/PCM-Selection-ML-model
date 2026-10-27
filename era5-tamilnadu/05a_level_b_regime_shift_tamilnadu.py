@@ -47,7 +47,7 @@ OUTPUTS:
   data/processed/clustering/level_b_feature_importance_tamilnadu.csv
   data/processed/clustering/level_b_season_tautology_tamilnadu.csv
   data/processed/clustering/level_b_season_contingency_tamilnadu.csv
-  outputs/qc_level_b_regime_shift_sankey_tamilnadu.html   (NEW 2026-09-08 —
+  data/plots/qc/qc_level_b_regime_shift_sankey.html   (NEW 2026-09-08 —
       alluvial/Sankey of every point's cluster membership across the 4
       seasons, with shifting flows highlighted against non-shifting ones)
 
@@ -72,6 +72,7 @@ import plotly.graph_objects as go
 from config import (
     COMBINED_POINTS_FILE, SUNTIMES_FILE, PROCESSED_DIR, OUTPUTS_DIR,
     ensure_data_dirs,
+    QC_PLOTS_DIR,
 )
 from signature_lib import EVENT_ORDER, SEASON_ORDER, attach_season, build_tier1_signature
 from cluster_lib import (
@@ -114,7 +115,7 @@ ASSIGN_B_FILE = OUT_DIR / f"cluster_assignments_{STATE_NAME}_levelB{_suffix}.csv
 FEATURE_IMPORTANCE_FILE = OUT_DIR / f"level_b_feature_importance_{STATE_NAME}{_suffix}.csv"
 SEASON_TAUTOLOGY_FILE = OUT_DIR / f"level_b_season_tautology_{STATE_NAME}{_suffix}.csv"
 CONTINGENCY_FILE = OUT_DIR / f"level_b_season_contingency_{STATE_NAME}{_suffix}.csv"
-SANKEY_FILE = OUTPUTS_DIR / f"qc_level_b_regime_shift_sankey_{STATE_NAME}.html"
+SANKEY_FILE = QC_PLOTS_DIR / "qc_level_b_regime_shift_sankey.html"
 
 # Optional manual override — leave None to use suggest_k()'s auto-suggestion.
 LEVEL_B_K_OVERRIDE = None

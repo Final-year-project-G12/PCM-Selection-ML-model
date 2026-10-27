@@ -10,7 +10,7 @@ Checks performed:
   4. Candidate labels and non-MCDM status are preserved.
   5. Level 1 Primary Governance Result: n_confirmed=[0,0,0], NOT PERFORMED verified.
   6. Phase 10 report exists and contains all 12 required sections.
-  7. Final Verdict 'NOT PHYSICALLY SUPPORTED' is explicitly stated in report.
+  7. Per-dimension final verdicts (delivery, solar fraction) are stated in the report.
   8. All 4 Phase 10 visualization plots exist and are non-empty.
   9. Mathematical integrity: Spearman rho calculations match recomputed values.
  10. Top-1 agreement (0.0%) and Top-3 overlap (0.0%) verified.
@@ -27,7 +27,7 @@ sys.stdout.reconfigure(encoding="utf-8")
 BASE_DIR = Path(__file__).resolve().parent
 PROCESSED_PCM_DIR = BASE_DIR / "data" / "processed" / "pcm"
 PREPROCESSED_DIR = BASE_DIR / "data" / "preprocessed"
-VIS_DIR = BASE_DIR / "phase10_visualizations"
+VIS_DIR = BASE_DIR / "data" / "plots" / "objective1"
 
 def run_checks():
     print("=" * 78)
@@ -129,10 +129,10 @@ def run_checks():
 
     # 6. Visualization plots check
     plots = [
-        VIS_DIR / "01_mcdm_vs_delivery_rank.png",
-        VIS_DIR / "02_mcdm_vs_solar_fraction_rank.png",
-        VIS_DIR / "03_mcdm_vs_cycling_rank.png",
-        VIS_DIR / "04_tm_vs_physics_delivery.png",
+        VIS_DIR / "11b_physics_vs_mcdm_delivery_rank.png",
+        VIS_DIR / "11b_physics_vs_mcdm_solar_fraction_rank.png",
+        VIS_DIR / "11b_physics_vs_mcdm_cycling_rank.png",
+        VIS_DIR / "11c_tm_vs_physics_delivery.png",
     ]
     plots_ok = all(p.exists() and p.stat().st_size > 5000 for p in plots)
     results.append(("6. All 4 visualization plots generated and non-empty (>5 KB)", plots_ok))

@@ -43,7 +43,7 @@ OUTPUT : data/processed/clustering/
                                                    per regime — feed this into
                                                    Phase 5 PCM feasibility
                                                    filtering
-           cluster_map_uttarakhand.png
+         data/plots/clustering/cluster_map.png
 
 HOW TO RUN:
   python 05_cluster_uttarakhand.py
@@ -63,7 +63,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-from config import PROCESSED_DIR
+from config import PROCESSED_DIR, CLUSTER_PLOTS_DIR
 
 SIGNATURE_FILE = PROCESSED_DIR / "signatures" / "climate_signature_uttarakhand.csv"
 OUT_DIR = PROCESSED_DIR / "clustering"
@@ -214,9 +214,9 @@ def main():
     ax.set_xlabel("Longitude"); ax.set_ylabel("Latitude")
     ax.set_aspect("equal")
     plt.tight_layout()
-    plt.savefig(OUT_DIR / "cluster_map_uttarakhand.png", dpi=150, bbox_inches="tight")
+    plt.savefig(CLUSTER_PLOTS_DIR / "cluster_map.png", dpi=150, bbox_inches="tight")
     plt.close()
-    print(f"  Saved: {OUT_DIR / 'cluster_map_uttarakhand.png'}")
+    print(f"  Saved: {CLUSTER_PLOTS_DIR / 'cluster_map.png'}")
 
     print("\n" + "=" * 68)
     print("  DONE")

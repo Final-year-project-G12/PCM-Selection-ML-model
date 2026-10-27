@@ -21,22 +21,21 @@
 
 | Script | What it generates | Output directory |
 | :--- | :--- | :--- |
-| `generate_rajasthan_plots.py` | **13 objective-1 plots** (static PNG + interactive Plotly/Folium HTML) | `rajasthan_objective1/` |
+| `generate_rajasthan_plots.py` | **13 objective-1 plots** (static PNG + interactive Plotly/Folium HTML) | `objective1/` |
 | `verify_01_preprocessing_rajasthan.py` | **Preprocessing & QC verification** (7 plots) | `verify_preprocessing/` |
 | `verify_02_clustering_rajasthan.py` | **Clustering validation** (6 plots) | `verify_clustering/` |
 | `verify_03_feasibility_rajasthan.py` | **Feasibility-filter validation** (6 plots) | `verify_feasibility/` |
 | `verify_04_ranking_rajasthan.py` | **MCDM ranking validation** (6 plots) | `verify_ranking/` |
-| `phase1_data_collection_rajasthan.py` | **Raw-data QA** (6 plots + MBE/RMSE CSV) | `phase1_data_collection/` |
-| `phase3_climate_signature_rajasthan.py` | **Climate-signature diagnostics** (3 plots) | `phase3_climate_signature/` |
-| `comparison_plots_rajasthan.py` | **8 cross-step comparison plots** (§7) | `comparison_plots/` |
-| `09_mcdm_vs_physics_agreement.py` | **Per-cluster MCDM-vs-physics agreement** + Spearman ρ audit check (§7) | `physics_validation/` |
-| `comparison_phase3_tmcap_old_vs_new.py` | Tm_cap methodology before/after | `comparison_plots/phase3_tmcap_old_vs_new/` |
-| `comparison_phase5_lrequired_before_after.py` | L_required methodology before/after (§7) | `comparison_plots/phase5_lrequired_before_after/` |
-| `build_plots_folder_rajasthan.py` | Assembles the curated 6-phase folder (§6) | `Plots/` |
+| `phase3_climate_signature_rajasthan.py` | **Climate-signature diagnostics** (3 plots) | `signatures/` |
+| `comparison_plots_rajasthan.py` | **8 cross-step comparison plots** (§7) | `comparison/` |
+| `09_mcdm_vs_physics_agreement.py` | **Per-cluster MCDM-vs-physics agreement** + Spearman ρ audit check (§7) | `objective1/` (`11b_physics_vs_mcdm_all_clusters.html`) |
+| `comparison_phase3_tmcap_old_vs_new.py` | Tm_cap methodology before/after | `comparison/phase3_tmcap_old_vs_new/` |
+| `comparison_phase5_lrequired_before_after.py` | L_required methodology before/after (§7) | `comparison/phase5_lrequired_before_after/` |
+| `build_plots_folder_rajasthan.py` | Assembles the curated 6-phase folder (§6) | `ppt/` |
 | `run_all_plots_v2.py` | Runs all of the above in pipeline order | — |
 
 ```
-python run_all_plots_v2.py              # everything, then assembles Plots/
+python run_all_plots_v2.py              # everything, then assembles ppt/
 python run_all_plots_v2.py objective1   # just the 13 plots
 python run_all_plots_v2.py verify       # just the four verification suites
 python run_all_plots_v2.py phases       # just the phase-1 / phase-3 figures
@@ -44,14 +43,15 @@ python run_all_plots_v2.py comparison   # just the cross-step comparison set
 python run_all_plots_v2.py plots        # just re-assemble Plots/
 ```
 
-Phase 1 reads the ~1.4 GB raw points CSV, so a full run takes a few minutes.
+All figures are written under `../data/plots/`, in the folder layout every state
+shares (`../../docs/PLOT_NAMING.md`); the scripts themselves stay in `PLOTSV2/`.
 
 > **The old `../plotting/` folder is retired.** Its scripts were either duplicates
 > of the ones above (superseded — several carried bugs this set corrects, see §4)
 > or were moved here unchanged. `../outputs/objective1_plots_rajasthan/` holds the
-> figures that folder generated; everything still reachable is regenerated inside
-> `PLOTSV2/`. `../outputs/` also holds unrelated main-pipeline QC artifacts —
-> do not delete it wholesale.
+> figures that folder generated; everything still reachable is regenerated under
+> `../data/plots/`. `../outputs/` also holds the main pipeline's recommendation and
+> cluster cards — do not delete it wholesale.
 
 ---
 
@@ -91,7 +91,7 @@ Two Rajasthan-specific things worth knowing:
 
 ---
 
-## 3. The 13 objective-1 plots (`rajasthan_objective1/`)
+## 3. The 13 objective-1 plots (`objective1/`)
 
 ### 1. Raw vs. Preprocessed Radiation
 `01_raw_vs_preprocessed_radiation.png` · `..._interactive.html`
@@ -118,7 +118,7 @@ Two Rajasthan-specific things worth knowing:
 **Verify:** 9 / 14 / 16 survivors for clusters 0 / 1 / 2 — i.e. 14.5 % / 22.6 % / 25.8 % of the pool, inside the 10–50 % selectivity band.
 
 ### 6. Feasibility Scatter + Survivor Count (canonical filenames)
-`06_pcm_feasibility_scatter_and_survivors.png` · `pcm_feasibility_scatter.png` · `pcm_survivors_per_cluster.png`
+`06_pcm_feasibility_scatter_and_survivors.png` · `06a_pcm_feasibility_scatter.png` · `06b_pcm_survivors_per_cluster.png`
 Same content as 3 and 5, under the filenames the Uttarakhand/Tamil Nadu sets use, so the three states' folders stay directly comparable.
 
 ### 7. Bump Chart — ranks across MCDM methods (**one per cluster**)
@@ -217,9 +217,9 @@ Correlations are computed **within each cluster and then averaged** — pooling 
 
 ---
 
-## 5. The curated `Plots/` folder (paper-facing set)
+## 5. The curated `ppt/` folder (paper-facing set)
 
-`build_plots_folder_rajasthan.py` assembles `PLOTSV2/Plots/` in the same 6-phase
+`build_plots_folder_rajasthan.py` assembles `data/plots/ppt/` in the same 6-phase
 layout as the project-root `Plots/` folder, one figure set per pipeline stage —
 28 figures. Locally the tree is **flat**: each phase folder holds its figures
 directly (single state, no per-state subfolder). It matches the Uttarakhand set
@@ -229,7 +229,7 @@ per-cluster ones (see §3, plot 7):
 | Phase folder | Figures |
 | :--- | :--- |
 | `1 Data collection/` | `A_point_map` · `C_era5_vs_power` · `F_yearly_trend` |
-| `2 Data Preprocessing/` | `01_raw_vs_preprocessed_radiation` · `02_data_completeness` · `05_data_quality_metrics` · `06_correlation_analysis` · `07_preprocessing_summary` |
+| `2 Data Preprocessing/` | `01_raw_vs_preprocessed_radiation` · `02_data_completeness` · `05_correlation_analysis` · `06_data_quality_metrics` · `07_preprocessing_summary` |
 | `3 Climate Feature Engineering (Climate Signature)/` | `point_signature_map` · `signature_correlation_heatmap` · `signature_distributions` |
 | `4 Climate Region Discovery (Clustering)/` | `01_elbow_curves` · `02_silhouette_plot` · `05_cluster_profiles` · `06_cluster_sizes` |
 | `5 PCM Suitability Evaluation (MCDA)/` | `03_melting_point_vs_latent_heat` · `04_constraint_analysis` · `04_feasible_candidates_highlighted` · `05_pcm_survivors_per_cluster` · `05_property_distributions` · `07_bump_chart_ranks_cluster_0/1/2` · `08_method_rank_correlation_heatmap` · `10_rank_reversal_violin_bar` |
@@ -237,20 +237,19 @@ per-cluster ones (see §3, plot 7):
 
 `--mirror` also copies the tree into the project-root `Plots/` folder, dropping a
 `Rajasthan/` subfolder alongside the existing `Tamilnadu/` and `Uttarakhand/` ones.
-Without the flag nothing outside `PLOTSV2/` is touched.
+Without the flag nothing outside `data/plots/ppt/` is written.
 
 Three things worth knowing about this folder:
 
-- **Phase 2 numbering is deliberately swapped.** Uttarakhand's preprocessing suite
-  writes `05_data_quality_metrics` / `06_correlation_analysis`; Tamil Nadu's and
-  Rajasthan's write those two the other way round. The curated folder follows
-  Uttarakhand's numbering, so the assembler renames them on copy — the
-  Rajasthan `05_data_quality_metrics.png` here is `verify_preprocessing/06_data_quality_metrics.png`.
-- **Phases 1 and 3 needed new scripts.** Rajasthan's own `03c_plots_raw_rajasthan.py`
-  and `04_climate_signature_rajasthan.py` write these figures as interactive Plotly
-  HTML only (that pipeline's convention), so there was no PNG to curate.
-  `phase1_data_collection_rajasthan.py` and `phase3_climate_signature_rajasthan.py`
-  are matplotlib ports of the Uttarakhand/Tamil Nadu originals, same filenames.
+- **File names match the other states.** Since the 2026-10-28 naming
+  unification (`../../docs/PLOT_NAMING.md`) every state writes the same file
+  names, so the assembler copies them unchanged.
+- **Phase 1 comes from `../03_plots_raw.py`; phase 3 needed a new script.**
+  `04b_climate_signature.py` writes the signature figures as interactive Plotly
+  HTML only, so there was no PNG to curate. `phase3_climate_signature_rajasthan.py`
+  is a matplotlib port of the Uttarakhand/Tamil Nadu original, same filenames.
+  (The old `phase1_data_collection_rajasthan.py` port was removed: it wrote the
+  same six figures as `03_plots_raw.py`.)
 - **`Clustering.jpeg` has no Rajasthan equivalent.** The Uttarakhand phase-4 folder
   contains a hand-made conceptual diagram with no source script; nothing in this
   repo can regenerate it for Rajasthan.
@@ -282,13 +281,13 @@ Three things worth knowing about this folder:
 
 ---
 
-## 7. Cross-step comparison plots (`comparison_plots/`, `physics_validation/`)
+## 7. Cross-step comparison plots (`comparison/`, `objective1/11b_*`)
 
 `python run_all_plots_v2.py comparison` runs all four scripts below. These answer
 "does the output of step N still make sense given step N−1?", which the 13
 objective-1 plots do not.
 
-### `comparison_plots_rajasthan.py` → `comparison_plots/` (8 figures)
+### `comparison_plots_rajasthan.py` → `comparison/` (8 figures)
 
 | # | Figure | Question it answers |
 | :--- | :--- | :--- |
@@ -321,9 +320,9 @@ cluster file, which duplicates every point once per season in the signature merg
 this one reads Level A; and #5 filters on `survives_all`, since the kappa-calibrated
 table lists all 186 evaluations rather than just the 39 survivors.
 
-### `09_mcdm_vs_physics_agreement.py` → `physics_validation/`
+### `09_mcdm_vs_physics_agreement.py` → `objective1/11b_physics_vs_mcdm_all_clusters.html`
 
-`mcdm_vs_physics_agreement_rajasthan.html` — the richer companion to plot 11.
+`11b_physics_vs_mcdm_all_clusters.html` — the richer companion to plot 11.
 Where plot 11 is a single scatter, this computes Spearman ρ **per cluster** with
 p-values and cross-checks them against both the audit-documented values
 (cluster 0 −0.385, cluster 1 +0.125, cluster 2 −0.097) and the stored
@@ -337,8 +336,8 @@ performance, and that is the finding to report rather than smooth over.
 
 ### Methodology before/after pair
 
-- `comparison_phase3_tmcap_old_vs_new.py` → `comparison_plots/phase3_tmcap_old_vs_new/tmcap_methodology_comparison_rajasthan.html`
-- `comparison_phase5_lrequired_before_after.py` → `comparison_plots/phase5_lrequired_before_after/`
+- `comparison_phase3_tmcap_old_vs_new.py` → `comparison/phase3_tmcap_old_vs_new/tmcap_methodology_comparison.html`
+- `comparison_phase5_lrequired_before_after.py` → `comparison/phase5_lrequired_before_after/`
 
 The phase-5 script visualises the `L_required` correction (the combined
 sensible+latent basis, `L_required = SHARE_PCM * Q_night / m_PCM` with

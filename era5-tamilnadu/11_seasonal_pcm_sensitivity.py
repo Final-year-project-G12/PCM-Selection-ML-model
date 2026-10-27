@@ -41,7 +41,7 @@ INPUT  : data/preprocessed/tamilnadu_cleaned_physical.csv   (has a 'season'
            as the headline result)
 OUTPUT : data/processed/pcm/seasonal_pcm_sensitivity_topk.csv
          data/processed/pcm/seasonal_pcm_sensitivity_summary.md
-         outputs/qc_seasonal_pcm_flip_heatmap_tamilnadu.html   (NEW — the
+         data/plots/qc/qc_seasonal_pcm_flip_heatmap.html   (NEW — the
            (cluster x season) grid of #1-ranked PCM identity, with flipped
            cells outlined against the annual baseline)
 
@@ -59,6 +59,7 @@ import plotly.graph_objects as go
 from config import (
     PREPROCESSED_DIR, PROCESSED_DIR, OUTPUTS_DIR, SHARE_PCM,
     ASSUMED_PCM_MASS_KG, T_DELIVERY_C, latent_heat_floor_kj_kg,
+    QC_PLOTS_DIR,
 )
 from provenance_lib import file_fingerprint, fingerprint_id, assert_fingerprint_match
 
@@ -71,7 +72,7 @@ PCM_FILE = PROCESSED_DIR / "pcm" / f"pcm_database_{STATE_NAME}.csv"
 SCORES_FILE = PROCESSED_DIR / "pcm" / "mcdm_full_rankings.csv"   # renamed 2026-09-08 Phase 6 unification (was mcdm_full_scores_by_cluster.csv)
 OUT_CSV = PROCESSED_DIR / "pcm" / "seasonal_pcm_sensitivity_topk.csv"
 OUT_MD = PROCESSED_DIR / "pcm" / "seasonal_pcm_sensitivity_summary.md"
-HEATMAP_FILE = OUTPUTS_DIR / f"qc_seasonal_pcm_flip_heatmap_{STATE_NAME}.html"
+HEATMAP_FILE = QC_PLOTS_DIR / "qc_seasonal_pcm_flip_heatmap.html"
 
 ABSOLUTE_TM_MIN, ABSOLUTE_TM_MAX = 42.0, 70.0
 WINDOW_LOWER_OFFSET, WINDOW_UPPER_OFFSET = 5.0, 8.0

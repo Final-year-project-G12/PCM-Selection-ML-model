@@ -94,15 +94,15 @@ PHASE 2 QA — POST-CLEANING CHECKS
 PHASE 3 — CLIMATE SIGNATURE (Tier 1 sun-event + Tier 2 true daily integral)
   04b_climate_signature.py        -> data/processed/signatures/climate_signature_uttarakhand.csv
                                      pca_loadings.csv + 3 diagnostic PNGs
-  04d_signature_interactive.py    -> data/processed/signatures/interactive/*.html
+  04d_signature_interactive.py    -> data/plots/signatures/interactive/*.html
         |
 PHASE 4 — CLIMATE REGIME CLUSTERING (Uttarakhand only)
   05_cluster_uttarakhand.py       -> data/processed/clustering/bic_selection_uttarakhand.csv
                                      kmeans_comparison_uttarakhand.csv
                                      cluster_assignments_uttarakhand.csv (soft membership)
                                      cluster_profiles_uttarakhand.csv    (population-weighted)
-                                     cluster_map_uttarakhand.png
-  05b_cluster_interactive.py      -> data/processed/clustering/interactive/*.html
+                                     cluster_map.png
+  05b_cluster_interactive.py      -> data/plots/clustering/interactive/*.html
   05_cluster_regions.py           -> (multi-state; NOT run — stops if <2 regions present)
         |
 PHASE 4 — OPTIONAL EXPLORATION
@@ -131,7 +131,7 @@ PHASE 8 — RECOMMENDATION CARDS
   09_recommendation_cards.py      -> data/processed/pcm/recommendation_cards.md
 
 FIGURE / VERIFICATION LAYER (not part of the numbered phase chain)
-  generate_objective1_plots.py    -> data/plots/uttarakhand_objective1/*   (13-plot set)
+  generate_objective1_plots.py    -> data/plots/objective1/*   (13-plot set)
   comparison_plots_uttarakhand.py -> data/plots/comparison/*               (never produced — path bug)
   verify_01_preprocessing.py      -> data/plots/verify_preprocessing/*
   verify_02_clustering.py         -> data/plots/verify_clustering/*

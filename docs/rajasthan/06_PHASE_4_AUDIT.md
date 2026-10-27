@@ -75,7 +75,7 @@ inactive) is retained in the extracted script.
 Regime-shift fraction **320/320 points (100%)**. Season-tautology ARI(cluster, season) = **0.691**,
 NMI = 0.805 — *high* agreement, i.e. Rajasthan's Level B substantially rediscovers "season" itself
 (report it that way, not as a novel regime-shift discovery). New plot:
-`outputs/qc_level_b_regime_shift_sankey_rajasthan.html` (alluvial of cluster membership across the
+`data/plots/qc/qc_level_b_regime_shift_sankey.html` (alluvial of cluster membership across the
 4 seasons, shifting flows highlighted).
 
 ### Seasonal PCM sensitivity (`11_seasonal_pcm_sensitivity.py`, post-Phase-6)
@@ -87,7 +87,7 @@ Monsoon and Retreat #1 differs from its annual pick in at least one case (Cluste
 three; Cluster 2 only in Retreat). **Winter is unresolved for all 3 clusters**: Winter `L_required`
 is the year's highest (403–431 kJ/kg, lowest ambient → largest ΔT), which drops every cluster below
 2 seasonal survivors — a real, reportable ceiling effect, not a bug. New plot:
-`outputs/qc_seasonal_pcm_flip_heatmap_rajasthan.html` ((cluster × season) grid coloured by #1-PCM
+`data/plots/qc/qc_seasonal_pcm_flip_heatmap.html` ((cluster × season) grid coloured by #1-PCM
 identity, flipped cells red-outlined).
 
 > **SUPERSEDED (2026-09-13).** The 7/9-flip result above was produced while
@@ -200,21 +200,21 @@ NBC/ECBC still stubbed.
 
 **Level A (`05_cluster_rajasthan.py`)**: `cluster_assignments_rajasthan_levelA.csv`,
 `bic_selection_rajasthan.csv`, `cluster_profiles_rajasthan.csv`,
-`outputs/cluster_profile_cards_rajasthan.md`, `outputs/qc_cluster_map_rajasthan.html` (now
+`outputs/cluster_profile_cards_rajasthan.md`, `data/plots/qc/qc_cluster_map.html` (now
 population-scaled marker size), `koppen_validation_rajasthan.csv`,
-`outputs/qc_k_selection_curve_rajasthan.html` (BIC + silhouette + **bootstrap-ARI**, chosen k
-marked), `outputs/qc_cluster_profile_bars_rajasthan.html`,
-`outputs/qc_cluster_population_share_rajasthan.html`.
+`data/plots/qc/qc_k_selection_curve.html` (BIC + silhouette + **bootstrap-ARI**, chosen k
+marked), `data/plots/qc/qc_cluster_profile_bars.html`,
+`data/plots/qc/qc_cluster_population_share.html`.
 
 **Level B — regime shift (`05a_level_b_regime_shift_rajasthan.py`)**:
 `bic_selection_rajasthan_levelB.csv` (**now persisted**, previously console-only),
 `cluster_assignments_rajasthan_levelB.csv`, `level_b_feature_importance_rajasthan.csv`,
 `level_b_season_tautology_rajasthan.csv`, `level_b_season_contingency_rajasthan.csv`,
-`outputs/qc_level_b_regime_shift_sankey_rajasthan.html` (new).
+`data/plots/qc/qc_level_b_regime_shift_sankey.html` (new).
 
 **Seasonal PCM sensitivity (`11_seasonal_pcm_sensitivity.py`)**:
 `seasonal_pcm_sensitivity_rajasthan.csv`, `outputs/seasonal_pcm_sensitivity_rajasthan.md`,
-`outputs/qc_seasonal_pcm_flip_heatmap_rajasthan.html` (new).
+`data/plots/qc/qc_seasonal_pcm_flip_heatmap.html` (new).
 
 ## Dependencies
 
@@ -268,7 +268,7 @@ None are in `run_all_rajasthan.py`'s core chain; all are read-only.
   probabilities (which the static PNG discards), an interactive cluster-profile comparison, and the
   K-selection curves. Reads `cluster_assignments_rajasthan_levelA.csv`,
   `cluster_profiles_rajasthan.csv`, `bic_selection_rajasthan.csv`; writes
-  `PLOTSV2/clustering_interactive/*.html`.
+  `data/plots/clustering/interactive/*.html`.
 - **`05c_explore_interactive.py`** (renamed from `05f_explore_interactive.py`; content unchanged) —
   a Streamlit app (run with `streamlit run 05c_explore_interactive.py`, not plain `python`). One row
   per `(point_id, date, event)`; every time-series chart plots three traces (sunrise/noon/sunset)

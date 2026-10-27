@@ -165,7 +165,7 @@ import pandas as pd
 import plotly.graph_objects as go
 from scipy.stats import spearmanr, kendalltau
 
-from config import PROCESSED_DIR, BASE_DIR, OUTPUTS_DIR, ensure_data_dirs
+from config import PROCESSED_DIR, BASE_DIR, OUTPUTS_DIR, ensure_data_dirs, QC_PLOTS_DIR
 from provenance_lib import file_fingerprint, fingerprint_id, assert_fingerprint_match
 
 ensure_data_dirs()
@@ -181,7 +181,7 @@ OUT_FULL = PROCESSED_DIR / "mcdm_full_rankings.csv"          # full per-survivor
 OUT_TOPK = PROCESSED_DIR / "mcdm_topk_by_cluster.csv"        # Top-3 per cluster subset
 OUT_MC = PROCESSED_DIR / "monte_carlo_stability.csv"         # Monte Carlo columns only
 OUT_METHOD_AGREEMENT = PROCESSED_DIR / "mcdm_method_agreement.csv"
-OUT_FIGURE = OUTPUTS_DIR / "qc_montecarlo_inclusion.html"
+OUT_FIGURE = QC_PLOTS_DIR / "qc_montecarlo_inclusion.html"
 # Back-compat alias kept so anything still importing OUT_FILE keeps working.
 OUT_FILE = OUT_FULL
 
@@ -281,16 +281,11 @@ RI_TABLE = {1: 0.0, 2: 0.0, 3: 0.58, 4: 0.90, 5: 1.12, 6: 1.24, 7: 1.32, 8: 1.41
 RUN_COCOSO = False   # optional 5th ranker, plan doc §9.4 — never a replacement for the 4 core methods
 
 # --- Monte Carlo -----------------------------------------------------------
-N_DRAWS = 1000        # plan doc default is 5000; 1000 is the documented,
-                      # literature-precedented fallback (module docstring).
-                      # SET IDENTICALLY IN BOTH STATES (2026-09-08 Phase 6
-                      # unification): the first 5000-draw Rajasthan run took
-                      # 606s wall-clock (183-232s/cluster); Tamil Nadu has 5
-                      # clusters of 9-16 survivors, so 5000 there is ~500-900s
-                      # — impractical for iteration in both. The plan doc
-                      # notes inclusion probabilities converge well before
-                      # 5000. Raise BOTH to 5000 (this one constant) for the
-                      # final reported run once the pipelines are settled.
+N_DRAWS = 5000        # plan doc default (module docstring). Was 1000 during
+                      # iteration (the first 5000-draw run took 606s
+                      # wall-clock, 183-232s/cluster); raised back to 5000 on
+                      # 2026-10-28 so all four states report the same draw
+                      # count (TN, UK and Assam already use 5000).
 DIRICHLET_CONCENTRATION = 25.0   # chosen to give roughly +/-20% variation around
                                    # nominal weights — see main()'s printed check
 GAUSS_NOISE_PCT = {"latent_heat": 0.05, "thermal_conductivity": 0.10,

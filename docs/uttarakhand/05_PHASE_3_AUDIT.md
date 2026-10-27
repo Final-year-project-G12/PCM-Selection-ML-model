@@ -291,7 +291,7 @@ recommendation depends on.
 ## `04d_signature_interactive.py` — explorer
 
 Reads `climate_signature_uttarakhand.csv` and writes Folium/Plotly HTML to
-`data/processed/signatures/interactive/`. Produces a multi-layer map with one toggleable layer per
+`data/plots/signatures/interactive/`. Produces a multi-layer map with one toggleable layer per
 index (`MAP_LAYERS = GHI_daily_kWh, Ta_mean, DTR, kt_mean, cloudy_frac, CCI, HDD18, CDD24, RH_mean,
 HSI, monsoon_index, L_required_kJ_per_kg`), an interactive correlation heatmap, index-distribution
 histograms, and a scatter matrix of the key PCM-facing indices "to eyeball the clustering structure
@@ -309,7 +309,7 @@ this repository.**
 | `signature_correlation_heatmap.png` | 18-index correlation | No |
 | `signature_distributions.png` | per-index histograms, with a constant-value special case | No |
 | `point_signature_map.png` | lon/lat scatter coloured by `GHI_daily_kWh` and `monsoon_index` | No |
-| `data/processed/signatures/interactive/*.html` | `04d` output | No |
+| `data/plots/signatures/interactive/*.html` | `04d` output | No |
 
 None of Phase 3's own outputs are committed. The only surviving evidence of the signature values is
 `data/plots/verify_clustering/05_cluster_profiles.png`, which plots six of them by cluster.

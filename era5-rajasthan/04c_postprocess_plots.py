@@ -8,8 +8,7 @@ so you can see exactly what the 13 preprocessing steps actually did
 before trusting them for Phase 3.
 
 Direct port of the Tamil Nadu pipeline's 04c_postprocess_plots.py — same
-six checks (A-F). Two Rajasthan adaptations only:
-  - output goes to PLOTSV2/post_preprocess/ instead of data/plots/post_preprocess/
+six checks (A-F). One Rajasthan adaptation only:
   - rajasthan_cleaned_physical.csv is ~4 GB, so this reads only the
     columns the six checks touch (usecols filter) rather than the whole
     frame the way the Tamil Nadu script does. Output is identical.
@@ -61,7 +60,7 @@ import seaborn as sns
 
 from config import PREPROCESSED_DIR, BASE_DIR
 
-POST_PLOT_DIR = BASE_DIR / "PLOTSV2" / "post_preprocess"
+POST_PLOT_DIR = BASE_DIR / "data" / "plots" / "post_preprocess"
 POST_PLOT_DIR.mkdir(parents=True, exist_ok=True)
 
 PHYSICAL_FILE = PREPROCESSED_DIR / "rajasthan_cleaned_physical.csv"

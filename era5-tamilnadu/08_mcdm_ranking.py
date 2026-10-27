@@ -180,7 +180,7 @@ import pandas as pd
 import plotly.graph_objects as go
 from scipy.stats import spearmanr, kendalltau
 
-from config import PROCESSED_DIR, BASE_DIR, OUTPUTS_DIR, ensure_data_dirs
+from config import PROCESSED_DIR, BASE_DIR, OUTPUTS_DIR, ensure_data_dirs, QC_PLOTS_DIR
 from provenance_lib import file_fingerprint, fingerprint_id, assert_fingerprint_match
 
 ensure_data_dirs()
@@ -211,7 +211,7 @@ OUT_FULL = PCM_DIR / "mcdm_full_rankings.csv"          # full per-survivor audit
 OUT_TOPK = PCM_DIR / "mcdm_topk_by_cluster.csv"        # Top-3 per cluster subset
 OUT_MC = PCM_DIR / "monte_carlo_stability.csv"         # Monte Carlo columns only
 OUT_METHOD_AGREEMENT = PCM_DIR / "mcdm_method_agreement.csv"
-OUT_FIGURE = OUTPUTS_DIR / "qc_montecarlo_inclusion.html"
+OUT_FIGURE = QC_PLOTS_DIR / "qc_montecarlo_inclusion.html"
 # Back-compat alias kept so anything still importing OUT_FILE keeps working.
 OUT_FILE = OUT_FULL
 

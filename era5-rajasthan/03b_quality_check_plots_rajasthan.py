@@ -38,7 +38,7 @@ PLOTS PRODUCED:
      cleaning. Sanity check only (e.g. GHI/CSI should stay strongly
      correlated; T_amb/RHum should stay negatively correlated).
 
-OUTPUTS: outputs/qc_clean_*.html (5 files)
+OUTPUTS: data/plots/qc/qc_clean_*.html (5 files)
 
 HOW TO RUN (run 03b_quality_check_rajasthan.py first — this script reads
 its output):
@@ -59,6 +59,7 @@ from plotly.subplots import make_subplots
 from config import (
     COMBINED_POINTS_FILE, CLEANED_POINTS_FILE, QUALITY_REPORT_JSON_FILE,
     OUTPUTS_DIR, ensure_data_dirs,
+    QC_PLOTS_DIR,
 )
 
 ensure_data_dirs()
@@ -104,7 +105,7 @@ fig = go.Figure(data=go.Heatmap(
 fig.update_layout(title="% Missing Data POST-CLEAN — per Point x Variable "
                          "(expect ~0% — imputation already ran)",
                    height=max(500, 6 * len(miss_by_point)))
-out = OUTPUTS_DIR / "qc_clean_missing_heatmap_rajasthan.html"
+out = QC_PLOTS_DIR / "qc_clean_missing_heatmap.html"
 fig.write_html(str(out))
 print(f"  Saved: {out}")
 
@@ -121,7 +122,7 @@ for i, col in enumerate(HAMPEL_VARS, start=1):
     fig.add_trace(go.Histogram(x=clean[col], name="winsorized", opacity=0.55, marker_color="#dd8452",
                                 showlegend=(i == 1)), row=1, col=i)
 fig.update_layout(title="Distribution — Raw vs Winsorized (overlaid, HAMPEL_VARS only)", barmode="overlay")
-out = OUTPUTS_DIR / "qc_clean_distributions_rajasthan.html"
+out = QC_PLOTS_DIR / "qc_clean_distributions.html"
 fig.write_html(str(out))
 print(f"  Saved: {out}")
 
@@ -142,7 +143,7 @@ fig.add_hline(y=SYSTEMATIC_OUTLIER_PCT_FLAG, line_dash="dash", line_color="red",
               annotation_text=f"{SYSTEMATIC_OUTLIER_PCT_FLAG}% systematic-issue threshold")
 fig.update_layout(title="Outlier Flag % per Point, per HAMPEL_VAR", barmode="group",
                    yaxis_title="% flagged", xaxis=dict(tickangle=90))
-out = OUTPUTS_DIR / "qc_clean_outlier_flags_rajasthan.html"
+out = QC_PLOTS_DIR / "qc_clean_outlier_flags.html"
 fig.write_html(str(out))
 print(f"  Saved: {out}")
 max_flag_pct = flag_pct.values.max()
@@ -177,7 +178,7 @@ for i, col in enumerate(HAMPEL_VARS, start=1):
                       row=i, col=1)
 fig.update_layout(title=f"Sample Point Annual Time Series (noon event) — {sample_point}, {sample_year} — "
                          f"raw vs winsorized, flagged points marked")
-out = OUTPUTS_DIR / "qc_clean_sample_timeseries_rajasthan.html"
+out = QC_PLOTS_DIR / "qc_clean_sample_timeseries.html"
 fig.write_html(str(out))
 print(f"  Saved: {out}  ({sample_point}, {sample_year})")
 
@@ -194,7 +195,7 @@ fig = go.Figure(data=go.Heatmap(
     colorscale="RdBu_r", zmid=0, zmin=-1, zmax=1, colorbar=dict(title="Pearson r"),
 ))
 fig.update_layout(title="Correlation, post-clean (all 5 quality variables)")
-out = OUTPUTS_DIR / "qc_clean_correlation_rajasthan.html"
+out = QC_PLOTS_DIR / "qc_clean_correlation.html"
 fig.write_html(str(out))
 print(f"  Saved: {out}")
 

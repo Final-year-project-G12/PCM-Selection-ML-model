@@ -32,16 +32,7 @@ WHAT THIS DOES NOT RUN, AND WHY:
        modules and this file itself, not runnable stages.
      - 05c_explore_interactive.py — a Streamlit app; launch it with
        `streamlit run 05c_explore_interactive.py`, not plain `python`.
-     - 03b_validate_quality_fix_rajasthan.py — deprecated (kept on disk
-       with a banner): both its premises stopped holding once Phase 3
-       started reading 04_preprocess_rajasthan.py's output.
-     - check_supercooling_data.py, check_supercooling_K.py — throwaway
-       read-only diagnostics from the Phase 8 field-identification work;
-       both hardcode absolute d:/Final Year Project/... paths, so they are
-       not portable tooling. Run by hand if you need them.
      - plotting/__init__.py — an empty package marker, not a script.
-     - PLOTSV2/fix_unicode_issues.py — a one-off text-repair utility for
-       mojibake in already-generated plot files; run by hand if needed.
      - PLOTSV2/interactive_plots/*.py — Streamlit / interactive-explorer
        apps (00e/00f/03e/03f/04e/04f + 03b_interactive_raw_qa); launch
        with `streamlit run <file>`, not plain `python`.
@@ -51,10 +42,9 @@ WHAT THIS DOES NOT RUN, AND WHY:
      It runs, each in its own process so one failure doesn't take the
      rest down: generate_rajasthan_plots.py (13 objective-1 figures),
      the four verify_0{1,2,3,4}_*_rajasthan.py suites,
-     phase1_data_collection_rajasthan.py + phase3_climate_signature_
-     rajasthan.py, the four comparison_*/09_mcdm_vs_physics_agreement.py
+     phase3_climate_signature_rajasthan.py, the four comparison_*/09_mcdm_vs_physics_agreement.py
      cross-step plots, then build_plots_folder_rajasthan.py to assemble
-     the curated PLOTSV2/Plots/ folder. Delegating to it (rather than
+     the curated data/plots/ppt/ folder. Delegating to it (rather than
      re-listing 20 scripts here) keeps the two runners from drifting.
      Non-blocking and runs LAST, after the core chain + --with-optional.
      Phase 1's figure reads the ~1.4 GB raw points CSV, so this adds a
@@ -286,8 +276,7 @@ NON_BLOCKING_CORE = {"05a_level_b_regime_shift_rajasthan.py"}
 # fans out to ~20 plot scripts (13 objective-1 figures, 4 verify suites,
 # 2 phase figures, 4 cross-step comparisons, + the curated-folder builder).
 # Non-blocking, runs LAST. NOT covered: PLOTSV2/interactive_plots/*.py
-# (Streamlit apps — `streamlit run <file>`) and PLOTSV2/fix_unicode_issues.py
-# (one-off repair utility).
+# (Streamlit apps — `streamlit run <file>`).
 PLOT_SCRIPTS = [
     "PLOTSV2/run_all_plots_v2.py",
 ]
@@ -300,7 +289,7 @@ OPTIONAL_SCRIPTS = [
                                                  # this runner entirely (added 2026-09-09).
     "03_verify_climate_csv.py",
     "03_plots_raw.py",                          # raw-data QA (static PNG) — direct port of
-                                                 # era5-tamilnadu/03_plots_raw.py; output to PLOTSV2/raw/
+                                                 # era5-tamilnadu/03_plots_raw.py; output to data/plots/raw/
     "03b_agreement_analysis.py",
     "03b_quality_check_rajasthan.py",           # SUPERSEDED as Phase 2.5 by
                                                  # 04_preprocess_rajasthan.py; kept here as a
@@ -310,7 +299,7 @@ OPTIONAL_SCRIPTS = [
     "03b_quality_check_plots_rajasthan.py",
     # Tamil-Nadu plot-script ports (Group A) — direct ports of
     # era5-tamilnadu/{03_plots_raw,03b_interactive_raw_qa,04c_postprocess_plots,
-    # 04c_interactive_postprocess_qc}.py, output to PLOTSV2/<subfolder>/.
+    # 04c_interactive_postprocess_qc}.py, output to data/plots/<subfolder>/.
     # 05c_explore_interactive.py is excluded here: it is a Streamlit app, run
     # with `streamlit run 05c_explore_interactive.py`, not plain `python`.
     "03b_interactive_raw_qa.py",
@@ -327,7 +316,7 @@ OPTIONAL_SCRIPTS = [
     # pre-quality-check version and internally re-ran a script name
     # ("04_climate_signature_rajasthan.py") that does not exist. Neither
     # premise holds now that Phase 3 reads 04_preprocess_rajasthan.py's
-    # output. Kept on disk with a deprecation banner; not run here.
+    # output. Deleted 2026-10-27 in the repo cleanup.
 ]
 
 

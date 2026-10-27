@@ -28,12 +28,9 @@ group below):
   it via subprocess the way every other stage here is run would not do
   anything useful. Launch it yourself, separately, whenever you want the
   live exploration app.
-  05_cluster_regions.py
-  — the multi-state (Tamil Nadu + Rajasthan + Assam + Uttarakhand
-  combined) clustering design, kept on standby for when a second state's
-  Phase 3 output exists alongside this one. Uttarakhand-only clustering
-  uses 05_cluster_uttarakhand.py instead (see CORE_SCRIPTS below); this
-  file is intentionally not part of the single-state run.
+  (05_cluster_regions.py, the old multi-state clustering design, was
+  deleted in the 2026-10-27 cleanup; 05_cluster_uttarakhand.py is the
+  clustering step.)
 
 KNOWN GAP — read before running the CORE chain unattended:
   `06_build_pcm_database.py` reads
@@ -50,7 +47,7 @@ KNOWN GAP — read before running the CORE chain unattended:
 
 ORDER AND WHY (CORE stages — required, this runner STOPS at the first
 failure since every later stage reads an earlier stage's output, EXCEPT
-07b which is marked optional below — see that entry):
+07b and 09b which are marked optional below — see those entries):
   1.  02_combine_uttarakhand.py       — Phase 1 final step: merges ERA5 +
                                        NASA POWER at sun-events ->
                                        climate_uttarakhand_points.csv, the
@@ -96,13 +93,21 @@ failure since every later stage reads an earlier stage's output, EXCEPT
                                        database per cluster ->
                                        feasibility_survivors_by_cluster.csv
   10. 08_mcdm_ranking.py            — Phase 6: TOPSIS/GRA/PROMETHEE II/
-                                       VIKOR + Monte Carlo ->
+                                       VIKOR ->
                                        mcdm_topk_by_cluster.csv
-  11. 10_physics_validation.py      — Phase 7: grey-box tank simulation ->
+  11. 09b_monte_carlo_stability.py  — Phase 6, non-blocking: Monte Carlo
+                                       weight/property perturbation ->
+                                       monte_carlo_stability.csv (needed by
+                                       generate_objective1_plots.py; 08 does
+                                       not produce it). Runs its default
+                                       2,000 draws per cluster; for the full
+                                       5,000 run `python 09b_monte_carlo_
+                                       stability.py --draws 5000` by hand.
+  12. 10_physics_validation.py      — Phase 7: grey-box tank simulation ->
                                        physics_validation_results.csv
                                        (numbered 10 but runs BEFORE 09 —
                                        see module docstring intro)
-  12. 09_recommendation_cards.py    — Phase 8: pure aggregation of
+  13. 09_recommendation_cards.py    — Phase 8: pure aggregation of
                                        everything above -> paste-ready
                                        recommendation_cards.md
 
@@ -198,10 +203,11 @@ SETUP_SCRIPTS = [
     "00_unzip_accum.py",
 ]
 
-# Required, sequential, stop-on-failure — EXCEPT the one entry marked
-# required=False (07b_charging_feasibility.py), which is explicitly
-# documented as optional but must be sequenced before 07 to take effect
-# (see module docstring). (name, required) pairs, in run order.
+# Required, sequential, stop-on-failure — EXCEPT the entries marked
+# required=False: 07b_charging_feasibility.py (optional, but must be
+# sequenced before 07 to take effect) and 09b_monte_carlo_stability.py
+# (feeds the plot scripts only). See module docstring. (name, required)
+# pairs, in run order.
 CORE_SCRIPTS = [
     ("02_combine_uttarakhand.py", True),
     ("02b_build_daily_aggregates.py", True),
@@ -213,6 +219,11 @@ CORE_SCRIPTS = [
     ("07b_charging_feasibility.py", False),
     ("07_feasibility_filter.py", True),
     ("08_mcdm_ranking.py", True),
+    # Monte Carlo rank stability -> monte_carlo_stability.csv, which
+    # generate_objective1_plots.py reads. Reads 07's survivors and recomputes
+    # 08's weights itself; nothing in the core chain reads its output, so a
+    # failure here does not stop the run.
+    ("09b_monte_carlo_stability.py", False),
     ("10_physics_validation.py", True),
     ("09_recommendation_cards.py", True),
 ]

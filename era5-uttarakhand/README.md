@@ -65,13 +65,12 @@ PHASE 2 QA — POST-CLEANING CHECKS
 
 PHASE 3 — CLIMATE SIGNATURE (Tier 1 sun-event + Tier 2 true-daily-integral)
   04b_climate_signature.py        →  data/processed/signatures/climate_signature_uttarakhand.csv
-  04d_signature_interactive.py    →  data/processed/signatures/interactive/*.html
+  04d_signature_interactive.py    →  data/plots/signatures/interactive/*.html
 
 PHASE 4 — CLIMATE REGIME CLUSTERING
   05_cluster_uttarakhand.py       →  data/processed/clustering/cluster_assignments_uttarakhand.csv
                                       data/processed/clustering/cluster_profiles_uttarakhand.csv
-  05b_cluster_interactive.py      →  data/processed/clustering/interactive/*.html
-  05_cluster_regions.py           →  (multi-state, NOT for now — see its section below)
+  05b_cluster_interactive.py      →  data/plots/clustering/interactive/*.html
 
 PHASE 4 — EXTRA EXPLORATION (optional, either order relative to 05/05b)
   05c_explore_interactive.py      →  Streamlit app (raw vs. processed vs. comparison)
@@ -86,7 +85,9 @@ PHASE 5 — PCM DATABASE + FEASIBILITY FILTERING
 PHASE 6 — MULTI-CRITERIA RANKING
   08_mcdm_ranking.py              →  data/processed/pcm/mcdm_topk_by_cluster.csv
                                      data/processed/pcm/mcdm_full_scores_by_cluster.csv
-  09b_monte_carlo_stability.py    →  (5,000-draw Monte Carlo rank-stability results)
+  09b_monte_carlo_stability.py    →  data/processed/pcm/monte_carlo_stability.csv
+                                     (run by run_all_uttarakhand.py after 08, non-blocking;
+                                     needed by generate_objective1_plots.py)
 
 PHASE 7 — PHYSICS-BASED VALIDATION
   10_physics_validation.py        →  data/processed/pcm/physics_validation_results.csv
@@ -110,8 +111,7 @@ python run_all_uttarakhand.py --from 05_cluster_uttarakhand.py   # resume from a
 ```
 
 It does not run `02_combine_uttarakhand.py`, `05c_explore_interactive.py`
-(a Streamlit app — launch that one yourself), or `05_cluster_regions.py`
-(the multi-state version, on standby for later) — see its own docstring
+(a Streamlit app — launch that one yourself) — see its own docstring
 for the full explanation. Otherwise it's exactly the same steps as below,
 in the same order, via `subprocess`.
 
@@ -394,7 +394,7 @@ preprocessing, or needs bias correction against NASA POWER first. Never
 writes back to `climate_uttarakhand_points.csv`.
 
 - Output: `data/processed/era5_power_agreement_uttarakhand.csv`,
-  `outputs/qc_era5_power_scatter_uttarakhand.html`,
+  `data/plots/qc/qc_era5_power_scatter.html`,
   `outputs/bias_decision_uttarakhand.txt` (read this before trusting `04`)
 
 ### `03e_interactive_raw_plotly.py` / `03f_interactive_raw_folium.py`
@@ -475,13 +475,12 @@ interactive correlation heatmap, index-distribution histograms, and a
 scatter matrix of the key PCM-facing indices to eyeball the clustering
 structure before `05` finds it formally.
 
-- Output: `data/processed/signatures/interactive/*.html`
+- Output: `data/plots/signatures/interactive/*.html`
 
 ### `05_cluster_uttarakhand.py`
 Phase 4 — climate regime clustering, Uttarakhand only (not combined with
 any other state's Phase 3 output — nothing in the objective requires
-cross-state regimes, and this script's output format is compatible with
-the multi-state `05_cluster_regions.py`, described below). Uses
+cross-state regimes). Uses
 Gaussian Mixture rather than K-Means because climate is a continuous
 gradient — the boundary between, say, high-hill and valley/plains
 Uttarakhand isn't a hard line, and a point near it genuinely has partial
@@ -498,7 +497,7 @@ per-cluster profiles.
   `cluster_assignments_uttarakhand.csv` (soft membership probabilities),
   `cluster_profiles_uttarakhand.csv` (population-weighted profile per
   regime — feed this into Phase 5 PCM feasibility filtering),
-  `cluster_map_uttarakhand.png`.
+  `cluster_map.png`.
 
 ### `05b_cluster_interactive.py`
 Interactive explorer for `05`'s output: a Folium cluster map where each
@@ -509,20 +508,7 @@ grouped-bar comparison of population-weighted cluster profiles, a
 population-share pie chart per regime, and BIC/silhouette K-selection
 curves if `bic_selection_uttarakhand.csv` exists.
 
-- Output: `data/processed/clustering/interactive/*.html`
-
-### `05_cluster_regions.py`
-Multi-state version of Phase 4 — **not for now**. Needs
-`climate_signature_{region}.csv` from at least one other state's own
-pipeline folder (e.g. `../era5-rajasthan/data/processed/signatures/...`)
-before it does anything useful; its `REGION_FILES` dict at the top already
-points at Uttarakhand's own signature file plus a placeholder for
-Rajasthan. Nothing in the Objective 1 definition requires cross-state
-regimes — `05_cluster_uttarakhand.py` alone is sufficient to finish the
-objective on Uttarakhand. Leave this one alone until you actually add a
-second state's Phase 3 output; its output format matches
-`05_cluster_uttarakhand.py`'s exactly, so nothing downstream needs to
-change if/when you do.
+- Output: `data/plots/clustering/interactive/*.html`
 
 ### `11_level_b_seasonal_analysis.py`
 "Level B" from the plan — for each EXISTING Level-A cluster (from `05`),
