@@ -34,12 +34,16 @@ Reads `climate_assam_points.csv` and applies physical bounds verification and ou
 To maintain scientific traceability, the pipeline distinguishes four distinct stages of climate representation:
 
 1. **Raw Physical Climate Signature (`climate_signatures_raw.csv`)**:
-   - Exactly **129 rows × 18 physical indices** in dimensional units (°C, kWh/m²/day, %, mm).
+   - Exactly **129 rows × 19 physical indices** in dimensional units (°C, kWh/m²/day, %, mm), all
+     computed from the event-sampled physical dataset — there is no working Tier-1/Tier-2 split in
+     the current `04b_climate_signature.py` (it never reads `daily_aggregates_assam.csv` /
+     `tier2_signature_assam.csv`).
    - Structured into:
-     - *Thermodynamic block (7 indices)*: `Ta_mean`, `Ta_p95`, `Ta_p05`, `HDD18`, `CDD24`, `RH_mean`, `elev_proxy`.
-     - *Solar block (4 indices)*: `GHI_daily_kWh`, `kt_mean`, `SAI`, `CCI`.
-     - *Variability / Climate character (5 indices)*: `DTR`, `cloudy_frac`, `monsoon_index`, `HSI`, `precipitation_annual`.
-     - *Derived targets (2 indices, not clustered)*: `Tm_target` (44.0°C), `L_required`.
+     - *Thermodynamic PCA block (7 indices)*: `Ta_mean`, `Ta_p95`, `Ta_p05`, `HDD18`, `CDD24`, `RH_mean`, `elev_proxy`.
+     - *Solar/variability block, uncompressed (12 indices)*: `GHI_mean`, `GHI_daily_kWh_est`, `kt_mean`, `kt_std`, `SAI`, `cloudy_frac`, `CCI`, `HSI`, `wind_mean`, `monsoon_index`, `seasonality`, `DTR`.
+     - *Derived targets (3, not clustered)*: `Tm_target` (44.0°C), `T_mains_est`, `L_required_kWh`.
+   - `precipitation_annual`, `Ta_min_true`, `Ta_max_true` do **not** appear in the current
+     signature output, despite being listed in earlier drafts of this document.
 
 2. **Standardized Clustering Matrix (`climate_signatures_matrix.csv`)**:
    - Standardized (zero mean, unit variance) across all 129 points.
@@ -64,4 +68,4 @@ To maintain scientific traceability, the pipeline distinguishes four distinct st
 
 - **Uniform Melting Target**: $T_m^{\text{target}} = 44.0^\circ\text{C}$ across all 129 sites, based on $T_{\text{delivery}} = 50.0^\circ\text{C}$ (Indian domestic SWH standard) and heat exchanger approach $\Delta T = 6.0\text{ K}$.
 - **Soil Temperature Fallback**: In the absence of recorded shallow ground temperatures, $T_{\text{soil,mean}} \approx T_{a,\text{mean}}$ is documented and applied.
-- **Mains Temperature Approximation**: $T_{\text{mains,est}} = T_{a,\text{mean}} - 2.0\text{ K}$, determining the site-specific thermal charging deficit and $L_{\text{required}}$.
+- **Mains Temperature Approximation**: $T_{\text{mains,est}} = \max(5.0,\ T_{a,\text{mean}} - 6.0\text{ K})$ in `04b_climate_signature.py`, determining the site-specific thermal charging deficit and $L_{\text{required}}$. **Note:** `10_physics_validation.py` uses a different offset (`Ta_mean − 2.0`) for its own mains-temperature estimate — the two are not reconciled across the pipeline.

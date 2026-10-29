@@ -11,7 +11,7 @@ Requires: pip install plotly folium
 INPUT  : data/processed/clustering/cluster_assignments_uttarakhand.csv
          data/processed/clustering/cluster_profiles_uttarakhand.csv
          data/processed/clustering/bic_selection_uttarakhand.csv
-OUTPUT : data/processed/clustering/interactive/*.html
+OUTPUT : data/plots/clustering/interactive/*.html
 
 HOW TO RUN:
   python 05b_cluster_interactive.py
@@ -29,10 +29,10 @@ import plotly.graph_objects as go
 # pyrefly: ignore [missing-import]
 import folium
 
-from config import PROCESSED_DIR
+from config import PROCESSED_DIR, CLUSTER_PLOTS_DIR
 
 CLUSTER_DIR = PROCESSED_DIR / "clustering"
-OUT_DIR = CLUSTER_DIR / "interactive"
+OUT_DIR = CLUSTER_PLOTS_DIR / "interactive"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 ASSIGN_FILE = CLUSTER_DIR / "cluster_assignments_uttarakhand.csv"

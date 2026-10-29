@@ -63,7 +63,7 @@ INPUTS:
 OUTPUTS:
   data/processed/seasonal_pcm_sensitivity_rajasthan.csv
   outputs/seasonal_pcm_sensitivity_rajasthan.md
-  outputs/qc_seasonal_pcm_flip_heatmap_rajasthan.html   (the (cluster x
+  data/plots/qc/qc_seasonal_pcm_flip_heatmap.html   (the (cluster x
       season) grid of #1-ranked PCM identity, flipped cells outlined
       against the annual baseline)
 
@@ -84,6 +84,7 @@ import plotly.graph_objects as go
 from config import (
     BASE_DIR, COMBINED_POINTS_FILE, PROCESSED_DIR, OUTPUTS_DIR,
     SHARE_PCM, ASSUMED_PCM_MASS_KG, T_DELIVERY_C, ensure_data_dirs,
+    QC_PLOTS_DIR,
 )
 from provenance_lib import file_fingerprint, fingerprint_id, assert_fingerprint_match
 
@@ -98,7 +99,7 @@ SURVIVORS_FILE = PROCESSED_DIR / "feasibility_survivors_by_cluster_kappa_calibra
 MCDM_RANKINGS_FILE = PROCESSED_DIR / "mcdm_full_rankings.csv"   # renamed 2026-09-08 (was mcdm_rankings_rajasthan.csv)
 OUT_CSV = PROCESSED_DIR / f"seasonal_pcm_sensitivity_{STATE_NAME}.csv"
 OUT_MD = OUTPUTS_DIR / f"seasonal_pcm_sensitivity_{STATE_NAME}.md"
-HEATMAP_FILE = OUTPUTS_DIR / f"qc_seasonal_pcm_flip_heatmap_{STATE_NAME}.html"
+HEATMAP_FILE = QC_PLOTS_DIR / "qc_seasonal_pcm_flip_heatmap.html"
 
 SEASON_ORDER = ["Winter", "Summer", "Monsoon", "Retreat"]
 

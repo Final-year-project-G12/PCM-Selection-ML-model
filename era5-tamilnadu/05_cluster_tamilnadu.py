@@ -67,12 +67,13 @@ OUTPUT : data/processed/clustering/
                L_required_kJ_per_kg / HSI_sunrise from here)
            cluster_profile_cards_tamilnadu.md
            koppen_validation_tamilnadu.csv      (cluster_id x Köppen class)
-           cluster_map_tamilnadu.png            (static, kept for continuity)
-         outputs/
-           qc_cluster_map_tamilnadu.html
-           qc_k_selection_curve_tamilnadu.html
-           qc_cluster_profile_bars_tamilnadu.html
-           qc_cluster_population_share_tamilnadu.html
+         data/plots/clustering/
+           cluster_map.png            (static, kept for continuity)
+         data/plots/qc/
+           qc_cluster_map.html
+           qc_k_selection_curve.html
+           qc_cluster_profile_bars.html
+           qc_cluster_population_share.html
 
 REQUIRED LIBRARIES:
   pip install pandas numpy scikit-learn folium branca plotly rasterio
@@ -102,6 +103,8 @@ import matplotlib.pyplot as plt
 from config import (
     PROCESSED_DIR, OUTPUTS_DIR,
     KOPPEN_RASTER_FILE, KOPPEN_LEGEND_FILE, ensure_data_dirs,
+    QC_PLOTS_DIR,
+    CLUSTER_PLOTS_DIR,
 )
 # Shared Phase-4 machinery — ONE implementation across both states and both
 # clustering levels (see cluster_lib.py's docstring).
@@ -129,8 +132,8 @@ ASSIGN_A_FILE = OUT_DIR / f"cluster_assignments_{STATE_NAME}.csv"
 PROFILE_FILE = OUT_DIR / f"cluster_profiles_{STATE_NAME}.csv"
 CARDS_FILE = OUT_DIR / f"cluster_profile_cards_{STATE_NAME}.md"
 KOPPEN_CONTINGENCY_FILE = OUT_DIR / f"koppen_validation_{STATE_NAME}.csv"
-STATIC_MAP_FILE = OUT_DIR / f"cluster_map_{STATE_NAME}.png"
-MAP_FILE = OUTPUTS_DIR / f"qc_cluster_map_{STATE_NAME}.html"
+STATIC_MAP_FILE = CLUSTER_PLOTS_DIR / "cluster_map.png"
+MAP_FILE = QC_PLOTS_DIR / "qc_cluster_map.html"
 
 # k-scan range widened 2..10 -> 2..12 to match Rajasthan.
 K_RANGE_A = list(range(2, 13))
@@ -150,9 +153,22 @@ EXPECTED_K_RANGE_SINGLE_STATE = (2, 4)
 
 # Optional manual override — leave None to use the auto-suggested k from
 # suggest_k(); set an int to force a specific k after reviewing
-# bic_selection_tamilnadu.csv. Forced to 5 per student decision (2026-09-14),
-# overriding the cascade's auto-suggested k=3.
-LEVEL_A_K_OVERRIDE = 5
+# bic_selection_tamilnadu.csv.
+#
+# REVERTED TO AUTO (2026-09-16): the prior LEVEL_A_K_OVERRIDE=5 (student
+# decision, 2026-09-14) forced a k that was OUTSIDE the documented expected
+# single-state range (2-4) and, on both the original and the post-elevation
+# rerun (00c_attach_elevation.py), was the WORST of k=2..5 on both GMM
+# silhouette (0.203, lowest) and bootstrap-ARI stability (0.557, lowest) —
+# i.e. it wasn't just "not the top pick", it was measurably the least
+# internally-cohesive and least resample-stable candidate among the
+# plausible options. k=3 lands in silhouette band AND the expected range,
+# with the highest bootstrap-ARI (0.630) of any in-range k — tier 1 of the
+# cascade fires cleanly, no ambiguity. Confirmed unchanged by the elevation
+# correction (same k=3 suggestion before and after). Set back to None so the
+# auto-suggestion drives it; re-review bic_selection_tamilnadu.csv before
+# overriding again.
+LEVEL_A_K_OVERRIDE = None
 
 
 def log_header(title):
@@ -639,7 +655,7 @@ fig.update_yaxes(title_text="Silhouette / bootstrap-ARI", secondary_y=True)
 fig.update_xaxes(title_text="k (number of clusters)")
 fig.update_layout(title=f"Level A — K-Selection Curve (BIC + Silhouette + bootstrap-ARI) — "
                          f"{STATE_NAME.title()}")
-kcurve_path = OUTPUTS_DIR / f"qc_k_selection_curve_{STATE_NAME}.html"
+kcurve_path = QC_PLOTS_DIR / "qc_k_selection_curve.html"
 fig.write_html(str(kcurve_path))
 print(f"  Saved: {kcurve_path}")
 
@@ -653,7 +669,7 @@ for i, col in enumerate(PROFILE_BAR_COLS, start=1):
                           showlegend=False, marker_color="#4c72b0"), row=1, col=i)
 fig.update_layout(title=f"Level A — Cluster Profile, Headline Indices (population-weighted means) — "
                          f"{STATE_NAME.title()}")
-profile_bar_path = OUTPUTS_DIR / f"qc_cluster_profile_bars_{STATE_NAME}.html"
+profile_bar_path = QC_PLOTS_DIR / "qc_cluster_profile_bars.html"
 fig.write_html(str(profile_bar_path))
 print(f"  Saved: {profile_bar_path}")
 
@@ -663,7 +679,7 @@ fig = go.Figure(data=go.Pie(
     values=cluster_profiles["total_population"], hole=0.35,
 ))
 fig.update_layout(title=f"Level A — Population Share by Climate Regime — {STATE_NAME.title()}")
-pop_pie_path = OUTPUTS_DIR / f"qc_cluster_population_share_{STATE_NAME}.html"
+pop_pie_path = QC_PLOTS_DIR / "qc_cluster_population_share.html"
 fig.write_html(str(pop_pie_path))
 print(f"  Saved: {pop_pie_path}")
 

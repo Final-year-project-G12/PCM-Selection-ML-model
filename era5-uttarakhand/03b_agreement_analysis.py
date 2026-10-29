@@ -11,7 +11,7 @@ climate_uttarakhand_points.csv — this script never writes back to it.
 INPUT  : data/processed/climate_uttarakhand_points.csv  (02_combine output)
 OUTPUTS:
   data/processed/era5_power_agreement_uttarakhand.csv
-  outputs/qc_era5_power_scatter_uttarakhand.html
+  data/plots/qc/qc_era5_power_scatter.html
   outputs/bias_decision_uttarakhand.txt
 
 HOW TO RUN:
@@ -28,7 +28,7 @@ import plotly.graph_objects as go
 # pyrefly: ignore [missing-import]
 from plotly.subplots import make_subplots
 
-from config import COMBINED_POINTS_FILE, PROCESSED_DIR, OUTPUTS_DIR, ensure_data_dirs
+from config import COMBINED_POINTS_FILE, PROCESSED_DIR, OUTPUTS_DIR, ensure_data_dirs, QC_PLOTS_DIR
 
 ensure_data_dirs()
 OUTPUTS_DIR.mkdir(parents=True, exist_ok=True)
@@ -121,7 +121,7 @@ def build_ghi_scatter(df, pairs):
                                  line=dict(color="black", dash="dash", width=1),
                                  showlegend=False), row=r, col=c)
     fig.update_layout(title="ERA5 vs NASA POWER GHI by season — Uttarakhand", height=850, width=950)
-    out = OUTPUTS_DIR / "qc_era5_power_scatter_uttarakhand.html"
+    out = QC_PLOTS_DIR / "qc_era5_power_scatter.html"
     fig.write_html(str(out))
     print(f"  [OK]   GHI scatter -> {out}")
 

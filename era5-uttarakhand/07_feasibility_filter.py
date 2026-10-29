@@ -20,14 +20,25 @@ Filters applied (Table 12; two are noted as NOT applied — see below):
   5. Supercooling veto    : exclude if supercooling > 8K (only applies
                             where the value is known; NaN passes through
                             flagged, not excluded)
+  6. Corrosion veto        : exclude a "check_manually" (inorganic)
+                            candidate if that cluster's HSI exceeds the
+                            75th percentile of HSI across all 5 clusters
+                            (plan v3.0 Table 12). IMPORTANT HONESTY NOTE:
+                            this filter is real and active, but currently
+                            a no-op — every one of the 55 candidates in
+                            06_build_pcm_database.py's output is organic
+                            (corrosion_class == "low_organic"), so the
+                            veto has nothing to reject yet. It will start
+                            binding automatically the moment an inorganic
+                            candidate (e.g. a salt hydrate) is added to
+                            the database. Implemented now for parity with
+                            Assam's pipeline and so it's ready rather than
+                            deferred again.
   NOT applied (need data this project doesn't have yet — flagged as
   future work, not silently skipped):
     - Charging feasibility at the cluster's 5th-percentile insolation day
       (needs a full daily GHI percentile per cluster, not just the mean
       in cluster_profiles_uttarakhand.csv)
-    - Corrosion veto against cluster HSI 75th percentile (needs a real
-      corrosion_class per PCM; the database currently only distinguishes
-      "low_organic" vs "check_manually" for the one inorganic PCM)
     - Safety exclusion (no toxicity data in the current database)
 
 If a cluster keeps fewer than 5 candidates, the melting window is
@@ -65,7 +76,7 @@ SUPERCOOLING_MAX_K = 8.0
 MIN_SURVIVORS, MAX_RELAX_STEPS, RELAX_STEP_K = 5, 4, 2.0
 
 
-def filter_cluster(pcm_db, tm_target, l_required, window_relax=0.0):
+def filter_cluster(pcm_db, tm_target, l_required, cluster_hsi, hsi_p75, window_relax=0.0):
     lo = tm_target - WINDOW_LOWER_OFFSET - window_relax
     hi = tm_target + WINDOW_UPPER_OFFSET + window_relax
 
@@ -84,8 +95,19 @@ def filter_cluster(pcm_db, tm_target, l_required, window_relax=0.0):
     df["pass_supercooling"] = np.where(
         df["supercooling_known"], df["supercooling_K"].abs() <= SUPERCOOLING_MAX_K, True)
 
+    # Corrosion veto (plan v3.0 Table 12): a "check_manually" (inorganic)
+    # candidate fails if THIS cluster's HSI exceeds the 75th percentile of
+    # HSI across all clusters. "low_organic" candidates always pass -- see
+    # the module docstring for why this is currently a no-op with the
+    # present (all-organic) database.
+    needs_corrosion_check = df["corrosion_class"].astype(str) == "check_manually"
+    cluster_is_humid = cluster_hsi > hsi_p75
+    df["pass_corrosion"] = ~(needs_corrosion_check & cluster_is_humid)
+    df["cluster_hsi"], df["hsi_p75_across_clusters"] = cluster_hsi, hsi_p75
+
     df["passes_all"] = (df["pass_melting_window"] & df["pass_absolute_band"] &
-                         df["pass_latent_heat"] & df["pass_cycling"] & df["pass_supercooling"])
+                         df["pass_latent_heat"] & df["pass_cycling"] & df["pass_supercooling"] &
+                         df["pass_corrosion"])
     df["window_lo"], df["window_hi"], df["window_relax_applied"] = lo, hi, window_relax
     return df
 
@@ -113,6 +135,14 @@ def main():
               "Check 05's profile_cols list includes them.")
         return
 
+    if "HSI" not in profiles.columns:
+        print("\n  ERROR: cluster_profiles_uttarakhand.csv is missing HSI — needed for the "
+              "corrosion veto's cluster-humidity comparison.")
+        return
+    hsi_p75 = float(np.percentile(profiles["HSI"].values, 75))
+    print(f"  HSI 75th percentile across clusters: {hsi_p75:.2f} "
+          f"(per-cluster HSI: {profiles['HSI'].round(2).tolist()})")
+
     all_rows = []
     for _, prof in profiles.iterrows():
         cid = int(prof["cluster_id"])
@@ -121,10 +151,12 @@ def main():
         tm_target = (prof["Tm_target_C_regime_capped"]
                      if "Tm_target_C_regime_capped" in prof.index else prof["Tm_target_C"])
         l_required = prof["L_required_kJ_per_kg"]
+        cluster_hsi = float(prof["HSI"])
 
         relax = 0.0
         for step in range(MAX_RELAX_STEPS + 1):
-            result = filter_cluster(pcm_db, tm_target, l_required, window_relax=relax)
+            result = filter_cluster(pcm_db, tm_target, l_required, cluster_hsi, hsi_p75,
+                                     window_relax=relax)
             n_survivors = int(result["passes_all"].sum())
             if n_survivors >= MIN_SURVIVORS or step == MAX_RELAX_STEPS:
                 break

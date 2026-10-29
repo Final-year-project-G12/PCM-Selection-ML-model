@@ -64,7 +64,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-from config import COMBINED_POINTS_FILE, PREPROCESSED_DIR
+from config import COMBINED_POINTS_FILE, PREPROCESSED_DIR, PREPROCESS_PLOTS_DIR
 
 PREPROCESSED_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -485,7 +485,7 @@ if len(sub) > 31:
     ax.legend()
     ax.grid(alpha=0.3)
     plt.tight_layout()
-    plt.savefig(PREPROCESSED_DIR / "savitzky_golay_diagnostic.png", dpi=130, bbox_inches="tight")
+    plt.savefig(PREPROCESS_PLOTS_DIR / "savitzky_golay_diagnostic.png", dpi=130, bbox_inches="tight")
     plt.close()
     log(f"  Saved: savitzky_golay_diagnostic.png  ({sample_point}, {sample_year})")
 else:
@@ -518,7 +518,7 @@ for ax, corr, title in zip(axes, [pearson_corr, spearman_corr], ["Pearson", "Spe
     ax.set_title(f"{title} Correlation — daytime rows")
     plt.setp(ax.get_xticklabels(), rotation=45, ha="right")
 plt.tight_layout()
-plt.savefig(PREPROCESSED_DIR / "correlation_heatmaps.png", dpi=130, bbox_inches="tight")
+plt.savefig(PREPROCESS_PLOTS_DIR / "correlation_heatmaps.png", dpi=130, bbox_inches="tight")
 plt.close()
 log("  Saved: correlation_pearson.csv, correlation_spearman.csv, correlation_heatmaps.png")
 

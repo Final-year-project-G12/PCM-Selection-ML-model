@@ -17,6 +17,12 @@ def compute_solar(df, lat, lon, alt):
     ...
 ```
 
+**Correction — `GHI_clearsky` is not pvlib-only.** `02_combine_assam.py` downloads ERA5's own
+clear-sky field (`ssrdc`, deaccumulated to `era5_GHI_clearsky_era5`) and **prefers** it over the
+pvlib Ineichen estimate above whenever it is present in the source NetCDF; the pvlib value above is
+the fallback. A `clearsky_source` column (`"era5_ssrdc"` or `"pvlib_ineichen"`) records which was
+actually used per row. Earlier drafts of this document described only the pvlib branch.
+
 ## Solar position algorithm — method not explicitly pinned
 
 `get_solarposition(times)` called without an explicit `method=` argument — relies on pvlib's

@@ -14,7 +14,7 @@ OUTPUTS:
       Full variable x season x event MBE/RMSE/Pearson-r table, plus
       "ALL x <event>" and "<season> x ALL" and "ALL x ALL" aggregate rows
       per variable.
-  outputs/qc_era5_power_scatter_rajasthan.html
+  data/plots/qc/qc_era5_power_scatter.html
       ERA5-vs-POWER GHI scatter, one panel per season, y=x identity line.
   outputs/bias_decision_rajasthan.txt
       Which of the three decision branches was taken, with the supporting
@@ -61,7 +61,7 @@ import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
-from config import COMBINED_POINTS_FILE, PROCESSED_DIR, OUTPUTS_DIR, ensure_data_dirs
+from config import COMBINED_POINTS_FILE, PROCESSED_DIR, OUTPUTS_DIR, ensure_data_dirs, QC_PLOTS_DIR
 
 ensure_data_dirs()
 
@@ -199,7 +199,7 @@ def build_ghi_scatter(df, pairs):
         title="ERA5 vs NASA POWER GHI by season — Rajasthan (dashed = y=x identity line)",
         height=850, width=950,
     )
-    out = OUTPUTS_DIR / "qc_era5_power_scatter_rajasthan.html"
+    out = QC_PLOTS_DIR / "qc_era5_power_scatter.html"
     fig.write_html(str(out))
     print(f"  [OK]   GHI scatter -> {out}")
 
@@ -482,7 +482,7 @@ def main():
     print("  CROSS-SOURCE AGREEMENT ANALYSIS — Rajasthan (ERA5 vs NASA POWER)")
     print(f"  Input  : {COMBINED_POINTS_FILE}")
     print(f"  Output : {PROCESSED_DIR}/era5_power_agreement_rajasthan.csv, "
-          f"{OUTPUTS_DIR}/qc_era5_power_scatter_rajasthan.html, "
+          f"{QC_PLOTS_DIR}/qc_era5_power_scatter.html, "
           f"{OUTPUTS_DIR}/bias_decision_rajasthan.txt")
     print("=" * 68)
 

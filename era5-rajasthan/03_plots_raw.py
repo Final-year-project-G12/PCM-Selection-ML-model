@@ -10,8 +10,8 @@ columns downstream.
 Direct port of the Tamil Nadu pipeline's 03_plots_raw.py — same six
 checks (A-F), same schema (population-weighted points x 3 events/day
 x 10 years, both ERA5 and NASA POWER columns per row). Only the region
-name, the input/preprocess script names, and the output directory
-(PLOTSV2/raw/ instead of data/plots/raw/) differ.
+name and the input/preprocess script names differ; output goes to the
+same data/plots/raw/ folder as in every state.
 
 WHAT EACH PLOT CHECKS (mapped to Phase 2 acceptance checks in the plan doc)
 -----------------------------------------------------------------------
@@ -37,7 +37,7 @@ WHAT EACH PLOT CHECKS (mapped to Phase 2 acceptance checks in the plan doc)
 HOW TO RUN:
   python 03_plots_raw.py
 
-OUTPUT: PLOTSV2/raw/*.png  (all read-only diagnostics — nothing here
+OUTPUT: data/plots/raw/*.png  (all read-only diagnostics — nothing here
 writes back to climate_rajasthan_points.csv)
 """
 
@@ -54,7 +54,7 @@ import seaborn as sns
 
 from config import COMBINED_POINTS_FILE, BASE_DIR
 
-RAW_PLOT_DIR = BASE_DIR / "PLOTSV2" / "raw"
+RAW_PLOT_DIR = BASE_DIR / "data" / "plots" / "raw"
 RAW_PLOT_DIR.mkdir(parents=True, exist_ok=True)
 
 EVENT_ORDER = ["sunrise", "noon", "sunset"]

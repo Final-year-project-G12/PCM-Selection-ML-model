@@ -42,17 +42,17 @@ sig = pd.read_csv(SIG_CSV) if os.path.exists(SIG_CSV) else None
 
 # 1. BIC / Silhouette Selection Curves
 print("[1/5] BIC & Model Selection Curves")
-if bic is not None and "k" in bic.columns:
+if bic is not None and "K" in bic.columns:
     fig, ax1 = plt.subplots(figsize=(8, 5))
     color = "#3b7dd8"
     ax1.set_xlabel("Number of Clusters (k)")
-    if "bic" in bic.columns:
-        ax1.plot(bic["k"], bic["bic"], "-o", color=color, label="BIC")
+    if "BIC" in bic.columns:
+        ax1.plot(bic["K"], bic["BIC"], "-o", color=color, label="BIC")
         ax1.set_ylabel("BIC (lower is better)", color=color)
-    if "silhouette" in bic.columns:
+    if "Silhouette" in bic.columns:
         ax2 = ax1.twinx()
         color2 = "#e6194b"
-        ax2.plot(bic["k"], bic["silhouette"], "-s", color=color2, label="Silhouette")
+        ax2.plot(bic["K"], bic["Silhouette"], "-s", color=color2, label="Silhouette")
         ax2.set_ylabel("Silhouette Score (higher is better)", color=color2)
     plt.title("Verify Clustering 01: BIC & Silhouette Curves (Assam)")
     sfig("01_elbow_curves.png")

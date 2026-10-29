@@ -23,7 +23,7 @@ HOW TO RUN
 
 OUTPUT
 ------
-  PLOTSV2/comprehensive/
+  data/plots/comprehensive/
     maps/           — standalone Folium HTML
     timeseries/     — matplotlib PNG
     statistics/     — matplotlib PNG
@@ -49,7 +49,7 @@ from config import COMBINED_POINTS_FILE, PREPROCESSED_DIR, BASE_DIR
 
 USE_PROCESSED = True   # False -> plots raw climate_rajasthan_points.csv instead
 
-PLOT_DIR = BASE_DIR / "PLOTSV2" / "comprehensive"
+PLOT_DIR = BASE_DIR / "data" / "plots" / "comprehensive"
 for sub in ["maps", "timeseries", "statistics", "solar_resource"]:
     (PLOT_DIR / sub).mkdir(parents=True, exist_ok=True)
 

@@ -30,7 +30,7 @@ Phase 11 consolidates and audits all data, analytical, visual, and reporting art
 
 Exactly **10 thesis-ready tables** are consolidated in standardized CSV format:
 
-1. `table01_climate_signatures.csv`: 18 climate signature indices summarized across the 129 spatial points.
+1. `table01_climate_signatures.csv`: 19 climate signature indices summarized across the 129 spatial points.
 2. `table02_pca_loadings.csv`: Principal component factor loadings for the thermodynamic index block.
 3. `table03_gmm_selection.csv`: Clustering diagnostic metrics ($K=2$ to $K=6$) establishing minimum BIC at $K=3$.
 4. `table04_cluster_profiles_k3.csv`: Final $K=3$ regime profiles, population distributions, and medoids (`ASP_0012`, `ASP_0092`, `ASP_0028`).
@@ -47,16 +47,16 @@ Exactly **10 thesis-ready tables** are consolidated in standardized CSV format:
 
 Exactly **10 distinct thesis-ready figures** are consolidated:
 
-1. `fig01_gmm_bic_selection.png`: GMM BIC model selection curve showing global minimum at $K=3$ ($\text{BIC}=1574.94$).
-2. `fig02_gmm_silhouette_curve.png`: Silhouette coefficient curve across candidate cluster counts ($K=2$ to $K=6$).
-3. `fig03_gmm_davies_bouldin.png`: Davies-Bouldin cluster separation index.
-4. `fig04_gmm_calinski_harabasz.png`: Calinski-Harabasz variance ratio criterion.
-5. `fig05_mcdm_vs_delivery_rank.png`: Scatter plot comparing historical MCDM rank against dynamic physics delivery temperature rank ($\rho = -0.52$ to $-0.64$).
-6. `fig06_mcdm_vs_solar_fraction_rank.png`: Scatter plot comparing historical MCDM rank against dynamic physics solar fraction rank ($\rho = -0.43$ to $-0.55$).
-7. `fig07_mcdm_vs_cycling_rank.png`: Scatter plot comparing historical MCDM rank against annual thermal cycling count.
-8. `fig08_tm_vs_physics_delivery_mechanism.png`: Thermodynamic mechanism plot demonstrating why $T_m \approx 51^\circ\text{C}$ outperforms $T_m = 44^\circ\text{C}$ for $50^\circ\text{C}$ hot water delivery.
-9. `fig09_final_k3_climate_regime_map.png` (and interactive `fig09_final_k3_climate_regime_map.html`): High-resolution cartographic map of the 129 population-weighted grid points colored by final $K=3$ climate regime.
-10. `fig10_final_k3_pca_projection.png`: 2D Principal Component Analysis scatter plot showing the 129 grid points projected on PC1 vs. PC2 with $K=3$ GMM covariance confidence ellipses.
+1. `k_selection_bic.png`: GMM BIC model selection curve showing global minimum at $K=3$ ($\text{BIC}=1574.94$).
+2. `k_selection_silhouette.png`: Silhouette coefficient curve across candidate cluster counts ($K=2$ to $K=6$).
+3. `k_selection_davies_bouldin.png`: Davies-Bouldin cluster separation index.
+4. `k_selection_calinski_harabasz.png`: Calinski-Harabasz variance ratio criterion.
+5. `11b_physics_vs_mcdm_delivery_rank.png`: Scatter plot comparing historical MCDM rank against dynamic physics delivery temperature rank ($\rho = -0.52$ to $-0.64$).
+6. `11b_physics_vs_mcdm_solar_fraction_rank.png`: Scatter plot comparing historical MCDM rank against dynamic physics solar fraction rank ($\rho = -0.43$ to $-0.55$).
+7. `11b_physics_vs_mcdm_cycling_rank.png`: Scatter plot comparing historical MCDM rank against annual thermal cycling count.
+8. `11c_tm_vs_physics_delivery.png`: Thermodynamic mechanism plot demonstrating why $T_m \approx 51^\circ\text{C}$ outperforms $T_m = 44^\circ\text{C}$ for $50^\circ\text{C}$ hot water delivery.
+9. `cluster_map.png` (and interactive `cluster_map.html`): High-resolution cartographic map of the 129 population-weighted grid points colored by final $K=3$ climate regime.
+10. `pca_projection.png`: 2D Principal Component Analysis scatter plot showing the 129 grid points projected on PC1 vs. PC2 with $K=3$ GMM covariance confidence ellipses.
 
 ---
 

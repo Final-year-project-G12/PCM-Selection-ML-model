@@ -36,11 +36,9 @@ OUT      = os.path.join(BASE, "data", "plots", "comparison")
 os.makedirs(OUT, exist_ok=True)
 
 PAL = ["#e6194b", "#3cb44b", "#4363d8", "#f58231", "#911eb4", "#42d4f4", "#f032e6", "#bfef45"]
-MEDOID_MAP = {0: "ASP_0012", 1: "ASP_0092", 2: "ASP_0028"}
-
-ALT_OUT = os.path.join(BASE, "plots", "comparison")
-PORTAL_OUT = os.path.abspath(os.path.join(BASE, "..", "..", "Documentation-Portal", "public", "plots", "comparison"))
-os.makedirs(ALT_OUT, exist_ok=True)
+# Medoids the physics simulation actually used (one per cluster), read from its output.
+MEDOID_MAP = (pd.read_csv(PHYS).groupby("cluster_id")["medoid_point_id"].first().to_dict()
+              if os.path.exists(PHYS) else {})
 
 def load(p, label=""):
     if not os.path.exists(p):
@@ -49,9 +47,7 @@ def load(p, label=""):
     return pd.read_csv(p)
 
 def sfig(n):
-    for d in [OUT, ALT_OUT, PORTAL_OUT]:
-        if os.path.exists(d):
-            plt.savefig(os.path.join(d, n), dpi=150, bbox_inches="tight")
+    plt.savefig(os.path.join(OUT, n), dpi=150, bbox_inches="tight")
     plt.close()
     print(f"  {n}")
 
@@ -403,11 +399,8 @@ if full_df is not None:
         name1 = c1.replace("_score", "").replace("_grade", "").upper()
         name2 = c2.replace("_score", "").replace("_grade", "").upper()
         
-        regimes = {
-            0: ("Cluster 0: Lower Brahmaputra Valley", "ASP_0012"),
-            1: ("Cluster 1: Upper Assam Tea Belt", "ASP_0092"),
-            2: ("Cluster 2: Barak Valley & Southern Hills", "ASP_0028")
-        }
+        regimes = {int(c): (f"Cluster {int(c)}", MEDOID_MAP.get(int(c), f"C{c}"))
+                   for c in full_df["cluster_id"].unique()}
         
         cids = sorted(full_df["cluster_id"].unique())
         nc = len(cids)

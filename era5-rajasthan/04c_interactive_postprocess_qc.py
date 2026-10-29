@@ -7,16 +7,14 @@ as-is in the PNG script), reading rajasthan_cleaned_physical.csv, as
 zoomable/hoverable HTML.
 
 Direct port of the Tamil Nadu pipeline's 04c_interactive_postprocess_qc.py.
-Two Rajasthan adaptations only:
-  - output goes to PLOTSV2/post_preprocess_interactive/ instead of
-    data/plots/post_preprocess_interactive/
+One Rajasthan adaptation only:
   - rajasthan_cleaned_physical.csv is ~4 GB, so this reads only the
     columns the checks touch (usecols filter). Output is identical.
 
 Requires: pip install plotly
 
 INPUT  : data/preprocessed/rajasthan_cleaned_physical.csv
-OUTPUT : PLOTSV2/post_preprocess_interactive/*.html
+OUTPUT : data/plots/post_preprocess_interactive/*.html
 
 HOW TO RUN:
   python 04c_interactive_postprocess_qc.py
@@ -33,7 +31,7 @@ from plotly.subplots import make_subplots
 
 from config import PREPROCESSED_DIR, BASE_DIR
 
-OUT_DIR = BASE_DIR / "PLOTSV2" / "post_preprocess_interactive"
+OUT_DIR = BASE_DIR / "data" / "plots" / "post_preprocess_interactive"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 PHYSICAL_FILE = PREPROCESSED_DIR / "rajasthan_cleaned_physical.csv"

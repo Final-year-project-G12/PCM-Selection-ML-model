@@ -75,7 +75,12 @@ This consolidation reduces documentation fragmentation by embedding conceptual a
 - Decision rule thresholds (BACKBONE / QUANTILE_MAP / MANUAL_REVIEW)
 - Actual Rajasthan numbers: r=0.8102, MBE=10.95 W/m² at solar noon
 - Why QUANTILE_MAP was chosen (r ≥ 0.70 but failed stricter gates)
-- Critical caveat: quantile-mapped GHI never persisted; Phase 3 reads uncorrected ERA5
+- Critical caveat (as it stood when this file described the now-deleted `14_ERA5_POWER_VALIDATION.md`):
+  quantile-mapped GHI never persisted; Phase 3 reads uncorrected ERA5. **RESOLVED as of the current
+  pipeline (confirmed 2026-09-17):** `04_preprocess_rajasthan.py` (Phase 2.5) now applies the
+  quantile-mapping correction in place and writes it to `rajasthan_cleaned_physical.csv`, which
+  `04b_climate_signature.py` (Phase 3) reads directly — see `12_FINAL_READINESS_REPORT.md`
+  ("Scientific risks") for the current status.
 
 **Quality Control (formerly `15_QUALITY_CONTROL.md`)**
 **Moved to:** briefly `04b_PHASE_2_5_AUDIT.md`, then folded into `04_PHASE_2_AUDIT.md` Part B in Wave 4 (its current home)

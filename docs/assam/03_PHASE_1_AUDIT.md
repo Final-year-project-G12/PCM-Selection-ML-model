@@ -33,7 +33,7 @@
 ## ERA5 Reanalysis Retrieval (`01_download_era5_assam.py`)
 
 - **CDS Product**: `reanalysis-era5-single-levels` (hourly).
-- **Parameters**: Surface solar radiation downwards (`ssrd`), surface thermal radiation downwards (`strd`), 2m temperature (`t2m`), 2m dewpoint (`d2m`), 10m wind components (`u10`, `v10`), mean sea level pressure (`msl`), total cloud cover (`tcc`), total precipitation (`tp`), and direct beam solar radiation (`avg_sdirswrf`).
+- **Parameters**: Surface solar radiation downwards (`ssrd`), clear-sky surface solar radiation downwards (`ssrdc`), surface thermal radiation downwards (`strd`), 2m temperature (`t2m`), 2m dewpoint (`d2m`), 10m wind components (`u10`, `v10`), **surface pressure (`sp` / `surface_pressure`, not mean sea level pressure `msl`)**, total cloud cover (`tcc`), total precipitation (`tp`), and direct beam solar radiation (`avg_sdirswrf`, matching ERA5 fields `msdwswrf`/`fdir`/`msdrswrf`).
 - **Operational Tracking**: `download_status_points.csv` ensures idempotent, resumable retrieval.
 - **Format Normalization**: `00_unzip_accum.py` detects and decompresses CDS zip containers delivered with `.nc` extensions.
 
@@ -41,7 +41,7 @@
 
 ## NASA POWER Retrieval (`01b_download_nasapower.py`)
 
-- **Product**: NASA POWER hourly and daily meteorology (`ALLSKY_SFC_SW_DWN`, `T2M_MAX`, `T2M_MIN`, `RH2M`, `WS2M`, `PRECTOTCORR`).
+- **Product**: NASA POWER **hourly-only** point API (`ALLSKY_SFC_SW_DWN`, `CLRSKY_SFC_SW_DWN`, `T2M`, `RH2M`, `WS10M`). There is no daily-product request, no `T2M_MAX`/`T2M_MIN` (derived instead in `02b` from the 24 hourly `T2M` values), and **`PRECTOTCORR` is not downloaded** — `monsoon_index` is computed from ERA5's event-sampled precipitation instead.
 - **Coverage**: 2016–2025 (10 continuous years) for all 129 spatial coordinates.
 - **Operational Storage**: Cached locally in `data/raw/nasapower/power_{point_id}_{year}.json`.
 - **Authoritative Output**: Feeds into `daily_aggregates_assam.csv` (audited count: **467,367 daily rows** after dropping incomplete days with $<20$ valid hours).

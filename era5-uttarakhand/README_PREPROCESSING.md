@@ -23,13 +23,11 @@ Run order:
 
 Merges ERA5 + NASA POWER for every `(point_id, date, event)` combination.
 Expected shape: **45 population-weighted points x 10 years x 3 sun-events**
-= 45 x 3,653 days x 3 events ≈ **493,000 rows** (a small number fewer, since
-some point/day/event combinations get dropped if both sources fall outside
-the 3-hour matching window — check your own printed row count against this
-estimate rather than trusting the arithmetic blindly; unlike the Tamil
-Nadu version of this pipeline, this figure hasn't been independently
-confirmed against your actual output file here). Row 1 (`sunrise`, GHI=0)
-being physically correct, not a bug, still applies.
+= 45 x 3,653 days x 3 events = **493,155 rows** if no combination is
+dropped for falling outside the 3-hour matching window. **Confirmed**:
+the actual output row count is exactly 493,155 — zero rows lost to the
+match window (see `04_PHASE_2_AUDIT.md` and `03_PHASE_1_AUDIT.md`). Row 1
+(`sunrise`, GHI=0) being physically correct, not a bug, still applies.
 
 The 45-point count itself **is** confirmed from your own `00a_build_population_grid.py`
 run (population points covering ~87.5% of state population) and from
@@ -179,9 +177,11 @@ agreement" in your methodology if you want to.
   (PCM must sit *above* delivery temperature to discharge heat into the
   water — the earlier subtract-based rule had the sign backwards). Held
   constant across all points by design.
-- **5 interaction terms** (GHI x kt_std, DTR x cloudy_frac, RH x (Ta-Tm),
-  wind x (Ta-Tsoil), CCI x (1-SAI)) — now computed on the canonical
-  (true-where-available) columns.
+- **4 interaction terms** (GHI x kt_std, DTR x cloudy_frac, RH x (Ta-Tm),
+  CCI x (1-SAI)) — now computed on the canonical (true-where-available)
+  columns. A 5th term, wind x (Ta-Tsoil), was removed: `Tsoil = Ta - 3.0`
+  is a constant offset, so the term reduced algebraically to a rescaled
+  copy of `wind_mean` rather than an independent interaction.
 - **PCA on the correlated block only** (Ta_mean, Ta_p95, Ta_p05, HDD18,
   CDD24, RH_mean, elevation_m) — retained to 95% variance.
 - **Clustering matrix** explicitly excludes lat/lon (never cluster on
@@ -237,13 +237,8 @@ their own regimes (Gaussian Mixture, BIC-selected K, K-Means reported as
 comparison) already gives you "different PCMs for different locations"
 within Uttarakhand.
 
-`05_cluster_regions.py` (the original multi-state script) still exists and
-is already state-parameterised — if you add Rajasthan/Assam/Tamil Nadu's
-Phase 3 output later, switch to it. Until then, this single-state version
-produces the same output shapes (`cluster_assignments_uttarakhand.csv`
-with soft membership probabilities, `cluster_profiles_uttarakhand.csv`
-population-weighted per regime) so nothing downstream (Phase 5/6) needs to
-change when/if you extend to more states later.
+The original multi-state script (`05_cluster_regions.py`) was deleted in the
+2026-10-27 cleanup; it is in git history if cross-state clustering is ever needed.
 
 Expected K for one state, and with only 45 points to work with: probably
 smaller than Tamil Nadu's 3-6 — realistically 2-4 (e.g. high-Himalaya vs.

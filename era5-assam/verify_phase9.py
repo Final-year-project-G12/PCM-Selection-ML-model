@@ -134,14 +134,36 @@ def main():
     assign_df = pd.read_csv(ASSIGN_FILE)
     sig_raw_df = pd.read_csv(SIG_RAW_FILE)
     medoids = derive_true_medoids(assign_df, sig_raw_df)
-    expected_medoids = {0: "ASP_0012", 1: "ASP_0092", 2: "ASP_0028"}
+    # Updated 2026-09-23: the previous expected medoids (ASP_0012/0092/0028)
+    # were derived under 05_cluster_assam.py's old covariance_type="full"
+    # GMM fit. Switching to "diag" (the correct choice for 5 features / 80
+    # points -- see 05_cluster_assam.py's own comment) genuinely changes
+    # which points the GMM assigns to each cluster, and therefore which
+    # point is closest to each cluster's centroid. This is an expected
+    # consequence of that fix, not a regression -- update this expectation
+    # again only alongside a deliberate re-verification of the new
+    # clustering, never to silently paper over an unexplained drift.
+    expected_medoids = {0: "ASP_0003", 1: "ASP_0036", 2: "ASP_0080"}
     assert medoids == expected_medoids, f"Medoid mismatch! Expected {expected_medoids}, got {medoids}"
     log(f"  [PASS] True Cluster Medoids verified: {medoids}")
     
     log("\n[SECTION 3] Verifying Output CSV Schema & Non-MCDM Candidate Labels...")
     assert OUT_RESULTS_CSV.exists(), f"Results CSV missing: {OUT_RESULTS_CSV}"
     res_df = pd.read_csv(OUT_RESULTS_CSV)
-    assert len(res_df) == 24, f"Expected 24 simulation results (8 PCMs x 3 clusters), got {len(res_df)}"
+    # Expected row count is derived from the Phase 6 survivors file the
+    # simulator itself draws candidates from (every unique passes_all PCM is
+    # simulated at every medoid), not hardcoded -- it was 24 (8 PCMs x 3)
+    # before the survivor pool was regenerated.
+    feas_df = pd.read_csv(phys_val.FEAS_FILE)
+    n_pcm_expected = feas_df[feas_df["passes_all"] == True]["name"].nunique()
+    n_clusters_expected = len(expected_medoids)
+    assert len(res_df) == n_pcm_expected * n_clusters_expected, (
+        f"Expected {n_pcm_expected * n_clusters_expected} simulation results "
+        f"({n_pcm_expected} PCMs x {n_clusters_expected} clusters), got {len(res_df)}"
+    )
+    assert res_df["pcm_name"].nunique() == n_pcm_expected, (
+        f"Expected {n_pcm_expected} unique PCMs, got {res_df['pcm_name'].nunique()}"
+    )
     
     req_cols = [
         "cluster_id", "medoid_point_id", "pcm_name", "candidate_status_label",

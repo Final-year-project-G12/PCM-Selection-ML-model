@@ -7,13 +7,12 @@ zoomable/hoverable HTML instead of static PNGs. Nothing here writes back
 to the data; purely a read-only QA pass, same as 03.
 
 Direct port of the Tamil Nadu pipeline's 03b_interactive_raw_qa.py — only
-the region name and the output directory (PLOTSV2/raw_interactive/ instead
-of data/plots/raw_interactive/) differ.
+the region name differs.
 
 Requires: pip install plotly folium branca
 
 INPUT  : data/processed/climate_rajasthan_points.csv
-OUTPUT : PLOTSV2/raw_interactive/*.html
+OUTPUT : data/plots/raw_interactive/*.html
 
 HOW TO RUN:
   python 03b_interactive_raw_qa.py
@@ -35,7 +34,7 @@ import branca.colormap as cm
 
 from config import COMBINED_POINTS_FILE, BASE_DIR
 
-OUT_DIR = BASE_DIR / "PLOTSV2" / "raw_interactive"
+OUT_DIR = BASE_DIR / "data" / "plots" / "raw_interactive"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 EVENT_ORDER = ["sunrise", "noon", "sunset"]

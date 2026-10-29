@@ -1,6 +1,6 @@
 """
 Verification Script 1: Preprocessing and QC - Rajasthan
-Output: PLOTSV2/verify_preprocessing/
+Output: data/plots/verify_preprocessing/
 Run AFTER: 04_preprocess_rajasthan.py
 
 Port of tamilnadu_pipeline/plots/verify_01_preprocessing_tamilnadu.py and
@@ -23,7 +23,7 @@ except Exception:
 BASE = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 RAW  = os.path.join(BASE,"data","processed","climate_rajasthan_points.csv")
 PRE  = os.path.join(BASE,"data","preprocessed","rajasthan_cleaned_physical.csv")
-OUT  = os.path.join(os.path.dirname(os.path.abspath(__file__)),"verify_preprocessing")
+OUT  = os.path.join(BASE, "data", "plots", "verify_preprocessing")
 os.makedirs(OUT, exist_ok=True)
 
 print("Loading data (first 500k rows of raw for speed)...")

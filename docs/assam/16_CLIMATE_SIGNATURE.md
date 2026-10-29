@@ -5,13 +5,17 @@
 > "Every index must answer the question 'which PCM property does this constrain, and by what
 > physical mechanism?'. If that sentence cannot be completed, the index is removed."
 
-All 18 Assam signature indices across the **129 spatial coordinates** satisfy this criterion.
+All 19 Assam signature indices across the **129 spatial coordinates** satisfy this criterion.
+(`04b_climate_signature.py` computes all 19 from the event-sampled physical dataset alone — see
+`02_DATA_SOURCES_AND_VARIABLES.md` for the verified formulas; there is no working Tier-1/Tier-2
+split inside the current signature script, even though the table below is organized under that
+older framing and `02b_build_daily_aggregates_assam.py`'s Tier-2 outputs exist on disk unused.)
 
 ---
 
 ## Feature → Thermal Behavior → PCM Property Map
 
-### Tier 1 — Sun-Event Statistics (ERA5 Hourly)
+### "Tier 1" — Sun-Event Statistics (ERA5, event-sampled: sunrise/noon/sunset, not hourly)
 
 | Feature | Physical Mechanism | PCM Property Constrained |
 |---|---|---|
@@ -23,27 +27,30 @@ All 18 Assam signature indices across the **129 spatial coordinates** satisfy th
 | `RH_mean` | Annual mean relative humidity → condensation and corrosion risk | Corrosion resistance requirement; container material |
 | `GHI_daily_kWh` | Mean daily global horizontal irradiation | $L_{\text{required}}$ latent heat capacity sizing |
 | `DTR` | Diurnal Temperature Range → daily thermal expansion/contraction | Thermal cycling durability ($\ge 300$ cycles) |
-| `HSI` | Humidity-Solar Interaction ($RH_{\text{mean}} \times GHI_{\text{daily}}$) | **Corrosion-veto trigger for Assam.** Excludes inorganic PCMs when $HSI > \text{global } p_{75}$ |
+| `HSI` | **Correction:** actually `RH_mean × mean(fraction of events with (Ta − Td) < 3 K)` — a dew-point-proximity index, not $RH_{\text{mean}} \times GHI_{\text{daily}}$ | **Not** the corrosion-veto trigger in code. `07_feasibility_filter_final.py`'s corrosion check uses each cluster's `RH_mean_mean` (not `HSI`) as the humidity proxy, and — because no PCM in `pcm_database_final.csv` has `is_inorganic=True` — the veto can never actually fire regardless of HSI or RH (see `07_PHASE_5_AUDIT.md`, `08_PHASE_6_AUDIT.md`). Treat HSI as a reported climate-character index, not an active screening input. |
 
-### Tier 2 — Daily-Integral Indices (NASA POWER Daily Integrals)
+### "Tier 2" — Daily-Integral Indices (produced by `02b_build_daily_aggregates_assam.py`, but **not consumed** by `04b_climate_signature.py`)
 
-| Feature | Physical Mechanism | PCM Property Constrained |
-|---|---|---|
-| `kt_mean` | Annual mean clearness index → solar resource reliability | Storage capacity scaling factor |
-| `cloudy_frac` | Fraction of days with $k_t < 0.4$ → intermittent solar charging | Autonomy sizing; partial-cycle charging stress |
-| `monsoon_index` | Fraction of annual rainfall occurring in Jun–Sep | Seasonal storage shortfall sizing |
-| `CCI` | Cloud Cover Index → daily solar intermittency | Combined charging reliability assessment |
-| `SAI` | Solar Availability Index → fraction of usable solar charging days | Latent-heat reserve margin |
-| `precipitation_annual` | Total annual precipitation (mm/yr) | Macro-climate regime characterization |
-| `Ta_min_true` | True annual minimum daily temperature (°C) | Melting window lower threshold boundary |
-| `Ta_max_true` | True annual maximum daily temperature (°C) | Thermal degradation & safety threshold |
-| `elev_proxy` | Surface atmospheric pressure elevation proxy | Ineichen clear-sky atmospheric modeling |
+The features below are described in earlier drafts as Tier-2 daily-integral indices feeding the
+signature. In the current code they are **either computed differently (from event-sampled data,
+in `04b` directly) or not computed at all**:
+
+| Feature | Actual status |
+|---|---|
+| `kt_mean`, `kt_std` | Computed in `04b` from event-level `era5_CSI`, not from a Tier-2 daily clearness index |
+| `cloudy_frac` | Computed in `04b` as a fraction of *events* (not days) with `GHI/GHI_clearsky < 0.35` |
+| `monsoon_index` | Computed in `04b` from ERA5 event-sampled precipitation (POWER's `PRECTOTCORR` is never downloaded) |
+| `CCI` | Computed in `04b` as `1 − std(daily cloudy-event fraction)`, not a "Cloud Cover Index" and not a longest-run count |
+| `SAI` | Computed in `04b` from a noon-GHI-based daily proxy, not a true POWER daily integral ratio |
+| `precipitation_annual` | **Not computed anywhere** — does not appear in `climate_signatures_raw.csv` |
+| `Ta_min_true`, `Ta_max_true` | **Not computed in `04b`** — these exist per-day in `daily_aggregates_assam.csv` but are never carried into the signature |
+| `elev_proxy` | Computed in `04b` from mean `era5_P_atm` ÷ 1013.25 — this one is accurately described |
 
 ---
 
 ## Four Climate Representations in the Pipeline
 
-1. **Raw 18-Index Signature**: Dimensions preserved in physical units across all 129 points (`climate_signatures_raw.csv`).
+1. **Raw 19-Index Signature**: Dimensions preserved in physical units across all 129 points (`climate_signatures_raw.csv`).
 2. **Standardized Matrix**: Normalized to zero mean and unit variance across the 129 coordinates (`climate_signatures_matrix.csv`).
 3. **PCA Thermodynamic Block**: Principal component reduction applied strictly to the 7 correlated thermodynamic indices (`Ta_mean`, `Ta_p95`, `Ta_p05`, `HDD18`, `CDD24`, `RH_mean`, `elev_proxy`). Solar and variability indices are held separate to preserve physical interpretability.
 4. **Final Locked GMM Input Representation (5 Features)**:

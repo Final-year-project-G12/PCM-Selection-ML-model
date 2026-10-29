@@ -40,19 +40,64 @@ STATED ASSUMPTIONS — all of these are documented choices, not measured
 values, exactly like every other stated assumption elsewhere in this
 pipeline. Report them as such if you cite results from this script.
 --------------------------------------------------------------------------
-  Tank water mass Mw          150 kg   (mid-range domestic tank; SWH
-                                         literature in your Sources/ spans
-                                         30-360 L depending on household size)
-  Collector-tank coil area Ac  2.5 m^2  (Barqawi2025 Table 1)
-  Water-coil HTC hc            1500 W/m^2K  (Barqawi2025)
+  RECONCILED (2026-09) — tank mass, PCM mass, collector area, and the
+  draw schedule used to be sized independently from Barqawi2025's own
+  "mid-configuration" (150kg tank, 2.5m^2 collector, 28kg PCM, 2x75kg/day
+  draws), which is a SMALLER household than the one
+  04b_climate_signature.py actually sized the MCDM's L_required criterion
+  for (300kg/day draw, 150kg PCM). That mismatch meant this script was
+  physics-testing a different system than the one the PCM ranking was
+  built around. Quantified in two steps:
+    1. With the old 28kg PCM, latent storage covered only ~25% of one
+       day's draw energy -- fixed by resizing PCM mass to 150kg (below),
+       which covers ~137%, plausibly sufficient on its own.
+    2. That alone barely moved the result (still ~16-19% solar fraction),
+       because a SECOND inconsistency was exposed: Barqawi2025's 2.5 m^2
+       collector was sized for THEIR 150kg tank, not this project's 300kg
+       one. At Uttarakhand's typical ~4.8 kWh/m^2/day insolation, a 2.5 m^2
+       collector at 70% efficiency delivers ~8.4 kWh/day against a
+       ~12.2 kWh/day demand for a 300kg draw -- only ~69% coverage even
+       under ideal (100%-coupling, no-loss) conditions, before accounting
+       for rate-limited charging and overnight ambient loss. Fixed by
+       scaling the collector area by Barqawi2025's OWN collector-to-tank
+       ratio (2.5 m^2 / 150 kg) applied to the 300kg tank -- the same
+       "scale up their reference design, don't invent a new number"
+       principle used for the PCM volume/area below, completed
+       consistently across every household-scale component instead of
+       reconciling only some of them and leaving others inconsistent.
+  hc, hp, and COLLECTOR_EFF (all per-unit-area or intrinsic properties,
+  not overall system size) are UNCHANGED throughout.
+  Tank water mass Mw          300 kg   (matches 04b's DRAW_MASS_KG=300 —
+                                         the water mass this project's own
+                                         L_required criterion assumes gets
+                                         heated from mains to delivery temp)
+  Collector-tank coil area Ac  5.0 m^2  (scaled from Barqawi2025's
+                                         2.5 m^2 / 150 kg ratio, applied to
+                                         the 300kg tank above -- not an
+                                         independent guess)
+  Water-coil HTC hc            1500 W/m^2K  (Barqawi2025 — unchanged)
   Collector efficiency eff     0.70     (mid-range of Al-Mamun2023's cited
-                                         45-73% FPC efficiency band)
-  PCM volume                   0.035 m^3  (Barqawi2025 mid-configuration)
-  PCM-water HTC hp             800 W/m^2K  (Barqawi2025)
-  PCM surface area Ap          3.5 m^2   (Barqawi2025)
-  Draws                        2/day, 75 kg each, 07:00 and 19:00 local
-                                         (IST) — a stated, simple household
-                                         schedule, not a measured profile
+                                         45-73% FPC efficiency band — unchanged)
+  PCM volume                   0.1705 m^3  (sized so PCM mass = 150 kg at
+                                         this database's own median solid
+                                         density, 880 kg/m^3 — matching
+                                         04b's ASSUMED_PCM_MASS_KG=150,
+                                         not Barqawi2025's smaller example)
+  PCM-water HTC hp             800 W/m^2K  (Barqawi2025 — unchanged; a
+                                         property of contact/flow quality,
+                                         not overall system size)
+  PCM surface area Ap          17.05 m^2  (scaled from Barqawi2025's
+                                         3.5 m^2 / 0.035 m^3 to preserve
+                                         the SAME specific surface area,
+                                         100 m^2 per m^3 of PCM — i.e.
+                                         geometric similarity for a scaled-
+                                         up encapsulated-PCM heat exchanger,
+                                         not an independent guess)
+  Draws                        2/day, 150 kg each, 07:00 and 19:00 local
+                                         (IST) — same schedule/times as
+                                         before, mass doubled so the two
+                                         draws total 300kg/day, matching
+                                         04b's DRAW_VOLUME_L=300
   Target delivery temperature  50 C      (same T_delivery used throughout
                                          this pipeline's Tm_target rule)
   Ambient temp                 daily sinusoid built from that day's real
@@ -144,15 +189,18 @@ OUT_RESULTS = PROCESSED_DIR / "pcm" / "physics_validation_results.csv"
 OUT_SPEARMAN = PROCESSED_DIR / "pcm" / "physics_validation_spearman.csv"
 
 # ─── Stated tank/collector assumptions (see docstring) ──────────────────
-M_W_KG = 150.0
+# M_W_KG, A_C_M2, V_PCM_M3, A_P_M2 reconciled 2026-09 to
+# 04b_climate_signature.py's own household sizing (300kg draw, 150kg PCM)
+# -- see docstring for why, including why the collector needed scaling too.
+M_W_KG = 300.0
 C_W_JKGK = 4186.0
-A_C_M2 = 2.5
+A_C_M2 = 5.0
 H_C_WM2K = 1500.0
 COLLECTOR_EFF = 0.70
 
-V_PCM_M3 = 0.035
+V_PCM_M3 = 0.1705
 H_P_WM2K = 800.0
-A_P_M2 = 3.5
+A_P_M2 = 17.05
 DEFAULT_PCM_DENSITY_KG_M3 = 800.0
 DEFAULT_CP_JKGK = 2000.0
 # Your pcm_database_uttarakhand.csv DOES carry density_* / Cp_* columns
@@ -174,11 +222,13 @@ DEFAULT_CP_JKGK = 2000.0
 # unrealistic for a domestic solar water heater.
 #
 # UA_TANK_W_K represents the total conductance of the tank shell to ambient
-# air.  For a well-insulated 150 L stainless-steel tank with 50 mm mineral
-# wool insulation (k ~ 0.04 W/m*K), the outer area is ~1.5 m^2 and the
-# effective U-value is ~0.8 W/m^2*K -> UA ~ 1.2 W/K.  A slightly higher
-# value of 2.0 W/K is used here as a conservative (higher loss) estimate
-# consistent with real-world installation imperfections and pipe losses.
+# air.  For a well-insulated 300 L stainless-steel tank (resized 2026-09
+# from the original 150 L example to match this project's own 300kg draw
+# sizing -- see the M_W_KG note above) with 50 mm mineral wool insulation
+# (k ~ 0.04 W/m*K): geometric similarity scales outer area by 2^(2/3) from
+# the original ~1.5 m^2 at 150 L to ~2.4 m^2 at 300 L; with the same
+# effective U-value ~0.8 W/m^2*K, UA ~ 1.9 W/K -- close enough to the
+# already-used 2.0 W/K conservative estimate that no change is needed here.
 # Uttarakhand note: if you're modeling a high-altitude installation
 # (colder nights, more wind exposure than a plains installation), this
 # constant is arguably too low, not too high — 2.0 W/K is a plains/
@@ -187,7 +237,8 @@ DEFAULT_CP_JKGK = 2000.0
 UA_TANK_W_K = 2.0   # W/K  tank-to-ambient conductance (stated assumption)
 
 DRAW_HOURS_LOCAL = [7, 19]
-DRAW_MASS_KG = 75.0
+DRAW_MASS_KG = 150.0   # 2 draws x 150kg = 300kg/day, matching 04b's
+                       # DRAW_VOLUME_L=300 (resized 2026-09 from 75kg)
 T_DELIVERY_C = 50.0
 
 MAX_PCMS_PER_CLUSTER = 20      # safety cap. Your audited database has 55
@@ -529,11 +580,17 @@ def main():
         print(f"\n  {pct_in_band:.0f}% of all simulations landed in the published "
               f"54-84% solar-fraction benchmark band (plan v3.0 Table 16).")
         if pct_in_band < 50:
-            print("  [NOTE] Less than half in-band — before trusting the Spearman rho "
-                  "results, revisit the stated tank/collector assumptions at the top "
-                  "of this script (M_W_KG, A_C_M2, COLLECTOR_EFF, draw schedule) — a "
-                  "systematically low or high solar fraction usually traces to one of "
-                  "those, not to the PCM choice itself.")
+            print("  [NOTE] Less than half in-band. This was already investigated (2026-09):")
+            print("    M_W_KG/A_C_M2/V_PCM_M3/A_P_M2/draw schedule were reconciled to")
+            print("    04b_climate_signature.py's own household sizing (300kg draw, 150kg")
+            print("    PCM), scaling the collector by Barqawi2025's own collector-to-tank")
+            print("    ratio -- solar fraction barely moved (proportional scaling doesn't")
+            print("    change a ratio-based metric like solar fraction; confirmed by the")
+            print("    near-zero mean Spearman rho before AND after). The low result now")
+            print("    looks like a genuine climate-vs-design-ratio finding for Uttarakhand,")
+            print("    not a remaining sizing inconsistency. Further raising these numbers")
+            print("    without a new external justification would be tuning toward a")
+            print("    target, not fixing a bug -- don't do that.")
     if len(spearman_df):
         print(f"\n  Mean Spearman rho across clusters: {spearman_df['spearman_rho'].mean():.3f}")
         print("  Report per plan v3.0 Table 17 — ALL THREE outcome bands are publishable")

@@ -1,6 +1,11 @@
 # 03 — Phase 1 Audit: Data Collection
 
-Scripts: `00a_build_population_grid.py`, `00b_build_suntimes.py`, `01_download_era5_tamilnadu.py`, `01b_download_nasapower.py`, `00_unzip_accum.py`.
+Scripts: `00a_build_population_grid.py`, `00b_build_suntimes.py`, `00c_attach_elevation.py`, `01_download_era5_tamilnadu.py`, `01b_download_nasapower.py`, `00_unzip_accum.py`.
+
+> **ELEVATION ADDED (2026-09-16).** Tamil Nadu now has its own `00c_attach_elevation.py`,
+> matching Rajasthan's. The "flat 150 m proxy" limitation described below is **resolved** —
+> see the new subsection 2b. Sections below that still describe the flat-proxy behavior are
+> kept as historical context for why the fix mattered, not as the current state.
 
 ## Purpose
 Determine the coordinates (where) and timestamps (when) to sample climate data, then retrieve ERA5 and NASA POWER historical records for Tamil Nadu with full spatial and temporal rigor.
@@ -25,9 +30,15 @@ Determine the coordinates (where) and timestamps (when) to sample climate data, 
 ### 2. Spatial Processing Justification (formerly `11_SPATIAL_PROCESSING.md`)
 - **Why Population-Weighting**: Uniform geometric grids spend computation on sparsely populated forest or mountain zones. Population-weighting ensures that discovered climate regimes represent regions where actual domestic solar water heating demand exists.
 - **Nearest-Neighbor Snapping**: Coordinates snap to nearest ERA5 grid centers using Euclidean distance. Pre-aligning grid cells guarantees 1:1 mapping without distortion.
-- **Elevation Handling & Flat Terrain Caveat**:
-  - Tamil Nadu currently uses a **flat default terrain assumption of 150 m** in `02_combine_tamilnadu.py` for atmospheric pressure and clear-sky solar calculations.
-  - *Justification & Limitation*: Flat 150 m is a reasonable proxy for the coastal plains and interior tablelands where >90% of Tamil Nadu's population resides. However, it ignores high-relief montane zones in the Western Ghats (e.g., Nilgiris / Ooty at ~2,240 m). Unlike Rajasthan (which lacks montane extremes), multi-state extensions or montane-specific deployments will require explicit geopotential elevation extraction (`00c_attach_elevation.py`).
+- **Elevation Handling** *(resolved 2026-09-16 — see subsection 2b below)*:
+  - Tamil Nadu previously used a **flat default terrain assumption of 150 m** in `02_combine_tamilnadu.py` for atmospheric pressure and clear-sky solar calculations, for every point regardless of real terrain.
+  - *Historical justification & limitation*: Flat 150 m was a reasonable proxy for the coastal plains and interior tablelands where >90% of Tamil Nadu's population resides, but ignored high-relief montane zones in the Western Ghats (e.g., Nilgiris / Ooty at ~2,240 m) — a real error for a real fraction of sampled points, unlike comparatively flat Rajasthan. `DEFAULT_ALT_M = 150` in `02_combine_tamilnadu.py` remains as the fallback only for a point where `elevation_m` is somehow missing/NaN — it should never actually fire now that `00c` populates every point.
+
+### 2b. Real Per-Point Elevation (`00c_attach_elevation.py`) — added 2026-09-16
+- **What it does**: downloads ERA5's time-invariant surface geopotential field (`z`) over the population grid's bounding envelope — **one CDS request** (geopotential is time-invariant, not a per-year weather field), cached at `data/raw/era5/invariant/era5_TN_geopotential.nc` so it never touches or triggers re-download of the sun-event instant/accum files. Converts `z / 9.80665` (WMO standard gravity) to per-point `elevation_m`, nearest-grid-cell snapped, written into `population_grid_points.csv`.
+- **Result** (133 points): range **-0.0 m to 1,283.4 m**, mean **282.4 m**. All values within the plausible Earth-surface sanity band (-420 m .. 8850 m).
+- **Known limitation, accepted, not further corrected**: ERA5's native grid is ~0.25° (~28 km), so its orography is a grid-cell MEAN elevation — in areas with sharp relief (the Nilgiris escarpment), a single cell value smooths out real local topography (hence the 1,283 m max here, well below Ooty's true ~2,240 m). Still far closer to the truth than one flat number for the whole state.
+- **Downstream effect**: `02_combine_tamilnadu.py` already had the code path to read `elevation_m` per point for `pvlib` solar geometry / clear-sky irradiance (it just had no real data to read before) — no changes needed there. Every phase from Phase 2 (`02_combine_tamilnadu.py`) onward was re-run against the corrected elevation on 2026-09-16; see `CHANGELOG.md`.
 
 ### 3. Sun-Event Times & Temporal Alignment (`00b_build_suntimes.py`)
 - **UTC Time Base**: ERA5 reanalysis and NASA POWER satellite data are stored and retrieved in Coordinated Universal Time (UTC). Indian Standard Time (IST) is UTC + 5:30.
@@ -44,12 +55,12 @@ Determine the coordinates (where) and timestamps (when) to sample climate data, 
 
 ## Differences from Rajasthan
 - **Point Count**: 133 points for Tamil Nadu vs 320 points for Rajasthan, reflecting Tamil Nadu's smaller geographical footprint.
-- **Elevation Script**: Rajasthan has a dedicated `00c_attach_elevation.py` script downloading ERA5 geopotential. Tamil Nadu uses the 150 m flat proxy (documented as a known limitation above).
+- **Elevation Script**: both states now have `00c_attach_elevation.py` (Tamil Nadu's added 2026-09-16) — no longer a difference.
 
 ---
 
 ## Status
-**COMPLETE** — 133 points, 240 NetCDF files, 1330 NASA POWER JSON files.
+**COMPLETE** — 133 points, 240 NetCDF files, 1330 NASA POWER JSON files, elevation attached to all 133 points (2026-09-16).
 
 ---
 

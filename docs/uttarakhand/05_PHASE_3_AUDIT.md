@@ -221,7 +221,7 @@ constraining a PCM property. The Uttarakhand implementation's mapping:
 |---|---|---|
 | `GHI_mean` | Mean solar irradiance at the charging instant | Charging-rate feasibility; upper bound on achievable `Tm` |
 | `RH_mean` | Annual mean relative humidity → condensation risk at the PCM container | Corrosion-resistance requirement; encapsulation choice |
-| `HSI` | `RH_mean × fraction(T_amb − T_dew < 3 K)` — combined humidity + near-saturation signal | Intended as the corrosion-veto trigger. **In this run it triggers nothing** — `07`'s corrosion veto is not implemented, and all 55 database candidates are organic. |
+| `HSI` | `RH_mean × fraction(T_amb − T_dew < 3 K)` — combined humidity + near-saturation signal | The corrosion-veto trigger — **implemented in `07` (2026-09)**, comparing each cluster's HSI against the 75th percentile across all clusters. **Still triggers nothing in this run** — all 55 database candidates are organic, so the veto has no inorganic candidate to reject yet, not because the logic is missing. |
 | `wind_mean` | Mean wind speed → convective loss from collector and tank | Tank/collector loss coefficient; indirectly the required storage margin |
 | `monsoon_index` | JJAS share of annual precipitation → seasonal charging gap | Storage sizing for the monsoon under-charging window (descriptive, not a ranking criterion) |
 | `elevation_m` | Real per-point elevation (ERA5 geopotential, 196-2510m) — **was** `mean(P_atm)/1013.25`, a pressure-ratio proxy, fixed 2026-09 | Air mass into the Ineichen clear-sky model (via `02`'s per-point altitude, also fixed); PCA thermodynamic block |
@@ -291,7 +291,7 @@ recommendation depends on.
 ## `04d_signature_interactive.py` — explorer
 
 Reads `climate_signature_uttarakhand.csv` and writes Folium/Plotly HTML to
-`data/processed/signatures/interactive/`. Produces a multi-layer map with one toggleable layer per
+`data/plots/signatures/interactive/`. Produces a multi-layer map with one toggleable layer per
 index (`MAP_LAYERS = GHI_daily_kWh, Ta_mean, DTR, kt_mean, cloudy_frac, CCI, HDD18, CDD24, RH_mean,
 HSI, monsoon_index, L_required_kJ_per_kg`), an interactive correlation heatmap, index-distribution
 histograms, and a scatter matrix of the key PCM-facing indices "to eyeball the clustering structure
@@ -309,7 +309,7 @@ this repository.**
 | `signature_correlation_heatmap.png` | 18-index correlation | No |
 | `signature_distributions.png` | per-index histograms, with a constant-value special case | No |
 | `point_signature_map.png` | lon/lat scatter coloured by `GHI_daily_kWh` and `monsoon_index` | No |
-| `data/processed/signatures/interactive/*.html` | `04d` output | No |
+| `data/plots/signatures/interactive/*.html` | `04d` output | No |
 
 None of Phase 3's own outputs are committed. The only surviving evidence of the signature values is
 `data/plots/verify_clustering/05_cluster_profiles.png`, which plots six of them by cluster.

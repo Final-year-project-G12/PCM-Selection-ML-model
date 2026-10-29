@@ -4,7 +4,7 @@
 `05b_cluster_interactive.py` (explorer), `05_cluster_regions.py` (multi-state, **not run**)
 
 **Status**: **COMPLETE at K = 5.** Cluster assignments for all 45 points are recoverable from
-`data/plots/uttarakhand_objective1/02_climate_regime_map_folium.html`.
+`data/plots/objective1/02_climate_regime_map_folium.html`.
 
 ---
 
@@ -121,7 +121,7 @@ soft_probs   = gmm_final.predict_proba(X)
 | `kmeans_comparison_uttarakhand.csv` | K = 2…10 × K-Means silhouette |
 | `cluster_assignments_uttarakhand.csv` | `point_id, lat, lon, population, cluster_id, max_membership_prob, prob_cluster0…4` |
 | `cluster_profiles_uttarakhand.csv` | one row per cluster: `cluster_id, n_points, total_population_covered`, plus the **population-weighted mean** of every non-`_z` numeric signature column |
-| `cluster_map_uttarakhand.png` | lon/lat scatter coloured by `cluster_id`, annotated `C0…C4` |
+| `cluster_map.png` | lon/lat scatter coloured by `cluster_id`, annotated `C0…C4` |
 
 Population weighting uses `np.average(g[col], weights=g["population"])`, falling back to an
 unweighted mean if the weight sum is zero.
@@ -135,9 +135,24 @@ through — which is exactly what `07` checks for and errors on if absent.
 
 ## Observed results
 
-### Cluster assignments (all 45 points)
+**STALE-DATA WARNING (2026-09):** the tables in this "Observed results" section (cluster
+assignments, population/geographic extent, and the climate-profile-per-cluster table below) were
+recovered from `02_climate_regime_map_folium.html` / `A2_population_map.html` / `05_cluster_profiles.png`
+from a run that predates the `07b_charging_feasibility.py` regime-cap fix described in
+`00_MASTER_OVERVIEW.md` and `07_PHASE_5_AUDIT.md`, and reports sizes **12/9/3/7/14**. Every other
+current doc (`00_MASTER_OVERVIEW.md`, `01_PROJECT_CONTEXT.md`) — and this file's own "Silhouette"
+section below — states the **current, post-2026-09-fix run is K=5 with sizes 7/3/9/10/16** for
+Clusters 0-4, "not 12/9/3/7/14 — that was from an earlier signature version"
+(`01_PROJECT_CONTEXT.md`). This section was not regenerated against the current run. Since the
+underlying plot artefacts for the current run were not re-inspected as part of this pass, the
+specific per-cluster member `point_id` lists, population/geographic-extent figures, and the
+Tier-1-proxy climate-profile table immediately below are **left as a historical record of the
+superseded 12/9/3/7/14 run** — do not cite them as current-run numbers in a write-up. Use
+7/3/9/10/16 (from `00_MASTER_OVERVIEW.md`) for the current cluster sizes.
 
-Recovered from the popups in `data/plots/uttarakhand_objective1/02_climate_regime_map_folium.html`:
+### Cluster assignments (all 45 points) — SUPERSEDED run (12/9/3/7/14), kept as historical record only
+
+Recovered from the popups in `data/plots/objective1/02_climate_regime_map_folium.html`:
 
 | Cluster | n_points | Member `point_id`s |
 |---|---|---|
@@ -147,10 +162,11 @@ Recovered from the popups in `data/plots/uttarakhand_objective1/02_climate_regim
 | **3** | **7** | 0001, 0009, 0010, 0012, 0013, 0016, 0017 |
 | **4** | **14** | 0015, 0018, 0022, 0027, 0028, 0029, 0030, 0032, 0035, 0038, 0039, 0042, 0043, 0045 |
 
-Independently corroborated by `data/plots/verify_clustering/06_cluster_sizes.png`, which prints
-12 / 9 / 3 / 7 / 14. Total 45. Max/min size ratio = 14 / 3 = **4.67**.
+This table matches `data/plots/verify_clustering/06_cluster_sizes.png` at the time it was captured
+(12 / 9 / 3 / 7 / 14, total 45, max/min ratio 14/3 = 4.67) — **but that plot, like this table,
+predates the current 7/3/9/10/16 run** and has not been re-captured since.
 
-### Population and geographic extent per cluster
+### Population and geographic extent per cluster — SUPERSEDED run (12/9/3/7/14), kept as historical record only
 
 Computed by joining the cluster assignments to the per-point populations and coordinates embedded
 in `data/plots/comprehensive/maps/A2_population_map.html`:
@@ -167,7 +183,7 @@ in `data/plots/comprehensive/maps/A2_population_map.html`:
 Cluster 2 is the smallest by both point count (3) and population (3.2 %), and is the most spatially
 compact — a 0.25° × 0.25° neighbourhood around 30.25° N, 79.25° E.
 
-### Climate profile per cluster (observed medians)
+### Climate profile per cluster (observed medians) — SUPERSEDED run (12/9/3/7/14), kept as historical record only
 
 From the boxplots in `data/plots/verify_clustering/05_cluster_profiles.png`, which plot the first
 six numeric feature columns of the signature matrix. Values are read from the rendered chart and
@@ -279,7 +295,7 @@ version lag in an unrun file.
 
 Reads `cluster_assignments_uttarakhand.csv`, `cluster_profiles_uttarakhand.csv` and
 `bic_selection_uttarakhand.csv`; writes Folium/Plotly HTML to
-`data/processed/clustering/interactive/`. Features per the docstring: a cluster map whose popups
+`data/plots/clustering/interactive/`. Features per the docstring: a cluster map whose popups
 show the full soft-membership probability vector with boundary points (max membership below
 `1.5/K`) drawn with a faint ring, a grouped-bar comparison of population-weighted profiles, a
 population-share pie per regime, and BIC/silhouette K-selection curves.
@@ -295,7 +311,7 @@ this repository.**
 `05_cluster_regions.py` cites plan v2.0 §7 for the GMM-over-K-Means rationale and the silhouette
 band. No external reference for Gaussian Mixture models, BIC model selection, silhouette,
 Davies-Bouldin or Calinski-Harabasz appears anywhere in `era5-uttarakhand/`. See
-`11_LITERATURE_MAPPING.md`.
+`13_LITERATURE_MAPPING.md`.
 
 ## Validation
 

@@ -19,7 +19,7 @@ BASE_DIR = Path(__file__).resolve().parent
 PROCESSED_DIR = BASE_DIR / "data" / "processed"
 PREPROCESSED_DIR = BASE_DIR / "data" / "preprocessed"
 PLOTS_DIR = BASE_DIR / "data" / "plots"
-VIS10_DIR = BASE_DIR / "phase10_visualizations"
+VIS10_DIR = PLOTS_DIR / "objective1"
 FINAL_OUT_DIR = BASE_DIR / "final_outputs"
 
 TABLES_OUT_DIR = FINAL_OUT_DIR / "tables"
@@ -27,6 +27,44 @@ VISUALS_OUT_DIR = FINAL_OUT_DIR / "visuals"
 
 TABLES_OUT_DIR.mkdir(parents=True, exist_ok=True)
 VISUALS_OUT_DIR.mkdir(parents=True, exist_ok=True)
+
+# -----------------------------------------------------------------------------
+# 0. RESULTS QUOTED IN THE MANIFEST AND REPORT - read from this run's outputs,
+#    never hard-coded (an earlier version quoted figures from a superseded run).
+# -----------------------------------------------------------------------------
+import re
+
+PHYS = pd.read_csv(PROCESSED_DIR / "pcm" / "physics_validation_assam.csv")
+CMP = pd.read_csv(PROCESSED_DIR / "pcm" / "mcdm_vs_physics_comparison.csv")
+TOPK = pd.read_csv(PROCESSED_DIR / "pcm" / "mcdm_topk_assam.csv")
+VAL_REPORT = (PREPROCESSED_DIR / "validation_comparison_report.txt").read_text(encoding="utf-8")
+
+
+def _agg_rho(label):
+    m = re.search(rf"vs\. Aggregate {label}\s*:\s*rho = ([+-]?[\d.]+) \(p = ([\d.]+)\)", VAL_REPORT)
+    return (float(m.group(1)), float(m.group(2))) if m else (float("nan"), float("nan"))
+
+
+RHO_DEL, P_DEL = _agg_rho("Delivery Rank")
+RHO_SF, P_SF = _agg_rho("Solar Frac Rank")
+RHO_CYC, P_CYC = _agg_rho("Cycling Rank")
+VERDICTS = dict(re.findall(r"VERDICT vs\. ([A-Z ]+?)\s*:\s*([A-Z /]+?)\s+\(", VAL_REPORT))
+VERDICT_TEXT = "; ".join(f"{k.title()}: {v}" for k, v in VERDICTS.items()) or "see validation_comparison_report.txt"
+
+KCOMP = pd.read_csv(PROCESSED_DIR / "clustering" / "gmm_k_comparison.csv")
+K3 = KCOMP.loc[KCOMP["K"] == 3].iloc[0]
+K_MIN_BIC = int(KCOMP.loc[KCOMP["BIC"].idxmin(), "K"])
+BOOT = pd.read_csv(PROCESSED_DIR / "clustering" / "gmm_bootstrap_stability.csv").iloc[0]
+ASSIGN = pd.read_csv(PROCESSED_DIR / "clustering" / "cluster_assignments_assam.csv")
+GRID = pd.read_csv(PROCESSED_DIR / "population_grid_points.csv")
+SIG_MATRIX = pd.read_csv(PROCESSED_DIR / "climate_signatures_matrix.csv")
+FEAS = pd.read_csv(PROCESSED_DIR / "feasibility" / "pcm_feasibility_by_cluster.csv")
+ELIG = pd.read_csv(PROCESSED_DIR / "pcm" / "mcdm_cluster_eligibility_summary.csv")
+MEDOIDS = PHYS.groupby("cluster_id")["medoid_point_id"].first().to_dict()
+N_CONFIRMED = ELIG["confirmed_feasible_count"].astype(int).tolist()
+N_CONDITIONAL = ELIG["conditionally_feasible_count"].astype(int).tolist()
+TOP1 = (TOPK[TOPK["consensus_rank"] == 1].groupby("cluster_id")["name"].first().to_dict())
+TOP1_TEXT = ", ".join(f"C{int(c)}: {n}" for c, n in TOP1.items())
 
 # -----------------------------------------------------------------------------
 # 1. BUILD MASTER OUTPUT MANIFEST
@@ -37,14 +75,14 @@ manifest_entries = [
         "category": "Climate", "phase": "Phase 1", "output_name": "Population Grid Points",
         "file_path": "data/processed/population_grid_points.csv", "source_script": "01_clean_preprocess.py",
         "pipeline_version": "Final (K=3)", "status": "ACTIVE", "final_or_historical": "FINAL",
-        "purpose": "129 population-weighted ERA5 coordinate points covering Assam", "thesis_ready": "YES",
+        "purpose": f"{len(GRID)} population-weighted ERA5 coordinate points covering Assam", "thesis_ready": "YES",
         "notes": "Base spatial framework; lat 24.375-27.875, lon 89.875-95.875"
     },
     {
         "category": "Climate", "phase": "Phase 2", "output_name": "Raw Climate Signatures",
         "file_path": "data/processed/climate_signatures_raw.csv", "source_script": "04b_climate_signature.py",
         "pipeline_version": "Final (K=3)", "status": "ACTIVE", "final_or_historical": "FINAL",
-        "purpose": "10-year physical climate feature signatures for all 129 grid points", "thesis_ready": "YES",
+        "purpose": f"10-year physical climate feature signatures for {len(pd.read_csv(PROCESSED_DIR / 'climate_signatures_raw.csv'))} grid points", "thesis_ready": "YES",
         "notes": "Unstandardized physical units; Ta_mean, GHI_mean, DTR, RH_mean, wind_mean, etc."
     },
     {
@@ -65,15 +103,15 @@ manifest_entries = [
         "category": "Climate", "phase": "Phase 3", "output_name": "GMM K Comparison (BIC/Metrics)",
         "file_path": "data/processed/clustering/gmm_k_comparison.csv", "source_script": "05_cluster_assam.py",
         "pipeline_version": "Final (K=3)", "status": "ACTIVE", "final_or_historical": "FINAL",
-        "purpose": "Grid search comparison (K=2..10) validating K=3 optimal clustering", "thesis_ready": "YES",
-        "notes": "Proves minimum BIC (1574.94) and optimal silhouette at K=3"
+        "purpose": "Grid search comparison (K=2..10) of GMM selection metrics", "thesis_ready": "YES",
+        "notes": f"BIC at K=3 = {K3['BIC']:.2f}; lowest BIC over K=2..10 at K={K_MIN_BIC} (K=3 is a locked choice)"
     },
     {
         "category": "Climate", "phase": "Phase 3", "output_name": "GMM Bootstrap Stability",
         "file_path": "data/processed/clustering/gmm_bootstrap_stability.csv", "source_script": "05_cluster_assam.py",
         "pipeline_version": "Final (K=3)", "status": "ACTIVE", "final_or_historical": "FINAL",
         "purpose": "Bootstrap resampling stability results (ARI) for K=3 GMM", "thesis_ready": "YES",
-        "notes": "Mean ARI = 0.6289, Median ARI = 0.6542, 38.6% runs ARI >= 0.75"
+        "notes": f"Mean ARI = {BOOT['mean_ARI']:.4f}, Median ARI = {BOOT['median_ARI']:.4f}, {BOOT['pct_ARI_ge_075']:.1f}% runs ARI >= 0.75"
     },
     {
         "category": "Climate", "phase": "Phase 3", "output_name": "Final Cluster Assignments",
@@ -87,7 +125,7 @@ manifest_entries = [
         "file_path": "data/processed/clustering/cluster_profiles_assam.csv", "source_script": "05_cluster_assam.py",
         "pipeline_version": "Final (K=3)", "status": "ACTIVE", "final_or_historical": "FINAL",
         "purpose": "Aggregated mean climate characteristics for the 3 Assam climate regimes", "thesis_ready": "YES",
-        "notes": "Key climate medoids: Cluster 0=ASP_0012, Cluster 1=ASP_0092, Cluster 2=ASP_0028"
+        "notes": "Physics medoids: " + ", ".join(f"Cluster {c}={m}" for c, m in MEDOIDS.items())
     },
 
     # PCM Outputs
@@ -109,8 +147,8 @@ manifest_entries = [
         "category": "PCM", "phase": "Phase 6", "output_name": "PCM Feasibility Audit Matrix",
         "file_path": "data/processed/feasibility/pcm_feasibility_by_cluster.csv", "source_script": "07_feasibility_filter_final.py",
         "pipeline_version": "Final (K=3)", "status": "ACTIVE", "final_or_historical": "FINAL",
-        "purpose": "Criterion-by-criterion screening audit for 58 PCMs across 3 K=3 clusters", "thesis_ready": "YES",
-        "notes": "174 rows (58 PCMs x 3 clusters); honest reporting of confirmed vs conditional status"
+        "purpose": f"Criterion-by-criterion screening audit across {ASSIGN['cluster'].nunique()} K=3 clusters", "thesis_ready": "YES",
+        "notes": f"{len(FEAS)} rows; confirmed {N_CONFIRMED}, conditional {N_CONDITIONAL} per cluster"
     },
     {
         "category": "PCM", "phase": "Phase 6", "output_name": "PCM Feasibility Summary",
@@ -152,7 +190,7 @@ manifest_entries = [
         "file_path": "data/processed/pcm/mcdm_topk_assam.csv", "source_script": "08_mcdm_ranking.py",
         "pipeline_version": "Historical (K=4)", "status": "LOCKED_HISTORICAL", "final_or_historical": "HISTORICAL",
         "purpose": "Top-3 ranked PCMs per cluster under historical K=4 MCDM run", "thesis_ready": "NO",
-        "notes": "Historical pre-audit artifact; RT44HC #1, RT45HC #2, C22H46 #3"
+        "notes": f"Historical pre-audit artifact; #1 per cluster: {TOP1_TEXT}"
     },
     {
         "category": "PCM", "phase": "Phase 8", "output_name": "Monte Carlo Stability Summary",
@@ -174,8 +212,10 @@ manifest_entries = [
         "category": "Physics", "phase": "Phase 9", "output_name": "Physics Validation Results",
         "file_path": "data/processed/pcm/physics_validation_assam.csv", "source_script": "10_physics_validation.py",
         "pipeline_version": "Final (K=3)", "status": "ACTIVE", "final_or_historical": "FINAL",
-        "purpose": "10-year sub-hourly physics simulation across 8 PCMs x 3 K=3 medoids", "thesis_ready": "YES",
-        "notes": "24 runs; First-Law error 0.0000%, SSRD error 0.0000%, dt=300s vs 150s verified"
+        "purpose": f"10-year sub-hourly physics simulation across {PHYS['pcm_name'].nunique()} PCMs x {PHYS['cluster_id'].nunique()} K=3 medoids", "thesis_ready": "YES",
+        "notes": (f"{len(PHYS)} runs; max First-Law error {PHYS['cum_rel_energy_error_pct'].abs().max():.4f}%, "
+                  f"max SSRD error {PHYS['ssrd_recon_conservation_err_pct'].abs().max():.4f}%, "
+                  f"dt=300s vs 150s passed in {PHYS['dt_sensitivity_passed'].mean() * 100:.0f}% of runs")
     },
 
     # Comparison Outputs
@@ -184,62 +224,63 @@ manifest_entries = [
         "file_path": "data/processed/pcm/mcdm_vs_physics_comparison.csv", "source_script": "10_validation_comparison.py",
         "pipeline_version": "Final (K=3 vs K=4)", "status": "ACTIVE", "final_or_historical": "FINAL",
         "purpose": "Dual-level comparison evaluating historical MCDM ranking against physics", "thesis_ready": "YES",
-        "notes": "Verdict: NOT PHYSICALLY SUPPORTED (rho = -0.52 to -0.64; 0% Top-1 agreement)"
+        "notes": (f"{VERDICT_TEXT} (aggregate rho: delivery {RHO_DEL:+.2f}, "
+                  f"solar fraction {RHO_SF:+.2f}, cycling {RHO_CYC:+.2f})")
     },
 
     # Key Final Visual Outputs
     {
         "category": "Visual", "phase": "Phase 3", "output_name": "GMM BIC Curve vs K",
-        "file_path": "data/processed/clustering/gmm_bic.png", "source_script": "05_cluster_assam.py",
+        "file_path": "data/plots/clustering/k_selection_bic.png", "source_script": "05_cluster_assam.py",
         "pipeline_version": "Final (K=3)", "status": "ACTIVE", "final_or_historical": "FINAL",
-        "purpose": "Shows minimum BIC at K=3 (1574.94) justifying 3 climate regimes", "thesis_ready": "YES",
+        "purpose": f"BIC curve over K=2..10 (K=3: {K3['BIC']:.2f}; minimum at K={K_MIN_BIC})", "thesis_ready": "YES",
         "notes": "Publication-quality 300 DPI plot"
     },
     {
         "category": "Visual", "phase": "Phase 3", "output_name": "GMM Silhouette Score vs K",
-        "file_path": "data/processed/clustering/gmm_silhouette.png", "source_script": "05_cluster_assam.py",
+        "file_path": "data/plots/clustering/k_selection_silhouette.png", "source_script": "05_cluster_assam.py",
         "pipeline_version": "Final (K=3)", "status": "ACTIVE", "final_or_historical": "FINAL",
         "purpose": "Shows silhouette peak across cluster counts K=2..10", "thesis_ready": "YES",
         "notes": "Publication-quality 300 DPI plot"
     },
     {
         "category": "Visual", "phase": "Phase 3", "output_name": "GMM Davies-Bouldin Index vs K",
-        "file_path": "data/processed/clustering/gmm_davies_bouldin.png", "source_script": "05_cluster_assam.py",
+        "file_path": "data/plots/clustering/k_selection_davies_bouldin.png", "source_script": "05_cluster_assam.py",
         "pipeline_version": "Final (K=3)", "status": "ACTIVE", "final_or_historical": "FINAL",
         "purpose": "Shows cluster separation index for full-covariance GMM", "thesis_ready": "YES",
         "notes": "Publication-quality 300 DPI plot"
     },
     {
         "category": "Visual", "phase": "Phase 3", "output_name": "GMM Calinski-Harabasz vs K",
-        "file_path": "data/processed/clustering/gmm_calinski_harabasz.png", "source_script": "05_cluster_assam.py",
+        "file_path": "data/plots/clustering/k_selection_calinski_harabasz.png", "source_script": "05_cluster_assam.py",
         "pipeline_version": "Final (K=3)", "status": "ACTIVE", "final_or_historical": "FINAL",
         "purpose": "Variance ratio criterion curve supporting K=3 cluster selection", "thesis_ready": "YES",
         "notes": "Publication-quality 300 DPI plot"
     },
     {
         "category": "Visual", "phase": "Phase 10", "output_name": "MCDM vs Delivery Rank Scatter",
-        "file_path": "phase10_visualizations/01_mcdm_vs_delivery_rank.png", "source_script": "10_validation_comparison.py",
+        "file_path": "data/plots/objective1/11b_physics_vs_mcdm_delivery_rank.png", "source_script": "10_validation_comparison.py",
         "pipeline_version": "Final (K=3 vs K=4)", "status": "ACTIVE", "final_or_historical": "FINAL",
-        "purpose": "Demonstrates inverse ordering between historical MCDM rank and physics delivery rank", "thesis_ready": "YES",
-        "notes": "Highlights savE OM48 (#8 MCDM -> #1 Physics Delivery)"
+        "purpose": f"Historical MCDM rank vs physics delivery rank (aggregate rho = {RHO_DEL:+.2f})", "thesis_ready": "YES",
+        "notes": "See validation_comparison_report.txt section 7"
     },
     {
         "category": "Visual", "phase": "Phase 10", "output_name": "MCDM vs Solar Fraction Rank Scatter",
-        "file_path": "phase10_visualizations/02_mcdm_vs_solar_fraction_rank.png", "source_script": "10_validation_comparison.py",
+        "file_path": "data/plots/objective1/11b_physics_vs_mcdm_solar_fraction_rank.png", "source_script": "10_validation_comparison.py",
         "pipeline_version": "Final (K=3 vs K=4)", "status": "ACTIVE", "final_or_historical": "FINAL",
-        "purpose": "Demonstrates inverse ordering between MCDM rank and physics annual solar fraction", "thesis_ready": "YES",
-        "notes": "Highlights RT44HC (#1 MCDM -> #8 Solar Fraction)"
+        "purpose": f"Historical MCDM rank vs physics annual solar fraction rank (aggregate rho = {RHO_SF:+.2f})", "thesis_ready": "YES",
+        "notes": "See validation_comparison_report.txt section 7"
     },
     {
         "category": "Visual", "phase": "Phase 10", "output_name": "MCDM vs Cycling Durability Scatter",
-        "file_path": "phase10_visualizations/03_mcdm_vs_cycling_rank.png", "source_script": "10_validation_comparison.py",
+        "file_path": "data/plots/objective1/11b_physics_vs_mcdm_cycling_rank.png", "source_script": "10_validation_comparison.py",
         "pipeline_version": "Final (K=3 vs K=4)", "status": "ACTIVE", "final_or_historical": "FINAL",
         "purpose": "Shows near-zero correlation between MCDM ranking and PCM cycling degradation rate", "thesis_ready": "YES",
         "notes": "Spearman rho ~ +0.14; MCDM criteria do not predict dynamic cycling frequency"
     },
     {
         "category": "Visual", "phase": "Phase 10", "output_name": "Thermodynamic Mechanism (Tm vs Delivery)",
-        "file_path": "phase10_visualizations/04_tm_vs_physics_delivery.png", "source_script": "10_validation_comparison.py",
+        "file_path": "data/plots/objective1/11c_tm_vs_physics_delivery.png", "source_script": "10_validation_comparison.py",
         "pipeline_version": "Final (K=3 vs K=4)", "status": "ACTIVE", "final_or_historical": "FINAL",
         "purpose": "Shows delivery success jumping 5x for PCMs melting at >=50C vs 44C target", "thesis_ready": "YES",
         "notes": "Reveals why MCDM Gaussian target at 44C fails to capture 50C delivery utility"
@@ -250,14 +291,14 @@ manifest_entries = [
         "category": "Visual", "phase": "Phase 3", "output_name": "Assam Climate Regime Map (Final K=3)",
         "file_path": "MISSING_IN_ACTIVE_PIPELINE", "source_script": "05_cluster_assam.py (not implemented in script)",
         "pipeline_version": "Final (K=3)", "status": "MISSING", "final_or_historical": "MISSING",
-        "purpose": "Geographic scatter map of 129 grid points colored by final K=3 GMM cluster", "thesis_ready": "NO",
+        "purpose": f"Geographic scatter map of {len(ASSIGN)} grid points colored by final K=3 GMM cluster", "thesis_ready": "NO",
         "notes": "Existing map data/plots/verify_clustering/04_geographic_map.png depicts historical K=4. Final K=3 map is missing but readily generable."
     },
     {
         "category": "Visual", "phase": "Phase 3", "output_name": "PCA 2D Projection (Final 5-Feature K=3)",
         "file_path": "MISSING_IN_ACTIVE_PIPELINE", "source_script": "05_cluster_assam.py (not implemented in script)",
         "pipeline_version": "Final (K=3)", "status": "MISSING", "final_or_historical": "MISSING",
-        "purpose": "PCA projection of 129 points colored by final K=3 cluster", "thesis_ready": "NO",
+        "purpose": f"PCA projection of {len(ASSIGN)} points colored by final K=3 cluster", "thesis_ready": "NO",
         "notes": "Existing plot data/plots/verify_clustering/03_pca_projection.png depicts historical K=4."
     }
 ]
@@ -344,7 +385,7 @@ df_t7_hist.to_csv(TABLES_OUT_DIR / "table07_historical_mcdm_rankings_k4.csv", in
 df_t8 = pd.read_csv(PROCESSED_DIR / "pcm" / "monte_carlo_stability_assam.csv")
 df_t8.to_csv(TABLES_OUT_DIR / "table08_monte_carlo_stability_k3.csv", index=False)
 
-# Table 9: Phase 9 Physics Performance (8 PCMs x 3 Clusters)
+# Table 9: Phase 9 Physics Performance (PCMs x clusters)
 df_t9 = pd.read_csv(PROCESSED_DIR / "pcm" / "physics_validation_assam.csv")
 df_t9.to_csv(TABLES_OUT_DIR / "table09_physics_performance_k3.csv", index=False)
 
@@ -358,14 +399,14 @@ print(f"[Phase 11 SUCCESS] Saved 10 Thesis-Ready Tables to: {TABLES_OUT_DIR}")
 # 3. COPY FINAL PUBLICATION-READY VISUALS INTO final_outputs/visuals/
 # -----------------------------------------------------------------------------
 visual_copies = [
-    (PROCESSED_DIR / "clustering" / "gmm_bic.png", VISUALS_OUT_DIR / "fig01_gmm_bic_selection.png"),
-    (PROCESSED_DIR / "clustering" / "gmm_silhouette.png", VISUALS_OUT_DIR / "fig02_gmm_silhouette_curve.png"),
-    (PROCESSED_DIR / "clustering" / "gmm_davies_bouldin.png", VISUALS_OUT_DIR / "fig03_gmm_davies_bouldin.png"),
-    (PROCESSED_DIR / "clustering" / "gmm_calinski_harabasz.png", VISUALS_OUT_DIR / "fig04_gmm_calinski_harabasz.png"),
-    (VIS10_DIR / "01_mcdm_vs_delivery_rank.png", VISUALS_OUT_DIR / "fig05_mcdm_vs_delivery_rank.png"),
-    (VIS10_DIR / "02_mcdm_vs_solar_fraction_rank.png", VISUALS_OUT_DIR / "fig06_mcdm_vs_solar_fraction_rank.png"),
-    (VIS10_DIR / "03_mcdm_vs_cycling_rank.png", VISUALS_OUT_DIR / "fig07_mcdm_vs_cycling_rank.png"),
-    (VIS10_DIR / "04_tm_vs_physics_delivery.png", VISUALS_OUT_DIR / "fig08_tm_vs_physics_delivery_mechanism.png"),
+    (PLOTS_DIR / "clustering" / "k_selection_bic.png", VISUALS_OUT_DIR / "k_selection_bic.png"),
+    (PLOTS_DIR / "clustering" / "k_selection_silhouette.png", VISUALS_OUT_DIR / "k_selection_silhouette.png"),
+    (PLOTS_DIR / "clustering" / "k_selection_davies_bouldin.png", VISUALS_OUT_DIR / "k_selection_davies_bouldin.png"),
+    (PLOTS_DIR / "clustering" / "k_selection_calinski_harabasz.png", VISUALS_OUT_DIR / "k_selection_calinski_harabasz.png"),
+    (VIS10_DIR / "11b_physics_vs_mcdm_delivery_rank.png", VISUALS_OUT_DIR / "11b_physics_vs_mcdm_delivery_rank.png"),
+    (VIS10_DIR / "11b_physics_vs_mcdm_solar_fraction_rank.png", VISUALS_OUT_DIR / "11b_physics_vs_mcdm_solar_fraction_rank.png"),
+    (VIS10_DIR / "11b_physics_vs_mcdm_cycling_rank.png", VISUALS_OUT_DIR / "11b_physics_vs_mcdm_cycling_rank.png"),
+    (VIS10_DIR / "11c_tm_vs_physics_delivery.png", VISUALS_OUT_DIR / "11c_tm_vs_physics_delivery.png"),
 ]
 
 for src, dst in visual_copies:
@@ -384,7 +425,7 @@ rep("===========================================================================
 rep("  FINAL PROJECT OUTPUTS AUDIT & DELIVERABLES REPORT")
 rep("  Assam Solar Water Heating (SWH) Phase Change Material (PCM) Selection")
 rep("================================================================================")
-rep("Date: 2026-09-04")
+rep(f"Date: {pd.Timestamp.today():%Y-%m-%d}")
 rep("Scope: Phases 1 through 11 (Full Pipeline Deliverables Inventory & Traceability)")
 rep()
 rep("1. PROJECT OUTPUT INVENTORY SUMMARY")
@@ -402,44 +443,46 @@ rep("Final Climate Clustering Model: Gaussian Mixture Model (GMM) with K = 3 reg
 rep("Trained on 5 physical features: GHI_mean, Ta_mean, DTR, RH_mean, wind_mean.")
 rep()
 rep("Key Climate Deliverables:")
-rep("  - Grid Points: data/processed/population_grid_points.csv (129 points)")
-rep("  - Raw Signatures: data/processed/climate_signatures_raw.csv (129 x 20)")
-rep("  - Normalized Matrix: data/processed/climate_signatures_matrix.csv (129 x 20)")
-rep("  - PCA Loadings: data/processed/pca_loadings.csv (2 components x 8 features)")
-rep("  - Cluster Assignments: data/processed/clustering/cluster_assignments_assam.csv (129 x 6)")
-rep("    * Cluster 0: 33 points (25.58%) | True Medoid: ASP_0012 (lat 26.625, lon 92.875)")
-rep("    * Cluster 1: 61 points (47.29%) | True Medoid: ASP_0092 (lat 26.125, lon 91.625)")
-rep("    * Cluster 2: 35 points (27.13%) | True Medoid: ASP_0028 (lat 24.875, lon 92.875)")
-rep("  - Cluster Profiles: data/processed/clustering/cluster_profiles_assam.csv (3 x 13)")
+rep(f"  - Grid Points: data/processed/population_grid_points.csv ({len(GRID)} points)")
+rep(f"  - Raw Signatures: data/processed/climate_signatures_raw.csv ({df_t1.shape[0]} x {df_t1.shape[1]})")
+rep(f"  - Normalized Matrix: data/processed/climate_signatures_matrix.csv ({SIG_MATRIX.shape[0]} x {SIG_MATRIX.shape[1]})")
+rep(f"  - PCA Loadings: data/processed/pca_loadings.csv ({df_t2.shape[0]} x {df_t2.shape[1]})")
+rep(f"  - Cluster Assignments: data/processed/clustering/cluster_assignments_assam.csv ({ASSIGN.shape[0]} x {ASSIGN.shape[1]})")
+for _cid, _n in ASSIGN["cluster"].value_counts().sort_index().items():
+    rep(f"    * Cluster {_cid}: {_n} points ({_n / len(ASSIGN) * 100:.2f}%) | Physics medoid: {MEDOIDS.get(_cid, 'n/a')}")
+rep(f"  - Cluster Profiles: data/processed/clustering/cluster_profiles_assam.csv ({df_t4.shape[0]} x {df_t4.shape[1]})")
 rep("  - GMM Optimization: data/processed/clustering/gmm_k_comparison.csv (K=2..10)")
-rep("    * Validates minimum BIC = 1574.94 at K=3")
+rep(f"    * BIC at K=3 = {K3['BIC']:.2f}; lowest BIC over the grid at K={K_MIN_BIC} (K=3 is a locked choice)")
 rep("  - Bootstrap Stability: data/processed/clustering/gmm_bootstrap_stability.csv")
-rep("    * Mean ARI = 0.6289, Median ARI = 0.6542, 38.6% runs ARI >= 0.75")
+rep(f"    * Mean ARI = {BOOT['mean_ARI']:.4f}, Median ARI = {BOOT['median_ARI']:.4f}, "
+    f"{BOOT['pct_ARI_ge_075']:.1f}% runs ARI >= 0.75")
 rep()
 
 rep("3. PCM OUTPUTS AUDIT (PHASES 5–8)")
 rep("----------------------------------")
 rep("A. Cleaned PCM Database:")
-rep("  - data/processed/pcm/pcm_database_final.csv: 58 unique records x 41 properties.")
+rep(f"  - data/processed/pcm/pcm_database_final.csv: {df_t5.shape[0]} records x {df_t5.shape[1]} columns.")
 rep("  - Complete provenance metadata: source_type (Manufacturer Datasheet / Literature).")
 rep("  - Value-status columns for every thermal property: Reported | Imputed | Missing.")
 rep("  - Single-phase fallback removed: Cp_avg strictly requires both solid and liquid Cp.")
 rep()
 rep("B. Phase 6 Feasibility Screening:")
-rep("  - Active Matrix: data/processed/feasibility/pcm_feasibility_by_cluster.csv (174 rows = 58 PCMs x 3 clusters).")
+rep(f"  - Active Matrix: data/processed/feasibility/pcm_feasibility_by_cluster.csv ({len(FEAS)} rows).")
 rep("  - Summary: data/processed/feasibility/pcm_feasibility_summary.csv")
-rep("  - Confirmed Feasible: n_confirmed = [0, 0, 0] across all three clusters.")
-rep("  - Conditionally Feasible: 1 candidate in Cluster 0 (n-Tetracosane C24, Tm=52C).")
+rep(f"  - Confirmed Feasible per cluster: n_confirmed = {N_CONFIRMED}.")
+rep(f"  - Conditionally Feasible per cluster: {N_CONDITIONAL}.")
 rep("  - Historical Survivor Universe: data/processed/pcm/feasibility_survivors_assam.csv")
-rep("    * Contains 8 unique survivor PCMs passing historical K=4 screening.")
+rep(f"    * Contains {df_t6_survivors['name'].nunique()} unique survivor PCMs passing historical screening.")
 rep()
 rep("C. Phase 7 MCDM Governance:")
 rep("  - Primary Governance Record: data/processed/pcm/mcdm_cluster_eligibility_summary.csv")
-rep("  - Status: NOT PERFORMED for Clusters 0, 1, 2 due to n_confirmed = 0.")
+for _r in ELIG.itertuples():
+    rep(f"  - Cluster {int(_r.cluster_id)}: {_r.mcdm_ranking_status} (n_confirmed = {int(_r.confirmed_feasible_count)}).")
 rep("  - Governance Rule: Primary MCDM requires n_confirmed >= 2 for matrix algorithms.")
-rep("  - Preserved Historical K=4 MCDM Ranking: data/processed/pcm/mcdm_full_scores_assam.csv")
-rep("    * Consensus Rank: #1 RT44HC, #2 RT45HC, #3 C22H46, #4 savE OM50, #5 savE OM42,")
-rep("                      #6 Myristic-Palmitic eutectic, #7 savE OM46, #8 savE OM48.")
+rep("  - Preserved Historical MCDM Ranking: data/processed/pcm/mcdm_full_scores_assam.csv")
+for _cid, _g in TOPK[TOPK["consensus_rank"] <= 3].groupby("cluster_id"):
+    _names = ", ".join(f"#{int(r.consensus_rank)} {r.name}" for r in _g.sort_values("consensus_rank").itertuples())
+    rep(f"    * Cluster {int(_cid)} top 3: {_names}")
 rep()
 rep("D. Phase 8 Monte Carlo Governance:")
 rep("  - data/processed/pcm/monte_carlo_stability_assam.csv: status = SKIPPED (n_draws = 0).")
@@ -448,82 +491,84 @@ rep()
 rep("4. PHYSICS OUTPUTS AUDIT (PHASE 9)")
 rep("-----------------------------------")
 rep("Physics Validation Script: 10_physics_validation.py (verified by verify_phase9.py).")
-rep("Validation Results CSV: data/processed/pcm/physics_validation_assam.csv (24 rows = 8 PCMs x 3 clusters).")
+_n_runs, _n_pcm, _n_cl = len(PHYS), PHYS["pcm_name"].nunique(), PHYS["cluster_id"].nunique()
+_dt_ok = bool(PHYS["dt_sensitivity_passed"].all())
+rep(f"Validation Results CSV: data/processed/pcm/physics_validation_assam.csv "
+    f"({_n_runs} rows = {_n_pcm} PCMs x {_n_cl} clusters).")
 rep()
 rep("Governing Physical Validations:")
-rep("  1. Candidate Universe: Exactly the 8 Phase-6-screened candidate PCMs.")
-rep("  2. Climate Forcing: 10-year chronological sub-hourly ERA5 climate forcing (2016-2025, 87,672 hours).")
+rep(f"  1. Candidate Universe: the {_n_pcm} Phase-6-screened candidate PCMs.")
+rep("  2. Climate Forcing: 10-year chronological sub-hourly ERA5 climate forcing (2016-2025).")
 rep("  3. Duration-Overlap SSRD: De-accumulated interval radiation distributed to hourly bins.")
-rep("     SSRD energy reconstruction conservation error = 0.000000% across all 3 clusters.")
+rep(f"     SSRD energy reconstruction conservation error: max {PHYS['ssrd_recon_conservation_err_pct'].abs().max():.6f}%.")
 rep("  4. 4-State Path-Dependent Enthalpy: Liquid, Freezing, Solid, Melting with exact boundary clipping.")
-rep("  5. First-Law Energy Balance: Cumulative relative energy error = 0.000000% across all 24 runs.")
-rep("     Maximum step residual = 0.000000 J across all sub-steps.")
+rep(f"  5. First-Law Energy Balance: cumulative relative energy error max "
+    f"{PHYS['cum_rel_energy_error_pct'].abs().max():.6f}% across all {_n_runs} runs.")
+rep(f"     Maximum step residual = {PHYS['max_step_residual_J'].abs().max():.6f} J.")
 rep("  6. Sub-Hourly Timestep Sensitivity (dt=300s vs dt=150s):")
-rep("     - Solar Fraction relative diff: max 0.0363% (< 1.0% threshold) [PASS]")
-rep("     - Delivery rate absolute diff : max 0.0684 pp (< 1.0 pp threshold) [PASS]")
-rep("     - Complete cycles/year diff   : max 0.40 cyc/yr (< 1.0 cyc/yr threshold) [PASS]")
-rep("  7. Spin-Up Convergence: 100% converged across all runs.")
-rep("  8. Validation Status: PASSED for all 24 evaluations.")
+rep(f"     - Solar Fraction relative diff: max {PHYS['dt_sens_sf_rel_diff_pct'].abs().max():.4f}% (< 1.0% threshold)")
+rep(f"     - Delivery rate absolute diff : max {PHYS['dt_sens_delivery_abs_diff_pp'].abs().max():.4f} pp (< 1.0 pp threshold)")
+rep(f"     - Complete cycles/year diff   : max {PHYS['dt_sens_cycles_abs_diff'].abs().max():.2f} cyc/yr (< 1.0 cyc/yr threshold)")
+rep(f"     - All runs pass: {'YES' if _dt_ok else 'NO'}")
+rep(f"  7. Spin-Up Convergence: {PHYS['spinup_converged'].mean() * 100:.0f}% of runs converged.")
 rep()
 
 rep("5. COMPARISON & VALIDATION AUDIT (PHASE 10)")
 rep("--------------------------------------------")
-rep("Comparison Dataset: data/processed/pcm/mcdm_vs_physics_comparison.csv (24 rows x 16 cols).")
+rep(f"Comparison Dataset: data/processed/pcm/mcdm_vs_physics_comparison.csv ({CMP.shape[0]} rows x {CMP.shape[1]} cols).")
 rep("Full Report: data/preprocessed/validation_comparison_report.txt.")
 rep()
 rep("Dual-Level Assessment Results:")
 rep("  - Level 1 (Primary Governance): Formal K=3 MCDM ranking was NOT PERFORMED (n_confirmed = 0).")
 rep("  - Level 2 (Retrospective Validation): Historical K=4 MCDM consensus ranking was compared")
 rep("    against the final K=3 physics metrics at the PCM identity level.")
-rep("  - Spearman Rank Correlations:")
-rep("    * vs. Delivery Success Rate : rho = -0.52 to -0.64 (mean = -0.5238) [Inverse ordering]")
-rep("    * vs. Solar Fraction        : rho = -0.43 to -0.55 (mean = -0.5389) [Inverse ordering]")
-rep("    * vs. Cycling Durability    : rho = +0.14 (mean = 0.0000) [Zero correlation]")
-rep("  - Top-1 Agreement: 0.0% (MCDM winner RT44HC vs. Physics winner savE OM48).")
-rep("  - Top-3 Overlap  : 0.0% for delivery rate across all clusters.")
-rep("  - Physical Mechanism: MCDM Gaussian target centered at 44 C penalized PCMs near 50 C.")
-rep("    In actual physics, 50 C water delivery threshold requires latent heat discharge at >=50 C.")
-rep("    savE OM48 (Tm=51 C) sustains delivery temperatures 5x longer into the evening.")
-rep("  - Final Scientific Verdict: NOT PHYSICALLY SUPPORTED.")
+rep("  - Spearman Rank Correlations (aggregate, from validation_comparison_report.txt):")
+rep(f"    * vs. Delivery Success Rate : rho = {RHO_DEL:+.4f} (p = {P_DEL:.4f})")
+rep(f"    * vs. Solar Fraction        : rho = {RHO_SF:+.4f} (p = {P_SF:.4f})")
+rep(f"    * vs. Cycling Durability    : rho = {RHO_CYC:+.4f} (p = {P_CYC:.4f})")
+rep("  - Per-cluster correlations, Top-1 agreement and Top-3 overlap: see the full report.")
+for _metric, _verdict in VERDICTS.items():
+    rep(f"  - Final Scientific Verdict vs. {_metric.title()}: {_verdict}")
 rep()
 
 rep("6. VISUAL OUTPUTS INVENTORY")
 rep("----------------------------")
 rep("A. Final Publication-Ready Figures (in final_outputs/visuals/):")
-rep("  1. fig01_gmm_bic_selection.png          (Minimum BIC curve at K=3)")
-rep("  2. fig02_gmm_silhouette_curve.png       (Silhouette peak across K)")
-rep("  3. fig03_gmm_davies_bouldin.png         (Davies-Bouldin index curve)")
-rep("  4. fig04_gmm_calinski_harabasz.png      (Calinski-Harabasz variance ratio)")
-rep("  5. fig05_mcdm_vs_delivery_rank.png      (MCDM rank vs Delivery rank scatter)")
-rep("  6. fig06_mcdm_vs_solar_fraction_rank.png (MCDM rank vs Solar Fraction rank scatter)")
-rep("  7. fig07_mcdm_vs_cycling_rank.png       (MCDM rank vs Cycling durability scatter)")
-rep("  8. fig08_tm_vs_physics_delivery_mechanism.png (Melting temp vs 10-year delivery rate)")
+rep("  1. k_selection_bic.png          (BIC curve over K)")
+rep("  2. k_selection_silhouette.png       (Silhouette score over K)")
+rep("  3. k_selection_davies_bouldin.png         (Davies-Bouldin index curve)")
+rep("  4. k_selection_calinski_harabasz.png      (Calinski-Harabasz variance ratio)")
+rep("  5. 11b_physics_vs_mcdm_delivery_rank.png      (MCDM rank vs Delivery rank scatter)")
+rep("  6. 11b_physics_vs_mcdm_solar_fraction_rank.png (MCDM rank vs Solar Fraction rank scatter)")
+rep("  7. 11b_physics_vs_mcdm_cycling_rank.png       (MCDM rank vs Cycling durability scatter)")
+rep("  8. 11c_tm_vs_physics_delivery.png (Melting temp vs 10-year delivery rate)")
 rep()
-rep("B. Documented Missing Visual Figures:")
-rep("  1. Assam Final K=3 Climate Regime Map:")
-rep("     - Current status: MISSING for active K=3 model.")
-rep("     - Cause: Existing figure (data/plots/verify_clustering/04_geographic_map.png) is an")
-rep("       historical K=4 artifact from an earlier iteration.")
-rep("     - Remediation: Readily generable by plotting lat/lon from population_grid_points.csv")
-rep("       colored by 'cluster' from cluster_assignments_assam.csv.")
-rep("  2. Final 5-Feature K=3 PCA Projection:")
-rep("     - Current status: MISSING for active K=3 model.")
-rep("     - Cause: Existing figure (data/plots/verify_clustering/03_pca_projection.png) is historical K=4.")
-rep("     - Remediation: Readily generable by applying PCA to the 5 core clustering features.")
+# The K=3 regime map and PCA projection come from generate_phase11_figures.py,
+# which may run after this script; report whichever state is on disk now.
+_FIG_FILES = {"Assam Final K=3 Climate Regime Map": PLOTS_DIR / "clustering" / "cluster_map.png",
+              "Final 5-Feature K=3 PCA Projection": PLOTS_DIR / "clustering" / "pca_projection.png"}
+_missing_figs = [n for n, p in _FIG_FILES.items() if not p.exists()]
+rep("B. K=3 Regime Map and PCA Projection (generate_phase11_figures.py):")
+for _n, _p in _FIG_FILES.items():
+    rep(f"  - {_n}: {'PRESENT' if _p.exists() else 'MISSING'} ({_p.relative_to(BASE_DIR).as_posix()})")
+if _missing_figs:
+    rep("  - Run generate_phase11_figures.py to produce the missing figure(s).")
 rep()
 
 rep("7. FINAL THESIS TABLES (IN final_outputs/tables/)")
 rep("--------------------------------------------------")
-rep("Table 1  — Climate Signature Features (table01_climate_signatures.csv, 129 rows x 20 cols)")
-rep("Table 2  — PCA Explained Variance & Loadings (table02_pca_loadings.csv, 2 rows x 8 cols)")
-rep("Table 3  — GMM Model Selection & Validation Metrics (table03_gmm_selection.csv, 9 rows x 6 cols)")
-rep("Table 4  — Final K=3 Cluster Profiles (table04_cluster_profiles_k3.csv, 3 rows x 13 cols)")
-rep("Table 5  — PCM Database Summary & Provenance (table05_pcm_database_summary.csv, 58 rows x 41 cols)")
-rep("Table 6  — Phase 6 Feasibility Survivors (table06_feasibility_survivors.csv, 8 unique PCMs)")
-rep("Table 7  — Historical Pre-Audit MCDM Rankings (table07_historical_mcdm_rankings_k4.csv, 8 PCMs)")
-rep("Table 8  — Monte Carlo Stability Governance (table08_monte_carlo_stability_k3.csv, 3 rows, SKIPPED)")
-rep("Table 9  — Phase 9 Physics Performance (table09_physics_performance_k3.csv, 24 rows = 8 PCMs x 3 clusters)")
-rep("Table 10 — MCDM vs Physics Comparison (table10_mcdm_vs_physics_comparison.csv, 24 rows x 16 cols)")
+for _label, _file, _df in [
+        ("Table 1  — Climate Signature Features", "table01_climate_signatures.csv", df_t1),
+        ("Table 2  — PCA Explained Variance & Loadings", "table02_pca_loadings.csv", df_t2),
+        ("Table 3  — GMM Model Selection & Validation Metrics", "table03_gmm_selection.csv", df_t3),
+        ("Table 4  — Final K=3 Cluster Profiles", "table04_cluster_profiles_k3.csv", df_t4),
+        ("Table 5  — PCM Database Summary & Provenance", "table05_pcm_database_summary.csv", df_t5),
+        ("Table 6  — Phase 6 Feasibility Survivors", "table06_feasibility_survivors.csv", df_t6_survivors),
+        ("Table 7  — Historical Pre-Audit MCDM Rankings", "table07_historical_mcdm_rankings_k4.csv", df_t7_hist),
+        ("Table 8  — Monte Carlo Stability Governance", "table08_monte_carlo_stability_k3.csv", df_t8),
+        ("Table 9  — Phase 9 Physics Performance", "table09_physics_performance_k3.csv", df_t9),
+        ("Table 10 — MCDM vs Physics Comparison", "table10_mcdm_vs_physics_comparison.csv", df_t10)]:
+    rep(f"{_label} ({_file}, {_df.shape[0]} rows x {_df.shape[1]} cols)")
 rep()
 
 rep("8. PIPELINE-VERSION DISCLOSURES & TRACEABILITY")
@@ -539,25 +584,34 @@ rep()
 
 rep("9. CRITICAL CONSISTENCY CHECKS VERIFICATION")
 rep("--------------------------------------------")
-rep("Automated checks confirmed:")
-rep("  [PASS] 1. Final climate clustering = K=3 (Cluster IDs 0, 1, 2).")
-rep("  [PASS] 2. Final Phase 3 medoids = {0: 'ASP_0012', 1: 'ASP_0092', 2: 'ASP_0028'}.")
-rep("  [PASS] 3. Phase 9 evaluates exactly 8 PCMs across 3 clusters (24 CSV rows).")
-rep("  [PASS] 4. Phase 10 evaluates exactly 8 PCMs across 3 clusters (24 CSV rows).")
-rep("  [PASS] 5. Level 1 Governance: n_confirmed = [0, 0, 0], formal ranking = NOT PERFORMED.")
-rep("  [PASS] 6. Historical MCDM ranking clearly labeled as historical K=4 artifact.")
-rep("  [PASS] 7. All 5 verification suites (Phase 5/6, Phase 7, Phase 8, Phase 9, Phase 10) pass 100%.")
+# Each line below is evaluated on this run's files, not asserted.
+_checks = [
+    (sorted(ASSIGN["cluster"].unique().tolist()) == [0, 1, 2],
+     f"Final climate clustering = K=3 (cluster ids {sorted(ASSIGN['cluster'].unique().tolist())})."),
+    (PHYS["cluster_id"].nunique() == 3,
+     f"Phase 9 covers {PHYS['cluster_id'].nunique()} clusters, medoids {MEDOIDS} "
+     f"({PHYS['pcm_name'].nunique()} PCMs, {len(PHYS)} rows)."),
+    (CMP["cluster_id"].nunique() == 3,
+     f"Phase 10 covers {CMP['cluster_id'].nunique()} clusters ({CMP['pcm_name'].nunique()} PCMs, {len(CMP)} rows)."),
+    (all(n < 2 for n in N_CONFIRMED) == (ELIG["mcdm_ranking_status"] == "NOT PERFORMED").all(),
+     f"Level 1 governance consistent: n_confirmed = {N_CONFIRMED}, "
+     f"status = {ELIG['mcdm_ranking_status'].unique().tolist()}."),
+]
+rep("Automated checks on this run's outputs:")
+for _i, (_ok, _msg) in enumerate(_checks, 1):
+    rep(f"  [{'PASS' if _ok else 'FAIL'}] {_i}. {_msg}")
+rep("  Verification-suite results (Phase 5/6-10): run final_project_verification.py.")
 rep()
 
 rep("================================================================================")
 rep("## PHASE 11 VERDICT")
-rep("COMPLETE WITH DOCUMENTED MISSING OUTPUTS")
+_all_ok = all(ok for ok, _ in _checks)
+rep("COMPLETE" if _all_ok and not _missing_figs else
+    "COMPLETE WITH DOCUMENTED MISSING OUTPUTS" if _all_ok else "CHECKS FAILED - SEE SECTION 9")
 rep("================================================================================")
-rep("Rationale: All primary analytical, numerical, thermodynamic, and governance deliverables")
-rep("are 100% complete, locked, and verified across Phases 1 through 10. All 10 thesis tables")
-rep("are compiled in final_outputs/tables/. Two visual figures (final K=3 geographic cluster map")
-rep("and final 5-feature PCA projection) are documented as missing from the active pipeline")
-rep("(only historical K=4 versions exist on disk) and are clearly recorded for thesis production.")
+rep("Rationale: all 10 thesis tables are compiled in final_outputs/tables/; section 9 lists")
+rep("the consistency checks evaluated on this run" +
+    (f"; missing figures: {', '.join(_missing_figs)}." if _missing_figs else "."))
 rep("================================================================================")
 
 OUT_REPORT_TXT = PREPROCESSED_DIR / "final_project_output_report.txt"

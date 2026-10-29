@@ -83,7 +83,7 @@ INPUTS:
 OUTPUTS:
   data/processed/physics_validation_rajasthan.csv
   data/processed/spearman_rho_by_cluster_rajasthan.csv
-  outputs/qc_calibration_check_rajasthan.html
+  data/plots/qc/qc_calibration_check.html
   physics_validation_summary_rajasthan.txt
 """
 
@@ -97,7 +97,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 import physics_lib as pl
-from config import PROCESSED_DIR, OUTPUTS_DIR, RAW_POWER_DIR, BASE_DIR, ensure_data_dirs
+from config import PROCESSED_DIR, OUTPUTS_DIR, RAW_POWER_DIR, BASE_DIR, ensure_data_dirs, QC_PLOTS_DIR
 from provenance_lib import file_fingerprint, fingerprint_id, assert_fingerprint_match
 
 ensure_data_dirs()
@@ -113,7 +113,7 @@ PCM_MANUFACTURER_CSV = BASE_DIR.parent / "PCM_data" / "data" / "PCM_Properties_c
 
 OUT_RESULTS = PROCESSED_DIR / f"physics_validation_{STATE_NAME}.csv"
 OUT_SPEARMAN = PROCESSED_DIR / f"spearman_rho_by_cluster_{STATE_NAME}.csv"
-OUT_CALIBRATION_HTML = OUTPUTS_DIR / f"qc_calibration_check_{STATE_NAME}.html"
+OUT_CALIBRATION_HTML = QC_PLOTS_DIR / "qc_calibration_check.html"
 OUT_SUMMARY_TXT = BASE_DIR / f"physics_validation_summary_{STATE_NAME}.txt"
 
 BENCHMARK_SF_LOW, BENCHMARK_SF_HIGH, BENCHMARK_SF_TARGET = 0.54, 0.84, 0.69   # framework doc §11

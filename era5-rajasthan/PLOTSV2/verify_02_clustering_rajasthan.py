@@ -1,6 +1,6 @@
 """
 Verification Script 2: Clustering Validation - Rajasthan
-Output: PLOTSV2/verify_clustering/
+Output: data/plots/verify_clustering/
 Run AFTER: 05_cluster_rajasthan.py
 
 Port of tamilnadu_pipeline/plots/verify_02_clustering_tamilnadu.py and
@@ -29,7 +29,7 @@ LEVEL    = "A"
 BASE     = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 SIG_CSV  = os.path.join(BASE,"data","processed","climate_signature_rajasthan.csv")
 CLU_CSV  = os.path.join(BASE,"data","processed",f"cluster_assignments_rajasthan_level{LEVEL}.csv")
-OUT      = os.path.join(os.path.dirname(os.path.abspath(__file__)),"verify_clustering")
+OUT      = os.path.join(BASE, "data", "plots", "verify_clustering")
 os.makedirs(OUT, exist_ok=True)
 
 print("Loading data...")

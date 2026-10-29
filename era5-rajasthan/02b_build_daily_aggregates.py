@@ -251,8 +251,14 @@ def build_summary(daily_df):
         CCI = gg["GHI_Wh_m2"].corr(gg["GHI_clearsky_Wh_m2"]) if len(gg) >= 3 else np.nan
 
         t_mean = g["T2M_mean"].dropna()
-        HDD18 = (18.0 - t_mean).clip(lower=0).sum() if not t_mean.empty else np.nan
-        CDD24 = (t_mean - 24.0).clip(lower=0).sum() if not t_mean.empty else np.nan
+        # Annualise: sum-over-all-usable-days would be ~10x a real annual HDD/CDD
+        # figure for a 10-year record — divide by the actual years spanned so the
+        # number means what a reader expects ("HDD18 = ~220/year", not "~2200").
+        # Matches era5-tamilnadu/02b_build_daily_aggregates.py's HDD18_true/CDD24_true fix.
+        n_years_spanned = pd.to_datetime(g["date"]).dt.year.nunique()
+        n_years_spanned = max(n_years_spanned, 1)
+        HDD18 = (18.0 - t_mean).clip(lower=0).sum() / n_years_spanned if not t_mean.empty else np.nan
+        CDD24 = (t_mean - 24.0).clip(lower=0).sum() / n_years_spanned if not t_mean.empty else np.nan
 
         dtr = (g["T2M_max"] - g["T2M_min"]).dropna()
         DTR_true = dtr.mean() if not dtr.empty else np.nan

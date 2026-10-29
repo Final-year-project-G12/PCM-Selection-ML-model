@@ -32,7 +32,8 @@ Phase 2.5 — QUALITY CONTROL & OUTLIER DETECTION
                                    (Physical bounds checks, IsolationForest multivariate flagging)
         ↓
 Phase 3 — CLIMATE REGIME CLUSTERING (LOCKED K=3 MODEL)
-  04b_climate_signature.py       → climate_signatures_raw.csv (18 indices across 129 sites)
+  04b_climate_signature.py       → climate_signatures_raw.csv (19 indices across 129 sites, all
+                                   computed from event-sampled ERA5 data — see 02_DATA_SOURCES_AND_VARIABLES.md)
   05_cluster_assam.py            → clustering/cluster_assignments_assam.csv (K=3 GMM, full covariance)
                                    (5 core features: GHI_mean, Ta_mean, DTR, RH_mean, wind_mean;
                                     min BIC=1574.94 at K=3; medoids: ASP_0012, ASP_0092, ASP_0028)
@@ -133,7 +134,7 @@ Phase 11 — FINAL OUTPUTS AUDIT & CONSOLIDATION
 The consolidated deliverables are indexed in `final_output_manifest.csv` (31 total entries: 27 Active/Final, 4 Locked Historical):
 
 ### Consolidated Thesis Tables (`final_outputs/tables/`)
-1. `table01_climate_signatures.csv`: Summary statistics of 18 climate signature indices across 129 points.
+1. `table01_climate_signatures.csv`: Summary statistics of 19 climate signature indices across 129 points.
 2. `table02_pca_loadings.csv`: Principal component loadings for the thermodynamic index block.
 3. `table03_gmm_selection.csv`: Clustering diagnostic metrics ($K=2$ to $K=6$) establishing minimum BIC at $K=3$.
 4. `table04_cluster_profiles_k3.csv`: Final $K=3$ regime profiles, population distributions, and medoids.
@@ -145,13 +146,13 @@ The consolidated deliverables are indexed in `final_output_manifest.csv` (31 tot
 10. `table10_mcdm_vs_physics_comparison.csv`: Dual-level comparison metrics, Spearman correlations, and divergence diagnostics.
 
 ### Consolidated Thesis Figures (`final_outputs/visuals/`)
-1. `fig01_gmm_bic_selection.png`: GMM BIC model selection curve showing global minimum at $K=3$.
-2. `fig02_gmm_silhouette_curve.png`: Silhouette coefficient curve across candidate cluster counts.
-3. `fig03_gmm_davies_bouldin.png`: Davies-Bouldin cluster separation index.
-4. `fig04_gmm_calinski_harabasz.png`: Calinski-Harabasz variance ratio criterion.
-5. `fig05_mcdm_vs_delivery_rank.png`: Rank comparison scatter plot: MCDM rank vs. physics delivery temperature rank.
-6. `fig06_mcdm_vs_solar_fraction_rank.png`: Rank comparison scatter plot: MCDM rank vs. physics solar fraction rank.
-7. `fig07_mcdm_vs_cycling_rank.png`: Rank comparison scatter plot: MCDM rank vs. annual thermal cycling count.
-8. `fig08_tm_vs_physics_delivery_mechanism.png`: Thermodynamic mechanism plot demonstrating why $T_m \approx 51^\circ\text{C}$ outperforms $T_m = 44^\circ\text{C}$.
-9. `fig09_final_k3_climate_regime_map.png` (and interactive `.html`): Publication-grade geographic map of the 129 grid points colored by final $K=3$ regime.
-10. `fig10_final_k3_pca_projection.png`: 2D PCA projection of the 129 points showing the $K=3$ GMM regime ellipsoids.
+1. `k_selection_bic.png`: GMM BIC model selection curve showing global minimum at $K=3$.
+2. `k_selection_silhouette.png`: Silhouette coefficient curve across candidate cluster counts.
+3. `k_selection_davies_bouldin.png`: Davies-Bouldin cluster separation index.
+4. `k_selection_calinski_harabasz.png`: Calinski-Harabasz variance ratio criterion.
+5. `11b_physics_vs_mcdm_delivery_rank.png`: Rank comparison scatter plot: MCDM rank vs. physics delivery temperature rank.
+6. `11b_physics_vs_mcdm_solar_fraction_rank.png`: Rank comparison scatter plot: MCDM rank vs. physics solar fraction rank.
+7. `11b_physics_vs_mcdm_cycling_rank.png`: Rank comparison scatter plot: MCDM rank vs. annual thermal cycling count.
+8. `11c_tm_vs_physics_delivery.png`: Thermodynamic mechanism plot demonstrating why $T_m \approx 51^\circ\text{C}$ outperforms $T_m = 44^\circ\text{C}$.
+9. `cluster_map.png` (and interactive `.html`): Publication-grade geographic map of the 129 grid points colored by final $K=3$ regime.
+10. `pca_projection.png`: 2D PCA projection of the 129 points showing the $K=3$ GMM regime ellipsoids.

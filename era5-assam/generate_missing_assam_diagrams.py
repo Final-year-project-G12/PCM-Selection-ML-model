@@ -2,15 +2,15 @@
 Generate Missing Visualizations for Assam Data
 ================================================
 Brings Assam into full parity with Tamil Nadu and Rajasthan by generating:
-1. data/plots/verify_preprocessing/05_era5_vs_nasa_power_agreement.png
+1. data/plots/verify_preprocessing/08_era5_vs_nasa_power_agreement.png
    - Visualizes Pearson r and seasonal MBE from era5_power_agreement_assam.csv,
      documenting the empirical justification for the BACKBONE decision.
-2. data/plots/verify_preprocessing/03_population_grid_map.png
+2. data/plots/verify_preprocessing/14_population_grid_map.png
    - Spatial distribution of the 129 population-weighted grid points across Assam,
      sized/colored by WorldPop population with true K=3 medoids labeled.
-3. data/plots/verify_clustering/02_pca_scree_variance.png
+3. data/plots/verify_clustering/07_pca_scree_variance.png
    - Scree plot and cumulative variance curve for the 5 final climate features.
-4. data/plots/comparison/09_physics_diurnal_thermal_cycle.png
+4. data/plots/comparison/09_comparison_physics_diurnal_thermal_cycle.png
    - Dynamic 24-hour diurnal thermal simulation showing solar irradiance,
      tank water temperature, PCM temperature, and melt fraction.
 """
@@ -78,7 +78,7 @@ def generate_era5_vs_power_plot():
         
     plt.suptitle("Assam ERA5 vs NASA POWER Cross-Validation (Full 10-Year Satellite Agreement)", fontsize=12, fontweight="bold")
     plt.tight_layout()
-    out_path = os.path.join(OUT_PRE, "05_era5_vs_nasa_power_agreement.png")
+    out_path = os.path.join(OUT_PRE, "08_era5_vs_nasa_power_agreement.png")
     plt.savefig(out_path, dpi=150, bbox_inches="tight")
     plt.close()
     print(f"  Saved: {out_path}")
@@ -93,7 +93,11 @@ def generate_population_grid_map():
         return
     df = pd.read_csv(POP_CSV)
     
-    medoids = {"ASP_0012": "C0 Medoid (ASP_0012)", "ASP_0092": "C1 Medoid (ASP_0092)", "ASP_0028": "C2 Medoid (ASP_0028)"}
+    # Medoids the physics simulation actually used, read from its output.
+    phys_csv = os.path.join(BASE, "data", "processed", "pcm", "physics_validation_assam.csv")
+    med_by_cluster = (pd.read_csv(phys_csv).groupby("cluster_id")["medoid_point_id"].first().to_dict()
+                      if os.path.exists(phys_csv) else {})
+    medoids = {pid: f"C{int(c)} Medoid ({pid})" for c, pid in med_by_cluster.items()}
     
     fig, ax = plt.subplots(figsize=(10, 6.5))
     norm_pop = df["population"] / 1000.0  # In thousands
@@ -103,7 +107,8 @@ def generate_population_grid_map():
     cbar.set_label("Grid Cell Population (Thousands, WorldPop 2020)", fontsize=10)
     
     # Highlight Medoids
-    medoid_colors = {"ASP_0012": "#e6194b", "ASP_0092": "#3cb44b", "ASP_0028": "#4363d8"}
+    _pal = ["#e6194b", "#3cb44b", "#4363d8", "#f58231", "#911eb4"]
+    medoid_colors = {pid: _pal[i % len(_pal)] for i, pid in enumerate(medoids)}
     for pid, label in medoids.items():
         row = df[df["point_id"] == pid]
         if not row.empty:
@@ -119,7 +124,7 @@ def generate_population_grid_map():
     ax.grid(alpha=0.3, linestyle="--")
     ax.legend(loc="lower right", fontsize=9, framealpha=0.9)
     plt.tight_layout()
-    out_path = os.path.join(OUT_PRE, "03_population_grid_map.png")
+    out_path = os.path.join(OUT_PRE, "14_population_grid_map.png")
     plt.savefig(out_path, dpi=150, bbox_inches="tight")
     plt.close()
     print(f"  Saved: {out_path}")
@@ -163,7 +168,7 @@ def generate_pca_scree_plot():
     plt.title("Assam Climate Space: Principal Component Analysis (PCA) Scree Plot\n[PC1 (38.0%) + PC2 (25.5%) = 63.5% Total Variance Explained]", fontsize=11, fontweight="bold")
     ax1.grid(alpha=0.3, axis="y")
     plt.tight_layout()
-    out_path = os.path.join(OUT_CLU, "02_pca_scree_variance.png")
+    out_path = os.path.join(OUT_CLU, "07_pca_scree_variance.png")
     plt.savefig(out_path, dpi=150, bbox_inches="tight")
     plt.close()
     print(f"  Saved: {out_path}")
@@ -173,7 +178,8 @@ def generate_pca_scree_plot():
 # -------------------------------------------------------------------------
 def generate_diurnal_thermal_profile():
     print("[4/4] Generating SWH Diurnal Thermal Profile...")
-    # Simulate a realistic 24-hour diurnal cycle for Assam medoid conditions
+    # Illustrative 24-hour cycle from idealised forcing - NOT the physics model's
+    # output (that run saves annual summaries only). The title says so.
     time_hours = np.linspace(0, 24, 288)  # 5-minute timestep
     
     # Solar irradiance curve (peaks at solar noon ~ 850 W/m2)
@@ -281,9 +287,9 @@ def generate_diurnal_thermal_profile():
     labels = [l.get_label() for l in lines]
     ax1.legend(lines, labels, loc="upper left", fontsize=8.5, framealpha=0.9)
     
-    ax1.set_title("Assam SWH Sub-Hourly Physics Simulation: 24-Hour Diurnal Thermal Storage Cycle\n[Demonstrates Daytime Solar Charging, Latent Phase-Change Plateau, & Evening Discharge]", fontsize=11, fontweight="bold")
+    ax1.set_title("Assam SWH 24-Hour Diurnal Thermal Storage Cycle - ILLUSTRATIVE SCHEMATIC\n[Idealised forcing (850 W/m² sine, fixed Tm); not output of 10_physics_validation.py]", fontsize=11, fontweight="bold")
     plt.tight_layout()
-    out_path = os.path.join(OUT_CMP, "09_physics_diurnal_thermal_cycle.png")
+    out_path = os.path.join(OUT_CMP, "09_comparison_physics_diurnal_thermal_cycle.png")
     plt.savefig(out_path, dpi=150, bbox_inches="tight")
     plt.close()
     print(f"  Saved: {out_path}")

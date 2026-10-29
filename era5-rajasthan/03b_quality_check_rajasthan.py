@@ -85,9 +85,7 @@ distribution looks like. HAMPEL_WINDOW_EACH_SIDE widened to 15 occurrences
 (matching Tamil Nadu's own precedent script exactly — "~a month either
 side") to give the local median/MAD baseline enough data to distinguish a
 genuinely anomalous single day from an ordinary multi-day cloudy/hazy
-stretch. Re-validate (03b_validate_quality_fix_rajasthan.py) after this
-change and confirm the uniform-shift signature is gone before trusting the
-output — this is a check to actually run, not a change to assume fixed it.
+stretch.
 
 METHODOLOGY
 ---------------------------------------------------------------------------
@@ -134,14 +132,10 @@ WHAT THIS SCRIPT DOES NOT TOUCH:
 HOW TO RUN:
   python 03b_quality_check_rajasthan.py
 
-VALIDATION (run separately, AFTER this script and AFTER
-04_climate_signature_rajasthan.py's input path is updated to read
-climate_rajasthan_points_clean.csv):
-  python 03b_validate_quality_fix_rajasthan.py
-  — confirms row counts match, prints before/after GHI/T_amb stats,
-  flags any point with >20% of a variable marked outlier (likely a
-  systematic issue, not genuine outliers), and diffs the climate
-  signature CSV built from clean data against the pre-fix version.
+The companion validator 03b_validate_quality_fix_rajasthan.py was deleted
+in the 2026-10-27 cleanup: it compared against a Phase 3 input that the
+pipeline no longer uses (Phase 3 now reads 04_preprocess_rajasthan.py's
+output). This script is a standalone diagnostic only.
 """
 
 import warnings
@@ -586,9 +580,7 @@ def main():
     log_header("DONE")
     print(f"  {n_rows_out:,} rows, {n_points} points")
     print(f"  Review list: {review_list or 'none'}")
-    print(f"\nNext: update 04_climate_signature_rajasthan.py to read "
-          f"{CLEANED_POINTS_FILE.name} (already done if you're re-running this), "
-          f"then re-run it, then run 03b_validate_quality_fix_rajasthan.py.")
+    print("\nDiagnostic only: the core chain reads 04_preprocess_rajasthan.py's output, not this file.")
     print("=" * 68)
 
 

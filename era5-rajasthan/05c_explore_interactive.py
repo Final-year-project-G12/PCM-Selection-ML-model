@@ -30,7 +30,7 @@ DATA REQUIRED
   data/processed/climate_rajasthan_points.csv          (02's output — raw)
   data/preprocessed/rajasthan_cleaned_physical.csv     (04's output — processed)
 
-Transient map HTML is written to PLOTSV2/interactive_explorer/.
+Transient map HTML is written to data/plots/interactive_explorer/.
 """
 
 import os
@@ -58,7 +58,7 @@ st.set_page_config(
 
 RAW_FILE = COMBINED_POINTS_FILE
 PROCESSED_FILE = PREPROCESSED_DIR / "rajasthan_cleaned_physical.csv"
-OUT_DIR = BASE_DIR / "PLOTSV2" / "interactive_explorer"
+OUT_DIR = BASE_DIR / "data" / "plots" / "interactive_explorer"
 os.makedirs(OUT_DIR, exist_ok=True)
 
 if not os.path.exists(RAW_FILE):

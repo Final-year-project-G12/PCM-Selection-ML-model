@@ -196,8 +196,8 @@ occur here.
 Recovered from four independent committed artefacts:
 `data/plots/objective1/recommended_pcm_summary.html` (consensus ranks),
 `data/plots/objective1/consensus_vs_topsis_agreement.html` (consensus vs TOPSIS rank pairs),
-`data/plots/uttarakhand_objective1/07_bump_chart_ranks.html` (TOPSIS / GRA / consensus per
-cluster), and `data/plots/uttarakhand_objective1/13_recommended_pcm_summary_interactive.html`
+`data/plots/objective1/07_bump_chart_ranks.html` (TOPSIS / GRA / consensus per
+cluster), and `data/plots/objective1/13_recommended_pcm_summary_interactive.html`
 (per-candidate properties). **All four agree.**
 
 ### Clusters 0, 2 and 4 — identical Top-3
@@ -234,8 +234,8 @@ PCM reached the Top-3, not a probability — see the note below):
 
 ### Method agreement
 
-From `data/plots/verify_ranking/06_summary.png` and
-`data/plots/uttarakhand_objective1/08_method_rank_correlation_heatmap_interactive.html`
+From `data/plots/verify_ranking/06_ranking_summary.png` and
+`data/plots/objective1/08_method_rank_correlation_heatmap_interactive.html`
 (identical values):
 
 | Pair | Spearman rho |
@@ -291,7 +291,7 @@ a tie, not by a margin.**
 **None present in the source files** for TOPSIS, Grey Relational Analysis, Shannon-entropy
 weighting, Borda count or Kendall's W. `08` cites plan v3.0 §9, §9.2 (the Gaussian transform and
 sigma = 4 K), §9.5 (the low-W interpretation) and Table 13 (the AHP prior) — all internal
-references. See `11_LITERATURE_MAPPING.md`.
+references. See `13_LITERATURE_MAPPING.md`.
 
 ## Validation
 

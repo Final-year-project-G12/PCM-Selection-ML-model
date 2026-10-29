@@ -173,11 +173,11 @@ HOW TO RUN:
   python 04_climate_signature_rajasthan.py
 
 PLOTS ADDED 2026-08-11 (signature-level QC, see "SIGNATURE-LEVEL QC PLOTS"
-section near the end of this file): outputs/signature_distributions_
-rajasthan.html (histogram of every clustering-input column, 320 points)
-and outputs/signature_point_map_rajasthan.html (geographic view of
+section near the end of this file): data/plots/signatures/
+signature_distributions.html (histogram of every clustering-input column, 320 points)
+and data/plots/signatures/signature_point_map.html (geographic view of
 GHI_daily_kWh and monsoon_index) — in addition to the pre-existing
-outputs/signature_correlation_heatmap_rajasthan.html.
+data/plots/signatures/signature_correlation_heatmap.html.
 """
 
 import warnings
@@ -212,6 +212,7 @@ from config import (
     SHARE_PCM,
     PCA_N_COMPONENTS,
     T_MAINS_EST_C_TODO,
+    SIGNATURE_PLOTS_DIR,
 )
 from signature_lib import EVENT_ORDER, build_tier1_signature
 
@@ -638,7 +639,7 @@ fig.update_layout(
     height=max(500, 28 * len(corr_cols_nonconst)), width=max(600, 28 * len(corr_cols_nonconst)),
     xaxis=dict(tickangle=45),
 )
-heatmap_path = OUTPUTS_DIR / "signature_correlation_heatmap_rajasthan.html"
+heatmap_path = SIGNATURE_PLOTS_DIR / "signature_correlation_heatmap.html"
 fig.write_html(str(heatmap_path))
 print(f"  Saved: {heatmap_path}")
 
@@ -683,7 +684,7 @@ for idx, col in enumerate(corr_cols_nonconst):
 fig.update_layout(title="Climate Signature — Distribution of Every Clustering-Input Column "
                          "(320 points, Rajasthan)",
                    height=max(600, 220 * n_rows_grid), showlegend=False)
-dist_path = OUTPUTS_DIR / "signature_distributions_rajasthan.html"
+dist_path = SIGNATURE_PLOTS_DIR / "signature_distributions.html"
 fig.write_html(str(dist_path))
 print(f"  Saved: {dist_path}")
 
@@ -707,7 +708,7 @@ fig.add_trace(go.Scatter(
 fig.update_layout(title="Point-Signature Map — Rajasthan (320 points)", showlegend=False)
 fig.update_yaxes(scaleanchor="x", scaleratio=1, row=1, col=1)
 fig.update_yaxes(scaleanchor="x2", scaleratio=1, row=1, col=2)
-map_path = OUTPUTS_DIR / "signature_point_map_rajasthan.html"
+map_path = SIGNATURE_PLOTS_DIR / "signature_point_map.html"
 fig.write_html(str(map_path))
 print(f"  Saved: {map_path}")
 

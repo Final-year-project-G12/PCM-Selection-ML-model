@@ -36,8 +36,9 @@ NOT modified. Phase 9 uses:
     feasibility_survivors_assam.csv / pcm_database_assam.csv. These were screened
     under the K=4 pipeline but the 7-constraint feasibility logic is climate-independent.
     They are labelled "Phase 6-screened candidates".
-  - Climate forcing: Phase 3 final K=3 medoids (ASP_0012, ASP_0092, ASP_0028),
-    derived programmatically from the 5-feature GMM standardization.
+  - Climate forcing: Phase 3 final K=3 medoids, derived programmatically from the
+    5-feature GMM standardization (derive_true_medoids(); recorded per row in
+    physics_validation_assam.csv as medoid_point_id).
   The two cluster sets originate from different pipeline versions. This is a
   documented pipeline-version inconsistency; Phase 6 files are not rerun.
 

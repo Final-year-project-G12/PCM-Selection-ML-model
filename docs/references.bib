@@ -1922,3 +1922,478 @@ Gadhave, P., Prabhune, C., & Pathan, F. (2023). SELECTION OF PHASE CHANGE MATERI
 %%     Chen 2025, ...), not sources this repo uses directly — deliberately
 %%     NOT enumerated here.
 %% ═══════════════════════════════════════════════════════════════════════
+
+%% ═══════════════════════════════════════════════════════════════════════
+%% ADDED 2026-10-17 — citations used across docs/, scripts, pcm_shared_config.py
+%% and CLAUDE.md that had no full entry above (they appeared only as the bare
+%% text lines or the "NOT ADDED" comment block earlier in this file).
+%%
+%% Entries marked  note = {VERIFY ...}  carry bibliographic details supplied
+%% from general knowledge of well-known works, NOT from this project's Sources/
+%% extracts. Entries marked INCOMPLETE give only what the project docs state;
+%% nothing is invented. Complete/verify each before the IEEE reference list.
+%% ═══════════════════════════════════════════════════════════════════════
+
+%% ── SHARE_PCM basis (pcm_shared_config.py; CLAUDE.md 3.1) — INCOMPLETE ──
+%% The project docs give only author + year for these four. Locate the papers
+%% (and fix the "Kowhitney 2021" misspelling in some docs -> Kozelj 2021).
+@misc{Zhao2022PCMShare,
+  author = {Zhao and others},
+  year   = {2022},
+  note   = {INCOMPLETE -- title/venue not stated anywhere in the project docs. Cited for SHARE_PCM = 0.5: PCM supplies ~50\% of total heat storage in combined sensible+latent systems (pcm_shared_config.py; CLAUDE.md 3.1).}
+}
+
+@misc{Huang2020PCMVolumeRatio,
+  author = {Huang and others},
+  year   = {2020},
+  note   = {INCOMPLETE -- title/venue not stated in project docs. Cited for SHARE_PCM: PCM volume ratio 0.67--0.78 raises solar fraction ~30\% (CLAUDE.md 3.1).}
+}
+
+@misc{Abdelsalam2020PCMStorageVolume,
+  author = {Abdelsalam and others},
+  year   = {2020},
+  note   = {INCOMPLETE -- title/venue not stated in project docs. Cited for SHARE_PCM (50\% PCM volume -> 40\% storage-volume reduction) and as the base of Eldokaishi et al. (2022)'s design study (CLAUDE.md 3.1, 3.3).}
+}
+
+@misc{Kozelj2021PCMFraction,
+  author = {Ko{\v{z}}elj and others},
+  year   = {2021},
+  note   = {INCOMPLETE -- title/venue not stated in project docs. Cited for SHARE_PCM: 15\% PCM fraction -> 70\% storage increase (CLAUDE.md 3.1). Some docs misspell the name "Kowhitney 2021" or "Kozelj".}
+}
+
+@misc{Xu2017MaterialAssessmentLHTES,
+  author = {Xu and others},
+  title  = {Application of material assessment methodology in latent heat thermal energy storage},
+  year   = {2017},
+  note   = {INCOMPLETE -- title as quoted in CLAUDE.md 3.1; authors/journal/volume not stated. Cited as the standard MCDM workflow for PCM-material selection.}
+}
+
+@misc{Nahar2003Jodhpur,
+  author = {Nahar},
+  year   = {2003},
+  note   = {INCOMPLETE -- bare "Nahar (2003)" in docs/rajasthan: field-evidence sanity check for the Tm_target_capped cap, tested at Jodhpur. Title/journal not stated; locate the paper.}
+}
+
+%% ── Standards, codes and datasets ──────────────────────────────────────
+@misc{IS12976_2023,
+  author       = {{Bureau of Indian Standards}},
+  title        = {{IS} 12976:2023 --- Solar Water Heating Systems --- Code of Practice},
+  year         = {2023},
+  howpublished = {Bureau of Indian Standards, New Delhi},
+  note         = {Local copy: PCM-Selection-ML-model/Sources/pdfs/IS12976_2023.pdf. Tank capacity 40--100 L/m$^2$ collector, 75 L/m$^2$ reference (4.2/7.1); overheat protection (8.2); backup heater (5). Basis of the Objective 2 Rajasthan resizing (CLAUDE.md 3.5). An older IS 12976 (1990) is cited in one source paper.}
+}
+
+@misc{NBC2016India,
+  author       = {{Bureau of Indian Standards}},
+  title        = {National Building Code of India 2016},
+  year         = {2016},
+  howpublished = {Bureau of Indian Standards, New Delhi},
+  note         = {Five Indian climate zones; planned (still stubbed) external validation of Phase 4 clusters. docs/Literature Review.md Part A3.}
+}
+
+@misc{ECBC2017India,
+  author       = {{Bureau of Energy Efficiency}},
+  title        = {Energy Conservation Building Code ({ECBC}) 2017},
+  year         = {2017},
+  howpublished = {Bureau of Energy Efficiency, Ministry of Power, Government of India},
+  note         = {Climate-zone definitions; planned external validation of Phase 4 clusters. docs/Literature Review.md Part A3.}
+}
+
+@book{BansalMinke1988Climatic,
+  author    = {Bansal, N. K. and Minke, G.},
+  title     = {Climatic Zones and Rural Housing in {India}},
+  publisher = {Kernforschungsanlage J{\"u}lich},
+  year      = {1988},
+  note      = {VERIFY. Historical origin of the five Indian climate zones (docs/Literature Review.md A3).}
+}
+
+%% ── MCDM originating papers (docs/rajasthan/17_LITERATURE_MAPPING.md) ──
+@book{HwangYoon1981MADM,
+  author    = {Hwang, Ching-Lai and Yoon, Kwangsun},
+  title     = {Multiple Attribute Decision Making: Methods and Applications},
+  series    = {Lecture Notes in Economics and Mathematical Systems},
+  volume    = {186},
+  publisher = {Springer},
+  year      = {1981},
+  note      = {VERIFY. Originating TOPSIS reference for 08_mcdm_ranking.py.}
+}
+
+@article{BransVincke1985PROMETHEE,
+  author  = {Brans, J. P. and Vincke, Ph.},
+  title   = {A Preference Ranking Organisation Method: The {PROMETHEE} Method for Multiple Criteria Decision-Making},
+  journal = {Management Science},
+  volume  = {31},
+  number  = {6},
+  pages   = {647--656},
+  year    = {1985},
+  note    = {VERIFY. Originating PROMETHEE reference. Companion: BransMareschal2005PROMETHEE.}
+}
+
+@book{Opricovic1998Multicriteria,
+  author    = {Opricovic, Serafim},
+  title     = {Multicriteria Optimization of Civil Engineering Systems},
+  publisher = {Faculty of Civil Engineering, University of Belgrade},
+  year      = {1998},
+  note      = {VERIFY. Originating VIKOR reference. Companion: OpricovicTzeng2004VIKOR.}
+}
+
+@article{Shannon1948Communication,
+  author  = {Shannon, C. E.},
+  title   = {A Mathematical Theory of Communication},
+  journal = {The Bell System Technical Journal},
+  volume  = {27},
+  number  = {3},
+  pages   = {379--423},
+  year    = {1948},
+  note    = {VERIFY. Entropy basis of the criterion-weighting step in 08_mcdm_ranking.py.}
+}
+
+@article{Zadeh1965FuzzySets,
+  author  = {Zadeh, L. A.},
+  title   = {Fuzzy Sets},
+  journal = {Information and Control},
+  volume  = {8},
+  number  = {3},
+  pages   = {338--353},
+  year    = {1965},
+  note    = {Citation given in full in the project docs (rejected-alternatives table for the melting window).}
+}
+
+@article{Oluah2020TrombeTOPSIS,
+  author  = {Oluah, C. and Akinlabi, E. T. and Njoku, H. O.},
+  title   = {Selection of phase change material for improved performance of {Trombe} wall systems using the entropy weight and {TOPSIS} methodology},
+  journal = {Energy and Buildings},
+  volume  = {217},
+  year    = {2020},
+  note    = {Title/volume as quoted in the project docs. Source of the 72.12\% thermal-conductivity-domination TOPSIS regression fixture in 08_mcdm_ranking.py. Article number not stated.}
+}
+
+@misc{Nabavi2023EntropyWeight,
+  author = {Nabavi and others},
+  year   = {2023},
+  note   = {INCOMPLETE -- cited as Nabavi et al. (2023, Ind. Eng. Chem. Res.) for entropy-weight stability expectations in 08_mcdm_ranking.py. Title/pages not stated.}
+}
+
+@misc{Jangid2025VIKORStability,
+  author = {Jangid and others},
+  year   = {2025},
+  note   = {INCOMPLETE -- cited as Jangid et al. (2025) for the VIKOR stability expectation in 08_mcdm_ranking.py. Title/journal not stated.}
+}
+
+@misc{Yadav2020PCMDomesticWaterMCDM,
+  author = {Yadav and others},
+  title  = {Selection of phase change material for domestic water heating using multi-criteria decision approach},
+  year   = {2023},
+  note   = {INCOMPLETE -- docs/Literature Review.md A1 cites "Yadav et al. (2020/2023)", Australian Journal of Mechanical Engineering 21(1); AHP+entropy weights feeding TOPSIS/VIKOR/EXPROM2. Authors and exact year need confirming.}
+}
+
+@article{Awan2023RankingVsSimulation,
+  author  = {Awan, M. B. and Ma, Z. and Lin, W. and Pandey, A. K. and Tyagi, V. V.},
+  journal = {Journal of Energy Storage},
+  volume  = {57},
+  pages   = {106301},
+  year    = {2023},
+  note    = {Title not stated in project docs. Template for validating an MCDM ranking against simulation (ranking + simulation, no climate clustering) -- docs/Literature Review.md A6/C6.}
+}
+
+@article{Cui2023RankCorrelation,
+  author  = {Cui, Y. and others},
+  journal = {Information Sciences},
+  volume  = {647},
+  pages   = {119439},
+  year    = {2023},
+  note    = {INCOMPLETE -- title not stated in project docs (docs/Literature Review.md A6).}
+}
+
+@article{Wieckowski2023MCDMRankingSimilarity,
+  author  = {Wi{\k{e}}ckowski, Jaros{\l}aw and Sa{\l}abun, Wojciech},
+  journal = {Applied Soft Computing},
+  volume  = {148},
+  pages   = {110915},
+  year    = {2023},
+  note    = {Title not stated in project docs (docs/Literature Review.md A6). Verify authors' given names.}
+}
+
+@misc{Curran2014SpearmanMonteCarlo,
+  author       = {Curran, Patrick A.},
+  title        = {Monte Carlo error analyses of {Spearman}'s rank test},
+  year         = {2014},
+  howpublished = {arXiv:1411.3816},
+  note         = {VERIFY title. Suggested for confidence intervals on the Phase 7 Spearman rho (docs/Literature Review.md A6/C6).}
+}
+
+%% ── Statistics / clustering / preprocessing ────────────────────────────
+@article{Schwarz1978BIC,
+  author  = {Schwarz, Gideon},
+  title   = {Estimating the Dimension of a Model},
+  journal = {The Annals of Statistics},
+  volume  = {6},
+  number  = {2},
+  pages   = {461--464},
+  year    = {1978},
+  note    = {VERIFY. BIC for GMM model selection (05_cluster_*.py).}
+}
+
+@article{Rousseeuw1987Silhouettes,
+  author  = {Rousseeuw, Peter J.},
+  title   = {Silhouettes: A graphical aid to the interpretation and validation of cluster analysis},
+  journal = {Journal of Computational and Applied Mathematics},
+  volume  = {20},
+  pages   = {53--65},
+  year    = {1987},
+  note    = {VERIFY. Silhouette score for choosing k.}
+}
+
+@book{DudaHart1973Pattern,
+  author    = {Duda, Richard O. and Hart, Peter E.},
+  title     = {Pattern Classification and Scene Analysis},
+  publisher = {Wiley},
+  year      = {1973},
+  note      = {VERIFY. Cited with McLachlanPeel2000FMM for GMM clustering.}
+}
+
+@article{SavitzkyGolay1964,
+  author  = {Savitzky, Abraham and Golay, Marcel J. E.},
+  title   = {Smoothing and Differentiation of Data by Simplified Least Squares Procedures},
+  journal = {Analytical Chemistry},
+  volume  = {36},
+  number  = {8},
+  pages   = {1627--1639},
+  year    = {1964},
+  note    = {VERIFY. Savitzky-Golay smoothing diagnostic, 04_preprocess step 9.}
+}
+
+@article{YeoJohnson2000,
+  author  = {Yeo, In-Kwon and Johnson, Richard A.},
+  title   = {A new family of power transformations to improve normality or symmetry},
+  journal = {Biometrika},
+  volume  = {87},
+  number  = {4},
+  pages   = {954--959},
+  year    = {2000},
+  note    = {VERIFY. Yeo-Johnson skew diagnostic, 04_preprocess step 8.}
+}
+
+@article{Cannon2015QuantileMapping,
+  author  = {Cannon, Alex J. and Sobie, Stephen R. and Murdock, Trevor Q.},
+  title   = {Bias Correction of {GCM} Precipitation by Quantile Mapping: How Well Do Methods Preserve Changes in Quantiles and Extremes?},
+  journal = {Journal of Climate},
+  volume  = {28},
+  number  = {17},
+  pages   = {6938--6959},
+  year    = {2015},
+  note    = {VERIFY. Project docs give only "Cannon et al. (2015)"; recommended citation for the quantile-mapping branch of 03b_agreement_analysis.py. See also Themessl2012QM.}
+}
+
+@article{Bailey2025ClearSkyQM,
+  author  = {Bailey, B. and Nychka, D. and Sengupta, M. and Bandyopadhyay, S.},
+  journal = {Solar Energy},
+  volume  = {282},
+  pages   = {113220},
+  year    = {2025},
+  note    = {Title not stated in project docs; described as clear-sky-constrained quantile mapping (docs/Literature Review.md C). Recommended upgrade for GHI bias correction.}
+}
+
+%% ── Solar geometry / decomposition / thermodynamics ────────────────────
+@article{Erbs1982DiffuseFraction,
+  author  = {Erbs, D. G. and Klein, S. A. and Duffie, J. A.},
+  title   = {Estimation of the diffuse radiation fraction for hourly, daily and monthly-average global radiation},
+  journal = {Solar Energy},
+  volume  = {28},
+  number  = {4},
+  pages   = {293--302},
+  year    = {1982},
+  note    = {VERIFY. Named in docs as the standard DNI/DHI decomposition citation; NOT implemented in this pipeline.}
+}
+
+@misc{Perez1990Decomposition,
+  author = {Perez, R. and others},
+  year   = {1990},
+  note   = {INCOMPLETE -- docs cite "Perez et al. (1990, DISC model)" as an alternative DNI/DHI decomposition, not implemented. Title/journal not stated; the DISC model is usually attributed to Maxwell (1987), so check which model is meant.}
+}
+
+@article{Kusuda1965EarthTemperature,
+  author  = {Kusuda, T. and Achenbach, P. R.},
+  title   = {Earth temperature and thermal diffusivity at selected stations in the {United States}},
+  journal = {ASHRAE Transactions},
+  volume  = {71},
+  number  = {1},
+  pages   = {61--74},
+  year    = {1965},
+  note    = {VERIFY title. Recommended replacement for the T_mains_est_C = Ta_mean - 2.0 placeholder (pcm_shared_config.py T_MAINS_EST_C_TODO).}
+}
+
+@inproceedings{BurchChristensen2007MainsWater,
+  author    = {Burch, J. and Christensen, C.},
+  title     = {Towards development of an algorithm for mains water temperature},
+  booktitle = {Proceedings of the {ASES} Solar Conference},
+  year      = {2007},
+  note      = {VERIFY. Alternative mains-water-temperature model (docs/Literature Review.md C).}
+}
+
+@misc{PerlmanMills1985DHW,
+  author = {Perlman, M. and Mills, B. E.},
+  year   = {1985},
+  note   = {INCOMPLETE -- ASHRAE Transactions; title not stated. Basis of the ASHRAE Standard 90.2 hot-water draw-profile shape used in physics_lib.py (see ASHRAE902DrawProfile above).}
+}
+
+%% ── PCM properties and reviews (docs/Literature Review.md A4) ──────────
+@article{Abhat1983LowTempLHTES,
+  author  = {Abhat, A.},
+  title   = {Low temperature latent heat thermal energy storage: Heat storage materials},
+  journal = {Solar Energy},
+  volume  = {30},
+  number  = {4},
+  pages   = {313--332},
+  year    = {1983},
+  note    = {VERIFY.}
+}
+
+@article{Zalba2003PCMReview,
+  author  = {Zalba, Belen and Mar{\'\i}n, Jos{\'e} M. and Cabeza, Luisa F. and Mehling, Harald},
+  title   = {Review on thermal energy storage with phase change: materials, heat transfer analysis and applications},
+  journal = {Applied Thermal Engineering},
+  volume  = {23},
+  number  = {3},
+  pages   = {251--283},
+  year    = {2003},
+  note    = {VERIFY.}
+}
+
+@article{Sharma2009PCMReview,
+  author  = {Sharma, Atul and Tyagi, V. V. and Chen, C. R. and Buddhi, D.},
+  title   = {Review on thermal energy storage with phase change materials and applications},
+  journal = {Renewable and Sustainable Energy Reviews},
+  volume  = {13},
+  number  = {2},
+  pages   = {318--345},
+  year    = {2009},
+  note    = {VERIFY. Most-cited PCM review (docs/Literature Review.md A4).}
+}
+
+@article{Cabeza2011PCMBuildings,
+  author  = {Cabeza, L. F. and Castell, A. and Barreneche, C. and de Gracia, A. and Fern{\'a}ndez, A. I.},
+  title   = {Materials used as {PCM} in thermal energy storage in buildings: A review},
+  journal = {Renewable and Sustainable Energy Reviews},
+  volume  = {15},
+  number  = {3},
+  pages   = {1675--1695},
+  year    = {2011},
+  note    = {VERIFY.}
+}
+
+@article{Kenisarin2014OrganicPCM,
+  author  = {Kenisarin, Murat M.},
+  title   = {Thermophysical properties of some organic phase change materials for latent heat storage. A review},
+  journal = {Solar Energy},
+  volume  = {107},
+  pages   = {553--575},
+  year    = {2014},
+  note    = {VERIFY.}
+}
+
+@article{KenisarinMahkamov2016SaltHydrates,
+  author  = {Kenisarin, Murat and Mahkamov, Khamid},
+  title   = {Salt hydrates as latent heat storage materials: Thermophysical properties and costs},
+  journal = {Solar Energy Materials and Solar Cells},
+  volume  = {145},
+  pages   = {255--286},
+  year    = {2016},
+  note    = {VERIFY. Suggested source for the missing salt-hydrate rows (the corrosion veto is inert while the database is all-organic).}
+}
+
+@misc{Sharma2017PCMSelection,
+  author = {Sharma and others},
+  year   = {2017},
+  note   = {INCOMPLETE -- "traditional PCM selection papers" strawman for the monthly-means approach, docs/tamilnadu/METHODS.md 04b. No title/venue in docs.}
+}
+
+@misc{Luo2021DoublePassPCM,
+  author = {Luo and others},
+  year   = {2021},
+  note   = {INCOMPLETE -- air-type double-pass collector with PCM rod; used as a collector-outlet-temperature validation benchmark in a source paper's Table 2. Not directly cited by pipeline code.}
+}
+
+%% ── Hot-water demand (docs/Literature Review.md A5) ────────────────────
+@article{Edwards2015DrawProfiles,
+  author  = {Edwards, Sarah and Beausoleil-Morrison, Ian and Laperri{\`e}re, Andr{\'e}},
+  title   = {Representative hot water draw profiles at high temporal resolution for simulating the performance of solar thermal systems},
+  journal = {Solar Energy},
+  volume  = {111},
+  pages   = {43--52},
+  year    = {2015},
+  note    = {VERIFY.}
+}
+
+@article{Fuentes2018DHWProfiles,
+  author  = {Fuentes, Elisa and Arce, Luis and Salom, Jaume},
+  title   = {A review of domestic hot water consumption profiles for application in systems and buildings energy performance analysis},
+  journal = {Renewable and Sustainable Energy Reviews},
+  volume  = {81},
+  number  = {Part 1},
+  pages   = {1530--1547},
+  year    = {2018},
+  note    = {VERIFY. Docs confirm second author is Luis Arce (not "Schaefer"). Solar coverage varies up to 24\% with the tapping profile.}
+}
+
+%% ── DRL / Objective 3 (docs/Literature Review.md Part D — future work) ─
+@article{Biemann2021ContinuousHVACRL,
+  author  = {Biemann, Marco and Scheller, Fabian and Liu, Xiufeng and Huang, Lizhen},
+  title   = {Experimental evaluation of model-free reinforcement learning algorithms for continuous {HVAC} control},
+  journal = {Applied Energy},
+  volume  = {298},
+  pages   = {117164},
+  year    = {2021},
+  note    = {VERIFY. SAC vs PPO/TRPO/A2C; SAC most data-efficient.}
+}
+
+@article{CorreaJullian2020SolarThermalRL,
+  author  = {Correa-Jullian, Camila and L{\'o}pez Droguett, Enrique and Cardemil, Jos{\'e} M.},
+  title   = {Operation scheduling in a solar thermal system: A reinforcement learning-based framework},
+  journal = {Applied Energy},
+  volume  = {268},
+  pages   = {114943},
+  year    = {2020},
+  note    = {VERIFY.}
+}
+
+@article{Rodriguez2024MultiObjectiveDRLWaterHeating,
+  author  = {Rodr{\'\i}guez and others},
+  journal = {Energy},
+  year    = {2024},
+  note    = {INCOMPLETE -- Elsevier article S0360544224000677 (docs/Literature Review.md D). Multi-objective DRL for a solar water-heating system with heat recovery. Full author list/title/volume not stated.}
+}
+
+@article{Wang2023IceTESRL,
+  author  = {Wang and others},
+  journal = {Energy and Buildings},
+  volume  = {301},
+  pages   = {113696},
+  year    = {2023},
+  note    = {INCOMPLETE -- RL for ice-based thermal energy storage; title/authors not stated in project docs.}
+}
+
+@misc{Heidari2022StochasticDemandWeather,
+  author = {Heidari and others},
+  year   = {2022},
+  note   = {INCOMPLETE and NOT A VERIFIED PROJECT SOURCE -- raised as a second precedent for DRL under stochastic demand + weather (CLAUDE.md 3.4). Do not cite specific claims until read and extracted into sources/ per CLAUDE.md section 0.}
+}
+
+@misc{Noor2026ClusterRankSimulate,
+  author = {Noor and others},
+  year   = {2026},
+  note   = {INCOMPLETE -- Sustainability; combined clustering+ranking+simulation analogue (720 EnergyPlus runs, 10 ASHRAE zones), docs/Literature Review.md A7.}
+}
+
+@misc{Zeleke2022ClusterRankSimulate,
+  author = {Zeleke and Kumar and Rajasekar and others},
+  year   = {2022},
+  note   = {INCOMPLETE -- docs/Literature Review.md A7 gives "Zeleke, Kumar ... Rajasekar (2022), Frontiers in Sustainable Cities 4:684148"; names are partial in the docs.}
+}
+
+%% Not added (no usable metadata found anywhere in the docs): "Smith 1939",
+%% "Pearson 2002", "Pandey & Tyagi 2023", "Dholpur 2020" (a place, not a
+%% citation), the two Building and Environment 2024/2025 India climate
+%% classification papers (S0360132324013532, S0360132325011047), and the
+%% remaining DRL/aquifer/HVAC items listed in the "NOT ADDED" block earlier
+%% in this file, which are Elsevier article ids only.

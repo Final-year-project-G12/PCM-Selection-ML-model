@@ -229,7 +229,7 @@ if topk is not None:
                title="Comparison 4: TOPSIS vs GRA Direct Agreement (Uttarakhand)")
         ax.legend(fontsize=8)
         ax.grid(alpha=0.25)
-        sfig("04_comparison_topsis_vs_gra_agreement.png")
+        sfig("10_comparison_topsis_vs_gra_agreement.png")
 
         valid = topk[["topsis_rank", "gra_rank"]].dropna()
         if len(valid) >= 3:
