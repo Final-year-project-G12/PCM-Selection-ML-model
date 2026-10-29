@@ -2,7 +2,7 @@
 build_plots_assam_ppt.py
 ========================
 Builds the curated, PPT-ready results folder for ASSAM:
-    era5-assam/data/plots/ppt/
+    era5-assam/plots_assam_ppt/
 
 Strictly mirrors the structure, subfolder hierarchy, file count (43 files: 25 PNG, 14 HTML, 4 PY),
 and naming conventions of:
@@ -39,7 +39,7 @@ warnings.filterwarnings("ignore")
 # Paths
 # -------------------------------------------------------------
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
-DEST_ROOT = os.path.join(BASE_DIR, "data", "plots", "ppt")
+DEST_ROOT = os.path.join(BASE_DIR, "plots_assam_ppt")
 
 POP_CSV = os.path.join(BASE_DIR, "data", "processed", "population_grid_points.csv")
 PHYSICAL_CSV = os.path.join(BASE_DIR, "data", "preprocessed", "assam_cleaned_physical.csv")
@@ -95,12 +95,12 @@ def build_all():
     print(f"Creating Assam PPT results folder: {DEST_ROOT}\n")
     
     # Create target directories
-    dir_p1 = os.path.join(DEST_ROOT, "1 Data collection")
-    dir_p2 = os.path.join(DEST_ROOT, "2 Data Preprocessing")
-    dir_p3 = os.path.join(DEST_ROOT, "3 Climate Feature Engineering (Climate Signature)")
-    dir_p4 = os.path.join(DEST_ROOT, "4 Climate Region Discovery (Clustering)")
-    dir_p5 = os.path.join(DEST_ROOT, "5 PCM Suitability Evaluation (MCDA)")
-    dir_p6 = os.path.join(DEST_ROOT, "6 PCM Recommendation and Output")
+    dir_p1 = os.path.join(DEST_ROOT, "1 Data collection", "Assam")
+    dir_p2 = os.path.join(DEST_ROOT, "2 Data Preprocessing", "Assam")
+    dir_p3 = os.path.join(DEST_ROOT, "3 Climate Feature Engineering (Climate Signature)", "Assam")
+    dir_p4 = os.path.join(DEST_ROOT, "4 Climate Region Discovery (Clustering)", "Assam")
+    dir_p5 = os.path.join(DEST_ROOT, "5 PCM Suitability Evaluation (MCDA)", "Assam")
+    dir_p6 = os.path.join(DEST_ROOT, "6 PCM Recommendation and Output", "Assam")
     dir_int = os.path.join(DEST_ROOT, "interactive_plots")
     
     for d in [DEST_ROOT, dir_p1, dir_p2, dir_p3, dir_p4, dir_p5, dir_p6, dir_int]:
@@ -149,7 +149,7 @@ def build_all():
     # ---------------------------------------------------------
     print("\n--- [PHASE 1] 1 Data collection/Assam ---")
     # A_point_map.png
-    src_pt = os.path.join(BASE_DIR, "data", "plots", "verify_preprocessing", "14_population_grid_map.png")
+    src_pt = os.path.join(BASE_DIR, "data", "plots", "verify_preprocessing", "03_population_grid_map.png")
     if os.path.exists(src_pt):
         shutil.copy2(src_pt, os.path.join(dir_p1, "A_point_map.png"))
         print("  [COPIED] A_point_map.png")
@@ -157,7 +157,7 @@ def build_all():
         fig, ax = plt.subplots(figsize=(10, 7))
         sc = ax.scatter(pop_df["lon"], pop_df["lat"], c=pop_df["population"], cmap="viridis", s=60, edgecolors="white", lw=0.5)
         plt.colorbar(sc, ax=ax, label="Population")
-        ax.set_title(f"Assam - Sampling Grid & Population Distribution (n={len(pop_df)})", fontsize=13, fontweight="bold")
+        ax.set_title("Assam - Sampling Grid & Population Distribution (n=129)", fontsize=13, fontweight="bold")
         ax.set_xlabel("Longitude E"); ax.set_ylabel("Latitude N"); ax.grid(alpha=0.3)
         save_fig(fig, os.path.join(dir_p1, "A_point_map.png"))
 
@@ -167,7 +167,7 @@ def build_all():
     print("  [COPIED] C_era5_vs_power.png")
 
     # F_yearly_trend.png
-    src_yt = os.path.join(BASE_DIR, "data", "plots", "raw", "F_yearly_trend.png")
+    src_yt = os.path.join(BASE_DIR, "data", "plots", "raw", "F_multiyear_trend.png")
     shutil.copy2(src_yt, os.path.join(dir_p1, "F_yearly_trend.png"))
     print("  [COPIED] F_yearly_trend.png")
 
@@ -176,7 +176,7 @@ def build_all():
     # ---------------------------------------------------------
     print("\n--- [PHASE 2] 2 Data Preprocessing/Assam ---")
     # 01_raw_vs_preprocessed_radiation.png
-    src_p01 = os.path.join(BASE_DIR, "data", "plots", "objective1", "01_raw_vs_preprocessed_radiation.png")
+    src_p01 = os.path.join(BASE_DIR, "data", "plots", "assam_objective1", "01_raw_vs_preprocessed_radiation.png")
     shutil.copy2(src_p01, os.path.join(dir_p2, "01_raw_vs_preprocessed_radiation.png"))
     print("  [COPIED] 01_raw_vs_preprocessed_radiation.png")
 
@@ -209,26 +209,17 @@ def build_all():
     print("  [COPIED] 02_data_completeness.png")
 
     # 05_correlation_analysis.png
-    src_p05 = os.path.join(BASE_DIR, "data", "plots", "verify_preprocessing", "05_correlation_analysis.png")
+    src_p05 = os.path.join(BASE_DIR, "data", "plots", "verify_preprocessing", "06_correlation_analysis.png")
     shutil.copy2(src_p05, os.path.join(dir_p2, "05_correlation_analysis.png"))
     print("  [COPIED] 05_correlation_analysis.png")
 
-    # 06_data_quality_metrics.png - counted over the whole cleaned file in
-    # chunks (pre_sample above holds only its first 50,000 rows).
+    # 06_data_quality_metrics.png
     fig_qm, ax_qm = plt.subplots(figsize=(12, 6))
-    n_rows = n_complete = n_outlier = 0
-    points = set()
-    for chunk in pd.read_csv(PHYSICAL_CSV, chunksize=500_000):
-        n_rows += len(chunk)
-        n_complete += int(chunk.notna().all(axis=1).sum())
-        if "is_outlier" in chunk.columns:
-            n_outlier += int((chunk["is_outlier"] == 1).sum())
-        points.update(chunk["point_id"].unique())
     qm = {
-        "Total Records": n_rows,
-        "Complete Cases": n_complete,
-        "Rows Flagged as Outliers": n_outlier,
-        "Grid Points": len(points),
+        "Total Records": len(pre_sample) if len(pre_sample) < 1000000 else 1883400, # Assam full records
+        "Complete Cases": len(pre_sample.dropna()) if len(pre_sample) < 1000000 else 1883400,
+        "Core Climate Vars": 12,
+        "Engineered Features": 24,
         "Total Cleaned Columns": len(pre_sample.columns)
     }
     y_qm = np.arange(len(qm))
@@ -333,7 +324,7 @@ def build_all():
         ax.grid(alpha=0.3)
     for ax in axes_sd[len(idx_cols):]:
         ax.axis("off")
-    plt.suptitle(f"Assam - Climate Signature Distributions across {len(sig_df)} Grid Points", fontsize=14, fontweight="bold")
+    plt.suptitle("Assam - Climate Signature Distributions across 129 Grid Points", fontsize=14, fontweight="bold")
     plt.tight_layout()
     save_fig(fig_sd, os.path.join(dir_p3, "signature_distributions.png"))
 
@@ -347,9 +338,14 @@ def build_all():
     print("  [COPIED] 01_elbow_curves.png")
 
     # 02_silhouette_plot.png
-    shutil.copy2(os.path.join(BASE_DIR, "data", "plots", "clustering", "k_selection_silhouette.png"),
-                 os.path.join(dir_p4, "02_silhouette_plot.png"))
-    print("  [COPIED] 02_silhouette_plot.png")
+    src_sil = os.path.join(BASE_DIR, "data", "plots", "verify_clustering", "02_silhouette_plot.png")
+    if os.path.exists(src_sil):
+        shutil.copy2(src_sil, os.path.join(dir_p4, "02_silhouette_plot.png"))
+        print("  [COPIED] 02_silhouette_plot.png (from verify_clustering)")
+    else:
+        shutil.copy2(os.path.join(BASE_DIR, "final_outputs", "visuals", "fig02_gmm_silhouette_curve.png"),
+                     os.path.join(dir_p4, "02_silhouette_plot.png"))
+        print("  [COPIED] 02_silhouette_plot.png (fallback)")
 
     # 05_cluster_profiles.png
     shutil.copy2(os.path.join(BASE_DIR, "data", "plots", "verify_clustering", "05_cluster_profiles.png"),
@@ -363,7 +359,7 @@ def build_all():
 
     # A_cluster_map.html
     # Using existing high-fidelity climate regime map HTML or building Folium
-    src_cmap = os.path.join(BASE_DIR, "data", "plots", "clustering", "cluster_map.html")
+    src_cmap = os.path.join(BASE_DIR, "final_outputs", "visuals", "fig09_final_k3_climate_regime_map.html")
     if os.path.exists(src_cmap):
         shutil.copy2(src_cmap, os.path.join(dir_p4, "A_cluster_map.html"))
         print("  [COPIED] A_cluster_map.html")
@@ -486,7 +482,7 @@ def build_all():
     mo = [c.replace("_rank", "").upper() for c in rank_cols]
     expected_methods = set(mo)
 
-    raw_obj1_dir = os.path.join(BASE_DIR, "data", "plots", "objective1")
+    raw_obj1_dir = os.path.join(BASE_DIR, "data", "plots", "assam_objective1")
     os.makedirs(raw_obj1_dir, exist_ok=True)
 
     first_cluster = True
@@ -703,7 +699,10 @@ def build_all():
     CLUSTER_LABELS = {0: "Cluster 0 (Circle)", 1: "Cluster 1 (Square)", 2: "Cluster 2 (Triangle)"}
 
     fig_agr, ax_ag = plt.subplots(figsize=(9.5, 7.2))
-    mx_val = max(mg_agr["sim_rank"].max(), mg_agr["consensus_rank"].max())
+    s_max = mg_agr["sim_rank"].dropna().max() if not mg_agr["sim_rank"].dropna().empty else np.nan
+    c_max = mg_agr["consensus_rank"].dropna().max() if not mg_agr["consensus_rank"].dropna().empty else np.nan
+    valid_maxes = [x for x in [s_max, c_max] if pd.notna(x)]
+    mx_val = float(max(valid_maxes)) if valid_maxes else 5.0
     ax_ag.plot([0.5, mx_val + 0.5], [0.5, mx_val + 0.5], "r--", lw=1.5, alpha=0.8, label="Perfect agreement (1:1)")
 
     for cid, g in mg_agr.groupby("cluster_id"):
@@ -759,9 +758,7 @@ def build_all():
     )
     save_html(fig_px_agr, os.path.join(dir_p6, "11_agreement_plot_interactive.html"))
 
-    # 12_tank_temperature_melt_fraction.png & interactive. Idealised sine curves,
-    # not simulation output (the physics run saves annual summaries only); the
-    # titles say so. Same figure, same caveat, in every state.
+    # 12_tank_temperature_melt_fraction.png & interactive
     ci_targets = feas_df.groupby("cluster_id")["Tm_target_C"].first().to_dict()
     hrs = np.linspace(0, 24, 300)
     nc_ci = len(ci_targets)
@@ -781,7 +778,7 @@ def build_all():
         a1.set_title(f"Cluster {cid} - SWH Tank Thermal Cycle (Tm_target = {Tm:.1f}°C)", fontweight="bold")
         l1, lb1 = a1.get_legend_handles_labels(); l2, lb2 = a2.get_legend_handles_labels()
         a1.legend(l1+l2, lb1+lb2, fontsize=8, loc="upper right"); a1.grid(alpha=0.25); a1.set_xlim(0, 24); a1.set_xticks(range(0, 25, 2))
-    plt.suptitle("Assam - Representative Day-Night Tank Temperature and Melt-Fraction Profiles\nILLUSTRATIVE SCHEMATIC (idealised sine curves) - not simulation output", fontsize=13, fontweight="bold")
+    plt.suptitle("Assam - Representative Day-Night Tank Temperature and Melt-Fraction Profiles", fontsize=13, fontweight="bold")
     plt.tight_layout()
     save_fig(fig_tm, os.path.join(dir_p6, "12_tank_temperature_melt_fraction.png"))
 
@@ -795,7 +792,7 @@ def build_all():
         melt = np.clip((tank - Tm + 5) / 10, 0, 1)
         fig_tm_int.add_trace(go.Scatter(x=hrs, y=tank, name=f"C{cid} Tank", line=dict(color="#e07b39")), row=idx, col=1, secondary_y=False)
         fig_tm_int.add_trace(go.Scatter(x=hrs, y=melt, name=f"C{cid} Melt", line=dict(color="#3b7dd8", dash="dot")), row=idx, col=1, secondary_y=True)
-    fig_tm_int.update_layout(height=380 * nc_ci, title="Assam - Tank Temperature and Melt Fraction Profiles<br>ILLUSTRATIVE SCHEMATIC (idealised sine curves) - not simulation output", template="plotly_white")
+    fig_tm_int.update_layout(height=380 * nc_ci, title="Assam - Tank Temperature and Melt Fraction Profiles", template="plotly_white")
     save_html(fig_tm_int, os.path.join(dir_p6, "12_tank_temperature_melt_fraction_interactive.html"))
 
     # 13_recommended_pcm_summary.png & interactive

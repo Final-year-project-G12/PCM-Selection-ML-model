@@ -15,6 +15,9 @@ import matplotlib; matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import silhouette_samples, silhouette_score
+
 
 warnings.filterwarnings("ignore")
 
@@ -41,7 +44,7 @@ bic = pd.read_csv(BIC_CSV) if os.path.exists(BIC_CSV) else None
 sig = pd.read_csv(SIG_CSV) if os.path.exists(SIG_CSV) else None
 
 # 1. BIC / Silhouette Selection Curves
-print("[1/5] BIC & Model Selection Curves")
+print("[1/6] BIC & Model Selection Curves")
 if bic is not None and "K" in bic.columns:
     fig, ax1 = plt.subplots(figsize=(8, 5))
     color = "#3b7dd8"
@@ -57,8 +60,42 @@ if bic is not None and "K" in bic.columns:
     plt.title("Verify Clustering 01: BIC & Silhouette Curves (Assam)")
     sfig("01_elbow_curves.png")
 
-# 2. PCA Projection
-print("[2/5] PCA Projection")
+# 2. Silhouette Analysis
+print("[2/6] Silhouette Analysis")
+if sig is not None and clu is not None:
+    clu_clean = clu.copy()
+    c_col = "cluster_id" if "cluster_id" in clu_clean.columns else "cluster"
+    mg_sil = sig.merge(clu_clean[["point_id", c_col]], on="point_id", how="inner") if "point_id" in sig.columns and "point_id" in clu_clean.columns else sig.copy()
+    if c_col not in mg_sil.columns and c_col in clu_clean.columns:
+        mg_sil[c_col] = clu_clean[c_col].values[:len(mg_sil)]
+    
+    CORE_FEATS = ["GHI_mean", "Ta_mean", "DTR", "RH_mean", "wind_mean"]
+    fc = [c for c in CORE_FEATS if c in mg_sil.columns]
+    if len(fc) == len(CORE_FEATS):
+        Xs = StandardScaler().fit_transform(mg_sil[fc].values)
+        labs = mg_sil[c_col].astype(int).to_numpy()
+        k = len(np.unique(labs))
+        sv = silhouette_samples(Xs, labs)
+        sa = silhouette_score(Xs, labs)
+        
+        fig, ax = plt.subplots(figsize=(10, 8))
+        y_lo = 10
+        clrs = plt.cm.Set3(np.linspace(0, 1, k))
+        for i in range(k):
+            vals = np.sort(sv[labs == i])
+            y_hi = y_lo + len(vals)
+            ax.fill_betweenx(np.arange(y_lo, y_hi), 0, vals, facecolor=clrs[i], edgecolor=clrs[i], alpha=0.7, label=f"Cluster {i}")
+            y_lo = y_hi + 10
+        ax.axvline(sa, color="red", ls="--", lw=2, label=f"Avg={sa:.3f}")
+        ax.axvline(0.4, color="green", ls=":", lw=2, label="Threshold 0.4")
+        ax.set(xlabel="Silhouette Coeff", ylabel="Cluster", title=f"Silhouette - Assam clusters (Level A, k={k})")
+        ax.legend(loc="upper right", fontsize=8.5)
+        ax.grid(alpha=0.3)
+        plt.tight_layout()
+        sfig("02_silhouette_plot.png")
+
+# 3. PCA Projection
+print("[3/6] PCA Projection")
 if sig is not None and clu is not None:
     clu_clean = clu.copy()
     if "cluster_id" not in clu_clean.columns and "cluster" in clu_clean.columns:
@@ -83,8 +120,8 @@ if sig is not None and clu is not None:
                title="Verify Clustering 03: PCA Projection of Assam Climate Regimes")
         ax.legend(); ax.grid(alpha=0.25); sfig("03_pca_projection.png")
 
-# 3. Geographic Map
-print("[3/5] Geographic Cluster Map")
+# 4. Geographic Map
+print("[4/6] Geographic Cluster Map")
 if clu is not None:
     clu_map = clu.copy()
     if "cluster_id" not in clu_map.columns and "cluster" in clu_map.columns:
@@ -103,8 +140,8 @@ if clu is not None:
         ax.set(xlabel="Longitude E", ylabel="Latitude N", title="Verify Clustering 04: Geographic Cluster Map (Assam)")
         ax.legend(); ax.grid(alpha=0.3); sfig("04_geographic_map.png")
 
-# 4. Cluster Profile Comparison
-print("[4/5] Cluster Profiles Bar Chart")
+# 5. Cluster Profile Comparison
+print("[5/6] Cluster Profiles Bar Chart")
 if prof is not None and ("cluster_id" in prof.columns or "cluster" in prof.columns):
     prof_clean = prof.copy()
     c_col = "cluster_id" if "cluster_id" in prof_clean.columns else "cluster"
@@ -115,8 +152,8 @@ if prof is not None and ("cluster_id" in prof.columns or "cluster" in prof.colum
         ax.set(title="Verify Clustering 05: Mean Climate Features by Cluster (Assam)", ylabel="Normalized Feature Value", xlabel="Cluster ID")
         ax.grid(alpha=0.3, axis="y"); plt.tight_layout(); sfig("05_cluster_profiles.png")
 
-# 5. Cluster Sizes
-print("[5/5] Cluster Sizes")
+# 6. Cluster Sizes
+print("[6/6] Cluster Sizes")
 if clu is not None:
     c_col = "cluster_id" if "cluster_id" in clu.columns else "cluster"
     sizes = clu[c_col].value_counts().sort_index()
