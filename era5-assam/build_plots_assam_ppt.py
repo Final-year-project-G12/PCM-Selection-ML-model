@@ -338,9 +338,14 @@ def build_all():
     print("  [COPIED] 01_elbow_curves.png")
 
     # 02_silhouette_plot.png
-    shutil.copy2(os.path.join(BASE_DIR, "final_outputs", "visuals", "fig02_gmm_silhouette_curve.png"),
-                 os.path.join(dir_p4, "02_silhouette_plot.png"))
-    print("  [COPIED] 02_silhouette_plot.png")
+    src_sil = os.path.join(BASE_DIR, "data", "plots", "verify_clustering", "02_silhouette_plot.png")
+    if os.path.exists(src_sil):
+        shutil.copy2(src_sil, os.path.join(dir_p4, "02_silhouette_plot.png"))
+        print("  [COPIED] 02_silhouette_plot.png (from verify_clustering)")
+    else:
+        shutil.copy2(os.path.join(BASE_DIR, "final_outputs", "visuals", "fig02_gmm_silhouette_curve.png"),
+                     os.path.join(dir_p4, "02_silhouette_plot.png"))
+        print("  [COPIED] 02_silhouette_plot.png (fallback)")
 
     # 05_cluster_profiles.png
     shutil.copy2(os.path.join(BASE_DIR, "data", "plots", "verify_clustering", "05_cluster_profiles.png"),
@@ -694,7 +699,10 @@ def build_all():
     CLUSTER_LABELS = {0: "Cluster 0 (Circle)", 1: "Cluster 1 (Square)", 2: "Cluster 2 (Triangle)"}
 
     fig_agr, ax_ag = plt.subplots(figsize=(9.5, 7.2))
-    mx_val = max(mg_agr["sim_rank"].max(), mg_agr["consensus_rank"].max())
+    s_max = mg_agr["sim_rank"].dropna().max() if not mg_agr["sim_rank"].dropna().empty else np.nan
+    c_max = mg_agr["consensus_rank"].dropna().max() if not mg_agr["consensus_rank"].dropna().empty else np.nan
+    valid_maxes = [x for x in [s_max, c_max] if pd.notna(x)]
+    mx_val = float(max(valid_maxes)) if valid_maxes else 5.0
     ax_ag.plot([0.5, mx_val + 0.5], [0.5, mx_val + 0.5], "r--", lw=1.5, alpha=0.8, label="Perfect agreement (1:1)")
 
     for cid, g in mg_agr.groupby("cluster_id"):

@@ -21,25 +21,28 @@ KEY PHYSICAL & METHODOLOGICAL NOTES:
 9. Spin-Up: 2016 warm-up loop until starting state converges across 4 variables (Tw, Tp, f_melt, H_sys).
 10. Complete First-Law System Balance: Cumulative relative error < 0.1%.
 11. Delivery Success Evaluation: Evaluated at 07:00 and 19:00 BEFORE mains water replenishment.
-12. MCDM Status: Phase 7 n_confirmed = 0 for all clusters; no MCDM ranking performed.
+12. MCDM Status: Phase 7 MCDM ranking was performed on the final Phase 6 deployable survivors. Phase 8 evaluates TOPSIS ranking stability using Monte Carlo perturbations.
+PIPELINE VERSION AND PHASE 9 SELECTION:
+----------------------------------------
+The final Assam pipeline uses the K=3 GMM climate clustering model.
 
-PIPELINE-VERSION INCONSISTENCY (DOCUMENTED):
----------------------------------------------
-Phase 6 feasibility screening (07_feasibility_filter.py) and Phase 7 MCDM ranking
-(08_mcdm_ranking.py) were executed against the K=4 cluster profile (cluster IDs 0-3).
-Phase 3 was subsequently re-locked to a final K=3 GMM model (cluster IDs 0-2).
-The current cluster_profiles_assam.csv on disk reflects the K=3 model.
+Phase 6:
+  - Feasibility screening was rerun using the current Assam K=3 pipeline.
+  - The final relaxation round is round 2.
+  - Exactly 5 unique deployable PCM survivors are retained.
 
-Phase 6 and Phase 7 output files are treated as locked historical artifacts and are
-NOT modified. Phase 9 uses:
-  - Candidate PCMs: Phase 6 feasibility survivors (passes_all=True) from
-    feasibility_survivors_assam.csv / pcm_database_assam.csv. These were screened
-    under the K=4 pipeline but the 7-constraint feasibility logic is climate-independent.
-    They are labelled "Phase 6-screened candidates".
-  - Climate forcing: Phase 3 final K=3 medoids (ASP_0012, ASP_0092, ASP_0028),
-    derived programmatically from the 5-feature GMM standardization.
-  The two cluster sets originate from different pipeline versions. This is a
-  documented pipeline-version inconsistency; Phase 6 files are not rerun.
+Phase 7:
+  - MCDM ranking is performed on the final Phase 6 deployable survivors.
+  - The ranking is independent of the Phase 9 physics validation.
+
+Phase 8:
+  - TOPSIS-based Monte Carlo ranking stability is evaluated for the
+    final deployable survivor set.
+
+Phase 9:
+  - Uses the 5 final Phase 6 deployable survivors.
+  - Uses the final K=3 climate cluster medoids as forcing locations.
+  - Performs independent 10-year physics-based validation.
 
 ERA5 SSRD RECONSTRUCTION:
 --------------------------
@@ -83,10 +86,10 @@ from config import PROCESSED_DIR, PREPROCESSED_DIR, RAW_POINTS_DIR
 ASSIGN_FILE    = PROCESSED_DIR / "clustering" / "cluster_assignments_assam.csv"
 SIG_RAW_FILE   = PROCESSED_DIR / "climate_signatures_raw.csv"
 GRID_FILE      = PROCESSED_DIR / "population_grid_points.csv"
-# Phase 6 candidate sources (pcm_database_assam.csv + feasibility_survivors_assam.csv)
-PCM_ASSAM_FILE = PROCESSED_DIR / "pcm" / "pcm_database_assam.csv"
-FEAS_FILE      = PROCESSED_DIR / "pcm" / "feasibility_survivors_assam.csv"
-
+# Phase 6 candidate sources:
+# current Phase 6 feasibility audit + current PCM database
+PCM_ASSAM_FILE = PROCESSED_DIR / "pcm" / "pcm_database_final.csv"
+FEAS_FILE = PROCESSED_DIR / "feasibility" / "pcm_feasibility_by_cluster.csv"
 OUT_RESULTS_CSV = PROCESSED_DIR / "pcm" / "physics_validation_assam.csv"
 OUT_REPORT_TXT  = PREPROCESSED_DIR / "physics_validation_report.txt"
 
@@ -775,32 +778,96 @@ def main():
     sig_raw_df = pd.read_csv(SIG_RAW_FILE)
     grid_df    = pd.read_csv(GRID_FILE)
 
-    # ---- Phase 6 candidate universe (locked historical screening, K=4 pipeline) ----
-    # feasibility_survivors_assam.csv was produced by 07_feasibility_filter.py under
-    # the K=4 cluster pipeline. It is used here as the Assam-specific candidate set
-    # WITHOUT modification. The 8 unique PCMs that pass any Phase 6 cluster are
-    # evaluated at the Phase 3 final K=3 medoids (pipeline-version inconsistency documented).
-    feas_df      = pd.read_csv(FEAS_FILE)
-    phase6_names = sorted(feas_df[feas_df["passes_all"] == True]["name"].unique().tolist())
-    pcm_assam    = pd.read_csv(PCM_ASSAM_FILE)
+    feas_df = pd.read_csv(FEAS_FILE)
+
+    # ---- FINAL PHASE 6 DEPLOYABLE SURVIVORS ----
+    # Current Assam Phase 6 audit contains the final feasibility results.
+    # The current audit identifies exactly 5 unique deployable survivors.
+
+    final_feas = feas_df[
+        feas_df["survives_all"] == True
+    ].copy()
+
+    phase6_names = sorted(
+        final_feas["product_name"].dropna().unique().tolist()
+    )
+
+    if len(phase6_names) != 5:
+        raise ValueError(
+            f"Expected exactly 5 final deployable survivors from Phase 6, "
+            f"but found {len(phase6_names)}: {phase6_names}"
+        )
+
+    # Phase 6 relaxation history established round 2 as the final round.
+    final_relax_round = 2
+
+    log(
+        f"  Final Phase 6 relaxation round: {final_relax_round}"
+    )
+
+    log(
+        f"  Final Phase 6 deployable survivors (N={len(phase6_names)}):"
+    )
+
+    for name in phase6_names:
+        log(f"    - {name}")
+
+    if len(phase6_names) != 5:
+        raise ValueError(
+            f"Expected exactly 5 final deployable survivors from Phase 6, "
+            f"but found {len(phase6_names)}: {phase6_names}"
+        )
+
+    pcm_assam = pd.read_csv(PCM_ASSAM_FILE)
+
     # Rename 'name' -> 'product_name' so PCMStateNode and result rows are consistent
-    pcm_assam    = pcm_assam.rename(columns={"name": "product_name"})
-    candidates   = pcm_assam[pcm_assam["product_name"].isin(phase6_names)].copy().reset_index(drop=True)
+    pcm_assam = pcm_assam.rename(columns={"name": "product_name"})
 
-    log(f"  Phase 6-screened PCM candidates (K=4 pipeline, N={len(candidates)}):")
+    candidates = pcm_assam[
+        pcm_assam["product_name"].isin(phase6_names)
+    ].copy().reset_index(drop=True)
+
+    if len(candidates) != 5:
+        raise ValueError(
+            f"Expected 5 PCM property records, but found {len(candidates)} "
+            f"for survivors: {phase6_names}"
+        )
+
+    # Ensure all final Phase 6 survivors have corresponding PCM properties
+    missing_pcm = sorted(
+        set(phase6_names) - set(candidates["product_name"])
+    )
+
+    if missing_pcm:
+        raise ValueError(
+            f"Missing PCM property records for final survivors: {missing_pcm}"
+        )
+
+    log(
+        f"  Final Phase 6 relaxation round: {final_relax_round}"
+    )
+
+    log(
+        f"  Final Phase 6 deployable survivors (N={len(candidates)}):"
+    )
+
     for _, r in candidates[["product_name", "Tm_C"]].iterrows():
-        log(f"    {r['product_name']:48s}  Tm = {r['Tm_C']:.1f} C")
-
+        log(
+            f"    {r['product_name']:48s}  "
+            f"Tm = {r['Tm_C']:.1f} C"
+        )
+    
     # ---- Phase 3 K=3 medoids ----
     medoid_map = derive_true_medoids(assign_df, sig_raw_df)
     log("\n[2] Programmatically Derived Phase 3 K=3 True Cluster Medoids (5 GMM Features):")
     for c_id, pt_id in medoid_map.items():
         log(f"  Cluster {c_id}: True Medoid Point ID = {pt_id}")
 
-    log("\n[PIPELINE NOTE] Candidate eligibility: Phase 6 K=4 screening.")
-    log("                Climate forcing:        Phase 3 K=3 medoids.")
-    log("                This is a documented pipeline-version inconsistency.")
-    log("                Phase 6/7 files are not modified.")
+    log("\n[PIPELINE NOTE]")
+    log("  Candidate eligibility: FINAL Phase 6 deployable survivors.")
+    log(f"  Phase 6 final relaxation round: {final_relax_round}.")
+    log("  Climate forcing: FINAL Phase 3 K=3 cluster medoids.")
+    log("  Physics validation is independent of MCDM ranking.")
 
     results_list = []
 
@@ -821,14 +888,18 @@ def main():
         if ssrd_cons_err >= 0.1:
             log(f"  [WARNING] SSRD conservation error {ssrd_cons_err:.4f}% exceeds 0.1% threshold!")
 
-        log(f"\n  Phase 9 Physics Evaluation for {len(candidates)} Phase 6-screened candidates...")
+        log(
+            f"\n  Phase 9 Physics Evaluation for "
+            f"{len(candidates)} FINAL deployable survivors..."
+        )
 
         for _, pcm_row in candidates.iterrows():
             pcm_name = pcm_row["product_name"]
             # Candidate label: Phase 6-screened, independent physics evaluation, non-MCDM
             candidate_label = (
-                "Phase 6-screened candidate evaluated independently under the "
-                "final Phase 3 K=3 climate forcing; not an MCDM-ranked PCM."
+                "Final Phase 6 deployable survivor evaluated independently under "
+                "the final Phase 3 K=3 climate forcing; MCDM ranking is not used "
+                "as a physics-validation criterion."
             )
 
             # Execute 10-Year Sub-Hourly Simulation (dt = 300 s)
@@ -865,6 +936,8 @@ def main():
                 "medoid_point_id":        medoid_pt,
                 "pcm_name":               pcm_name,
                 "candidate_status_label": candidate_label,
+                "phase6_final_relax_round": final_relax_round,
+"candidate_selection_basis": "FINAL_PHASE6_DEPLOYABLE_SURVIVORS",
                 # PCM properties
                 "pcm_mass_kg":            M_P_KG,
                 "melting_temp_degC":      pcm_row["Tm_C"],

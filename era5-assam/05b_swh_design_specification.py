@@ -98,7 +98,7 @@ def main():
     raw_sig_df = pd.read_csv(RAW_SIG_FILE)
 
     merged = pd.merge(assign_df, raw_sig_df, on="point_id")
-    log(f"  Merged records count: {len(merged)} (Expected: 129)")
+    log(f"  Merged records count: {len(merged)} (Expected: {len(assign_df)})")
 
     # 3. Calculate Cluster-Wise Climate-Dependent Energy Requirements
     log("\n[3] Cluster-Wise Climate Energy Requirements:")

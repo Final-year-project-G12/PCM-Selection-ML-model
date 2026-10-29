@@ -221,49 +221,47 @@ if topk is not None:
 # Marker mapping per cluster: Cluster 0 -> circle, Cluster 1 -> square, Cluster 2 -> triangle
 MARKERS = {0: 'o', 1: 's', 2: '^'}
 
-# ── Comparison 4: Monte Carlo Top3-Prob vs Consensus Rank ────────────────
+# ── Comparison 4: Monte Carlo Top3-Prob vs Consensus Rank ────────────────────
 print("[4/8] Monte Carlo stability vs consensus rank")
-mc = load(MC_CSV, "monte_carlo")
-if mc is not None and "cluster_id" in mc.columns:
-    mc = mc[mc["cluster_id"].isin(VALID_CLUSTERS)]
-if mc is not None and "product_name" in mc.columns and "name" not in mc.columns:
-    mc = mc.rename(columns={"product_name": "name"})
-if mc is not None and topk is not None and "top3_inclusion_probability" in mc.columns and mc["top3_inclusion_probability"].notna().any():
-    name_col = "name" if "name" in topk.columns else "PCM_Name"
-    mc[name_col] = mc[name_col].astype(str)
-    topk[name_col] = topk[name_col].astype(str)
-    mg4 = mc.merge(topk[["cluster_id", name_col, "consensus_rank"]].drop_duplicates(subset=["cluster_id", name_col]), on=["cluster_id", name_col], how="inner").dropna(subset=["consensus_rank"])
-    if not mg4.empty:
-        fig, ax = plt.subplots(figsize=(10, 7))
-        scale = 100 if mg4["top3_inclusion_probability"].max() <= 1.0 else 1
-        for cid, g in mg4.groupby("cluster_id"):
-            m = MARKERS.get(int(cid) % len(MARKERS), 'o')
-            ax.scatter(g["consensus_rank"], g["top3_inclusion_probability"] * scale, color=PAL[int(cid) % len(PAL)], marker=m, s=100, alpha=0.85, edgecolors="black", lw=0.6, label=f"Cluster {cid}")
-            for _, row in g.iterrows():
-                ax.annotate(str(row[name_col]), (row["consensus_rank"], row["top3_inclusion_probability"] * scale), fontsize=6, alpha=0.7)
-        ax.set(xlabel="MCDM Consensus Rank (1 = Best)", ylabel="Top-3 Inclusion Probability (%)",
-               title="Comparison 4: Monte Carlo Ranking Stability vs. Consensus Rank (Assam K=3)\n(5,000 Perturbation Draws per Climate Regime)")
-        ax.legend(fontsize=9); ax.grid(alpha=0.25); sfig("04_comparison_mc_vs_rank.png")
-    elif topk is not None and "top3_inclusion_probability" in topk.columns:
-        fig, ax = plt.subplots(figsize=(10, 7))
-        scale = 100 if topk["top3_inclusion_probability"].max() <= 1.0 else 1
-        for cid, g in topk.groupby("cluster_id"):
-            m = MARKERS.get(int(cid) % len(MARKERS), 'o')
-            ax.scatter(g["consensus_rank"], g["top3_inclusion_probability"] * scale, color=PAL[int(cid) % len(PAL)], marker=m, s=100, alpha=0.85, edgecolors="black", lw=0.6, label=f"Cluster {cid}")
-        ax.set(xlabel="MCDM Consensus Rank (1 = Best)", ylabel="Top-3 Prob (%)",
-               title="Comparison 4: Monte Carlo Ranking Stability vs. Consensus Rank (Assam K=3)\n(5,000 Perturbation Draws per Climate Regime)")
-        ax.legend(fontsize=9); ax.grid(alpha=0.25); sfig("04_comparison_mc_vs_rank.png")
-    else:
-        print("  skip MC comparison: no active Monte Carlo draws")
-elif topk is not None and "top3_inclusion_probability" in topk.columns:
-    fig, ax = plt.subplots(figsize=(10, 7))
-    scale = 100 if topk["top3_inclusion_probability"].max() <= 1.0 else 1
-    for cid, g in topk.groupby("cluster_id"):
-        m = MARKERS.get(int(cid) % len(MARKERS), 'o')
-        ax.scatter(g["consensus_rank"], g["top3_inclusion_probability"] * scale, color=PAL[int(cid) % len(PAL)], marker=m, s=100, alpha=0.85, edgecolors="black", lw=0.6, label=f"Cluster {cid}")
-    ax.set(xlabel="MCDM Consensus Rank (1 = Best)", ylabel="Top-3 Prob (%)",
+# Use the full MCDM scores file which contains all candidates with proper
+# consensus_rank (1-N) and top3_inclusion_probability stored from MC runs.
+# The legacy monte_carlo_stability_assam.csv may have outdated PCM names
+# from an earlier candidate set, causing merge failures.
+_full_path = os.path.join(BASE, "data", "processed", "pcm", "mcdm_full_scores_assam.csv")
+_src = None
+if os.path.exists(_full_path):
+    _src = pd.read_csv(_full_path)
+    if "top3_inclusion_probability" not in _src.columns or _src["top3_inclusion_probability"].isna().all():
+        _src = None  # fall through to topk
+if _src is None and topk is not None and "top3_inclusion_probability" in topk.columns:
+    _src = topk
+if _src is not None and "cluster_id" in _src.columns:
+    _src = _src[_src["cluster_id"].isin(VALID_CLUSTERS)]
+
+if _src is not None and "top3_inclusion_probability" in _src.columns and "consensus_rank" in _src.columns:
+    _name_col = "name" if "name" in _src.columns else "PCM_Name"
+    fig, ax = plt.subplots(figsize=(11, 7))
+    _scale = 100 if _src["top3_inclusion_probability"].max() <= 1.0 else 1
+    for cid, g in _src.groupby("cluster_id"):
+        m = MARKERS.get(int(cid) % 3, "o")
+        ax.scatter(g["consensus_rank"], g["top3_inclusion_probability"] * _scale,
+                   color=PAL[int(cid) % len(PAL)], marker=m, s=120, alpha=0.88,
+                   edgecolors="black", lw=0.7, label=f"Cluster {cid}")
+        for _, row in g.iterrows():
+            _xoff = 5 if row["consensus_rank"] < 7 else -5
+            _ha = "left" if row["consensus_rank"] < 7 else "right"
+            ax.annotate(str(row[_name_col]),
+                        (row["consensus_rank"], row["top3_inclusion_probability"] * _scale),
+                        textcoords="offset points", xytext=(_xoff, 4), fontsize=6.5, alpha=0.85, ha=_ha)
+    ax.axhline(50, color="gray", ls="--", lw=1.2, alpha=0.6, label="50% inclusion threshold")
+    ax.axhline(30, color="lightcoral", ls=":", lw=1.1, alpha=0.6, label="30% inclusion threshold")
+    ax.set_xticks(sorted(_src["consensus_rank"].unique()))
+    ax.set_ylim(-5, 105)
+    ax.set(xlabel="MCDM Consensus Rank (1 = Best)", ylabel="Top-3 Inclusion Probability (%)",
            title="Comparison 4: Monte Carlo Ranking Stability vs. Consensus Rank (Assam K=3)\n(5,000 Perturbation Draws per Climate Regime)")
-    ax.legend(fontsize=9); ax.grid(alpha=0.25); sfig("04_comparison_mc_vs_rank.png")
+    ax.legend(fontsize=9); ax.grid(alpha=0.25, linestyle="--"); sfig("04_comparison_mc_vs_rank.png")
+else:
+    print("  skip MC comparison: no top3_inclusion_probability available")
 
 # ── Comparison 5: Latent Heat Distribution - Feasible vs All ─────────────
 print("[5/8] Latent heat distribution comparison")

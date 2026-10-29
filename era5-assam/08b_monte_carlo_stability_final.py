@@ -161,9 +161,9 @@ def run_phase8_framework():
     report_lines.append("        PHASE 8 — MONTE CARLO STABILITY ANALYSIS REPORT")
     report_lines.append("==========================================================================")
     report_lines.append("Framework Rules Enforced:")
-    report_lines.append("  1. Performed ONLY for clusters with n_confirmed >= 2 and baseline MCDM ranking.")
-    report_lines.append("  2. If n_confirmed < 2, stability analysis is skipped with explicit statement.")
-    report_lines.append("  3. Conditional or Infeasible PCMs are NEVER included.")
+    report_lines.append("  1. Performed for clusters with baseline MCDM ranking and at least 2 deployable survivors.")
+    report_lines.append("  2. If fewer than 2 deployable survivors are available, stability analysis is skipped with explicit statement.")
+    report_lines.append("  3. Conditional or Infeasible PCMs are NEVER included; audit labels do not define the MCDM candidate set.")
     report_lines.append("  4. 5,000 draws perturbing weights (Dirichlet alpha=30), Tm (+/-1K), L (+/-5%),")
     report_lines.append("     k (+/-10%), and rho_H (+/-8%).")
     report_lines.append("")
@@ -179,8 +179,22 @@ def run_phase8_framework():
         print(f"  - Baseline MCDM Status                       : {mcdm_status}")
 
         if n_confirmed >= 2 and mcdm_status == "PERFORMED":
-            print(f"  -> Executing 5,000 Monte Carlo draws ...")
-            c_rank = df_rank[(df_rank["cluster_id"] == cid) & (df_rank["eligibility"] == "CONFIRMED_FEASIBLE")]
+            print(f"  -> Executing 5,000 Monte Carlo draws on final deployable survivors ...")
+            # Phase 7 governance: Monte Carlo must use ALL final-round
+            # deployable survivors that entered MCDM. CONFIRMED/CONDITIONAL/
+            # INFEASIBLE are audit classifications only.
+            c_rank = df_rank[
+                (df_rank["cluster_id"] == cid)
+                & (df_rank["eligibility"] == "DEPLOYABLE_SURVIVOR")
+            ].copy()
+
+            if len(c_rank) < 2:
+                raise ValueError(
+                    f"Cluster {cid}: Phase 7 reports MCDM PERFORMED, but only "
+                    f"{len(c_rank)} deployable survivor(s) were found in the "
+                    "rankings file."
+                )
+
             mc_res = run_monte_carlo_for_cluster(c_rank, l_req)
             mc_res.insert(0, "cluster_id", cid)
             mc_res["status"] = "COMPLETED"

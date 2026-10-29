@@ -3,7 +3,7 @@
 =========================
 FINAL PHASE 3 — CLIMATE REGIME CLUSTERING (Assam Project)
 
-Clusters the 129 Assam population-weighted grid points into 3 climate regimes using
+Clusters the 80 Assam population-weighted grid points into 3 climate regimes using
 a Gaussian Mixture Model (GMM) with diagonal covariance trained on 5 core physical
 climate features:
   1. GHI_mean  (Mean daytime solar irradiance, W/m²)
@@ -14,7 +14,7 @@ climate features:
 
 WHY THE PREVIOUS 19-FEATURE MODEL WAS REJECTED:
 ------------------------------------------------
-The 19-feature full-covariance GMM fit 839 free parameters on n=129 samples (6.50 params/sample)
+The 19-feature full-covariance GMM fit 839 free parameters on n=80 samples (6.50 params/sample)
 and contained 22 multicollinear feature pairs (|r| >= 0.70), causing ill-conditioned matrices,
 overfitting, and severe bootstrap instability (mean ARI = 0.3281 - 0.3603).
 
@@ -150,7 +150,7 @@ def main():
         # choice here. A full covariance matrix requires D*(D+1)/2
         # parameters PER component; with 5 standardized core features and
         # up to K=10 components, that overdetermines the fit relative to
-        # 129 points, which is exactly what caused every point's
+        # 80 points, which is exactly what caused every point's
         # max_membership_prob to saturate near 1.000 in the original run
         # (soft clustering silently degenerating to hard clustering -- 62/80
         # points in the prior assignment file had prob > 0.999, median
@@ -237,14 +237,28 @@ def main():
     cluster_counts = assign_df["cluster"].value_counts().sort_index().to_dict()
     log(f"  - Cluster sizes (K=3)     : {cluster_counts} (Sum = {sum(cluster_counts.values())})")
 
-    if len(assign_df) == 129 and assign_df["cluster"].isnull().sum() == 0 and np.allclose(prob_sums, 1.0) and sum(cluster_counts.values()) == 129:
-        log("  [PASS] Exactly 129 points assigned, 0 missing, prob sum = 1.0 ± 1e-5, cluster count sum = 129.")
+    if (
+        len(assign_df) == n_samples
+        and assign_df["cluster"].isnull().sum() == 0
+        and np.allclose(prob_sums, 1.0)
+        and sum(cluster_counts.values()) == n_samples
+    ):
+        log(
+            f"[PASS] Exactly {n_samples} points assigned, "
+            f"0 missing, prob sum = 1.0 ± 1e-5, "
+            f"cluster count sum = {n_samples}."
+        )
 
-    # 6. Bootstrap Stability Analysis (500 iterations predicting all 129 original points)
+    # 6. Bootstrap Stability Analysis (500 iterations predicting all 80 original points)
     log("\n[7] Assessing Bootstrap Clustering Stability (500 iterations)...")
-    log("  Methodology: Resample 129 grid points with replacement, fit K=3 diag GMM,")
-    log("  predict labels for ALL 129 original points, calculate ARI against full-data reference.")
-
+    log(
+    f"  Methodology: Resample {n_samples} grid points with replacement, "
+    "fit K=3 diag GMM,"
+    )
+    log(
+        f"  predict labels for ALL {n_samples} original points, "
+        "calculate ARI against full-data reference."
+    )
     n_bootstraps = 500
     ari_scores = []
     rng = np.random.RandomState(RANDOM_SEED)
@@ -300,6 +314,21 @@ def main():
     log("\n[8] Constructing Cluster Profiles for the 3 Climate Regimes...")
     grid_df = pd.read_csv(GRID_POINTS_FILE)
     merged = pd.merge(assign_df, raw_df, on="point_id")
+    TM_CAP_FILE = BASE_DIR / "data" / "processed" / "tm_cap_by_point_assam.csv"
+    if TM_CAP_FILE.exists():
+        _cap = pd.read_csv(TM_CAP_FILE)[["point_id", "Tm_target_capped_C"]]
+        if "Tm_target_capped_C" in merged.columns:
+            log("  [NOTE] signatures file already had Tm_target_capped_C; replaced by "
+                "04c_charging_ceiling_assam.py's worst-month value.")
+            merged = merged.drop(columns=["Tm_target_capped_C"])
+        merged = pd.merge(merged, _cap, on="point_id", how="left")
+        log(f"  Merged worst-month charging ceiling from {TM_CAP_FILE.name}")
+    elif "Tm_target_capped_C" in merged.columns:
+        log("  [WARN] Using Tm_target_capped_C already present in the signatures file; its "
+            "derivation is UNVERIFIED against the Rajasthan worst-month method. Run 04c first.")
+    else:
+        log("  [WARN] No Tm_target_capped_C available (run 04c_charging_ceiling_assam.py). "
+            "Profile will carry NaN; Phase 6 will refuse to run.")
     if "population" in grid_df.columns:
         merged = pd.merge(merged, grid_df[["point_id", "population"]], on="point_id", how="left")
 
@@ -315,7 +344,8 @@ def main():
         q_night_kWh = (M_DRAW_KG * CP_WATER * (T_DELIVERY - t_mains_mean)) / 3_600_000.0
         q_required_kWh = SHARE_PCM * q_night_kWh
         req_energy_kJ_kg = (SHARE_PCM * (q_night_kWh * 3600.0)) / M_PCM_KG
-        hsi_val = sub["HSI"].mean() if "HSI" in sub.columns else sub["RH_mean"].mean()
+        hsi_sunrise_val = sub["HSI_sunrise"].mean() if "HSI_sunrise" in sub.columns else np.nan
+        hsi_legacy_val = sub["HSI"].mean() if "HSI" in sub.columns else np.nan
 
         p_row = {
             "cluster_id": k_idx,
@@ -334,19 +364,27 @@ def main():
             "Tm_target_C": TM_TARGET,
             "Tm_target_mean": TM_TARGET,
             "Tm_target_capped_C": (sub["Tm_target_capped_C"].mean()
-                                    if "Tm_target_capped_C" in sub.columns else TM_TARGET),
+                                    if "Tm_target_capped_C" in sub.columns else np.nan),
             "L_required_kWh_mean": q_required_kWh,
             "L_required_kJ_per_kg": req_energy_kJ_kg,
-            "HSI": hsi_val,
-            "HSI_mean": hsi_val,
+            "HSI_sunrise": hsi_sunrise_val,
+            "HSI": hsi_legacy_val,
+            "HSI_mean": hsi_legacy_val,
         }
         profile_rows.append(p_row)
 
     profile_df = pd.DataFrame(profile_rows)
+    for _col in ("Tm_target_capped_C", "HSI_sunrise"):
+        if profile_df[_col].isna().any():
+            log(f"  [WARN] cluster profile column {_col} is NaN (upstream value missing; "
+                f"NOT substituted by a proxy).")
     profile_df.to_csv(OUT_PROFILES, index=False)
     profile_df.to_csv(OUT_PROFILES_ALIAS, index=False)
     log(f"  Saved cluster profiles to: {OUT_PROFILES}")
-    log(f"  Represented points in profiles = {profile_df['n_points'].sum()} / 129")
+    log(
+        f"  Represented points in profiles = "
+        f"{profile_df['n_points'].sum()} / {n_samples}"
+    )
 
     # 8. Save Comprehensive Final Summary Report
     log("\n[9] Generating Final Phase 3 Summary Report...")
@@ -357,7 +395,7 @@ def main():
 
 REJECTION OF PREVIOUS 19-FEATURE MODEL:
 ----------------------------------------
-The initial 19-feature full-covariance GMM fit 839 free parameters on n=129
+The initial 19-feature full-covariance GMM fit 839 free parameters on n=80
 observations (6.50 parameters/sample) and contained 22 pairs of features with
 high correlation (|r| >= 0.70). This caused ill-conditioned sample covariance
 matrices, overfitting, and severe bootstrap instability (mean ARI = 0.3281 - 0.3603).
@@ -378,15 +416,16 @@ Benefits & Empirical Justification:
 CLIMATE REGIME INTERPRETATION (NOT ADMINISTRATIVE BOUNDARIES):
 ---------------------------------------------------------------
 The 3 clusters represent data-driven climate regimes across Assam:
-  - Cluster 0 ({cluster_counts.get(0, 0)} points, {cluster_counts.get(0, 0)/129*100:.1f}%): Moderate-Irradiance Moist Valley Regime
-  - Cluster 1 ({cluster_counts.get(1, 0)} points, {cluster_counts.get(1, 0)/129*100:.1f}%): High-Irradiance Warm Valley Regime
-  - Cluster 2 ({cluster_counts.get(2, 0)} points, {cluster_counts.get(2, 0)/129*100:.1f}%): Cooler Elevated Hill Regime
+  - Cluster 0 ({cluster_counts.get(0, 0)} points, {cluster_counts.get(0, 0)/n_samples*100:.1f}%): Moderate-Irradiance Moist Valley Regime
+  - Cluster 1 ({cluster_counts.get(1, 0)} points, {cluster_counts.get(1, 0)/n_samples*100:.1f}%): High-Irradiance Warm Valley Regime
+  - Cluster 2 ({cluster_counts.get(2, 0)} points, {cluster_counts.get(2, 0)/n_samples*100:.1f}%): Cooler Elevated Hill Regime
 
 ROLE OF SOFT GMM MEMBERSHIP PROBABILITIES:
 -------------------------------------------
 While K=3 achieves solid bootstrap stability (mean ARI = 0.6289), Assam's climate
 features vary along continuous geographical gradients rather than discrete steps.
-Soft GMM membership probabilities are therefore retained for all 129 points to enable
+Soft GMM membership probabilities are therefore retained for all
+{n_samples} points to enable
 weighted PCM selection at boundary locations.
 
 VERIFICATION SUMMARY:

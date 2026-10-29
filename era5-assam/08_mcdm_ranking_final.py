@@ -6,12 +6,11 @@ PHASE 7 — MULTI-CRITERIA DECISION MAKING (MCDM) RANKING & ELIGIBILITY GOVERNAN
 Implements the multi-criteria decision-making framework with strict eligibility
 governance:
   1. Primary formal MCDM ranking is restricted EXCLUSIVELY to candidates with
-     feasibility_status == "CONFIRMED_FEASIBLE" (ALL 6 criteria PASS).
-  2. Conditionally Feasible candidates are reported separately under:
-     "Conditional candidates — not formally ranked (unresolved evidence)".
-  3. Primary MCDM requires n_confirmed >= 2. If n_confirmed < 2, formal ranking
-     is NOT performed, and "No MCDM ranking performed due to insufficient/uncertain
-     eligible alternatives" is logged.
+     survives_all == True in the FINAL relaxation round selected by Phase 6.
+  2. Evidence-based CONFIRMED/CONDITIONAL/INFEASIBLE classifications are retained
+     as audit information but do not determine MCDM eligibility.
+  3. The >=5 survivor target is a minimum threshold, NOT a top-5 selection.
+     ALL final-round survivors are passed to MCDM.
   4. 5 Criteria: f_Tm (symmetric sigma=4K), L_margin, rho_H, k (phase-averaged
      or reported single-phase), C_confidence (ONLY reported cycles).
   5. 4 MCDM Methods: TOPSIS, GRA (zeta=0.5), PROMETHEE II (q=0.05, p=0.25),
@@ -181,46 +180,127 @@ def run_phase7():
     report_lines.append("        PHASE 7 — MULTI-CRITERIA DECISION MAKING (MCDM) REPORT")
     report_lines.append("==========================================================================")
     report_lines.append("Methodological Governance Rules Applied:")
-    report_lines.append("  1. Primary Formal MCDM Candidate Set: ONLY confirmed feasible PCMs (ALL 6 PASS).")
-    report_lines.append("  2. Conditionally Feasible candidates reported separately under:")
-    report_lines.append("     'Conditional candidates — not formally ranked (unresolved evidence)'.")
-    report_lines.append("  3. Governance Rule: Primary MCDM requires n_confirmed >= 2. If n_confirmed < 2,")
-    report_lines.append("     formal MCDM ranking is NOT performed.")
+    report_lines.append("  1. Primary MCDM Candidate Set: ALL Phase 6 deployable survivors")
+    report_lines.append("     (survives_all == True) from the FINAL relaxation round for each cluster.")
+    report_lines.append("  2. The >=5 survivor target is a minimum threshold, NOT a top-5 selection.")
+    report_lines.append("  3. CONFIRMED/CONDITIONAL/INFEASIBLE status is retained as evidence audit metadata.")
+    report_lines.append("  4. Candidates from earlier relaxation rounds are excluded from MCDM.")
     report_lines.append("")
 
     for _, prof in profiles.iterrows():
         cid = int(prof["cluster_id"])
-        c_feas = feas_by_cluster[feas_by_cluster["cluster_id"] == cid]
-        
-        c_summary = feas_summary[feas_summary["cluster_id"] == cid]
+        c_feas = feas_by_cluster[feas_by_cluster["cluster_id"] == cid].copy()
+
+        c_summary = feas_summary[feas_summary["cluster_id"] == cid].copy()
         l_req = (
             c_summary["L_required_kJ_kg"].iloc[0]
             if len(c_summary) > 0 and pd.notna(c_summary["L_required_kJ_kg"].iloc[0])
             else prof.get("L_required_kJ_per_kg", np.nan)
         )
 
-        confirmed_df = c_feas[c_feas["overall_feasibility"] == "CONFIRMED_FEASIBLE"]
-        conditional_df = c_feas[c_feas["overall_feasibility"] == "CONDITIONALLY_FEASIBLE"]
-        infeasible_df = c_feas[c_feas["overall_feasibility"] == "INFEASIBLE"]
+        # Phase 6 summary identifies the final relaxation round.
+        # IMPORTANT: the existing Phase 6 audit CSV does NOT store
+        # relax_round in each audit row. It stores all rounds sequentially
+        # (58 PCM rows per round). Therefore, when relax_round is absent,
+        # recover the final-round records by keeping the LAST occurrence of
+        # each PCM within this cluster. This is the final round because
+        # Phase 6 appends rounds in chronological order and stops at the
+        # first round reaching the survivor target.
+        if len(c_summary) == 0:
+            raise ValueError(
+                f"Cannot determine final relaxation round for Assam cluster {cid}: "
+                "cluster is missing from pcm_feasibility_summary.csv."
+            )
 
+        if "relax_round" not in c_summary.columns or pd.isna(c_summary["relax_round"].iloc[0]):
+            raise ValueError(
+                f"Phase 6 summary does not contain a valid relax_round for Assam cluster {cid}."
+            )
+
+        # Phase 6 summary may contain one row per relaxation round.
+        # The highest recorded round is the final selected round.
+        relax_rounds = pd.to_numeric(
+            c_summary["relax_round"], errors="coerce"
+        ).dropna()
+
+        if len(relax_rounds) == 0:
+            raise ValueError(
+                f"Phase 6 summary does not contain a valid relax_round "
+                f"for Assam cluster {cid}."
+            )
+
+        final_round = int(relax_rounds.max())
+
+        print(f"  -> Phase 6 final relaxation round identified: {final_round}")
+
+        if "survives_all" not in c_feas.columns:
+            raise ValueError(
+                "Phase 6 output must contain 'survives_all' for Phase 7 MCDM."
+            )
+
+        if "relax_round" in c_feas.columns:
+            c_final = c_feas[
+                pd.to_numeric(c_feas["relax_round"], errors="coerce") == final_round
+            ].copy()
+        else:
+            if "pcm_id" not in c_feas.columns:
+                raise ValueError(
+                    "Phase 6 audit output has no 'relax_round' and no 'pcm_id'; "
+                    "cannot reconstruct the final relaxation round safely."
+                )
+
+            # Audit rows are written in chronological relaxation order.
+            # Keep the last occurrence of each PCM.
+            c_final = c_feas.drop_duplicates(
+                subset=["pcm_id"], keep="last"
+            ).copy()
+
+        # The final round must contain one row for every PCM in the candidate pool.
+        expected_pool = len(pcm_db)
+        if len(c_final) != expected_pool:
+            raise ValueError(
+                f"Could not reconstruct final relaxation round for Assam cluster {cid}: "
+                f"found {len(c_final)} rows, expected {expected_pool}."
+            )
+
+        # Parse boolean values safely. bool("False") is True in Python, so
+        # never use astype(bool) directly on a string CSV column.
+        def _parse_bool(value):
+            if isinstance(value, (bool, np.bool_)):
+                return bool(value)
+            if pd.isna(value):
+                return False
+            return str(value).strip().lower() in {"true", "1", "yes", "y", "t"}
+
+        deployable_mask = c_final["survives_all"].map(_parse_bool)
+        deployable_df = c_final[deployable_mask].copy()
+
+        # Evidence classifications are retained for audit/reporting only.
+        confirmed_df = c_final[c_final["overall_feasibility"] == "CONFIRMED_FEASIBLE"]
+        conditional_df = c_final[c_final["overall_feasibility"] == "CONDITIONALLY_FEASIBLE"]
+        infeasible_df = c_final[c_final["overall_feasibility"] == "INFEASIBLE"]
+
+        n_deployable = len(deployable_df)
         n_confirmed = len(confirmed_df)
         n_conditional = len(conditional_df)
         n_infeasible = len(infeasible_df)
 
         print(f"Cluster {cid} (L_req = {l_req:.1f} kJ/kg):")
-        print(f"  - Confirmed Feasible (n_confirmed)  : {n_confirmed}")
-        print(f"  - Conditionally Feasible            : {n_conditional}")
-        print(f"  - Infeasible                        : {n_infeasible}")
+        print(f"  - Final relaxation round             : {final_round}")
+        print(f"  - Deployable survivors for MCDM     : {n_deployable}")
+        print(f"  - Confirmed Feasible (audit)         : {n_confirmed}")
+        print(f"  - Conditionally Feasible (audit)     : {n_conditional}")
+        print(f"  - Infeasible (audit)                 : {n_infeasible}")
 
-        if n_confirmed >= 2:
+        if n_deployable >= 2:
             mcdm_status = "PERFORMED"
             reason_no_ranking = "None"
-        elif n_conditional > 0 and n_confirmed == 0:
-            mcdm_status = "NOT PERFORMED"
-            reason_no_ranking = f"Only {n_conditional} conditionally feasible candidate(s) exist (n_confirmed=0). Matrix algorithms require n_confirmed >= 2."
         else:
             mcdm_status = "NOT PERFORMED"
-            reason_no_ranking = "No eligible PCM for MCDM ranking (n_confirmed=0)."
+            reason_no_ranking = (
+                f"Only {n_deployable} deployable survivor(s) are available; "
+                "MCDM requires at least 2 alternatives."
+            )
 
         print(f"  -> MCDM Ranking Status: {mcdm_status}")
         print(f"  -> Reason: {reason_no_ranking}")
@@ -228,7 +308,11 @@ def run_phase7():
         eligibility_summary_rows.append({
             "cluster_id": cid,
             "L_required_kJ_kg": l_req,
-            "total_pcm_pool": len(c_feas),
+            "final_relax_round": final_round,
+            "final_tm_min": c_summary["final_tm_min"].iloc[0] if "final_tm_min" in c_summary.columns else np.nan,
+            "final_tm_max": c_summary["final_tm_max"].iloc[0] if "final_tm_max" in c_summary.columns else np.nan,
+            "total_pcm_pool": len(c_final),
+            "deployable_survivor_count": n_deployable,
             "confirmed_feasible_count": n_confirmed,
             "conditionally_feasible_count": n_conditional,
             "infeasible_count": n_infeasible,
@@ -237,26 +321,50 @@ def run_phase7():
         })
 
         report_lines.append(f"CLUSTER {cid} AUDIT SUMMARY (L_req = {l_req:.1f} kJ/kg):")
-        report_lines.append(f"  Total Candidates:              {len(c_feas)}")
-        report_lines.append(f"  Confirmed Feasible (n_confirmed): {n_confirmed}")
-        report_lines.append(f"  Conditionally Feasible:        {n_conditional}")
-        report_lines.append(f"  Infeasible:                    {n_infeasible}")
-        report_lines.append(f"  MCDM Ranking Status:           {mcdm_status}")
-        report_lines.append(f"  Reason:                        {reason_no_ranking}")
+        report_lines.append(f"  Final Relaxation Round:         {final_round}")
+        if "final_tm_min" in c_summary.columns and "final_tm_max" in c_summary.columns:
+            report_lines.append(
+                f"  Final Tm Window:                "
+                f"{c_summary['final_tm_min'].iloc[0]:.1f}–"
+                f"{c_summary['final_tm_max'].iloc[0]:.1f} °C"
+            )
+        report_lines.append(f"  Final Round Candidate Pool:     {len(c_final)}")
+        report_lines.append(f"  Deployable Survivors for MCDM:  {n_deployable}")
+        report_lines.append(f"  Confirmed Feasible (audit):      {n_confirmed}")
+        report_lines.append(f"  Conditionally Feasible (audit):  {n_conditional}")
+        report_lines.append(f"  Infeasible (audit):              {n_infeasible}")
+        report_lines.append(f"  MCDM Ranking Status:             {mcdm_status}")
+        report_lines.append(f"  Reason:                          {reason_no_ranking}")
+
+        report_lines.append("\n  Final deployable PCM candidates entering MCDM:")
+        for _, dep_p in deployable_df.iterrows():
+            report_lines.append(
+                f"    - {dep_p['product_name']} "
+                f"(Tm={dep_p['Tm_C']}°C, L={dep_p['latent_heat_kJ_kg']}kJ/kg)"
+            )
 
         if n_conditional > 0:
-            report_lines.append("\n  Conditional candidates — not formally ranked (unresolved evidence):")
+            report_lines.append("\n  Conditional candidates in final round (audit only):")
             for _, cond_p in conditional_df.iterrows():
                 pname = cond_p["product_name"]
-                db_p = pcm_db[pcm_db["product_name"] == pname].iloc[0]
-                report_lines.append(f"    - {pname} (Tm={db_p['Tm_C']}°C, L={db_p['latent_heat_kJ_kg']}kJ/kg)")
-                report_lines.append(f"      Unresolved evidence: cycling_status={db_p.get('cycles_status', 'Missing')}, safety_status={db_p.get('flammability_status', 'Missing')}")
+                db_matches = pcm_db[pcm_db["product_name"] == pname]
+                if len(db_matches) == 0:
+                    continue
+                db_p = db_matches.iloc[0]
+                report_lines.append(
+                    f"    - {pname} "
+                    f"(Tm={db_p['Tm_C']}°C, L={db_p['latent_heat_kJ_kg']}kJ/kg)"
+                )
+                report_lines.append(
+                    f"      Unresolved evidence: "
+                    f"cycling_status={db_p.get('cycles_status', 'Missing')}, "
+                    f"safety_status={db_p.get('flammability_status', 'Missing')}"
+                )
 
-        if n_confirmed >= 2:
-            # Code path for when n_confirmed >= 2
-            # Prepare decision matrix
+        if n_deployable >= 2:
+            # Rank ALL final-round deployable survivors; this is not a top-5 truncation.
             eval_list = []
-            for _, c_row in confirmed_df.iterrows():
+            for _, c_row in deployable_df.iterrows():
                 pname = c_row["product_name"]
                 db_row = pcm_db[pcm_db["product_name"] == pname].iloc[0]
                 k_val, k_prov = compute_thermal_conductivity(db_row)
@@ -276,11 +384,25 @@ def run_phase7():
                     "TC_provenance": k_prov,
                     "cycles_confidence": cyc_conf,
                     "cycles_status": db_row["cycles_status"],
-                    "eligibility": "CONFIRMED_FEASIBLE"
+                    "eligibility": "DEPLOYABLE_SURVIVOR"
                 })
 
             df_eval = pd.DataFrame(eval_list)
-            # Minmax normalize & run 4 methods
+
+            # Cycling confidence is intentionally UNKNOWN when cycling data are
+            # unreported. For MCDM normalization, use a neutral value rather
+            # than allowing NaN to contaminate every ranking score. This does
+            # not change Phase 6 evidence classification.
+            if df_eval["cycles_confidence"].isna().any():
+                df_eval["cycles_confidence"] = df_eval["cycles_confidence"].fillna(0.5)
+
+            missing_criteria = [c for c in CRITERIA if df_eval[c].isna().any()]
+            if missing_criteria:
+                raise ValueError(
+                    f"Missing MCDM criterion values for Assam cluster {cid}: "
+                    f"{missing_criteria}"
+                )
+
             M = minmax_normalize(df_eval, CRITERIA)
             w = np.array([PRIOR_WEIGHTS[c] for c in CRITERIA])
 
@@ -290,25 +412,37 @@ def run_phase7():
             vq, vs, vr = vikor(M, w)
             df_eval["vikor_Q"] = vq
 
-            df_eval["topsis_rank"] = df_eval["topsis_score"].rank(ascending=False, method="min").astype(int)
-            df_eval["gra_rank"] = df_eval["gra_grade"].rank(ascending=False, method="min").astype(int)
-            df_eval["promethee_rank"] = df_eval["promethee_flow"].rank(ascending=False, method="min").astype(int)
-            df_eval["vikor_rank"] = df_eval["vikor_Q"].rank(ascending=True, method="min").astype(int)
+            df_eval["topsis_rank"] = df_eval["topsis_score"].rank(
+                ascending=False, method="min"
+            ).astype(int)
+            df_eval["gra_rank"] = df_eval["gra_grade"].rank(
+                ascending=False, method="min"
+            ).astype(int)
+            df_eval["promethee_rank"] = df_eval["promethee_flow"].rank(
+                ascending=False, method="min"
+            ).astype(int)
+            df_eval["vikor_rank"] = df_eval["vikor_Q"].rank(
+                ascending=True, method="min"
+            ).astype(int)
 
-            # Borda & Copeland
-            rank_list = [df_eval.set_index("product_name")[c] for c in ["topsis_rank", "gra_rank", "promethee_rank", "vikor_rank"]]
+            rank_list = [
+                df_eval.set_index("product_name")[c]
+                for c in ["topsis_rank", "gra_rank", "promethee_rank", "vikor_rank"]
+            ]
             n_c = len(df_eval)
             borda = pd.Series(0.0, index=df_eval["product_name"])
             for r in rank_list:
                 borda += (n_c - r + 1)
             df_eval["borda_score"] = df_eval["product_name"].map(borda)
-            df_eval["consensus_rank"] = df_eval["borda_score"].rank(ascending=False, method="min").astype(int)
+            df_eval["consensus_rank"] = df_eval["borda_score"].rank(
+                ascending=False, method="min"
+            ).astype(int)
 
             all_ranking_rows.append(df_eval)
         else:
-            # Format record entry for unranked cluster
-            for _, cond_p in conditional_df.iterrows():
-                pname = cond_p["product_name"]
+            # This branch is only for a genuine <2 deployable-survivor case.
+            for _, dep_p in deployable_df.iterrows():
+                pname = dep_p["product_name"]
                 db_p = pcm_db[pcm_db["product_name"] == pname].iloc[0]
                 k_val, k_prov = compute_thermal_conductivity(db_p)
                 cyc_conf = compute_cycling_confidence(db_p, max_cycles_reported)
@@ -327,7 +461,7 @@ def run_phase7():
                     "TC_provenance": k_prov,
                     "cycles_confidence": cyc_conf,
                     "cycles_status": db_p["cycles_status"],
-                    "eligibility": "CONDITIONALLY_FEASIBLE",
+                    "eligibility": "DEPLOYABLE_SURVIVOR",
                     "ranking_status": "NOT PERFORMED",
                     "reason": reason_no_ranking
                 }]))

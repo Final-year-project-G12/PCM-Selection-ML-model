@@ -3,7 +3,7 @@
 =================================
 PHASE 2 — CLIMATE SIGNATURE CONSTRUCTION & PCA (Assam Project)
 
-Constructs ONE climate-signature vector for each of the 129 population grid points in Assam.
+Constructs ONE climate-signature vector for each of the population grid points in Assam.
 
 PHYSICAL RIGOR & TERMINOLOGY CORRECTIONS:
 ------------------------------------------
@@ -12,15 +12,15 @@ PHYSICAL RIGOR & TERMINOLOGY CORRECTIONS:
 2. Applies PCA ONLY to the correlated thermodynamic block:
    (Ta_mean, Ta_p95, Ta_p05, HDD18, CDD24, RH_mean, elev_proxy).
    Solar resource and variability features remain uncompressed to preserve key discriminating signals.
-3. Guarantees 100% point retention: exactly 129 grid points in raw signature and matrix.
+3. Guarantees 100% point retention: all current grid points are retained in the raw signature and matrix.
 
 INPUTS:
   data/preprocessed/assam_cleaned_physical.csv
   data/processed/population_grid_points.csv
 
 OUTPUTS:
-  data/processed/climate_signatures_raw.csv      (129 rows, physical units)
-  data/processed/climate_signatures_matrix.csv   (129 rows, standardized for clustering)
+  data/processed/climate_signatures_raw.csv      (one row per current grid point, physical units)
+  data/processed/climate_signatures_matrix.csv   (one row per current grid point, standardized for clustering)
   data/processed/pca_loadings.csv                (PCA component loadings)
   data/preprocessed/climate_signature_report.txt
 """
@@ -35,6 +35,7 @@ import numpy as np
 import pandas as pd
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
+from signature_lib import compute_hsi_sunrise
 
 # Paths
 BASE_DIR = Path(__file__).resolve().parent
@@ -71,7 +72,7 @@ def main():
     log("  PHASE 2 — CLIMATE SIGNATURE CONSTRUCTION & PCA (Assam)")
     log("=" * 72)
 
-    # 1. Load Site Metadata (Master 129 points)
+    # 1. Load Site Metadata (Current population grid points)
     points_df = pd.read_csv(GRID_POINTS_FILE)
     expected_pids = list(points_df["point_id"].unique())
     log(f"\n[1] Master population grid points loaded: {len(expected_pids)}")
@@ -116,6 +117,16 @@ def main():
         noon_t = grp[grp["event"] == "noon"]["era5_T_amb"]
         sunrise_t = grp[grp["event"] == "sunrise"]["era5_T_amb"]
         sunset_t = grp[grp["event"] == "sunset"]["era5_T_amb"]
+        sunrise_rh = grp[grp["event"] == "sunrise"]["era5_RHum"]
+
+        row["T_sunrise_mean"] = sunrise_t.mean()
+        row["RH_sunrise_mean"] = sunrise_rh.mean()
+
+        row["HSI_sunrise"] = compute_hsi_sunrise(
+            row["T_sunrise_mean"],
+            row["RH_sunrise_mean"]
+        )
+
         min_event_t = pd.concat([sunrise_t, sunset_t]).groupby(grp["date"]).min()
         max_event_t = noon_t.groupby(grp["date"]).max()
         dtr_series = (max_event_t - min_event_t).dropna()
@@ -204,15 +215,14 @@ def main():
     sig_df = pd.DataFrame(sig_rows)
     log(f"  Raw signature DataFrame constructed. Shape: {sig_df.shape}")
 
-    # Verify 129 Point Retention
+    # Verify Point Retention
     log("\n[4] Verifying Grid Point Retention:")
     log(f"  Raw unique points = {df['point_id'].nunique()}")
     log(f"  Climate signature points = {sig_df['point_id'].nunique()}")
     missing_pids = set(expected_pids) - set(sig_df["point_id"].unique())
     log(f"  Missing point IDs = {len(missing_pids)}")
     if len(missing_pids) == 0:
-        log("  [PASS] 100% Point Retention Verified (129/129 points present).")
-
+       log(f"[PASS] 100% Point Retention Verified ({len(expected_pids)}/{len(expected_pids)} points present).")
     # 4. Refined Energy Requirements & Targets
     log("\n[5] Derived PCM & System Targets:")
     sig_df["Tm_target"] = TM_TARGET
