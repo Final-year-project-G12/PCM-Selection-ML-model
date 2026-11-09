@@ -20,7 +20,12 @@ The methodological choices in the Tamil Nadu implementation are mapped to peer-r
 | **PCM Database** | 62 candidates: 55 manufacturer-derived MICE+RF+PMM-completed records plus 7 literature records | Singh et al. (2025); Martinez (2025) | `Singh2025PCM_SWH_ComprehensiveReview_summary.md`, `Martinez2025PCM_Industrial_TES_summary.md` | Strong |
 | **Climate Sizing** | Tm_target worst-month ratio | Durin et al. (2018) | — | Strong |
 | **GMM Regime Discovery** | K=5, diagonal covariance | Liu et al. (2025) | `Liu2025AI_PCM_TES_Prediction_Optimization_summary.md` | Medium |
-| **MCDM Stack** | TOPSIS, GRA, PROMETHEE II, VIKOR + Borda | Chen et al. (2025) | `Chen2025TaguchiGRA_PCM_Nanofluid_SWH_summary.md` | Strong |
+| **MCDM Stack** (application to PCM-SWH) | TOPSIS, GRA, PROMETHEE II, VIKOR + Borda | Chen et al. (2025) | `Chen2025TaguchiGRA_PCM_Nanofluid_SWH_summary.md` | Strong for GRA/Taguchi; **this paper does not originate TOPSIS, PROMETHEE II or VIKOR** - see the per-method primary sources below |
+| **TOPSIS** (method origin) | Order preference by similarity to the ideal solution | Hwang & Yoon (1981), *Multiple Attribute Decision Making* | not in `sources/` | Primary source, added 2026-11-09 |
+| **PROMETHEE II** (method origin) | Net-flow outranking with preference functions | Brans & Vincke (1985), *Management Science* 31(6):647-656 | not in `sources/` | Primary source, added 2026-11-09 |
+| **VIKOR** (method origin) | Compromise ranking, Q-index | Opricovic & Tzeng (2004), *EJOR* 156(2):445-455 | not in `sources/` | Primary source, added 2026-11-09 |
+| **Borda count** (rank aggregation) | Fusing the four rankings | de Borda (1781); modern treatment Saari (2001) | not in `sources/` | Primary source, added 2026-11-09 |
+| **Shannon-entropy objective weighting** | Criterion weights from data spread | Shannon (1948); MCDM application Zeleny (1982) | not in `sources/` | Primary source, added 2026-11-09 |
 | **Uncertainty MC** | Dirichlet weights + Gaussian properties | Chopra et al. (2023) | `Chopra2023HPETC_MonteCarlo_TechnoEconomic_summary.md` | Strong |
 | **Grey-box Tank Model** | Lumped-enthalpy 3-phase, backward Euler | Barqawi (2025) | `Barqawi2025DynamicSimulationPCM_SWH_summary.md` | Strong |
 | **PCM Modeling Review** | Melting band, cycling, supercooling | Abdellatif (2025) | `Abdellatif2025PCM_Modeling_Review_summary.md` | Strong |
