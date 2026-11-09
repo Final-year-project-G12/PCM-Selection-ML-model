@@ -86,6 +86,8 @@ between Fix 1 and this correction). Rajasthan's delivery-temperature-anchored `T
 seasonally robust: the #1 PCM recommendation per cluster does not change across Winter/Summer/
 Monsoon/Retreat.
 
+> **CORRECTED 2026-11-10 (seasonal wording).** The current output `era5-rajasthan/outputs/seasonal_pcm_sensitivity_rajasthan.md` (file dated 2026-10-25) marks 8 of 11 (cluster, season) cells "YES", but that column compares each seasonal #1 with the *annual* #1; it is not evidence of seasonal change. Within every cluster the seasonal #1/#2/#3 are identical across seasons (cluster 1 has no winter result, < 2 survivors). Use: *the O1 ranking does not change with season within a cluster; the annual-vs-seasonal #1 mismatch in clusters 0 and 2 is unexplained.* (The seasonal re-rank is TOPSIS-only with fixed weights, whereas the annual #1 is the four-method consensus; whether that difference accounts for the mismatch has not been tested.) The "0/11 flip" and "7/9 flip" figures in this document come from earlier runs and are not what the current output shows.
+
 **Re-examined against the DRL literature (2026-09-13): this null result is the RIGHT outcome for
 Objective 1, and does not weaken Objective 3's case.** The original plan motivated O3's DRL
 controller by "the optimal PCM ranking flips across seasons" — but that is not actually how this

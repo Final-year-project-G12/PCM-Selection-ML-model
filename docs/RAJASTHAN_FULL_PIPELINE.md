@@ -8,6 +8,8 @@ Amrita School of Engineering · Guide: Dr. T. Deepika
 
 Compiled from all uploaded project documents and literature-summary files available in this workspace. Compilation date: 03 September 2026
 
+> ⚠️ **CORRECTIONS 2026-11-10.** This consolidated archive embeds older copies of the phase audits. Where it disagrees with `docs/rajasthan/00_MASTER_OVERVIEW.md` (section "Corrections applied 2026-11-10", which holds the versioned delivery / Tm-target table), the master overview and the result files it cites win. Sentences on physics validation, Koppen ARI/NMI, AHP weighting and population weighting were corrected in place; earlier-dated narrative (pre-fix values quoted as history) was left as written. Seasonal wording: the O1 ranking does not change with season within a cluster; the annual-vs-seasonal #1 mismatch in clusters 0 and 2 is unexplained ("0/11", "7/9" and "8 of 11 flips" are not evidence of seasonal change).
+
 > ⚠️ **ADDENDUM (2026-09-08): Phase 5 + Phase 6 unified with Tamil Nadu; Phase 7/8 scripts renumbered.**
 > This consolidated archive embeds the individual phase audits, which were updated in place — the
 > summaries here are superseded where they conflict.
@@ -185,8 +187,8 @@ recommendation cards
 (Phase 8) — both now implemented and run, see the status table below. Phase 7's
 result is
 
-a genuine, honestly-reported NEGATIVE validation (all three clusters' Spearman
-rho ≤ 0.4) —
+weak, non-significant agreement with the physics model (Spearman rho against Borda
+-0.200 / -0.168 / +0.569, p = 0.80 / 0.69 / 0.067; predictive validity not established) —
 
 see 19_PHASE_7_ONWARD.md for the full completion report.
 
@@ -311,7 +313,7 @@ failure — see 21_REPRODUCIBILITY.md.
 | 4 — Regime Clustering | 05 | COMPLETE — with 2 caught-and-fixed bugs | k=3 (GMM diag covariance, fixed from full); GMM cluster-index instability fixed via canonical relabeling (2026-08-11); Koppen-Geiger external validation wired in (ARI=0.19, NMI=0.32 vs GMM) |
 | 5 — Feasibility Filtering | 01_preprocess, 07 | PCM database prerequisite now COMPLETE (55 rows); Phase 5 output on disk is STALE, pending re-run | Database expanded 18→55 rows (2026-08-12), inside the 40–60 target; feasibility_survivors_by_cluster.csv still reflects the pre-expansion 25-candidate pool and the old 0-survivors-at-κ=0.7 finding — re-run required, see "What remains" |
 | 6 — MCDM Ranking | 08 | COMPLETE — with 3 caught-and-fixed bugs, 1 documented deviation | Runs on κ-relaxed survivor pool; N_DRAWS=1000 not 5000 (documented); AHP pairwise elicitation still a TODO stub; now hard-fails on a provenance mismatch |
-| 7 — Physics Validation | physics_lib.py, 09 | COMPLETE — 2 caught-and-fixed bugs, real calibration, genuine NEGATIVE result | Spearman rho = -0.385 (Cluster 0) / +0.125 (Cluster 1) / -0.097 (Cluster 2); MCDM ranking weakly/negatively correlates with simulated solar fraction; dominant criterion is supercooling (48–64%) but model cannot simulate it — see 09_PHASE_7_AUDIT.md |
+| 7 — Physics Validation | physics_lib.py, 09 | COMPLETE — 2 caught-and-fixed bugs, real calibration, genuine NEGATIVE result | Spearman rho = -0.385 (Cluster 0) / +0.125 (Cluster 1) / -0.097 (Cluster 2) [pre-fix; current file: -0.200 / -0.168 / +0.569, weak, not significant]; MCDM ranking weakly/negatively correlates with simulated solar fraction; dominant criterion is supercooling (48–64%) but model cannot simulate it — see 09_PHASE_7_AUDIT.md |
 | 8 — Supercooling Penalty | physics_lib.py, 08_phase8_supercooling_sweep.py | COMPLETE — Sensitivity sweep k ∈ [0.0,0.1,0.2,0.3], honest negative result | Penalty implementation is correct (energy conservation passes); but worsens physics/MCDM agreement instead of improving it — rho degrades Cluster 1 from +0.125 to +0.059, and Cluster 2 from -0.097 to -0.136; suggests supercooling weight is over-estimated or mechanism is incorrect — see 10_PHASE_8_AUDIT.md |
 | 9 — Recommendation Cards | 10 | COMPLETE | Pure aggregation of Phases 4/6/7 into recommendation_cards_rajasthan.md, hard-fails on cross-phase cluster-identity mismatch |
 
@@ -510,7 +512,7 @@ accumulated or mean-rate ERA5 field.
 doi:10.1038/sdata.2018.214) is now actually wired in (1-km raster, real
 per-point lookup) —
 
-ARI(GMM, Köppen)=0.19, NMI=0.32 (low-to-moderate agreement, read as "the GMM
+ARI(GMM, Köppen)=0.2787, NMI=0.3817 (recomputed 2026-11-10 from koppen_validation_rajasthan.csv; 0.19 / 0.32 was stale) (low-to-moderate agreement, read as "the GMM
 finds finer
 
 structure than Köppen's broad classes," not as a clustering failure). NBC/ECBC
@@ -598,10 +600,10 @@ objectives.
 | 1 — Data Collection | N6 | Population-weighted, sun-event-aligned sampling — not a uniform grid or arbitrary city list |
 | 2 — Preprocessing & Validation | (supports all) | The deaccumulation-bug catch and QUANTILE_MAP decision are the evidentiary basis for claiming the climate backbone (Phases 3+) is trustworthy — without this phase, none of N1–N5 would be defensible |
 | 3 — Climate Signature | N2, N3 | Two-tier signature (not a single temperature); Tm_target/L_required corrected to the 42–70°C SWH band (not the 18–28°C comfort band a naive approach might reuse) |
-| 4 — Regime Clustering | N1 | GMM-discovered regimes (k=3, statistically selected, not hand-picked); external validation now PARTIALLY wired in (Köppen-Geiger, ARI=0.19/NMI=0.32) — N1's "discovered, not hand-picked" claim is now supported by internal statistical measures PLUS one external classification cross-check (NBC/ECBC still open) |
+| 4 — Regime Clustering | N1 | GMM-discovered regimes (k=3, statistically selected, not hand-picked); external validation now PARTIALLY wired in (Köppen-Geiger, ARI=0.2787/NMI=0.3817) — N1's "discovered, not hand-picked" claim is now supported by internal statistical measures PLUS one external classification cross-check (NBC/ECBC still open) |
 | 5 — Feasibility Filtering | N3 (partial) | Enforces the corrected 42–70°C band and SWH-specific constraints; database-size gap closed 2026-08-12 (18–25 → 55 rows, inside the 40–60 target) — N3's practical value depended on having enough real in-band candidates to filter; that prerequisite is now met, but Phase 5 has not yet been re-run against the expanded database, so N3's demonstrated value in the current on-disk output is still the pre-expansion result |
-| 6 — MCDM Ranking | N4 | Four-method consensus + Monte Carlo, not a single TOPSIS winner; Kendall's W explicitly reports when consensus is not strong (Cluster 0, W=0.4375) rather than hiding disagreement — this honest reporting is itself part of N4's value proposition |
-| 7 — Physics Validation (COMPLETE) | N5 | Independently validated the MCDM ranking against simulated solar fraction — the result is a genuine NEGATIVE validation (Spearman rho ≤0.4, all 3 clusters), not a confirmation. This is itself evidence for N5 as a methodology (the validation was performed rigorously and reported honestly, exactly per the framework doc's own "write it out plainly" instruction) even though it does not currently confirm the MCDM ranking's output — N5's claim should read "the ranking WAS physics-tested, honestly, with a negative result attributable in part to the still-undersized PCM database" not "the ranking IS physics-validated." See 19_PHASE_7_ONWARD.md. |
+| 6 — MCDM Ranking | N4 | Four-method consensus + Monte Carlo, not a single TOPSIS winner; Kendall's W explicitly reports when consensus is not strong (Cluster 2, W=0.417 on the current run, with a Borda/Copeland Top-3 disagreement; "Cluster 0, W=0.4375" was a pre-fix figure) rather than hiding disagreement — this honest reporting is itself part of N4's value proposition |
+| 7 — Physics Validation (COMPLETE) | N5 | Compared the MCDM ranking with the lumped-enthalpy physics model's simulated solar fraction — agreement was weak and not statistically significant (Spearman rho against Borda -0.200 / -0.168 / +0.569, p = 0.80 / 0.69 / 0.067, n = 4 / 8 / 11; spearman_rho_by_cluster_rajasthan.csv), so predictive validity was not established; it is not a confirmation. (Cluster 2 only: rho against Copeland = +0.633, p = 0.036, nominal, uncorrected for multiple comparisons.) This is itself evidence for N5 as a methodology (the validation was performed rigorously and reported honestly, exactly per the framework doc's own "write it out plainly" instruction) even though it does not currently confirm the MCDM ranking's output — N5's claim should read "the ranking WAS physics-tested, honestly, with a negative result attributable in part to the still-undersized PCM database" not "the ranking IS physics-validated." See 19_PHASE_7_ONWARD.md. |
 | 8 — Recommendation Cards (COMPLETE) | (packaging) | Aggregates N1–N5's evidence, including Phase 7's negative result and its caveats, into the final deliverable format — 09_recommendation_cards.py's own caveats section surfaces the physics-validation band per cluster, not just the MCDM Top-3 |
 
 ### Phase → RG (broader project research gap) mapping — explicitly indirect
@@ -617,7 +619,7 @@ RG1–RG4, and how Objective 1 itself directly addresses RG5:
 | Phase | Related RG | Nature of contribution |
 | --- | --- | --- |
 | 1–2 (Data Collection, Validation) | RG5 | Supplies the validated, uncertainty-characterized climate data a later predictive-optimization-under-uncertainty component (RG5, "no predictive optimization under climatic uncertainty") would need as its own input |
-| 3–4 (Signature, Clustering) | RG5 | Climate regimes are themselves a climatic-uncertainty-aware framing (population-weighted, statistically validated) — a direct, not merely feeding, contribution to RG5 |
+| 3–4 (Signature, Clustering) | RG5 | Climate regimes are themselves a climatic-uncertainty-aware framing (population-weighted point selection and cluster profiles; the GMM fit itself is not population-weighted) — a direct, not merely feeding, contribution to RG5 |
 | 5–6 (Feasibility, MCDM) | RG5 | Monte Carlo uncertainty propagation over PCM property/weight perturbation is Objective 1's own predictive-optimization-under-uncertainty contribution |
 | 7 (Physics Validation) | RG4 (indirect) | A grey-box simulation is not a real-world experiment, but it is Objective 1's step toward the experimental-validation direction RG4 (limited real-world experimental validation) ultimately calls for — the framework doc itself frames Phase 7 as "what makes the result publishable, not skippable" |
 | 8 (Recommendation Cards) | RG2, RG3 (feeding, not addressing) | The per-regime PCM recommendation is the direct input a later hardware-prototype objective (RG2) and demand-alignment objective (RG3) would consume — Objective 1 does not itself build a prototype or model household demand |
@@ -796,7 +798,7 @@ dataset, D2 climate
 signature + PCA, D3 regime clusters + external validation, D4 PCM
 feasibility-survivor set, D5
 
-MCDM ranking + Monte Carlo confidence, D6 physics-validated solar-fraction
+MCDM ranking + Monte Carlo confidence, D6 physics-model comparison (weak, not significant) of the solar-fraction
 ranking, D7
 
 recommendation cards, D8 (implicit) the write-up/methodology section itself,
@@ -842,8 +844,8 @@ PCM-SWH literature:
 | N2 | Two-tier climate signature (sun-event + daily-integral) vs a single representative temperature |
 | N3 | Corrected 42–70°C SWH-specific PCM band vs 18–28°C building-thermal-comfort band (a common confusion in adjacent literature) |
 | N4 | Top-3 + explicit method-agreement/consensus reporting vs a single declared "winner" PCM |
-| N5 | Physics-validated ranking (Phase 7) vs a self-referential MCDM-only result |
-| N6 | Population-weighted sampling/regime discovery vs uniform-grid or arbitrary-city sampling |
+| N5 | Ranking compared against a physics model (Phase 7; agreement weak and not significant) vs a self-referential MCDM-only result |
+| N6 | Population-weighted sampling (and population-weighted cluster profiles) vs uniform-grid or arbitrary-city sampling |
 
 ## Important disambiguation: N1–N6 vs RG1–RG5
 
@@ -3264,7 +3266,7 @@ silhouette/BIC/Davies-Bouldin/Calinski-Harabasz (internal),
 season-tautology ANOVA check (Level B internal). External classification
 validation: Köppen-Geiger
 
-now real (ARI=0.19, NMI=0.32 — see above); NBC/ECBC still stubbed.
+now real (ARI=0.2787, NMI=0.3817 — see above); NBC/ECBC still stubbed.
 
 ## Outputs
 
@@ -4399,7 +4401,7 @@ has now ALSO been
 re-run against this fresh ranking (10_physics_validation.py) — the
 negative validation
 
-result persists (Spearman rho = -0.385/+0.125/-0.097 across the 3 clusters, mean
+result persists (pre-fix values, superseded 2026-11-10 by -0.200/-0.168/+0.569: Spearman rho = -0.385/+0.125/-0.097 across the 3 clusters, mean
 -0.119, all still in
 
 the ≤0.4 "genuine negative" band vs. the pre-expansion -0.900/-0.096/-0.198) —
@@ -4507,6 +4509,8 @@ Draw-profile integration (365 days):
  Daily total: 300.000 kg → Pass (expected 300.0 kg)
 
 ## Results: Per-Cluster Spearman ρ Against MCDM Borda Rank
+
+> **SUPERSEDED 2026-11-10 (pre-fix values).** The rho values -0.385 / +0.125 / -0.097 (n = 9 / 14 / 16) come from earlier runs. The current file `era5-rajasthan/data/processed/spearman_rho_by_cluster_rajasthan.csv` gives -0.200 / -0.168 / +0.569 against Borda (p = 0.80 / 0.69 / 0.067, n = 4 / 8 / 11; cluster 2 against Copeland +0.633, p = 0.036). Wording: agreement weak and not statistically significant, predictive validity not established. See `docs/rajasthan/00_MASTER_OVERVIEW.md`, "Corrections applied 2026-11-10".
 
 | Cluster | n_candidates | Borda vs. Solar Fraction | Notes |
 | --- | --- | --- | --- |
@@ -4695,7 +4699,7 @@ supercooling penalty in physics_lib.py, sensitivity sweep k ∈ [0.0, 0.1, 0.2,
 
 ## Purpose
 
-Phase 7 identified negative or near-zero Spearman ρ (−0.385, +0.125, −0.097
+Phase 7 identified negative or near-zero Spearman ρ (−0.385, +0.125, −0.097 [pre-fix; current −0.200, −0.168, +0.569]
 across clusters 0/1/2) between MCDM rankings and simulated solar fractions. The
 dominant entropy-weighted criterion in all three clusters is supercooling
 (48–64%), but the base physics model cannot simulate it (assumes ideal
@@ -4947,7 +4951,7 @@ against already-computed simulation_rank in physics_validation_rajasthan.csv:
 | Metric | Baseline (entropy-blended) | Capped (supercooling → AHP-only) | Effect |
 | --- | --- | --- | --- |
 | Kendall's W (method agreement) | 0.388 | 0.271 (worse) | Consensus drops further |
-| Spearman ρ vs. Phase 7 simulation | −0.385 (p=0.31) | +0.561 (p=0.12) | Direction flips; not significant at n=9 |
+| Spearman ρ vs. Phase 7 simulation | −0.385 (p=0.31) | +0.561 (p=0.12) | Direction flips; not significant at n=9 (pre-fix pool n=9; current pool n=4/8/11) |
 
 Interpretation: Capping supercooling's weight flips MCDM-vs-physics agreement
 from negative to positive (consistent with supercooling being over-weighted),
@@ -5131,7 +5135,7 @@ genuinely could have failed and didn't.
 recommendation_cards_rajasthan.md — Three cluster cards + cross-cluster summary
 table, fully populated and ready for thesis inclusion. Every card explicitly
 states physics validation does NOT confirm its Top-3 ordering for that cluster
-(Spearman ρ values as in Phase 7 table, band=NEGATIVE in all three).
+(Spearman ρ values as in Phase 7 table, band=NEGATIVE in all three; pre-fix, superseded 2026-11-10: cluster 2 is now +0.569).
 
 ### Critical Caveat for Write-Up
 
@@ -5204,7 +5208,7 @@ submission.
 | Field-evidence sanity check for the cap | same | Nahar (2003), tested at Jodhpur | Direct, present as a bare citation in .claude/references.md — needs a complete BibTeX entry |
 | T_mains lag estimate | same | none — explicitly documented in-code as not derived from any published correlation | Weak / open gap — see recommendation below |
 | GMM clustering, k-selection heuristics | 05_cluster_rajasthan.py | Building and Environment (2024) India climate-classification study (silhouette 0.21 vs −0.2 NBC); a 2026 thermal-comfort clustering study (mean silhouette 0.235) | Moderate — cited with enough specificity to be traceable but full BibTeX entries not located in this pass |
-| External classification validation | 05_cluster_rajasthan.py | Beck et al. (2018), Scientific Data 5, DOI:10.1038/sdata.2018.214 (Köppen-Geiger) | Strong citation, now wired in for real (2026-08-11) — ARI=0.19/NMI=0.32 vs. GMM. NBC/ECBC remains unwired. |
+| External classification validation | 05_cluster_rajasthan.py | Beck et al. (2018), Scientific Data 5, DOI:10.1038/sdata.2018.214 (Köppen-Geiger) | Strong citation, now wired in for real (2026-08-11) — ARI=0.2787/NMI=0.3817 vs. GMM. NBC/ECBC remains unwired. |
 | PCM candidate band (42–70°C) | Phase 5 | Framework doc Table 5, cross-referenced against Singh et al. (2025), Solar Energy Materials and Solar Cells 293 (states 40–70°C as the optimal SWH PCM band) | Strong, closely matching independent literature |
 | PCM property values (RT-series validation) | PCM database | Martínez et al. (2025), Heliyon 11 — directly measures/validates RT54HC/RT55/RT64HC, the same product family in this project's database, and finds large literature-vs-measured discrepancies for some | Strong and directly relevant — should be cited as a caveat on manufacturer-datasheet trust, not just a property source |
 | Gaussian Tm-fitness σ=4K | 08_mcdm_ranking.py | Framework doc §9.2 only — "not independently literature-calibrated," per the code's own docstring | Weak/self-sourced — state plainly, do not overclaim external validation |

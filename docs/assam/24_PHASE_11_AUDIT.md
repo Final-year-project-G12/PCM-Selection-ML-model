@@ -51,7 +51,7 @@ Exactly **10 distinct thesis-ready figures** are consolidated:
 2. `k_selection_silhouette.png`: Silhouette coefficient curve across candidate cluster counts ($K=2$ to $K=6$).
 3. `k_selection_davies_bouldin.png`: Davies-Bouldin cluster separation index.
 4. `k_selection_calinski_harabasz.png`: Calinski-Harabasz variance ratio criterion.
-5. `11b_physics_vs_mcdm_delivery_rank.png`: Scatter plot comparing historical MCDM rank against dynamic physics delivery temperature rank ($\rho = -0.52$ to $-0.64$).
+5. `11b_physics_vs_mcdm_delivery_rank.png`: Scatter plot comparing historical MCDM rank against dynamic physics delivery temperature rank ($\rho = -0.28$ to $-0.30$ against the delivery rank and $+0.62$ to $+0.64$ against the solar-fraction rank (current `validation_comparison_report.txt`, 2026-10-28; earlier text said $-0.52$ to $-0.64$)).
 6. `11b_physics_vs_mcdm_solar_fraction_rank.png`: Scatter plot comparing historical MCDM rank against dynamic physics solar fraction rank ($\rho = -0.43$ to $-0.55$).
 7. `11b_physics_vs_mcdm_cycling_rank.png`: Scatter plot comparing historical MCDM rank against annual thermal cycling count.
 8. `11c_tm_vs_physics_delivery.png`: Thermodynamic mechanism plot demonstrating why $T_m \approx 51^\circ\text{C}$ outperforms $T_m = 44^\circ\text{C}$ for $50^\circ\text{C}$ hot water delivery.

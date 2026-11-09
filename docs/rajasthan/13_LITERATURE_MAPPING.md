@@ -1,5 +1,7 @@
 # 13 — Literature Mapping
 
+> **2026-11-10 note (citation status, checked against `.claude/Sources/references.bib`; nothing invented).** The bib already holds entries for TOPSIS (`Hwang1981`), PROMETHEE (`Brans1985`, flagged VERIFY), VIKOR (`Opricovic2004`, `Opricovic1998`, flagged VERIFY), GRA (`Deng1982`), AHP (`Saaty1980`), SPA (`Reda2004`), clear-sky (`Ineichen2002`), MICE (`vanBuuren2011`) and quantile mapping (`Cannon2015`, flagged VERIFY); this document does not cite them yet. Not in the bib: Borda / Saari aggregation and Shannon / Zeleny entropy weighting. Clustering caveats: `Baudry2010CombiningMixtureComponents`, `Baldo2022WeatherRegimesProbabilistic`, `Babanov2023WeatherRegimeClustering` (Babanov, Semenov and Mokhov).
+
 **Documentation note (2026-09-02):** Earlier standalone concept files on temporal and spatial
 processing were consolidated into `03_PHASE_1_AUDIT.md` and `04_PHASE_2_AUDIT.md` respectively, with
 full justification for each method. The research gap mapping has been moved into

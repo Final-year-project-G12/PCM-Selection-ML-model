@@ -25,7 +25,10 @@ Sources: `cluster_profiles_<state>.csv` in each state's `data/processed/`
 `data/preprocessed/clustering_report.txt`.
 
 Uttarakhand's cluster 1 holds 3 points (mean elevation about 2,200 m), so its
-results rest on very few locations.
+results rest on very few locations. The Uttarakhand column is O1 main (K = 5); O2
+Uttarakhand used K = 4 outputs (O1 commit `6be0dcd`, not on main), and the two are not
+reconciled. Assam's 80 points here (27 / 28 / 25 in `cluster_profiles_assam.csv`) do not
+match the 129 points quoted in older Assam docs and in the O2 input copy; resolved 2026-11-10: the current O1 files have 80 points and the 129-point set is an older grid.
 
 ## 2. Storage design targets
 
@@ -44,7 +47,8 @@ Sources: the cluster-profile files above; Uttarakhand per-regime targets from
 is why `L_required` is about three times higher in the first pair. Before
 comparing feasibility or rankings across all four states in the paper, either
 bring Uttarakhand and Assam onto `pcm_shared_config.py` or state the
-difference explicitly.
+difference explicitly. The O1 delivery basis, O2 delivery target and PCM limit per state
+are in the versioned table in `OBJECTIVE1_CONSOLIDATED_SUMMARY.md` section 4.6.
 
 ## 3. Feasibility filter
 
@@ -108,8 +112,7 @@ per regime:
 | Candidates per regime | 4 / 8 / 11 | 8 / 10 / 8 | 20 each |
 | Significant at p < 0.05 | none against Borda (cluster 2 against Copeland: ρ = 0.63, p = 0.036) | none | none |
 
-**Assam** compares the historical ranking with physics across 8 common PCMs,
-pooled over regimes:
+**Assam** compares the historical (K = 4) ranking with physics across the 35 Phase-6-screened candidates per regime (report section 12, limitation 4; the pooled values are the "3-cluster aggregate mean" of section 7, corrected 2026-11-10 from "8 common PCMs"):
 
 | Physics metric | ρ | p |
 |---|---|---|

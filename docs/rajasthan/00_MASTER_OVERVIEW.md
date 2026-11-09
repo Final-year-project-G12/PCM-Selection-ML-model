@@ -42,6 +42,39 @@ PCM pick, reframed as a positive finding (Rajasthan's PCM selection is seasonall
 instability — see `09_PHASE_7_AUDIT.md`). See `05_PHASE_3_AUDIT.md`, `07_PHASE_5_AUDIT.md`,
 `09_PHASE_7_AUDIT.md` and `10_PHASE_8_AUDIT.md` for full detail.
 
+> **CORRECTED 2026-11-10 (seasonal wording).** The current output `era5-rajasthan/outputs/seasonal_pcm_sensitivity_rajasthan.md` (file dated 2026-10-25) marks 8 of 11 (cluster, season) cells "YES", but that column compares each seasonal #1 with the *annual* #1; it is not evidence of seasonal change. Within every cluster the seasonal #1/#2/#3 are identical across seasons (cluster 1 has no winter result, < 2 survivors). Use: *the O1 ranking does not change with season within a cluster; the annual-vs-seasonal #1 mismatch in clusters 0 and 2 is unexplained.* (The seasonal re-rank is TOPSIS-only with fixed weights, whereas the annual #1 is the four-method consensus; whether that difference accounts for the mismatch has not been tested.) The "0/11 flip" and "7/9 flip" figures in this document come from earlier runs and are not what the current output shows.
+
+---
+
+## Corrections applied 2026-11-10
+
+Source: `.claude/Objective_1_and_Objective_2_corrected_methodology_.docx`, each item checked against the file named. **Documentation and comments only:** no pipeline was re-run and no file under `data/`, `outputs/` or `results/` changed.
+
+### Delivery and melting-target basis (versioned table, v2026-11-10)
+
+| State | O1 delivery basis | O1 Tm target (nominal) | Capped targets actually used for ranking | O2 delivery target | PCM limit |
+|---|---|---|---|---|---|
+| Rajasthan | 60 C (`pcm_shared_config.py:50`; `era5-rajasthan/physics_lib.py:490`) | 67 C (`pcm_shared_config.py:52`) | 55.47 / 61.06 / 59.19 C for clusters 0/1/2 (`Tm_target_capped_C`, `era5-rajasthan/data/processed/cluster_profiles_rajasthan.csv`) | 45 C (`OBJECTIVE2/Objective---2/objective2-rajasthan/configs/system_config_shared.yaml:84`) | 65 C (same file, line 63) |
+
+Two different things are called "delivery". O1 sizes the night discharge (`L_required`) at 60 C because the Avargani 2021 300 L / 7 h capability it reuses was validated at 60 +/- 2 C (`pcm_shared_config.py:36-50`). O2 counts hot water as delivered above 45 C. A nominal 67 C melting target is above the 65 C PCM limit, so it is not operationally validated; the capped targets above (55.5-61.1 C) are what the ranking used, and the PCMs O2 selected melt at 55.0 / 58.0 / 61.0 C (savE OM55, PureTemp 58, PureTemp 60; `OBJECTIVE2/Objective---2/objective2-rajasthan/data/objective1/pcm_database_rajasthan.csv`). The same table for Uttarakhand and Assam is in their own master overviews; the three-state version is in `OBJECTIVE1_CONSOLIDATED_SUMMARY.md`.
+
+### What changed
+
+- **Physics wording.** "Physics-validated ranking" and "rho <= 0.4 in all 3 clusters" replaced (Phase 6/7 rows below, `12_FINAL_READINESS_REPORT.md`, `01_PROJECT_CONTEXT.md`). Replacement: The MCDM ranking was compared with the project's lumped-enthalpy physics model; agreement was weak and not statistically significant, so predictive validity was not established. Rajasthan, Spearman rho against the Borda ranking for clusters 0/1/2: -0.200 / -0.168 / +0.569, p = 0.80 / 0.69 / 0.067, n = 4 / 8 / 11 (`era5-rajasthan/data/processed/spearman_rho_by_cluster_rajasthan.csv`). Cluster 2 only, against the Copeland ranking: rho = +0.633, p = 0.036 (nominal; second comparison in that cluster, not corrected for multiple comparisons).
+- **Kendall W / pool size.** Current file: W = 1.000 / 0.768 / 0.417 for n = 4 / 8 / 11. Cluster 2 has W = 0.417 and a Borda/Copeland disagreement on the Top-3; cluster 0 rests on only four candidates (`candidate_pool_undersized = True`). Method agreement (Kendall W) is internal robustness, not evidence that a PCM performs best. The "Cluster 0, W = 0.4375" quoted in the Phase 6 row below was a pre-fix figure.
+- **Koppen.** ARI = 0.2787, NMI = 0.3817, recomputed from the contingency table `era5-rajasthan/data/processed/koppen_validation_rajasthan.csv` (320 points). The 0.19 / 0.32 quoted earlier is stale. NBC/ECBC is not wired in for any state.
+- **Weights.** "Entropy weights blended with the stated priors, with a capped supercooling weight"; `AHP_PAIRWISE_MATRIX = None` (`era5-rajasthan/08_mcdm_ranking.py:274`), so there is no AHP elicitation.
+- **Population.** "Population-weighted point selection and cluster profiles", never "population-weighted clustering": `sample_weight` appears nowhere in `05_cluster_rajasthan.py`.
+- **Seasonal wording.** See the corrected paragraph in `06_PHASE_4_AUDIT.md` / `09_PHASE_7_AUDIT.md`: the ranking does not change with season within a cluster; the annual-vs-seasonal #1 mismatch in clusters 0 and 2 is unexplained. "8 of 11 flips" is not evidence of seasonal change.
+
+### Already correct (verified, no edit)
+
+GMM covariance is diagonal, k = 3 (`OBJECTIVE1_CONSOLIDATED_SUMMARY.md` section 3; `05_cluster_rajasthan.py:222`); population is not in the GMM fit (`06_PHASE_4_AUDIT.md` already said so); the AHP gap was already flagged in `08_PHASE_6_AUDIT.md` and item 10 of the known-issues list below; the `T_DELIVERY_C = 60` basis in `physics_lib.py` matches `pcm_shared_config.py`.
+
+### Still open
+
+Cluster 0 has n = 4 (decision 2026-09-17: accept the calibrated-kappa pool); the annual-vs-seasonal #1 mismatch is unexplained; NBC/ECBC is not wired in; no AHP elicitation; the supercooling-weight cap and sigma = 4 K for Tm fitness are not sourced from a paper.
+
 ---
 
 ## Project objective
@@ -49,7 +82,7 @@ instability — see `09_PHASE_7_AUDIT.md`). See `05_PHASE_3_AUDIT.md`, `07_PHASE
 Final-year B.Tech CSE project (Group 12, Amrita School of Engineering, Guide: Dr. T. Deepika):
 **"Climate-Adaptive Intelligent Control and Optimization of PCM Thermal Storage for Solar Water
 Heating."** Objective 1 (the scope of this audit) builds a **climate-region-aware PCM
-recommendation framework**: turn 10 years of reanalysis climate data into population-weighted
+recommendation framework**: turn 10 years of reanalysis climate data (at population-weighted sampling points) into
 climate regimes, derive PCM performance targets per regime, and rank candidate phase-change
 materials against those targets with an auditable, multi-method, uncertainty-aware pipeline.
 
@@ -281,13 +314,13 @@ post-unification re-run pending).
    accumulated or mean-rate ERA5 field.
 9. **[PARTIALLY RESOLVED]** External classification validation: Köppen-Geiger (Beck et al. 2018,
    doi:10.1038/sdata.2018.214) is now actually wired in (1-km raster, real per-point lookup) —
-   ARI(GMM, Köppen)=0.19, NMI=0.32 (low-to-moderate agreement, read as "the GMM finds finer
+   ARI(GMM, Köppen)=0.2787, NMI=0.3817 (recomputed 2026-11-10 from `data/processed/koppen_validation_rajasthan.csv`; the 0.19 / 0.32 quoted before was stale) (low-to-moderate agreement, read as "the GMM finds finer
    structure than Köppen's broad classes," not as a clustering failure). NBC/ECBC Indian
    climate-zone classification remains stubbed (`None` placeholders, no fabricated labels) —
    no local lookup exists in this project tree.
 10. **[OPEN]** AHP pairwise elicitation + consistency-ratio check exists in code but is never invoked
     (`AHP_PAIRWISE_MATRIX = None`) — the "AHP" component of the blended MCDM weights is actually
-    just the framework doc's indicative Table 13 priors, unmodified.
+    just the framework doc's indicative Table 13 priors, unmodified. Correct wording: "entropy weights blended with the stated priors, with a capped supercooling weight", never "AHP-weighted" or "AHP-elicited".
 11. **[FIXED, high-impact]** GMM cluster-index instability: sklearn's GaussianMixture gives no
     guarantee that cluster label 0 refers to the same physical climate group across separate
     re-runs — Phase 5's and Phase 6's outputs were found (2026-08-11) to disagree cluster-by-
@@ -341,8 +374,8 @@ objectives.
 | 3 — Climate Signature | N2, N3 | Two-tier signature (not a single temperature); Tm_target/L_required corrected to the 42–70°C SWH band (not the 18–28°C comfort band a naive approach might reuse) |
 | 4 — Regime Clustering | N1 | GMM-discovered regimes (k=3, statistically selected, not hand-picked); external validation now PARTIALLY wired in (Köppen-Geiger, ARI=0.19/NMI=0.32) — N1's "discovered, not hand-picked" claim is now supported by internal statistical measures PLUS one external classification cross-check (NBC/ECBC still open) |
 | 5 — Feasibility Filtering | N3 (partial) | Enforces the corrected 42–70°C band and SWH-specific constraints; **database-size gap closed 2026-08-12** (18–25 → 55 rows, inside the 40–60 target) — N3's practical value depended on having enough real in-band candidates to filter; that prerequisite is now met, but Phase 5 has not yet been re-run against the expanded database, so N3's demonstrated value in the current on-disk output is still the pre-expansion result |
-| 6 — MCDM Ranking | N4 | Four-method consensus + Monte Carlo, not a single TOPSIS winner; Kendall's W explicitly reports when consensus is *not* strong (Cluster 0, W=0.4375) rather than hiding disagreement — this honest reporting is itself part of N4's value proposition |
-| 7 — Physics Validation (COMPLETE) | N5 | Independently validated the MCDM ranking against simulated solar fraction — **the result is a genuine NEGATIVE validation (Spearman rho ≤0.4, all 3 clusters)**, not a confirmation. This is itself evidence for N5 as a methodology (the validation was performed rigorously and reported honestly, exactly per the framework doc's own "write it out plainly" instruction) even though it does not currently confirm the MCDM ranking's output — N5's claim should read "the ranking WAS physics-tested, honestly, with a negative result attributable in part to the still-undersized PCM database" not "the ranking IS physics-validated." See `09_PHASE_7_AUDIT.md`. |
+| 6 — MCDM Ranking | N4 | Four-method consensus + Monte Carlo, not a single TOPSIS winner; Kendall's W explicitly reports when consensus is *not* strong (Cluster 2, W=0.417 on the current run, with a Borda/Copeland Top-3 disagreement; the "Cluster 0, W=0.4375" quoted here earlier is a pre-fix figure, Cluster 0 now has W=1.000 on n=4) rather than hiding disagreement — this honest reporting is itself part of N4's value proposition |
+| 7 — Physics Validation (COMPLETE) | N5 | Compared the MCDM ranking with the lumped-enthalpy physics model's simulated solar fraction — **agreement was weak and not statistically significant (Spearman rho against Borda -0.200 / -0.168 / +0.569, p = 0.80 / 0.69 / 0.067, n = 4 / 8 / 11; `era5-rajasthan/data/processed/spearman_rho_by_cluster_rajasthan.csv`), so predictive validity was not established**; it is not a confirmation. (Cluster 2 only: rho against Copeland = +0.633, p = 0.036, nominal, uncorrected for multiple comparisons.) This is itself evidence for N5 as a methodology (the validation was performed rigorously and reported honestly, exactly per the framework doc's own "write it out plainly" instruction) even though it does not currently confirm the MCDM ranking's output — N5's claim should read "the ranking WAS physics-tested, honestly, with a negative result attributable in part to the still-undersized PCM database" not "the ranking IS physics-validated." See `09_PHASE_7_AUDIT.md`. |
 | 8 — Recommendation Cards (COMPLETE) | (packaging) | Aggregates N1–N5's evidence, including Phase 7's negative result and its caveats, into the final deliverable format — `09_recommendation_cards.py`'s own caveats section surfaces the physics-validation band per cluster, not just the MCDM Top-3 |
 
 ### Phase → RG (broader project research gap) mapping — explicitly indirect
@@ -354,7 +387,7 @@ RG1–RG4, and how Objective 1 itself directly addresses RG5:
 | Phase | Related RG | Nature of contribution |
 |---|---|---|
 | 1–2 (Data Collection, Validation) | RG5 | Supplies the validated, uncertainty-characterized climate data a later predictive-optimization-under-uncertainty component (RG5, "no predictive optimization under climatic uncertainty") would need as its own input |
-| 3–4 (Signature, Clustering) | RG5 | Climate regimes are themselves a climatic-uncertainty-aware framing (population-weighted, statistically validated) — a direct, not merely feeding, contribution to RG5 |
+| 3–4 (Signature, Clustering) | RG5 | Climate regimes are themselves a climatic-uncertainty-aware framing (population-weighted point selection and cluster profiles; the GMM fit itself is not population-weighted) — a direct, not merely feeding, contribution to RG5 |
 | 5–6 (Feasibility, MCDM) | RG5 | Monte Carlo uncertainty propagation over PCM property/weight perturbation is Objective 1's own predictive-optimization-under-uncertainty contribution |
 | 7 (Physics Validation) | RG4 (indirect) | A grey-box simulation is not a real-world experiment, but it is Objective 1's step toward the experimental-validation direction RG4 (limited real-world experimental validation) ultimately calls for — the framework doc itself frames Phase 7 as "what makes the result publishable, not skippable" |
 | 8 (Recommendation Cards) | RG2, RG3 (feeding, not addressing) | The per-regime PCM recommendation is the direct input a later hardware-prototype objective (RG2) and demand-alignment objective (RG3) would consume — Objective 1 does not itself build a prototype or model household demand |

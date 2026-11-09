@@ -70,6 +70,9 @@ SIGMA_TM = 4.0
 # pipeline's actual assumption: a continuous overnight draw rate, not a
 # single fixed-volume draw), so annual and seasonal L_required stay on the
 # same basis within this pipeline.
+# NOTE (2026-11-10): state-specific 50 C delivery basis. pcm_shared_config.py (Rajasthan / Tamil Nadu) uses 60 C.
+# Known OPEN decision; the value is intentionally unchanged. See docs/uttarakhand/00_MASTER_OVERVIEW.md,
+# section 'Delivery and melting-target basis'.
 T_DELIVERY_C = 50.0
 # Matches 04b_climate_signature.py's corrected L_required formula (flat
 # domestic 300 L/day draw over a 7h window, SHARE_PCM=0.5 split) — the

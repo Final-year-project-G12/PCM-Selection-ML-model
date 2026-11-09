@@ -99,6 +99,9 @@ OUT_REPORT_TXT  = PREPROCESSED_DIR / "physics_validation_report.txt"
 M_W_KG = 100.0           # Tank water mass (kg)
 C_W_JKGK = 4186.0        # Water specific heat capacity (J/kg·K)
 M_P_KG = 50.0            # PCM mass (kg)
+# NOTE (2026-11-10): state-specific 50 C delivery basis. pcm_shared_config.py (Rajasthan / Tamil Nadu) uses 60 C.
+# Known OPEN decision; the value is intentionally unchanged. See docs/assam/00_MASTER_OVERVIEW.md,
+# section 'Delivery and melting-target basis'.
 T_DELIVERY_C = 50.0      # Target hot water delivery temperature (°C)
 T_M_TARGET_C = 56.0      # Target PCM melting temperature (°C) (50 + 6, indirect-system rule)
 

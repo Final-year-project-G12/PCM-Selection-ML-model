@@ -56,6 +56,8 @@ kappa. Re-run result: no longer degenerate (all 11 cluster-season cells rank cle
 survivors each) — **0/11 flip from the annual #1 pick**, a genuine null finding, not censored data:
 Rajasthan's delivery-anchored `Tm_target` rule is seasonally robust.
 
+> **CORRECTED 2026-11-10 (seasonal wording).** The current output `era5-rajasthan/outputs/seasonal_pcm_sensitivity_rajasthan.md` (file dated 2026-10-25) marks 8 of 11 (cluster, season) cells "YES", but that column compares each seasonal #1 with the *annual* #1; it is not evidence of seasonal change. Within every cluster the seasonal #1/#2/#3 are identical across seasons (cluster 1 has no winter result, < 2 survivors). Use: *the O1 ranking does not change with season within a cluster; the annual-vs-seasonal #1 mismatch in clusters 0 and 2 is unexplained.* (The seasonal re-rank is TOPSIS-only with fixed weights, whereas the annual #1 is the four-method consensus; whether that difference accounts for the mismatch has not been tested.) The "0/11 flip" and "7/9 flip" figures in this document come from earlier runs and are not what the current output shows.
+
 **This does NOT weaken Objective 3's case.** Re-checked against how comparable DRL-for-solar-
 thermal papers actually motivate their controllers: Emami et al. (2025/2026) — already an extracted
 project source (`sources/Emami2026DRL_Solar_ORC_TES_summary.md`) — motivates their DDPG controller
@@ -185,12 +187,12 @@ resumability/provenance mechanisms are summarised in `00_MASTER_OVERVIEW.md` ("C
 
 ## Missing validation
 
-External climate-classification validation: Köppen-Geiger is now wired in (ARI=0.19, NMI=0.32 vs
-GMM); NBC/ECBC Indian climate-zone classification remains stubbed. Physics-based simulation
+External climate-classification validation: Köppen-Geiger is now wired in (ARI=0.2787, NMI=0.3817 vs
+GMM, from koppen_validation_rajasthan.csv; the 0.19 / 0.32 once quoted here is stale); NBC/ECBC Indian climate-zone classification remains stubbed. Physics-based simulation
 validation (Phase 7) is now implemented and run — but returned a NEGATIVE result, which itself
 becomes a claims-boundary item (see below), not a gap to fill. The framework doc's own stated bar for
-a publishable result ("externally and physically validated") is now partially met: physically
-validated (yes, with a negative outcome that needs honest treatment), externally classification-
+a publishable result ("externally and physically validated") is now partially met: physics-tested
+(yes, with a weak, non-significant outcome that needs honest treatment), externally classification-
 validated (partially — Köppen only).
 
 ## Missing literature support
@@ -225,10 +227,8 @@ the clustering result is externally validated against a complete set of independ
 classifications (Köppen only, NBC/ECBC still stubbed), that AHP pairwise elicitation informed the
 criterion weights (it did not — Table 13 priors were used unmodified), or — the change from the
 previous version of this report — **that the MCDM ranking has been confirmed by physics simulation**.
-It has been TESTED (Phase 7 exists and ran), but the result does not confirm it: Spearman rho is
-≤0.4 (a genuine negative result) for all three clusters. The correct claim is "the MCDM ranking was
-physics-validated and the validation returned a negative result at the pipeline's current PCM-
-database size," not "the MCDM ranking is physics-validated."
+It has been TESTED (Phase 7 exists and ran), but the result does not confirm it: Spearman rho
+against Borda is -0.200 / -0.168 / +0.569 (p = 0.80 / 0.69 / 0.067; n = 4 / 8 / 11). The correct claim is "the MCDM ranking was compared with the project's lumped-enthalpy physics model; agreement was weak and not statistically significant, so predictive validity was not established," not "the MCDM ranking is physics-validated" (and not "rho <= 0.4 everywhere": cluster 2 is +0.569, and +0.633, p = 0.036, against Copeland).
 
 ## Prerequisites for a FINAL (non-provisional) result
 

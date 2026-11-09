@@ -42,6 +42,9 @@ PROC = BASE_DIR / "data" / "processed"
 RAW_SIG_FILE = PROC / "climate_signatures_raw.csv"
 OUT_FILE = PROC / "tm_cap_by_point_assam.csv"
 
+# NOTE (2026-11-10): state-specific 50 C delivery basis. pcm_shared_config.py (Rajasthan / Tamil Nadu) uses 60 C.
+# Known OPEN decision; the value is intentionally unchanged. See docs/assam/00_MASTER_OVERVIEW.md,
+# section 'Delivery and melting-target basis'.
 TM_TARGET_C = 56.0   # 50 C delivery + 6 K approach (Assam design basis)
 
 

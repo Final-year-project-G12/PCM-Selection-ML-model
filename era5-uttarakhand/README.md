@@ -177,7 +177,7 @@ python 07_feasibility_filter.py         # hard filters per cluster's Tm_target/L
                                          # feasibility_survivors_by_cluster.csv
 
 # ── Phase 6 — multi-criteria ranking ───────────────────────────────────────
-python 08_mcdm_ranking.py               # TOPSIS + GRA, entropy/AHP weights, Gaussian Tm fitness,
+python 08_mcdm_ranking.py               # TOPSIS + GRA, entropy weights blended with a stated prior (no AHP elicitation), Gaussian Tm fitness,
                                          # Borda consensus -> mcdm_topk_by_cluster.csv (headline table)
 
 # ── Phase 7 — physics-based validation ───────────────────────────────────────

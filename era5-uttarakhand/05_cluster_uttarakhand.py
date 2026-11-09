@@ -70,6 +70,8 @@ OUT_DIR = PROCESSED_DIR / "clustering"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 K_CANDIDATES = list(range(2, 11))     # smaller state -> smaller upper bound than the 4-state script
+# NOTE (2026-11-10): this file (O1 main) says K=5. O2 Uttarakhand consumed K=4 outputs (O1 commit 6be0dcd,
+# 2026-10-03, on origin/tamilnadu-data and NOT an ancestor of main). The two are not reconciled; K_FINAL is unchanged.
 K_FINAL = 5                            # <-- set after reviewing bic_selection_uttarakhand.csv, re-run
 SILHOUETTE_ACCEPT_LO, SILHOUETTE_ACCEPT_HI = 0.15, 0.40   # single-state band is a bit wider than
                                                             # the 4-state 0.15-0.35 (no artificial

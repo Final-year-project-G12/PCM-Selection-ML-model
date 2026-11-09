@@ -1,5 +1,7 @@
 # 01 — Project Context
 
+> ⚠️ **STALE NUMBERS FLAGGED 2026-11-10.** This document was written before the Assam re-run of 2026-10-25/28 (files dated 2026-09-28 or earlier). Where it disagrees with the files, the files win: `Tm_target` is 56 C nominal and 49.4-50.3 C capped (not 44 C); the K = 3 GMM covariance is diagonal; the physics comparison on disk is `era5-assam/data/preprocessed/validation_comparison_report.txt` (35 candidates per cluster; Spearman rho against the delivery rank -0.28 / -0.30 / -0.28, against the solar-fraction rank +0.63 / +0.62 / +0.64; its own verdict is "partially supported / inconclusive"; it ranks the historical K = 4 MCDM output, not a K = 3 ranking). See "Corrections applied 2026-11-10" in `00_MASTER_OVERVIEW.md`.
+
 ## Identity
 
 "OBJECTIVE 1 — IMPLEMENTATION PLAN," Climate-Region-Aware PCM Recommendation Framework, Version 3.0
@@ -35,7 +37,7 @@ and real-time grid operation.
 | **D7: MCDM Ranking Engine** | Multi-method ranking & consensus | **Governed Final** — $K=3$: **NOT PERFORMED** ($n_{\text{confirmed}}=0$); historical pre-audit $K=4$ ranking preserved as benchmark |
 | **D8: Monte Carlo Analysis** | Weight and property uncertainty propagation | **Governed Final** — $K=3$: **SKIPPED** ($n_{\text{draws}}=0$); historical pre-audit $K=4$ 5,000-draw stability preserved |
 | **D9: Sub-Hourly Physics Validation**| 10-year dynamic tank simulation | **Complete** — $\Delta t=300\text{ s}/150\text{ s}$, 4-state enthalpy model, 24 runs, First-Law error = 0.0000%, 100% spin-up convergence |
-| **D10: Validation Comparison** | MCDM vs. physics performance comparison | **Complete** — Dual-level assessment; Spearman $\rho = -0.52$ to $-0.64$; verdict: **NOT PHYSICALLY SUPPORTED** |
+| **D10: Validation Comparison** | MCDM vs. physics performance comparison | **Complete** — Dual-level assessment; Spearman $\rho = -0.28$ to $-0.30$ against the delivery rank and $+0.62$ to $+0.64$ against the solar-fraction rank (current `validation_comparison_report.txt`, 2026-10-28; earlier text said $-0.52$ to $-0.64$); verdict: **NOT PHYSICALLY SUPPORTED** |
 | **D11: Consolidation & Manifest** | Thesis-ready outputs and verification | **Complete** — Master manifest (31 entries), 10 thesis tables, 10 thesis figures; master verification passes 100% |
 
 ## Novelty Positions (§3, Table 3)

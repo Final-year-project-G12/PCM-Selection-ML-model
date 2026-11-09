@@ -206,7 +206,7 @@ humidity, and an intra-state gradient from the Brahmaputra floodplain to the hil
 | D3 | Regime clusters + external validation | Partial — k=4 produced; Köppen-Geiger **not** wired in |
 | D4 | PCM feasibility-survivor set | **Blocked** — see §3.1 |
 | D5 | MCDM ranking + MC confidence | Code complete; depends on D4 |
-| D6 | Physics-validated ranking | Code complete; depends on D4/D5 |
+| D6 | Physics-model comparison of the ranking | Code complete; depends on D4/D5 (no K=3 MCDM ranking exists) |
 | D7 | Recommendation cards | Code complete; three field-name bugs (§3.5) |
 | D8 | Methodology write-up | This document + `docs/assam/` |
 
@@ -218,7 +218,7 @@ humidity, and an intra-state gradient from the Brahmaputra floodplain to the hil
 | N2 | Two-tier climate signature | Tier 1 sun-event (ERA5) + Tier 2 daily-integral (NASA POWER hourly → daily). Implemented; index list differs from the docs (§7). |
 | N3 | Corrected 42–70 °C SWH-specific PCM band | Enforced in `06` (`in_absolute_band`) and `07` (constraint 2). |
 | N4 | Top-3 + method-agreement reporting | Borda + Copeland + Kendall's W per cluster; 5,000-draw MC. Implemented as documented. |
-| N5 | Physics-validated ranking | `10_physics_validation.py` implemented and run; genuine negative result reported. |
+| N5 | Ranking compared with a physics model | `10_physics_validation.py` implemented and run; compared against the historical K=4 ranking only (no K=3 ranking exists); mixed result, see `docs/assam/00_MASTER_OVERVIEW.md`. |
 | N6 | Population-weighted sampling | `00a`, `COVERAGE_TARGET = 0.875`. Implemented as documented. |
 
 **Do not conflate N1–N6 with RG1–RG5.** N1–N6 are the framework doc's own novelty

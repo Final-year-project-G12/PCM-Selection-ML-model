@@ -19,7 +19,7 @@ readiness verdict for the `era5-uttarakhand/` pipeline.
 | 4 — Regime Clustering | `05`, `05b` | **COMPLETE** | **K = 5**, GMM full covariance; sizes **12 / 9 / 3 / 7 / 14**; silhouette 0.279 |
 | 5 — Feasibility Filtering | `06`, `07`, `07b` | **COMPLETE, RESOLVED 2026-09** | 55-candidate database; window [52, 65] °C at Tm_target=57; **29/30/29/27/29 survivors — no longer identical**, since `07b`'s regime-cap bug is fixed (Clusters 1/2 get 55.16C/56.51C) |
 | 6 — MCDM Ranking | `08` | **COMPLETE, RESOLVED 2026-09** | TOPSIS + GRA + PROMETHEE II + VIKOR + Borda (was TOPSIS+GRA only); **PureTemp 58 #1 in Clusters 0/2/3/4, PureTemp 53 in Cluster 1**; Kendall's W 0.708-0.842 per cluster (was pooled TOPSIS-vs-GRA ρ = −0.930, a two-method-era figure) |
-| 7 — Physics Validation | `10_physics_validation.py` | **COMPLETE, RESOLVED 2026-09** | Backward-Euler grey-box tank model, two solver bugs fixed (verified against `scipy.integrate.solve_ivp`); **0% in [54%, 84%] SF band** (actual ~15-19%) — the previous 92%/+0.124 figures were inflated by those bugs and are not valid; current per-cluster ρ ranges −0.227 to +0.171, none significant |
+| 7 — Physics Validation | `10_physics_validation.py` | **COMPLETE, RESOLVED 2026-09** | Backward-Euler grey-box tank model, two solver bugs fixed (verified against `scipy.integrate.solve_ivp`); **0% in [54%, 84%] SF band** (actual ~15-19%) — the previous 92%/+0.124 figures were inflated by those bugs and are not valid; current per-cluster ρ ranges −0.338 to +0.169 (n = 20, all p >= 0.14; file `physics_validation_spearman.csv`), none significant; predictive validity not established |
 | 8 — Recommendation Cards | `09` | **CODE COMPLETE, OUTPUT REGENERATED 2026-09 (still not committed — git-ignored)** | 5 cards; #1 is PureTemp 58 in four clusters (a legitimate shared result, not identical-by-bug) and PureTemp 53 in Cluster 1 |
 
 ---
@@ -318,14 +318,14 @@ readiness verdict for the `era5-uttarakhand/` pipeline.
   regimes specifically, not evidence against the framework generally.
 - That the Top-3 ranking is stable, externally validated, or physics-confirmed — **still true**;
   Monte Carlo now quantifies stability (37.8-39.3% Top-3 inclusion) and physics validation now runs
-  (0% within the literature benchmark band, per-cluster ρ −0.227 to +0.171, none significant) —
+  (0% within the literature benchmark band, per-cluster ρ −0.338 to +0.169, all p >= 0.14) —
   both are honest, weak-agreement results, not confirmation.
 - ~~That RT60 is a clear winner~~ — RT60 is no longer even the consensus pick in the current
   four-method run (PureTemp 58/53 are). The current pick is decided across four methods with
   Kendall's W 0.708-0.842, materially more agreement than the old two-method Borda tie.
 - That the K = 5 partition is stable (no bootstrap) or externally valid (no Köppen-Geiger) — still
   true, unaddressed by the 2026-09 fixes.
-- That AHP informed the weights (it did not — a fixed placeholder prior was used) — still true.
+- That AHP informed the weights (it did not — entropy weights were blended with a fixed placeholder prior) — still true. Note (2026-11-10): O1 main is K = 5 but O2 Uttarakhand used K = 4 outputs (commit `6be0dcd`, not on main); see `00_MASTER_OVERVIEW.md`.
 - ~~That soft cluster membership captured boundary behaviour (all 45 points came back at 1.000).~~
   **Marginally improved**: `covariance_type` was fixed from `full` to `diag` (addressing genuine
   overdetermination), but 43/45 points still round to 1.000 in the current run — the practical

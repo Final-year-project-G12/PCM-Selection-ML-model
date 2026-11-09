@@ -1,5 +1,7 @@
 # 20 — Implementation Issues: Consolidated Audit & Resolution Log
 
+> ⚠️ **STALE NUMBERS FLAGGED 2026-11-10.** This document was written before the Assam re-run of 2026-10-25/28 (files dated 2026-09-28 or earlier). Where it disagrees with the files, the files win: `Tm_target` is 56 C nominal and 49.4-50.3 C capped (not 44 C); the K = 3 GMM covariance is diagonal; the physics comparison on disk is `era5-assam/data/preprocessed/validation_comparison_report.txt` (35 candidates per cluster; Spearman rho against the delivery rank -0.28 / -0.30 / -0.28, against the solar-fraction rank +0.63 / +0.62 / +0.64; its own verdict is "partially supported / inconclusive"; it ranks the historical K = 4 MCDM output, not a K = 3 ranking). See "Corrections applied 2026-11-10" in `00_MASTER_OVERVIEW.md`.
+
 Ranked by severity. Fully audited and resolved items demonstrate the project's rigorous self-correction methodology.
 
 ---
@@ -20,7 +22,7 @@ Ranked by severity. Fully audited and resolved items demonstrate the project's r
 
 ### 1.4 Decision-Theoretic vs. Dynamic Physics Divergence (Phase 10) — RESOLVED
 - **Prior Ambiguity**: Unclear whether historical MCDM rankings were physically supported.
-- **Audited Resolution**: Executed a dual-level assessment (`10_validation_comparison.py`). Level 1 confirmed that under $K=3$ governance, formal MCDM was **`NOT PERFORMED`** ($n_{\text{confirmed}}=[0,0,0]$). Level 2 retrospective evaluation revealed negative rank correlation ($\rho = -0.52$ to $-0.64$, Top-1 agreement $0\%$). Scientific verdict: **`NOT PHYSICALLY SUPPORTED`**, conclusively diagnosed as a thermodynamic threshold mismatch between the $50^\circ\text{C}$ delivery requirement and the $44^\circ\text{C}$ Gaussian MCDM target.
+- **Audited Resolution**: Executed a dual-level assessment (`10_validation_comparison.py`). Level 1 confirmed that under $K=3$ governance, formal MCDM was **`NOT PERFORMED`** ($n_{\text{confirmed}}=[0,0,0]$). Level 2 retrospective evaluation revealed negative rank correlation ($\rho = -0.28$ to $-0.30$ against the delivery rank and $+0.62$ to $+0.64$ against the solar-fraction rank (current `validation_comparison_report.txt`, 2026-10-28; earlier text said $-0.52$ to $-0.64$), Top-1 agreement $0\%$). Scientific verdict: **`NOT PHYSICALLY SUPPORTED`**, conclusively diagnosed as a thermodynamic threshold mismatch between the $50^\circ\text{C}$ delivery requirement and the $44^\circ\text{C}$ Gaussian MCDM target.
 
 ### 1.5 Pipeline-Version Inconsistency ($K=4$ vs. $K=3$) — RESOLVED
 - **Prior Defect**: Silently mixing preliminary 4-cluster results with the finalized 3-cluster model.

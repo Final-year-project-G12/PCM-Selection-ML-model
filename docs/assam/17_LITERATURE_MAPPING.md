@@ -1,5 +1,7 @@
 # 20 — Literature Mapping (Assam)
 
+> **2026-11-10 note (citation status, checked against `.claude/Sources/references.bib`; nothing invented).** The bib already holds entries for TOPSIS (`Hwang1981`), PROMETHEE (`Brans1985`, flagged VERIFY), VIKOR (`Opricovic2004`, `Opricovic1998`, flagged VERIFY), GRA (`Deng1982`), AHP (`Saaty1980`), SPA (`Reda2004`), clear-sky (`Ineichen2002`), MICE (`vanBuuren2011`) and quantile mapping (`Cannon2015`, flagged VERIFY); this document does not cite them yet. Not in the bib: Borda / Saari aggregation and Shannon / Zeleny entropy weighting. Clustering caveats: `Baudry2010CombiningMixtureComponents`, `Baldo2022WeatherRegimesProbabilistic`, `Babanov2023WeatherRegimeClustering` (Babanov, Semenov and Mokhov).
+
 ## Method
 
 Sources checked: (1) `PCM-Selection-ML-model/Sources/` — 21 full paper summaries, (2) the framework
@@ -40,7 +42,7 @@ Classification of supporting evidence:
 | Coupled Water–PCM Grey-Box Thermal Model | Phase 9 (`10_physics_validation.py`) | Model-class foundation: Bony & Citherlet (2007), *Energy and Buildings* 39(9); Energy conservation & first-law formulation: Barqawi (2025), *Muthanna J. Eng. Technol.* 13(3) | Strong (for model class & energy balance equations). Sub-hourly discretization, 4-state hysteresis loop, and boundary clipping are project-specific numerical implementations |
 | Domestic draw profile (07:00 & 19:00 IST) | Phase 9 (`10_physics_validation.py`) | ASHRAE Standard 90.2 §8.9.4 (bimodal domestic draw profile) | Moderate — qualitative bimodal schedule supported; exact 50 L / 50 L volume split is project-specific |
 | Historical solar fraction benchmark (54–84%) | Pre-audit calibration reference | Framework doc Table 16 (historical indicative target; Phase 9 10-year simulation yielded 47.9–75.3% across candidates) | Historical reference — calibration guide only, not final Phase 9 output |
-| Dual-Level MCDM vs Physics Comparison | Phase 10 (`10_validation_comparison.py`) | Retrospective validation framework; Spearman rank correlation ($\rho = -0.52$ to $-0.64$) | Strong — rigorous empirical test of whether MCDM rankings are physically supported |
+| Dual-Level MCDM vs Physics Comparison | Phase 10 (`10_validation_comparison.py`) | Retrospective validation framework; Spearman rank correlation ($\rho = -0.28$ to $-0.30$ against the delivery rank and $+0.62$ to $+0.64$ against the solar-fraction rank (current `validation_comparison_report.txt`, 2026-10-28; earlier text said $-0.52$ to $-0.64$)) | Strong — rigorous empirical test of whether MCDM rankings are physically supported |
 
 ---
 

@@ -1,5 +1,7 @@
 # MCDM Ranking & Physics Validation Results: Assam Comprehensive Reconciliation
 
+> ⚠️ **STALE NUMBERS FLAGGED 2026-11-10.** This document was written before the Assam re-run of 2026-10-25/28 (files dated 2026-09-28 or earlier). Where it disagrees with the files, the files win: `Tm_target` is 56 C nominal and 49.4-50.3 C capped (not 44 C); the K = 3 GMM covariance is diagonal; the physics comparison on disk is `era5-assam/data/preprocessed/validation_comparison_report.txt` (35 candidates per cluster; Spearman rho against the delivery rank -0.28 / -0.30 / -0.28, against the solar-fraction rank +0.63 / +0.62 / +0.64; its own verdict is "partially supported / inconclusive"; it ranks the historical K = 4 MCDM output, not a K = 3 ranking). See "Corrections applied 2026-11-10" in `00_MASTER_OVERVIEW.md`.
+
 **Document**: `docs/assam/MCDM_AND_PHYSICS_RESULTS_EXPLANATION.md`  
 **Purpose**: Comprehensive technical reconciliation of Phase 6 Feasibility, Phase 7/8 MCDM Governance, Phase 9 Dynamic Physics Simulation, and Phase 10 Validation for Assam.  
 **Audience**: Project Reviewers, Collaborators, and Viva Committee.
@@ -25,7 +27,7 @@ A common question arises when reviewing `docs/assam/09_PHASE_7_8_AUDIT.md` and `
 4. **Phase 10 Negative Validation Finding:**
    * Decision-theoretic proximity scoring showed **negative correlation** with true thermal performance ($\rho = -0.52$ to $-0.64$).
    * **Scientific Verdict**: **`NOT PHYSICALLY SUPPORTED`**.
-   * Consequently, Objective 2 directly uses the physics-validated materials: **`savE® OM48`** (Regimes 0 & 1) and **`savE® OM46`** (Regime 2).
+   * Consequently, Objective 2 uses the materials ranked highest by the O1 physics model's delivery metric (a shortlist from that model, not an MCDM-validated one): **`savE® OM48`** (Regimes 0 & 1) and **`savE® OM46`** (Regime 2).
 
 ---
 
@@ -117,7 +119,7 @@ Rather than accepting the mathematical MCDM score at face value, Phase 9 subject
 
 ## 5. Downstream Objective 2 Integration
 
-Objective 2 (`Objective---2/objective2-assam`) consumes the **Physics-Validated Candidate Universe**, completely bypassing the flawed historical MCDM choice:
+Objective 2 (`Objective---2/objective2-assam`) consumes the **Physics-Ranked Candidate Universe** (named "Physics-Validated Candidate Universe" in `assam.yaml`; a ranking by the physics model, not a validation of those PCMs), completely bypassing the flawed historical MCDM choice:
 
 | Regime ID | Climate Signature | Medoid Point | Objective 2 Selected PCM | Rationale | Useful Energy Delivered |
 | :---: | :---: | :---: | :---: | :---: | :---: |

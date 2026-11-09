@@ -1,5 +1,7 @@
 # 22 — Final Project Readiness & Verification Report: Assam
 
+> ⚠️ **STALE NUMBERS FLAGGED 2026-11-10.** This document was written before the Assam re-run of 2026-10-25/28 (files dated 2026-09-28 or earlier). Where it disagrees with the files, the files win: `Tm_target` is 56 C nominal and 49.4-50.3 C capped (not 44 C); the K = 3 GMM covariance is diagonal; the physics comparison on disk is `era5-assam/data/preprocessed/validation_comparison_report.txt` (35 candidates per cluster; Spearman rho against the delivery rank -0.28 / -0.30 / -0.28, against the solar-fraction rank +0.63 / +0.62 / +0.64; its own verdict is "partially supported / inconclusive"; it ranks the historical K = 4 MCDM output, not a K = 3 ranking). See "Corrections applied 2026-11-10" in `00_MASTER_OVERVIEW.md`.
+
 ## Overall Implementation Status
 
 **All 11 phases (Phase 1: Data Collection → Phase 11: Outputs Consolidation) are fully implemented, audited, locked, and automated with verified outputs on real 10-year Assam climate data.** 
@@ -22,7 +24,7 @@ The pipeline distinguishes strictly between **Final Locked $K=3$ Governance** an
 | **Phase 7: MCDM Ranking** | Multi-method ranking engine | **GOVERNED** | Final $K=3$: **`NOT PERFORMED`** ($n_{\text{confirmed}}=0$); Historical $K=4$ preserved as benchmark. |
 | **Phase 8: Monte Carlo** | Stochastic uncertainty | **GOVERNED** | Final $K=3$: **`SKIPPED`** ($n_{\text{draws}}=0$); Historical $K=4$ 5,000-draw reference preserved. |
 | **Phase 9: Physics Validation** | 10-year sub-hourly simulation | **COMPLETE** | $\Delta t=300\text{ s}/150\text{ s}$, 24 runs; First-Law error = $0.0000\%$; 100% spin-up convergence. |
-| **Phase 10: Comparison** | MCDM vs. physics performance | **COMPLETE** | Scientific verdict: **`NOT PHYSICALLY SUPPORTED`** ($\rho = -0.52$ to $-0.64$, Top-1 agreement $0\%$). |
+| **Phase 10: Comparison** | MCDM vs. physics performance | **COMPLETE** | Scientific verdict: **`NOT PHYSICALLY SUPPORTED`** ($\rho = -0.28$ to $-0.30$ against the delivery rank and $+0.62$ to $+0.64$ against the solar-fraction rank (current `validation_comparison_report.txt`, 2026-10-28; earlier text said $-0.52$ to $-0.64$), Top-1 agreement $0\%$). |
 | **Phase 11: Consolidation** | Deliverables & verification | **VERIFIED** | Master manifest (31 entries), 10 tables, 10 figures; `final_project_verification.py` passes 100%. |
 
 ---
@@ -37,7 +39,7 @@ The pipeline distinguishes strictly between **Final Locked $K=3$ Governance** an
    - The Phase 9 numerical simulation represents an industry-grade dynamic modeling benchmark: 10 continuous chronological years at 5-minute timesteps with exact duration-overlap shortwave reconstruction ($\text{error} = 0.000000\%$) and 4-state path-dependent enthalpy modeling ($\text{cumulative First-Law error} = 0.0000\%$).
 
 3. **Groundbreaking Negative Validation Finding (Phase 10)**:
-   - Rather than concealing disagreement, Phase 10 establishes that decision-theoretic Gaussian target proximity ($\rho = -0.52$ to $-0.64$, Top-1 agreement $0\%$) cannot predict dynamic thermal storage performance when operational thresholds govern delivery. This represents an impactful, publication-ready research finding.
+   - Rather than concealing disagreement, Phase 10 establishes that decision-theoretic Gaussian target proximity ($\rho = -0.28$ to $-0.30$ against the delivery rank and $+0.62$ to $+0.64$ against the solar-fraction rank (current `validation_comparison_report.txt`, 2026-10-28; earlier text said $-0.52$ to $-0.64$), Top-1 agreement $0\%$) cannot predict dynamic thermal storage performance when operational thresholds govern delivery. This represents an impactful, publication-ready research finding.
 
 4. **Complete Automation & Master Verification**:
    - All 11 phases are inventoried in `final_output_manifest.csv` (31 items), supported by 10 publication-ready tables (`final_outputs/tables/`) and 10 publication-ready figures (`final_outputs/visuals/`).

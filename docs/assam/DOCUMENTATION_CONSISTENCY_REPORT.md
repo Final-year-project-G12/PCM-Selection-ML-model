@@ -1,5 +1,7 @@
 # Documentation Consistency & Synchronization Report: Assam (Phases 1–11)
 
+> ⚠️ **STALE NUMBERS FLAGGED 2026-11-10.** This document was written before the Assam re-run of 2026-10-25/28 (files dated 2026-09-28 or earlier). Where it disagrees with the files, the files win: `Tm_target` is 56 C nominal and 49.4-50.3 C capped (not 44 C); the K = 3 GMM covariance is diagonal; the physics comparison on disk is `era5-assam/data/preprocessed/validation_comparison_report.txt` (35 candidates per cluster; Spearman rho against the delivery rank -0.28 / -0.30 / -0.28, against the solar-fraction rank +0.63 / +0.62 / +0.64; its own verdict is "partially supported / inconclusive"; it ranks the historical K = 4 MCDM output, not a K = 3 ranking). See "Corrections applied 2026-11-10" in `00_MASTER_OVERVIEW.md`.
+
 > **Correction (2026-09-14 code-grounded re-audit):** this report's "ALL CLAIMS VERIFIED" verdict
 > (§1) was based on synchronizing `docs/assam/*.md` against other analytical *outputs* (CSVs,
 > manifests), not against a fresh line-by-line read of the pipeline source. A subsequent direct
@@ -36,7 +38,7 @@
 
 ### 2.1 Documents Created (3 Files)
 1. **`docs/assam/10_PHASE_9_AUDIT.md`**: Comprehensive audit of the 10-year sub-hourly dynamic physics simulation, 4-state path-dependent enthalpy model with supercooling hysteresis, duration-overlap SSRD reconstruction, and First-Law energy conservation ($0.0000\%$ error).
-2. **`docs/assam/23_PHASE_10_AUDIT.md`**: Detailed documentation of the dual-level assessment, negative Spearman rank correlation ($\rho = -0.52$ to $-0.64$), $0\%$ Top-1 agreement, and scientific verdict `NOT PHYSICALLY SUPPORTED`.
+2. **`docs/assam/23_PHASE_10_AUDIT.md`**: Detailed documentation of the dual-level assessment, negative Spearman rank correlation ($\rho = -0.28$ to $-0.30$ against the delivery rank and $+0.62$ to $+0.64$ against the solar-fraction rank (current `validation_comparison_report.txt`, 2026-10-28; earlier text said $-0.52$ to $-0.64$)), $0\%$ Top-1 agreement, and scientific verdict `NOT PHYSICALLY SUPPORTED`.
 3. **`docs/assam/24_PHASE_11_AUDIT.md`**: Full documentation of Phase 11 master outputs, including the 31-entry manifest (`final_output_manifest.csv`), 10 thesis tables (`final_outputs/tables/`), 10 thesis figures (`final_outputs/visuals/`), and automated verification.
 
 ### 2.2 Documents Modified (20 Files)
@@ -79,7 +81,7 @@
 | **Phase 8 Monte Carlo** | Unqualified claim of 5,000 draws | Final $K=3$: **`SKIPPED`** ($n_{\text{draws}}=0$); historical $K=4$ benchmark | `table08_monte_carlo_stability_k3.csv` |
 | **Phase 9 Physics** | Daily lumped tank model | **10-year sub-hourly ($\Delta t=300\text{ s}/150\text{ s}$) dynamic model** | `physics_validation_results_assam.csv` |
 | **Night Clamping (Phase 9)** | Inaccurate phrasing "zero-loss night clamping" | **Duration-overlap SSRD reconstruction with energy conservation verified before nighttime clamping; nighttime-clamp losses were separately quantified** | `10_physics_validation.py` |
-| **Phase 10 Verdict** | Weak positive correlation | **`NOT PHYSICALLY SUPPORTED`** ($\rho = -0.52$ to $-0.64$) | `table10_mcdm_vs_physics_comparison.csv` |
+| **Phase 10 Verdict** | Weak positive correlation | **`NOT PHYSICALLY SUPPORTED`** ($\rho = -0.28$ to $-0.30$ against the delivery rank and $+0.62$ to $+0.64$ against the solar-fraction rank (current `validation_comparison_report.txt`, 2026-10-28; earlier text said $-0.52$ to $-0.64$)) | `table10_mcdm_vs_physics_comparison.csv` |
 | **Phase 11 Outputs** | Uncataloged outputs / "73 artifacts" | **31 manifest entries**, 10 thesis tables, 10 figures | `final_output_manifest.csv` |
 
 ---

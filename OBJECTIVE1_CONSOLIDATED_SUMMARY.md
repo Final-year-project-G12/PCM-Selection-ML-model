@@ -128,16 +128,17 @@ Other points worth stating plainly:
 - The simulated solar fractions of the Top-3 differ by under ~1 pp inside each cluster, so the physics model barely separates the candidates.
 - Phase 8 sweep: raising the supercooling penalty *worsens* agreement in every cluster (ρ: −0.200→−1.000, −0.168→−0.311, +0.569→+0.387 at k = 0.1–0.3).
 - Testing a 9th `thermal_margin` criterion made ρ worse in Clusters 0 and 2, so it was left off by default.
-- Seasonal sensitivity (`11_seasonal_pcm_sensitivity.py`): **8 of 11** valid (cluster, season) cells flip the annual #1 pick — see §7 for why this matters.
+- Seasonal sensitivity (`11_seasonal_pcm_sensitivity.py`): the output marks 8 of 11 valid (cluster, season) cells "YES", but that compares each seasonal #1 with the *annual* #1 and is not evidence of seasonal change. **The O1 ranking does not change with season within a cluster; the annual-vs-seasonal #1 mismatch in clusters 0 and 2 is unexplained** (decision 2026-11-09, wording corrected 2026-11-10; `era5-rajasthan/outputs/seasonal_pcm_sensitivity_rajasthan.md`).
+- Physics wording (corrected 2026-11-10): the MCDM ranking was compared with the project's lumped-enthalpy physics model; agreement was weak and not statistically significant, so predictive validity was not established. Against the Borda ranking p = 0.80 / 0.69 / 0.067 for n = 4 / 8 / 11; only cluster 2 against the Copeland ranking reaches nominal significance (rho = +0.633, p = 0.036, uncorrected for multiple comparisons) (`era5-rajasthan/data/processed/spearman_rho_by_cluster_rajasthan.csv`). Kendall W (1.000 / 0.768 / 0.417) is internal robustness across methods, not performance evidence; cluster 2 also has a Borda/Copeland disagreement and cluster 0 rests on n = 4.
 
 ### 4.2 Tamil Nadu (re-run 2026-09-16)
 133 points (87.5 %), **k = 3** (auto-selected; a forced k = 5 was tried and reverted because it was the worst of 2–5 on silhouette and bootstrap ARI). κ-calibrated survivors **8 / 10 / 8** (n = 26). 9 criteria (Table 13 + `thermal_margin`), 4 methods, 5,000 MC draws. Kendall's W 0.848 / 0.477 / 0.780. Consensus #1 is `RT57HC` in all three clusters (flagged for an independent sanity check). Mean Spearman ρ = +0.169 (+0.381 / +0.103 / +0.024), none statistically significant (n = 8–10). Köppen raster missing in this copy.
 
 ### 4.3 Uttarakhand (older design basis)
-45 points, **K = 5** (diag GMM), silhouette 0.28, 55-row database, `Tm_target` still the old **57 °C** (50 + 7). Survivors 29 / 30 / 29 / 27 / 29 (regime cap from `07b` genuinely lowers the target for Clusters 1 and 2 to 55.16 / 56.51 °C). #1 is PureTemp 58 in Clusters 0/2/3/4 and PureTemp 53 in Cluster 1. Kendall's W 0.708–0.842. Physics: 0 % of simulations land in the 54–84 % band (≈12–19 %), ρ from −0.338 to +0.169, none significant. This state was **not** moved to the 60 °C delivery basis.
+45 points, **K = 5** (diag GMM), silhouette 0.28, 55-row database, `Tm_target` still the old **57 °C** (50 + 7). Survivors 29 / 30 / 29 / 27 / 29 (regime cap from `07b` genuinely lowers the target for Clusters 1 and 2 to 55.16 / 56.51 °C). #1 is PureTemp 58 in Clusters 0/2/3/4 and PureTemp 53 in Cluster 1. Kendall's W 0.708–0.842. Physics: 0 % of simulations land in the 54–84 % band (≈12–19 %), ρ from −0.338 to +0.169, none significant. This state was **not** moved to the 60 °C delivery basis. **K = 5 is O1 main; O2 Uttarakhand used K = 4 outputs** (O1 commit `6be0dcd`, 2026-10-03, on `origin/tamilnadu-data`, not an ancestor of main); the two are not reconciled. Physics: n = 20 per cluster, all p >= 0.14 (`pcm/physics_validation_spearman.csv`); weights are entropy blended with the stated priors (`AHP_PRIOR`), no AHP elicitation. No Köppen-Geiger or NBC/ECBC comparison and no bootstrap stability exist for Uttarakhand.
 
 ### 4.4 Assam (own 11-phase variant)
-129 points (87.8 %), **K = 3** GMM (full covariance, 5 features, BIC 1574.94, bootstrap ARI 0.629), `Tm_target` = 44 °C (delivery 50 °C, ΔT 6 K), 58-PCM database. Under the final K = 3 and strict filtering, **zero confirmed survivors in every cluster** (one conditional: n-Tetracosane C24), so formal MCDM was *not performed* and Monte Carlo *skipped*. The older K = 4 ranking (RT44HC unanimous) was retained only as a labelled historical artefact; compared against a 10-year sub-hourly physics run it gave ρ = −0.52 to −0.64, Top-1 agreement 0 % → verdict "not physically supported" (delivering at 50 °C favours PCMs melting nearer 51 °C than the 44 °C target).
+80 points in the current files (older text, and the O2 input copy, say 129 / 87.8 %), **K = 3** GMM (**diagonal** covariance, 5 features: `05_cluster_assam.py:95,162`; on-disk BIC at K = 3 = 1030.97 and mean bootstrap ARI 0.694 over 500 resamples, `data/processed/clustering/`; the earlier "full covariance, BIC 1574.94, ARI 0.629" is not what the script or files show), `Tm_target` = 56 °C nominal (delivery 50 °C + ΔT 6 K; capped 50.31 / 49.36 / 49.41 °C), 58-PCM database. This is the legacy Assam chain; no Köppen-Geiger or NBC/ECBC comparison exists for it. Under the final K = 3 and strict filtering, **zero confirmed survivors in every cluster** (one conditional: n-Tetracosane C24), so formal MCDM was *not performed* and Monte Carlo *skipped*. The older K = 4 ranking (RT44HC unanimous) was retained only as a labelled historical artefact; compared against a 10-year sub-hourly physics run (35 candidates per cluster) the current `validation_comparison_report.txt` (2026-10-28) gives ρ = −0.284 / −0.300 / −0.281 against the delivery rank (p ≈ 0.08-0.10) and +0.626 / +0.621 / +0.639 against the solar-fraction rank (p <= 0.0001), Top-1 agreement 0 of 3, and its own verdict is "partially supported / inconclusive". The earlier "ρ = −0.52 to −0.64, not physically supported" is not reproduced by the files. Because no K = 3 MCDM ranking exists, this compares physics only with the historical K = 4 ranking and validates no current ranking.
 
 ### 4.5 Cross-state differences to keep in mind
 
@@ -146,9 +147,19 @@ Other points worth stating plainly:
 | Points | 320 | 133 | 45 | 129 |
 | k | 3 | 3 | 5 | 3 (final) |
 | Outlier handling | Hampel | Hampel | Hampel/MAD | IsolationForest |
-| `Tm_target` basis | 67 °C | 67 °C | 57 °C | 44 °C |
+| `Tm_target` basis | 67 °C | 67 °C | 57 °C | 56 °C |
 | MCDM state | complete | complete | complete | not performed at K = 3 |
-| Physics verdict | mixed | weak, n.s. | weak, n.s. | not supported (K = 4) |
+| Physics verdict | weak, n.s. against Borda (cluster 2 vs Copeland p = 0.036) | weak, n.s. | weak, n.s. | mixed / inconclusive (vs historical K = 4 ranking) |
+
+### 4.6 Delivery and melting-target basis (versioned table, v2026-11-10; Rajasthan, Uttarakhand, Assam)
+
+| State | O1 delivery basis | O1 Tm target (nominal) | Capped targets actually used | O2 delivery target | PCM limit |
+|---|---|---|---|---|---|
+| Rajasthan | 60 °C (`pcm_shared_config.py:50`; `era5-rajasthan/physics_lib.py:490`) | 67 °C (`pcm_shared_config.py:52`) | 55.47 / 61.06 / 59.19 °C (`cluster_profiles_rajasthan.csv`, `Tm_target_capped_C`) | 45 °C (`objective2-rajasthan/configs/system_config_shared.yaml:84`) | 65 °C (same file, :63) |
+| Uttarakhand | 50 °C own constants (`era5-uttarakhand/04b_climate_signature.py:66`, `10_physics_validation.py:245`, `11_level_b_seasonal_analysis.py:76`) | 57 °C (`04b_climate_signature.py:68`) | O1 main K = 5: 57.00 / 55.16 / 56.51 / 57.00 / 57.00; O2 input K = 4: 57.00 / 57.00 / 56.51 / 55.16 (`objective2-uttarakhand/data/objective1/mcdm_topk_by_cluster.csv`) | 50 °C (`objective2-uttarakhand/configs/system_config_shared.yaml:84`) | 65 °C (:55) |
+| Assam | 50 °C own constants (`era5-assam/04b_climate_signature.py:59`, `10_physics_validation.py:105`) | 56 °C (`04b_climate_signature.py:61`; `04c_charging_ceiling_assam.py:48`) | 50.31 / 49.36 / 49.41 °C (`cluster_profiles_assam.csv`) | 45 °C (`objective2-assam/configs/system_config_shared.yaml:54`) | 65 °C (:50) |
+
+("O2" paths are under `OBJECTIVE2/Objective---2/`.) Two different things are called "delivery". O1 sizes the night discharge at the delivery basis (Rajasthan: 60 °C, because the Avargani 2021 300 L / 7 h capability was validated at 60 ± 2 °C, `pcm_shared_config.py:36-50`), whereas O2 counts hot water as delivered above its own threshold (45 °C Rajasthan and Assam, 50 °C Uttarakhand). A nominal 67 °C melting target for Rajasthan is above the 65 °C PCM limit and is not operationally validated; the capped targets above are what the filters used, and the PCMs O2 selected melt at 55-61 °C. Uttarakhand and Assam were never moved to the 60 °C basis; doing so needs a full re-run (open decision b). The per-state versions of this table are in each state's `00_MASTER_OVERVIEW.md`.
 
 ---
 
@@ -191,13 +202,15 @@ Chronological record of design-basis fixes. Each was found by a specific diagnos
 - A physics validation that was actually run, with self-tests, and reported honestly.
 
 **Cannot claim:**
-- That the ranking is *physics-confirmed*. Correct wording: "the MCDM ranking was physics-tested against the final 62-row database, with a negative result in two clusters and partial agreement in the third."
+- That the ranking is *physics-confirmed*. Correct wording: "the MCDM ranking was compared with the project's lumped-enthalpy physics model; agreement was weak and not statistically significant, so predictive validity was not established." (Rajasthan: rho −0.200 / −0.168 / +0.569 against Borda, p = 0.80 / 0.69 / 0.067.)
 - That all Top-3 lists are equally well supported. Cluster 0's list rests on **n = 4**.
-- That the weights were AHP-elicited. They were not.
+- That the weights were AHP-elicited or "AHP-weighted". They were not: Rajasthan has `AHP_PAIRWISE_MATRIX = None` (`08_mcdm_ranking.py:274`) and Uttarakhand blends entropy with the stated `AHP_PRIOR`; the wording is "entropy weights blended with the stated priors, with a capped supercooling weight".
+- That the GMM is population-weighted. Population is used for *point selection* and for *cluster profiles*; no script passes `sample_weight` into any `05_cluster_*.py` fit.
+- That BIC alone justifies the number of regimes: BIC picks a density model, not necessarily a meaningful number of climate regimes (Baudry et al. 2010; Baldo and Locatelli 2022; Babanov, Semenov and Mokhov 2023). Assam's K = 3 is not the BIC minimum on disk.
 - That the clustering is validated against NBC/ECBC. Only Köppen is wired in.
 - Rajasthan's `Tm_target` of 67 °C is a delivery-plus-approach rule; it is unsourced for T_mains (`Ta_mean − 2.0` is a placeholder; a Kusuda–Achenbach style ground-temperature model is still to do) and σ = 4 K for Tm fitness is not from a paper.
 
-**Open framing question for the paper (O3 motivation).** `CLAUDE.md` §3.4 records a 0/11 seasonal-flip result that was reframed as a positive finding ("O1's material choice is seasonally stable; O3 handles hour-by-hour variability"). That 0/11 figure predates the 2026-09-19 `Tm_fitness` fix. The current Rajasthan result is **8/11 flips**, so the earlier reframing no longer follows from the data. The O3 motivation needs to be re-decided before it is written up. Heidari et al. (2022) is not yet an extracted project source and should not be cited for specifics.
+**Open framing question for the paper (O3 motivation).** `CLAUDE.md` §3.4 records a 0/11 seasonal-flip result that was reframed as a positive finding ("O1's material choice is seasonally stable; O3 handles hour-by-hour variability"). That 0/11 figure predates the 2026-09-19 `Tm_fitness` fix. Decision 2026-11-09 (wording fixed 2026-11-10): the current output's "8 of 11" compares seasonal with annual #1 and is not evidence of seasonal change; within each cluster the seasonal ranking is identical across seasons, and the annual-vs-seasonal #1 mismatch in clusters 0 and 2 is unexplained. O3 is motivated by hour-by-hour operation under weather and demand variability, not by seasonal re-ranking. Heidari et al. (2022) is not yet an extracted project source and should not be cited for specifics.
 
 ---
 

@@ -26,7 +26,7 @@ objective's output (the per-regime PCM recommendation) as an input, not to Objec
 
 Corresponds closely to the Phase 1–8 pipeline stages: D1 validated climate dataset, D2 climate
 signature + PCA, D3 regime clusters + external validation, D4 PCM feasibility-survivor set, D5
-MCDM ranking + Monte Carlo confidence, D6 physics-validated solar-fraction ranking, D7
+MCDM ranking + Monte Carlo confidence, D6 physics-model comparison of the ranking (solar fraction; weak, not significant), D7
 recommendation cards, D8 (implicit) the write-up/methodology section itself, which this
 documentation set is designed to directly support.
 
@@ -52,8 +52,8 @@ PCM-SWH literature:
 | N2 | Two-tier climate signature (sun-event + daily-integral) vs a single representative temperature |
 | N3 | Corrected 42–70°C SWH-specific PCM band vs 18–28°C building-thermal-comfort band (a common confusion in adjacent literature) |
 | N4 | Top-3 + explicit method-agreement/consensus reporting vs a single declared "winner" PCM |
-| N5 | Physics-validated ranking (Phase 7) vs a self-referential MCDM-only result |
-| N6 | Population-weighted sampling/regime discovery vs uniform-grid or arbitrary-city sampling |
+| N5 | Ranking compared against a physics model (Phase 7; agreement weak and not significant) vs a self-referential MCDM-only result |
+| N6 | Population-weighted sampling (and population-weighted cluster profiles) vs uniform-grid or arbitrary-city sampling |
 
 ## Important disambiguation: N1–N6 vs RG1–RG5
 

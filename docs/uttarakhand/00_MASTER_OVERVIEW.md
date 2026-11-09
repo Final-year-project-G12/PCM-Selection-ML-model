@@ -1,11 +1,46 @@
 # 00 — Master Overview: ERA5 Uttarakhand Climate → PCM Selection Pipeline
 
+## Corrections applied 2026-11-10
+
+Source: `.claude/Objective_1_and_Objective_2_corrected_methodology_.docx`, each item checked against the file named. **Documentation and comments only:** no pipeline was re-run and no file under `data/`, `outputs/` or `results/` changed. Code edits were comments only (the delivery-basis notes in `04b_climate_signature.py`, `10_physics_validation.py`, `11_level_b_seasonal_analysis.py` and the K note in `05_cluster_uttarakhand.py`).
+
+### Delivery and melting-target basis (versioned table, v2026-11-10)
+
+| State | O1 delivery basis | O1 Tm target (nominal) | Capped targets actually used for ranking | O2 delivery target | PCM limit |
+|---|---|---|---|---|---|
+| Uttarakhand | 50 C, own constants (`era5-uttarakhand/04b_climate_signature.py:66`, `10_physics_validation.py:245`, `11_level_b_seasonal_analysis.py:76`); NOT imported from `pcm_shared_config.py`, which says 60 C | 57 C (`04b_climate_signature.py:68`, 50 + 7) | O1 main, K = 5: 57.00 / 55.16 / 56.51 / 57.00 / 57.00 for clusters 0-4 (`Tm_target_C_regime_capped`, `data/processed/clustering/cluster_profiles_uttarakhand.csv`). O2 input, K = 4: 57.00 / 57.00 / 56.51 / 55.16 (`OBJECTIVE2/Objective---2/objective2-uttarakhand/data/objective1/mcdm_topk_by_cluster.csv`) | 50 C (`OBJECTIVE2/Objective---2/objective2-uttarakhand/configs/system_config_shared.yaml:84`, comment there: "matches Obj1's T_DELIVERY_C") | 65 C (same file, line 55) |
+
+Two different things are called "delivery". For Uttarakhand the two meanings coincide numerically (50 C in O1 sizing and in O2), but this is **not** the Rajasthan / Tamil Nadu basis: there O1 sizes at 60 C (Avargani 2021 capability validated at 60 +/- 2 C, `pcm_shared_config.py:36-50`) and O2 counts hot water as delivered above 45 C. Moving Uttarakhand to the 60 C basis would require a full O1 and O2 re-run and has **not** been decided (open decision b). Because 57 C is below the 65 C PCM limit, no nominal target here exceeds the limit; O2's held-out PCM peaks were 62.0-64.2 C (`results/g10_heldout_results.csv`).
+
+### K = 5 (O1 main) versus K = 4 (what O2 used) - NOT reconciled
+
+`era5-uttarakhand/05_cluster_uttarakhand.py:73` has `K_FINAL = 5` (diagonal covariance) and the O1 outputs on disk have five clusters. O2 Uttarakhand was built from K = 4 outputs (four regimes, `OBJECTIVE2/Objective---2/objective2-uttarakhand/data/objective1/cluster_profiles_uttarakhand.csv`: 10 / 23 / 9 / 3 points). The K = 4 switch is O1 commit `6be0dcd` (2026-10-03, "Switch Uttarakhand clustering from K=5 to K=4 and regenerate outputs": K = 4 has the best Davies-Bouldin 0.935 and Calinski-Harabasz 28.9, tied-best silhouette 0.362, and ARI 0.91 against 0.66 at K = 5 across seeds and 80 % subsamples, according to its message). That commit is on `origin/tamilnadu-data` only and is **not an ancestor of main**. `data/processed/clustering/bic_selection_uttarakhand.csv` on disk is consistent with it (silhouette 0.362 at K = 4 against 0.279 at K = 5). Until the two are reconciled the written O1 results below (five clusters, O1 main) do not match what O2 used (four).
+
+### What changed
+
+- **Physics wording.** "Physics-validated ranking" replaced (Phase 7 row below, `12_FINAL_READINESS_REPORT.md`). Replacement: The MCDM ranking was compared with the project's lumped-enthalpy physics model; agreement was weak and not statistically significant, so predictive validity was not established. Uttarakhand (O1 main, K = 5 outputs): Spearman rho by cluster 0-4 = +0.023 / -0.168 / -0.338 / +0.169 / -0.140, n = 20 per cluster, all p >= 0.14 (`era5-uttarakhand/data/processed/pcm/physics_validation_spearman.csv`). The earlier range "-0.227 to +0.171" (and Cluster 0 = -0.097, Cluster 2 = -0.227, Cluster 3 = +0.171) did not match the file and was corrected.
+- **Weights.** "Entropy weights blended with the stated priors, with a capped supercooling weight". `08_mcdm_ranking.py:270-272` blends entropy with `AHP_PRIOR` at lambda = 0.5; no pairwise elicitation was performed, so never "AHP-weighted" or "AHP-elicited".
+- **Population.** "Population-weighted point selection and cluster profiles", never "population-weighted clustering": `sample_weight` appears nowhere in `05_cluster_uttarakhand.py`; profiles use `np.average(..., weights=population)` (`06_PHASE_4_AUDIT.md`).
+- **MCDM agreement.** Kendall W (0.708-0.842 in the K = 5 run) is internal robustness across methods, not evidence that a PCM performs best.
+- **Clustering caveats kept.** BIC picks a density model, not necessarily a meaningful number of climate regimes (Baudry et al. 2010); GMM suits overlapping signatures (Baldo and Locatelli 2022); the clustering method changes the recovered regimes (Babanov, Semenov and Mokhov 2023; author list as in `.claude/Sources/references.bib`).
+- **External validation.** None for Uttarakhand: no Koppen-Geiger or NBC/ECBC comparison exists and there is no bootstrap stability for K = 5 (no such files under `era5-uttarakhand/data/processed/`).
+
+### Already correct (verified, no edit)
+
+Diagonal covariance (`05_cluster_uttarakhand.py:114,163`); the AHP placeholder was already labelled "an honest placeholder, not a claimed AHP result" (`08_PHASE_6_AUDIT.md`); `09_PHASE_7_AUDIT.md` already lists the correct rho and p values (-0.338 p = 0.144; +0.169 p = 0.477); the master overview already said Koppen / NBC-ECBC and bootstrap stability are missing.
+
+### Still open
+
+K = 4 versus K = 5 reconciliation (open decision a); whether Uttarakhand adopts the 60 C O1 basis (open decision b); NBC/ECBC and Koppen not wired in; no AHP elicitation.
+
+---
+
 ## Project objective
 
 Final-year B.Tech CSE project (Group 12, Amrita School of Engineering, Guide: Dr. T. Deepika):
 **"Climate-Adaptive Intelligent Control and Optimization of PCM Thermal Storage for Solar Water
 Heating."** Objective 1 (the scope of this audit) builds a **climate-region-aware PCM
-recommendation framework**: turn 10 years of reanalysis climate data into population-weighted
+recommendation framework**: turn 10 years of reanalysis climate data (at population-weighted sampling points) into
 climate regimes, derive PCM performance targets per regime, and rank candidate phase-change
 materials against those targets.
 
@@ -46,7 +81,7 @@ noon, sunset) rather than a uniform grid on fixed clock hours."
    (`06_build_pcm_database.py`, `07_feasibility_filter.py`, with `07b_charging_feasibility.py`'s
    regime-dependent Tm cap now materially lowering the target for 2 of the 5 clusters), then ranks
    survivors with a **four-method MCDM stack (TOPSIS + GRA + PROMETHEE II + VIKOR)**,
-   entropy/AHP-blended weights, a Gaussian Tm-fitness transform, and a **Borda consensus with
+   entropy weights blended with the stated priors (no AHP elicitation), a Gaussian Tm-fitness transform, and a **Borda consensus with
    Kendall's W** (`08_mcdm_ranking.py`).
 7. Stress-tests the ranking with a **5,000-draw Monte Carlo** over weight/property perturbations
    (`09b_monte_carlo_stability.py`) and validates it against a **grey-box lumped-enthalpy PCM tank
@@ -152,7 +187,7 @@ FIGURE / VERIFICATION LAYER (not part of the numbered phase chain)
 | 5 — Feasibility Filtering | `06`, `07` (`07b`) | **RUN** | 55-candidate database; melting window [52, 65] °C; **29/30/29/27/29 candidates survive in Clusters 0–4 respectively** — no longer identical, because `07b`'s regime cap (once its `poor_day_kt` normalization bug was fixed) genuinely lowers `Tm_target` for Clusters 1 and 2 |
 | 6 — MCDM Ranking | `08` | **RUN** | Four-method stack — TOPSIS + GRA + PROMETHEE II + VIKOR + Borda consensus; Top-1 is **PureTemp 58** in Clusters 0/3/4 but **PureTemp 53** in Cluster 1 and **PureTemp 58** (with a VIKOR compromise set) in Cluster 2 — see the Phase 6 table below; Kendall's W ranges 0.708–0.842 per cluster |
 | 6b — Monte Carlo Stability | `09b_monte_carlo_stability.py` | **RUN** | 5,000 draws/cluster; `n-Octacosane (C28)` has the highest Top-3-inclusion probability in every cluster (37.8%–39.3%); Top-1 retention 16.2%–18.3% — lower than other states because Uttarakhand's feasible pool (27–30 candidates/cluster) is much larger and more homogeneous |
-| 7 — Physics Validation | `10_physics_validation.py` | **RUN** | Grey-box lumped-enthalpy tank model (backward-Euler); after fixing a spurious term in the tank-temperature solve and a one-directional `Qp` latent-heat accumulator, **0% of simulations land in the published 54–84% solar-fraction benchmark band** (actual ~15–19% across all 5 clusters) — the previously-reported 92%-in-band figure was an artifact of those two bugs and is not valid. Per-cluster Spearman rho (consensus rank vs. simulated solar fraction): Cluster 0 = −0.097, Cluster 1 = −0.168, Cluster 2 = −0.227, Cluster 3 = +0.171, Cluster 4 = −0.140 — none significant at p<0.05 |
+| 7 — Physics Validation | `10_physics_validation.py` | **RUN** | Grey-box lumped-enthalpy tank model (backward-Euler); after fixing a spurious term in the tank-temperature solve and a one-directional `Qp` latent-heat accumulator, **0% of simulations land in the published 54–84% solar-fraction benchmark band** (actual ~15–19% across all 5 clusters) — the previously-reported 92%-in-band figure was an artifact of those two bugs and is not valid. Per-cluster Spearman rho (consensus rank vs. simulated solar fraction), from `physics_validation_spearman.csv` (n = 20 per cluster): Cluster 0 = +0.023, Cluster 1 = −0.168, Cluster 2 = −0.338, Cluster 3 = +0.169, Cluster 4 = −0.140 — all p >= 0.14, none significant (corrected 2026-11-10; earlier text had −0.097 / −0.227 / +0.171) |
 | 8 — Recommendation Cards | `09` | **RUN, OUTPUT NOT COMMITTED** | `recommendation_cards.md` exists on disk (regenerated against the current, corrected Phase 5–7 results) but `data/processed/` remains git-ignored, so it is not present in this repository |
 
 ## Current architecture
@@ -230,7 +265,7 @@ diagnostic · Pearson/Spearman correlation · VIF · MinMax scaling with a chron
 (**diagonal** covariance) with BIC / silhouette / Davies-Bouldin / Calinski-Harabasz model selection
 · K-Means comparison · population-weighted cluster profiling · MICE + Random-Forest +
 Predictive-Mean-Matching PCM property imputation · Gaussian Tm-fitness transform (sigma = 4 K) ·
-Shannon-entropy criterion weighting blended 0.5/0.5 with an AHP-style prior · TOPSIS (shared [0,1]
+Shannon-entropy criterion weighting blended 0.5/0.5 with a fixed prior (`AHP_PRIOR`; a placeholder, no AHP elicitation) · TOPSIS (shared [0,1]
 normalization basis, no extra vector renormalization) · Grey Relational Analysis (zeta = 0.5) ·
 PROMETHEE II · VIKOR (with both the C1 advantage and C2 stability compromise checks) · Borda count ·
 Kendall's W · regime-dependent clear-sky-reliability charging cap (`07b`, now genuinely
@@ -287,7 +322,7 @@ what the Uttarakhand pipeline demonstrably does.
 | 4 — Regime Clustering | Discovered regimes, not hand-picked zones | GMM **diagonal** covariance, K = 5 by manual selection from a BIC/silhouette table; lat/lon excluded | **Delivered** — clusters are spatially coherent without clustering on geography (silhouette 0.28). **But** no bootstrap stability and no external classification |
 | 5 — Feasibility Filtering | Corrected 42–70 °C SWH-specific PCM band | Band enforced; melting window [52, 65] °C at `Tm_target = 57` (regime-capped to 55.16/56.51 for Clusters 1/2) | **Partially delivered** — the corrosion veto cannot activate (all 55 candidates organic, and the database doesn't yet carry corrosion-class data); other Table-12 filters still unimplemented. Regime-capping now genuinely differentiates survivor counts (29/30/29/27/29) |
 | 6 — MCDM Ranking | Top-3 with explicit method-agreement reporting | TOPSIS + GRA + PROMETHEE II + VIKOR, entropy/AHP weights, Gaussian Tm fitness, Borda, Kendall's W | **Delivered** — four independent methods, Kendall's W 0.708–0.842 per cluster, VIKOR now correctly reports compromise sets (Clusters 1 and 2) instead of false single winners |
-| 7 — Physics Validation | Physics-validated ranking | Backward-Euler grey-box lumped-enthalpy tank model (`10_physics_validation.py`), Spearman rho of consensus rank vs. simulated solar fraction per cluster | **Delivered, and an honest negative result** — 0% of simulations land in the 54–84% literature benchmark band (actual ~15–19%); per-cluster rho ranges −0.227 to +0.171, none significant. This is a genuine finding once two solver bugs were fixed, not evidence the model is broken |
+| 7 — Physics Validation | Ranking compared with a physics model (not "physics-validated") | Backward-Euler grey-box lumped-enthalpy tank model (`10_physics_validation.py`), Spearman rho of consensus rank vs. simulated solar fraction per cluster | **Delivered; agreement weak and not statistically significant, so predictive validity was not established** — 0% of simulations land in the 54–84% literature benchmark band (actual ~15–19%); per-cluster rho ranges −0.338 to +0.169, n = 20, all p >= 0.14. This is a genuine finding once two solver bugs were fixed, not evidence the model is broken |
 | 8 — Recommendation Cards | Per-regime explainable output | 5 cards; population-weighted profiles; Top-3 with per-method scores and Kendall's W | **Delivered**; regenerated against the current, corrected results; output still not committed (git-ignored) |
 
 ### The central finding against the novelty claim — RESOLVED (2026-09)
@@ -310,15 +345,14 @@ and mostly the same Top-1 pick (PureTemp 58) — that remaining overlap is now a
 (those three regimes genuinely don't need a different melting-window target), not a bug. Phase 7's
 physics simulation (once its own two bugs were fixed — see `09_PHASE_7_AUDIT.md`) provides the
 further differentiation this section previously said was missing: per-cluster Spearman rho between
-MCDM rank and simulated solar fraction ranges from -0.227 to +0.171, a real, cluster-specific signal
-even though none reach statistical significance.
+MCDM rank and simulated solar fraction ranges from -0.338 to +0.169 (file value; earlier text said -0.227 to +0.171), n = 20 per cluster, all p >= 0.14: weak agreement that is not statistically significant, so it is not evidence that the ranking predicts physical performance.
 
 ### Phase -> broader-project mapping
 
 | Phase | Feeds | Nature of the contribution |
 |---|---|---|
 | 1–2 | Climate-data foundation | A validated 10-year, 45-point, dual-source Uttarakhand climate dataset |
-| 3–4 | Climate-aware recommendation (Objective 1's own gap) | Population-weighted regime discovery from a physically justified signature |
+| 3–4 | Climate-aware recommendation (Objective 1's own gap) | Regime discovery from a physically justified signature (sampled at population-weighted points; the GMM fit is not population-weighted) |
 | 5–6 | Climate-aware recommendation | Per-regime PCM screening and multi-method ranking |
 | 7 | Experimental/physics validation | **Addressed** — grey-box lumped-enthalpy tank simulation (`10_physics_validation.py`), run and validated against `scipy.integrate.solve_ivp`; an honest negative benchmark-match result (0% in-band) is itself a usable input to those objectives |
 | 8 | Design optimisation and hardware objectives | Per-regime PCM recommendations are the input those objectives would consume |
@@ -328,9 +362,9 @@ even though none reach statistical significance.
 
 - That Objective 1 addresses the DRL-control, design-optimisation or hardware-prototype gaps — it
   does not; it produces the input they consume.
-- That the K = 5 partition is externally validated — no Köppen-Geiger or NBC/ECBC comparison exists.
+- That the K = 5 partition (O1 main; O2 used K = 4) is externally validated — no Köppen-Geiger or NBC/ECBC comparison exists.
 - That the Top-3 ranking is physics-confirmed — Phase 7 was built and run, but per-cluster Spearman
-  rho (-0.227 to +0.171, none significant) shows only weak/no agreement between the MCDM rank and
+  rho (-0.338 to +0.169, all p >= 0.14) shows only weak/no agreement between the MCDM rank and
   simulated solar fraction; report this honestly rather than as confirmation.
 - That the once-identical-across-regimes result was a correct mathematical outcome of a constant
   `Tm_target` — it was traced to a real bug (`07b`'s regime cap dividing away its own signal) and is
