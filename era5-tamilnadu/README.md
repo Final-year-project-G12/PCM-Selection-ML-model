@@ -105,6 +105,18 @@ against elevation-corrected data. Headline results: k=3 climate clusters
 hand-pick); a 9-criterion MCDM engine (added `thermal_margin`, see below);
 consensus Top-1 PCM is `RT57HC` in all three clusters.
 
+**Read before quoting any validation claim** (see `docs/tamilnadu/CORRECTIONS.md`):
+this pipeline is **not** "physics-validated". Phase 7 *tested* whether the MCDM
+ranking tracks simulated solar fraction and largely found that it does not:
+mean Spearman rho = **+0.169**, per cluster +0.381 / +0.103 / +0.024, and
+**none of these is statistically significant** (n=8-10 per cluster,
+p = 0.12-0.96). 6 of 26 simulations land in the published 54-84 % band. There
+is also **no external cluster validation** - the Koppen-Geiger raster was never
+sourced into this copy and NBC/ECBC is stubbed. Criterion weights are a 50/50
+blend of Shannon-entropy weights and literature priors, **not** elicited AHP.
+The disagreement is a reported finding, not a defect; see
+`docs/tamilnadu/09_PHASE_7_AUDIT.md` section 5.
+
 **MCDM-vs-physics agreement, investigation closed**: `09_PHASE_7_AUDIT.md`
 diagnosed a negative Spearman ρ between MCDM consensus rank and Phase 7's
 physics-simulated performance in Cluster 0, traced it to no criterion

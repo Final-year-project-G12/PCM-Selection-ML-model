@@ -16,11 +16,11 @@ The Tamil Nadu recommendation pipeline is **implemented from Phase 1 through Pha
 
 ## Strongest Components
 - **Full Phase Implementation**: Complete operational loop from data download to physics-based grey-box validation and card generation.
-- **Uncertainty Propagation**: The Monte Carlo stack (N_DRAWS=5000) provides a robust confidence metric for the Top-3 ranks. Phase 6 unified with Rajasthan 2026-09-08 (8 Table-13 criteria; supercooling entropy weight capped at 2× prior; PROMETHEE native Tm; Kendall's W + pairwise method-agreement).
+- **Uncertainty Propagation**: The Monte Carlo stack (N_DRAWS=1000; 5000 for the final reported run) provides a robust confidence metric for the Top-3 ranks. Phase 6 unified with Rajasthan 2026-09-08 (8 Table-13 criteria; supercooling entropy weight capped at 2× prior; PROMETHEE native Tm; Kendall's W + pairwise method-agreement).
 - **Level B Seasonal Sensitivity**: Analyzes monsoon-dependent PCM rank flips (`11_level_b_seasonal_analysis.py`).
 - **Current PCM Run**: 62 records are screened, ranked, physics-tested, and summarized in recommendation cards.
 - **Level B Seasonal Sensitivity Findings** *(2026-09-08 unified run, k=3)*: 4 of 12 (cluster, season) combinations change their #1 PCM — Cluster 0's annual pick flips to `n-Tetracosane (C24)` in all four seasons. (Pre-unification, k=5: 4 of 20, `savE® OM55` in Summer/Monsoon for clusters 2–3.)
-- **Validation Transparency** *(figures below are from the pre-unification run and are STALE — the `data/processed/processed/` tree they lived in has been deleted; re-run Phase 5→7 to regenerate)*: the earlier physics run gave **mean Spearman $\rho = +0.177$** (per cluster −0.016, +0.717, +0.355, −0.171, −0.000) and **24 / 59** simulations inside the 54–84% benchmark band. Interpret cluster-by-cluster, not as a single global pass/fail.
+- **Validation Transparency** - **CURRENT figures, corrected 2026-11-09.** The 2026-09-16 run (k=3, n=26) gives **mean Spearman rho = +0.169** (per cluster **+0.381** / +0.103 / +0.024) and **6 / 26 (23 %)** simulations inside the 54-84 % benchmark band. **None of the per-cluster correlations is statistically significant** (n=8-10 per cluster, p = 0.12-0.96), so no value here - positive or negative - is distinguishable from zero; treat them as descriptive point estimates. Interpret cluster-by-cluster, not as a global pass/fail. *(Superseded, do not quote: the pre-unification k=5 run's rho = +0.177 over 5 clusters and 24/59 in band.)*
 
 ---
 
@@ -40,8 +40,8 @@ The Tamil Nadu recommendation pipeline is **implemented from Phase 1 through Pha
 ---
 
 ## Validation Verdict
-- **VERDICT: CODE OPERATIONAL — CLEAN RE-RUN INTO CANONICAL TREE PENDING; PHYSICS INTERPRETATION CLUSTER-BY-CLUSTER.**
-- **Reasoning**: The scripts import and resolve their inputs correctly and Phase 5 is now unified with Rajasthan. No unified run has been executed yet. The earlier (pre-unification, pre-`data/processed/processed/`-deletion) grey-box physics results were mixed (mean Spearman $\rho = +0.177$; 24/59 simulations in the 54–84% band), so PCM recommendations should be reported per cluster with stated model assumptions, not as a single global pass/fail. Re-run the CORE chain into the canonical `data/processed/` tree before final claims.
+- **VERDICT (corrected 2026-11-09): CODE OPERATIONAL - CLEAN RE-RUN COMPLETED 2026-09-16; PHYSICS AGREEMENT WEAK AND NOT STATISTICALLY SIGNIFICANT; INTERPRET CLUSTER-BY-CLUSTER.** The "re-run pending" verdict this line used to carry was left over from before the 2026-09-16 run.
+- **Reasoning (updated 2026-11-09)**: the scripts import and resolve their inputs correctly, Phase 5 is unified with Rajasthan, and **the clean CORE re-run was completed 2026-09-16** - the "no unified run has been executed yet" statement this line used to carry is obsolete. Current grey-box physics agreement is weak and not statistically significant (mean rho = +0.169; 6/26 in the 54-84 % band; p = 0.12-0.96), so PCM recommendations must be reported per cluster with stated model assumptions and **never as "physics-validated"**. The MCDM/physics disagreement is a documented finding, not a blocker - see `09_PHASE_7_AUDIT.md` section 5.
 
 ---
 
