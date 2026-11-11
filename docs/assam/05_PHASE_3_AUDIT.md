@@ -1,71 +1,148 @@
-# 05 — Phase 2.5 / 3 Audit: Quality Control & Climate Signature
+# 05 — Phase 2.5 / 3 Audit: Quality Control & Climate Signature (Assam)
+
+**Scripts:** `04_preprocess_assam.py`, `04b_climate_signature.py`
+
+**Dataset basis:** Current audited Assam Objective 1 run — 80 population-weighted points (`ASP_0001`–`ASP_0080`), with 87.8% population coverage.
+
+**Status:** Phase 2.5 / Phase 3 documentation updated to the current 80-point run. Some implementation and output-file details remain to be verified from the current run artifacts; these are marked explicitly below.
+
+---
 
 ## Phase 2.5 — Quality Control (`04_preprocess_assam.py`)
 
-**Status**: COMPLETE (Authoritative Final)
+### Processing and bounds checking
 
-### Processing & Bounds Checking
-Reads `climate_assam_points.csv` and applies physical bounds verification and outlier flagging across all **129 spatial coordinates**, outputting individual parquet partitions to `data/processed/preprocessed/parquet/{point_id}.parquet`.
+The preprocessing stage reads the combined Assam physical-climate dataset and applies physical-bound checks and multivariate outlier flagging before climate-signature construction.
 
-| Parameter | Lower Bound | Upper Bound | Enforcement Policy |
-|---|---|---|---|
-| `era5_GHI` | 0 W/m² | 1400 W/m² | Out-of-bounds flagged; physically valid extremes retained |
-| `era5_T_amb` | -30 °C | 55 °C | Bounds verification |
-| `era5_RHum` | 0 % | 100 % | Bounds verification |
-| `era5_T_dew` | -30 °C | 40 °C | Bounds verification |
+| Parameter | Lower bound | Upper bound | Enforcement policy |
+|---|---:|---:|---|
+| `era5_GHI` | 0 W/m² | 1400 W/m² | Out-of-bounds values flagged; valid extremes should be retained |
+| `era5_T_amb` | −30 °C | 55 °C | Bounds verification |
+| `era5_RHum` | 0% | 100% | Bounds verification |
+| `era5_T_dew` | −30 °C | 40 °C | Bounds verification |
 | `era5_W_spd` | 0 m/s | 50 m/s | Bounds verification |
 | `era5_P_atm` | 850 hPa | 1060 hPa | Bounds verification |
-| `era5_cloud_cover` | 0.0 | 1.0 | Fractional cloud cover |
-| `era5_precipitation` | 0 mm | 200 mm | Precipitation bounds |
+| `era5_cloud_cover` | 0.0 | 1.0 | Fractional cloud-cover bound |
+| `era5_precipitation` | 0 mm | 200 mm | Precipitation bound |
 
-### Multivariate Outlier Detection (IsolationForest)
-- **Algorithm**: scikit-learn `IsolationForest` applied to detect multivariate anomalies without assuming Gaussian normality, well-suited to Assam's heavy-tailed monsoon extremes.
-- **Strict Retention Policy**: Outliers are **flagged but never deleted** (`is_outlier` boolean flag carried forward to preserve energy totals).
-- **Output Files**: Exactly **129 parquet files** (`ASP_0001.parquet` through `ASP_0129.parquet`).
+### Multivariate outlier detection
+
+- **Algorithm documented in the Assam audit:** scikit-learn `IsolationForest`.
+- **Retention policy documented in the Assam audit:** outliers are flagged rather than deleted; the `is_outlier` flag is carried forward.
+- **Current point coverage:** the preprocessing run must correspond to the current 80-point population grid, not the historical 129-point grid.
+- **Output partition count and names:** **NOT VERIFIED** against the current output directory. The old claim of exactly 129 parquet files (`ASP_0001.parquet`–`ASP_0129.parquet`) is obsolete and must not be retained.
+
+The bounds and IsolationForest settings above are carried forward from the supplied Assam audit. Their current implementation and output counts should be checked against the present `04_preprocess_assam.py` and generated artifacts before final publication.
 
 ---
 
 ## Phase 3 — Climate Signature Construction (`04b_climate_signature.py`)
 
-**Status**: COMPLETE (Authoritative Final)
+### Purpose
 
-### Four Climate Representations
+Reduce each location's multi-year climate record to a compact set of climate descriptors for climate-regime clustering and PCM-facing target derivation.
 
-To maintain scientific traceability, the pipeline distinguishes four distinct stages of climate representation:
+### Current Assam implementation
 
-1. **Raw Physical Climate Signature (`climate_signatures_raw.csv`)**:
-   - Exactly **129 rows × 19 physical indices** in dimensional units (°C, kWh/m²/day, %, mm), all
-     computed from the event-sampled physical dataset — there is no working Tier-1/Tier-2 split in
-     the current `04b_climate_signature.py` (it never reads `daily_aggregates_assam.csv` /
-     `tier2_signature_assam.csv`).
-   - Structured into:
-     - *Thermodynamic PCA block (7 indices)*: `Ta_mean`, `Ta_p95`, `Ta_p05`, `HDD18`, `CDD24`, `RH_mean`, `elev_proxy`.
-     - *Solar/variability block, uncompressed (12 indices)*: `GHI_mean`, `GHI_daily_kWh_est`, `kt_mean`, `kt_std`, `SAI`, `cloudy_frac`, `CCI`, `HSI`, `wind_mean`, `monsoon_index`, `seasonality`, `DTR`.
-     - *Derived targets (3, not clustered)*: `Tm_target` (44.0°C), `T_mains_est`, `L_required_kWh`.
-   - `precipitation_annual`, `Ta_min_true`, `Ta_max_true` do **not** appear in the current
-     signature output, despite being listed in earlier drafts of this document.
+- The current `04b_climate_signature.py` computes **19 climate-signature indices directly from the event-sampled physical dataset**.
+- It does **not** read `daily_aggregates_assam.csv` or `tier2_signature_assam.csv`.
+- Therefore, the current Assam implementation does **not** implement a working Tier-1/Tier-2 join inside `04b_climate_signature.py`. Daily aggregates are produced separately by Phase 2, but their presence does not mean they are consumed by the current signature-construction script.
+- This is an implementation gap relative to a two-tier signature design and should be described accurately in the methodology.
 
-2. **Standardized Clustering Matrix (`climate_signatures_matrix.csv`)**:
-   - Standardized (zero mean, unit variance) across all 129 points.
-   - Normalization is applied strictly **after** temporal aggregation, avoiding aggregation bias.
+### Feature groups recorded in the earlier Assam audit
 
-3. **PCA Representation (`pca_loadings.csv`)**:
-   - Principal Component Analysis applied strictly to the 7-feature thermodynamic block to diagnose latent covariance without collapsing the solar radiation signal.
+The supplied Assam audit lists the following groups:
 
-4. **Final GMM Input Representation (5 Core Physical Features)**:
-   - Auditing revealed that fitting a full-covariance Gaussian Mixture Model on 18–19 dimensions with $N=129$ points resulted in severe over-parameterization ($D(D+1)/2 = 190$ covariance parameters per cluster).
-   - To ensure statistical power and cluster stability, the final locked GMM clustering in Phase 3 uses **5 core physical features**:
-     - `GHI_mean` (Solar resource)
-     - `Ta_mean` (Thermal baseline)
-     - `DTR` (Diurnal thermal range)
-     - `RH_mean` (Monsoon moisture proxy)
-     - `wind_mean` (Convective boundary layer cooling)
-   - This 5-feature representation produced an unambiguous global BIC minimum at **$K=3$** ($\text{BIC} = 1574.94$), with bootstrap ARI = $0.6289$.
+- **Thermodynamic block (7):** `Ta_mean`, `Ta_p95`, `Ta_p05`, `HDD18`, `CDD24`, `RH_mean`, `elev_proxy`.
+- **Solar / variability block (12):** `GHI_mean`, `GHI_daily_kWh_est`, `kt_mean`, `kt_std`, `SAI`, `cloudy_frac`, `CCI`, `HSI`, `wind_mean`, `monsoon_index`, `seasonality`, `DTR`.
+- **Derived PCM-facing quantities:** `Tm_target`, `T_mains_est`, and `L_required_kWh` are also listed separately in the earlier audit as derived targets, not clustering features.
+
+**Schema-count clarification:** the earlier document says “19 physical indices” but then lists 7 + 12 indices and separately lists 3 derived targets. Keep the 19-index count for the climate-signature feature groups; do not describe the three derived targets as additional members of those 19 indices unless the current CSV header confirms that interpretation.
+
+The earlier audit also states that `precipitation_annual`, `Ta_min_true`, and `Ta_max_true` are absent from the current signature output. Recheck the current output header before reintroducing these variables into the documented schema.
+
+### Standardization and PCA
+
+The earlier Assam audit describes:
+
+- A standardized climate-signature matrix, with normalization performed after temporal aggregation.
+- PCA applied to the thermodynamic feature block to inspect covariance without compressing the solar-radiation signal.
+- A final five-feature GMM input:
+  - `GHI_mean`
+  - `Ta_mean`
+  - `DTR`
+  - `RH_mean`
+  - `wind_mean`
+
+The current audited Assam clustering result is:
+
+| Metric | Current audited value |
+|---|---:|
+| Number of climate regimes | 3 |
+| GMM covariance type | Diagonal |
+| BIC at K=3 | 1030.97 |
+| Bootstrap mean ARI | 0.6939 |
+| Bootstrap median ARI | 0.7255 |
+| Cluster sizes | 27 / 28 / 25 |
+| Medoid point IDs | `ASP_0003`, `ASP_0036`, `ASP_0080` |
+
+These current values replace the historical K=3 result in the old Assam document (BIC 1574.94; bootstrap ARI 0.6289), which was produced using the earlier 129-point dataset / earlier clustering configuration. Do not mix the old and current metrics.
+
+**Feature-configuration verification:** the current GMM result above is the audited result. The exact current feature list, scaling artifact, PCA component count, and PCA loading output should be confirmed against the current `04b_climate_signature.py`, clustering script, and generated CSVs before claiming that every earlier implementation detail remains unchanged.
 
 ---
 
-## System Target Derivations
+## PCM-Facing Target Derivations
 
-- **Uniform Melting Target**: $T_m^{\text{target}} = 44.0^\circ\text{C}$ across all 129 sites, based on $T_{\text{delivery}} = 50.0^\circ\text{C}$ (Indian domestic SWH standard) and heat exchanger approach $\Delta T = 6.0\text{ K}$.
-- **Soil Temperature Fallback**: In the absence of recorded shallow ground temperatures, $T_{\text{soil,mean}} \approx T_{a,\text{mean}}$ is documented and applied.
-- **Mains Temperature Approximation**: $T_{\text{mains,est}} = \max(5.0,\ T_{a,\text{mean}} - 6.0\text{ K})$ in `04b_climate_signature.py`, determining the site-specific thermal charging deficit and $L_{\text{required}}$. **Note:** `10_physics_validation.py` uses a different offset (`Ta_mean − 2.0`) for its own mains-temperature estimate — the two are not reconciled across the pipeline.
+The old Assam audit records a uniform `Tm_target` of 44.0°C, based on a 50°C delivery target and a 6 K heat-exchanger approach. That is a historical design configuration and is not the current audited Objective 1 target basis.
+
+For the current Assam Objective 1 run:
+
+- **Nominal PCM melting target:** 56.0°C.
+- **Regime-specific melting-temperature caps:**
+  - Cluster 0: 49.659°C
+  - Cluster 1: 49.395°C
+  - Cluster 2: 49.437°C
+
+These are the current audited values. Do not retain the old 44.0°C uniform target as the current Assam result.
+
+The earlier Assam document also records two different mains-temperature approximations:
+- `04b_climate_signature.py`: `max(5.0, Ta_mean − 6.0 K)`.
+- `10_physics_validation.py`: `Ta_mean − 2.0 K`.
+
+The inconsistency was not reconciled in the supplied audit. **Current implementation status: NOT VERIFIED.** Do not claim these formulas have been reconciled without checking the current scripts.
+
+---
+
+## Current Dataset Reconciliation
+
+| Item | Current audited Assam basis |
+|---|---:|
+| Population-weighted grid points | 80 |
+| Point ID range | `ASP_0001`–`ASP_0080` |
+| Population coverage | 87.8% |
+| Climate regimes | 3 |
+| Cluster sizes | 27 / 28 / 25 |
+| GMM BIC at K=3 | 1030.97 |
+| Bootstrap mean ARI | 0.6939 |
+| Bootstrap median ARI | 0.7255 |
+| Current nominal PCM melting target | 56.0°C |
+| Current regime caps | 49.659 / 49.395 / 49.437°C |
+
+### Historical values to retire
+
+The following values in the original Assam file belong to the earlier 129-point run and must not be presented as current:
+
+- 129 spatial coordinates and 129 parquet partitions.
+- 129 rows in the raw climate-signature output and 129 rows in the standardized matrix.
+- GMM BIC = 1574.94 and bootstrap ARI = 0.6289.
+- Uniform `Tm_target` = 44.0°C.
+
+### Open verification items
+
+1. Confirm the current preprocessing parquet partition count and inspect whether all 80 point IDs are represented.
+2. Confirm the current raw-signature CSV row count and exact column header; reconcile the 19-index versus derived-target count wording.
+3. Confirm the current standardization and PCA configuration from the active code and outputs.
+4. Confirm whether the five-feature GMM input list remains unchanged in the current run.
+5. Reconcile the mains-temperature formula between signature construction and physics validation.
+6. Decide whether the separate daily aggregates / Tier-2 signature should be joined into the climate-signature pipeline. Until implemented, describe the current Assam signature as event-sampled and explicitly note that it does not consume the daily aggregate output.

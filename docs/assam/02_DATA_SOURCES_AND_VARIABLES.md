@@ -1,139 +1,165 @@
-# 02 — Data Sources and Variables
+# 02 — Data Sources and Variables (Assam)
 
 ## Primary Data Sources
 
 ### ERA5 (ECMWF Reanalysis v5)
-- **Provider**: Copernicus Climate Data Store (CDS), accessed via `cdsapi`
-- **Product**: ERA5 hourly data on single levels
-- **Spatial resolution**: 0.25° × 0.25° native grid
-- **Temporal coverage**: 2016–2025 (10 years)
-- **Sampling strategy**: Population-weighted grid sampling (**129 active points**, covering 87.8% of Assam's population)
-- **Download format**: NetCDF, sun-event-aligned hours (sunrise, solar noon, sunset) and full hourly series for medoids
-- **ERA5 variables downloaded**:
 
-| Variable | ERA5 Parameter | Native Unit | Notes / Role |
+- **Provider**: Copernicus Climate Data Store (CDS), accessed via `cdsapi`.
+- **Product**: ERA5 hourly data on single levels.
+- **Native spatial resolution**: 0.25° × 0.25°.
+- **Temporal coverage**: 2016–2025 (10 years).
+- **Current Assam sampling**: 80 active population-weighted grid points, IDs `ASP_0001`–`ASP_0080`.
+- **Population coverage**: 87.8% of Assam's population.
+- **Download format**: NetCDF. The pipeline uses sun-event-aligned samples (sunrise, solar noon, sunset) and full hourly series for selected medoid locations.
+
+#### ERA5 variables used
+
+| Variable | ERA5 parameter / source field | Native unit | Role / transformation |
 |---|---|---|---|
-| Solar radiation (GHI proxy) | `ssrd` (surface solar radiation downwards) | J/m² | Accumulated; converted to flux via duration-overlap |
-| Thermal radiation | `strd` (surface thermal radiation downwards) | J/m² | Accumulated; atmospheric longwave exchange |
-| 2m temperature | `t2m` | K → °C | Instantaneous dry-bulb temperature |
-| 2m dewpoint | `d2m` | K → °C | Used for Magnus-formula RH derivation |
-| 10m U-wind | `u10` | m/s | Zonal surface wind component |
-| 10m V-wind | `v10` | m/s | Meridional surface wind component |
-| Surface pressure | `sp` (`surface_pressure`) | Pa → hPa | Surface atmospheric pressure (code requests `surface_pressure`, not mean sea level pressure `msl`) |
+| Global horizontal solar radiation (GHI proxy) | `ssrd` | J/m² | Accumulated radiation; converted to flux using the pipeline's duration-overlap handling |
+| Thermal radiation | `strd` | J/m² | Downward atmospheric longwave radiation |
+| 2 m air temperature | `t2m` | K | Converted to °C |
+| 2 m dewpoint temperature | `d2m` | K | Converted to °C; used to derive relative humidity |
+| 10 m U-wind | `u10` | m/s | Zonal wind component |
+| 10 m V-wind | `v10` | m/s | Meridional wind component |
+| Surface pressure | `sp` / `surface_pressure` | Pa | Converted to hPa; this is surface pressure, not mean sea-level pressure |
 | Total cloud cover | `tcc` | 0–1 fraction | Fractional cloud cover |
-| Total precipitation | `tp` | m → mm | Accumulated precipitation |
-| Mean surface direct solar | `avg_sdirswrf` (matches `msdwswrf`/`fdir`/`msdrswrf`) | W/m² | Direct radiation component |
-| Clear-sky solar radiation | `ssrdc` (`surface_solar_radiation_downward_clear_sky`) | J/m² → W/m² | ERA5's own clear-sky GHI; preferred source for `GHI_clearsky` in `02_combine_assam.py`, with pvlib Ineichen as fallback (`clearsky_source` column records which was used) |
+| Total precipitation | `tp` | m | Converted to mm |
+| Direct solar radiation field | `avg_sdirswrf` | W/m² or source-dependent | Used as the primary direct-radiation input; see the field-name/unit caveat below |
+| Clear-sky solar radiation | `ssrdc` / `surface_solar_radiation_downward_clear_sky` | J/m² | Converted to W/m²; preferred for `GHI_clearsky`, with pvlib Ineichen as fallback |
+
+**Direct-radiation field caveat:** the pipeline's `avg_sdirswrf` may be populated from one of `msdwswrf`, `fdir`, or `msdrswrf`. These fields are not physically interchangeable: `fdir` is accumulated radiation, whereas `msdwswrf`/`msdrswrf` are mean-rate fields. The code's treatment must be checked against the actual matched field and its units before treating every record as equivalent. The Assam derivation description identifies `avg_sdirswrf` as the primary DNI source and a GHI/SZA closure as a fallback when the field is absent; this fallback is not a full irradiance decomposition model.
 
 ### NASA POWER
-- **Provider**: NASA Langley Research Center Prediction of Worldwide Energy Resources
-- **Product**: **Hourly** point API only (`https://power.larc.nasa.gov/api/temporal/hourly/point`), parameters `ALLSKY_SFC_SW_DWN, CLRSKY_SFC_SW_DWN, T2M, RH2M, WS10M` (`01b_download_nasapower.py`). There is no daily-product download, no `T2M_MAX`/`T2M_MIN` request (daily max/min are instead derived in `02b` from the 24 hourly `T2M` values), wind is 10 m (`WS10M`) not 2 m, and **`PRECTOTCORR` is not downloaded** — `monsoon_index` is therefore computed from ERA5's 3×/day precipitation samples, not a true POWER daily precipitation integral.
-- **Temporal coverage**: 2016–2025 (10 years, matching ERA5)
-- **Role**: Independent cross-source validation against ERA5; generation of daily integrals for Tier 2 signature indices
-- **Point IDs**: `ASP_0001` through `ASP_0129` (all 129 points active)
-- **Authoritative record count**: `daily_aggregates_assam.csv` contains **467,367 daily rows** (reflecting valid days where $\ge 20$ hours met strict retrieval criteria; incomplete days dropped)
+
+- **Provider**: NASA Langley Research Center, Prediction of Worldwide Energy Resources.
+- **Product / endpoint**: Hourly point API: `https://power.larc.nasa.gov/api/temporal/hourly/point`.
+- **Parameters requested**: `ALLSKY_SFC_SW_DWN`, `CLRSKY_SFC_SW_DWN`, `T2M`, `RH2M`, and `WS10M`.
+- **Temporal coverage**: 2016–2025, matching ERA5.
+- **Role**: Independent cross-source validation against ERA5 and input to the daily-aggregation workflow.
+- **Wind height**: `WS10M` is 10 m wind speed, not 2 m wind speed.
+- **Precipitation limitation**: `PRECTOTCORR` is not downloaded. Therefore, the current `monsoon_index` is based on ERA5 event-sampled precipitation, not a NASA POWER daily precipitation integral.
+- **Daily aggregation output**: the latest audited Assam pipeline contains **292,160 rows** in `daily_aggregates_assam.csv` (80 points × 3,652 days), covering **2016-01-02 to 2025-12-31**. This replaces the stale 467,367-row figure, which belongs to the earlier 129-point dataset.
+
+The available audit establishes the daily aggregate row count and date range. It does not establish that every row is a complete 24-hour POWER day; do not describe the output as a complete daily integral without checking the aggregation and missing-hour rules in the current script.
 
 ### Population Raster
-- **Source**: WorldPop unconstrained global mosaic, India, UN-adjusted, 100m, 2020
-- **Use**: Aggregated to 0.25° ERA5 grid cells; highest-density cells selected sequentially to achieve 87.8% population coverage of Assam
+
+- **Source**: WorldPop unconstrained global mosaic, India, UN-adjusted, 100 m, 2020.
+- **Use**: Population values are aggregated to the 0.25° ERA5 grid; candidate cells are selected by population density.
+- **Current Assam result**: 80 active grid points, with 87.8% population coverage.
 
 ### State Boundary
-- **Source**: GADM v4.1, India administrative level 1 (`NAME_1 == "Assam"`)
-- **Filter**: All candidate grid centroids clipped strictly within administrative boundaries
+
+- **Source**: GADM v4.1, India administrative level 1.
+- **Filter**: Assam boundary selected using `NAME_1 == "Assam"`; candidate grid centroids are clipped to the state boundary.
 
 ---
 
 ## Cross-Source Validation: ERA5 vs. NASA POWER
 
-Cross-source agreement analysis (`03b_agreement_analysis_assam.py`) quantitatively evaluated daytime GHI:
-- Mean Bias Error (MBE) between ERA5 and NASA POWER was **1.1%** (well within the $\le 10\%$ tolerance threshold).
-- Generated authoritative decision: **`BACKBONE`** (`bias_decision_assam.txt`).
-- Consequence: ERA5 data flows into downstream clustering and physics simulation unmodified, without empirical quantile mapping.
+The cross-source agreement analysis is implemented in `03b_agreement_analysis_assam.py`.
+
+- **Daytime GHI mean bias error (MBE)**: 1.1%.
+- **Decision**: `BACKBONE`, recorded in `bias_decision_assam.txt`.
+- **Pipeline consequence**: ERA5 is retained as the downstream climate-data backbone without empirical quantile mapping.
+
+The 1.1% value is the reported audited result. It should be rechecked if the input population grid, time alignment, or source preprocessing is changed.
 
 ---
 
 ## Derived Climate Variables (`02_combine_assam.py`)
 
-| Variable | Derivation / Formula | Physical Meaning |
+| Variable | Derivation / formula | Physical meaning |
 |---|---|---|
-| `RHum` | Magnus formula from $T_{\text{amb}}$ and $T_{\text{dew}}$ | Relative humidity (%) |
-| `W_spd` | $\sqrt{u_{10}^2 + v_{10}^2}$ | Scalar wind speed (m/s) |
-| `W_dir` | $\text{atan2}(u_{10}, v_{10})$ | Wind direction (degrees) |
-| `DNI` | Primary: ERA5 direct-radiation field (`avg_sdirswrf`), clipped [0,1400]. Fallback (rare): `GHI / cos(SZA)` when the field is absent — a crude closure, not a decomposition model | Direct Normal Irradiance |
-| `CSI` | $GHI / GHI_{\text{clearsky}}$, clipped to [0, 1.2] (recomputed in `04_preprocess_assam.py`; `GHI_clearsky` prefers ERA5 `ssrdc`, falling back to pvlib Ineichen) | Clear-sky index |
-| `elevation_m` | Default 100m (Assam valley baseline) | Atmospheric pressure adjustment |
+| `RHum` | Magnus formula using ambient temperature and dewpoint | Relative humidity (%) |
+| `W_spd` | \(\sqrt{u_{10}^{2}+v_{10}^{2}}\) | Scalar wind speed (m/s) |
+| `W_dir` | `atan2(u10, v10)` with the implementation's angle convention | Wind direction (degrees) |
+| `DNI` | Primary: direct-radiation field `avg_sdirswrf`, clipped to [0, 1400]. Fallback: `GHI / cos(SZA)` when the field is absent; this is a crude closure | Direct normal irradiance |
+| `GHI_clearsky` | Prefer ERA5 `ssrdc`; use pvlib Ineichen if the ERA5 clear-sky field is unavailable | Clear-sky global horizontal irradiance |
+| `CSI` | `GHI / GHI_clearsky`, clipped to [0, 1.2] in the preprocessing path described by the Assam audit | Clear-sky index |
+| `elevation_m` | Default value 100 m in the Assam combination description | Elevation / atmospheric-pressure context |
 
 ---
 
 ## Season Classification (`02_combine_assam.py`)
 
-| Month | Season Name | Code | Climatological Character |
-|---|---|---|---|
-| Dec, Jan, Feb | Winter | 1 | Cool, dry, clear skies, lowest ambient temperatures |
-| Mar, Apr, May | Pre-Monsoon | 2 | Rising temperatures, convective activity, increasing humidity |
-| Jun, Jul, Aug, Sep | Monsoon | 3 | Peak precipitation (>2500 mm/yr), persistent cloud cover, high RH |
-| Oct, Nov | Post-Monsoon | 4 | Retreating monsoon, transitional temperatures |
+| Months | Season | Code | Climatological character |
+|---|---|---:|---|
+| Dec, Jan, Feb | Winter | 1 | Cooler and generally drier period |
+| Mar, Apr, May | Pre-monsoon | 2 | Rising temperatures and convective activity |
+| Jun, Jul, Aug, Sep | Monsoon | 3 | High precipitation, cloud cover, and humidity |
+| Oct, Nov | Post-monsoon | 4 | Retreating-monsoon transition |
 
 ---
 
 ## Climate Signature Structure (19 Indices, `04b_climate_signature.py`)
 
-**Correction (verified against the current script):** `04b_climate_signature.py` computes every
-index directly from `data/preprocessed/assam_cleaned_physical.csv` (the event-sampled — sunrise/
-noon/sunset — physical dataset). It does **not** read `daily_aggregates_assam.csv` or
-`tier2_signature_assam.csv` at all, even though `02b_build_daily_aggregates_assam.py` produces
-both. There is currently no Tier-1/Tier-2 split inside the signature script itself — that is a
-stale description of an earlier architecture. All 19 indices below are Tier-1 (event-sampled)
-quantities:
+**Implementation note verified against the current Assam script:** `04b_climate_signature.py` computes all 19 climate indices directly from `data/preprocessed/assam_cleaned_physical.csv`, the event-sampled sunrise/noon/sunset physical dataset. It does **not** read `daily_aggregates_assam.csv` or `tier2_signature_assam.csv`, even though `02b_build_daily_aggregates_assam.py` produces those files. There is currently no Tier-1/Tier-2 split inside the signature script. Consequently, the 19 indices below should be described as event-sampled quantities, not as a mixture of event-sampled and daily-integral features.
 
-- `Ta_mean`, `Ta_p95`, `Ta_p05`: mean / 95th / 5th percentile of `era5_T_amb` across **all three
-  daily events** (not noon-only, and not a true daily mean)
-- `DTR`: mean of (noon `T_amb` − min(sunrise, sunset `T_amb`)) per day; falls back to
-  `(Ta_p95 − Ta_p05) / 2` if no valid day has all three events
-- `HDD18` / `CDD24`: `mean(max(0, 18 − Ta)) × 365.25` / `mean(max(0, Ta − 24)) × 365.25`, using
-  all-event `Ta` (an event-sampled annualisation, not a true daily-integral degree-day sum)
-- `GHI_mean`: mean of `era5_GHI` over all events with `GHI > 0`
-- `GHI_daily_kWh_est`: **proxy** estimate — noon-event mean GHI × 6.5 equivalent solar hours ÷
-  1000; explicitly documented in the script as not a true 24-hour integral
-- `kt_mean`, `kt_std`: mean / std of `era5_CSI` over events with `CSI > 0` (defaults 0.60 / 0.15
-  if the CSI column is absent)
-- `SAI`: fraction of days whose noon-based daily GHI estimate ≥ 2.0 kWh/m²/day
-- `cloudy_frac`: fraction of events with `GHI / max(10, GHI_clearsky) < 0.35`
-- `CCI`: `1 − std(daily cloudy-event fraction)` — a day-to-day cloudiness-persistence index, not
-  a "Cloud Cover Index" and not a longest-run count
-- `RH_mean`: mean `era5_RHum` across all events
-- `HSI`: `RH_mean × mean(fraction of events with (Ta − Td) < 3 K)` — a dew-point-proximity index,
-  **not** `RH_mean × GHI_daily`
-- `wind_mean`: mean `era5_W_spd`
-- `elev_proxy`: mean `era5_P_atm` ÷ 1013.25
-- `monsoon_index`: Σ ERA5 event-sampled precipitation in months 6–9 ÷ Σ annual ERA5 event-sampled
-  precipitation (POWER's `PRECTOTCORR` is not downloaded, so this is not a true daily integral)
-- `seasonality`: std ÷ mean of the 12 monthly-mean `GHI_mean` values
+- `Ta_mean`, `Ta_p95`, `Ta_p05`: mean, 95th percentile, and 5th percentile of `era5_T_amb` across all three daily events. These are event-sample statistics, not a true hourly or daily mean.
+- `DTR`: mean of (noon `T_amb` − minimum of sunrise and sunset `T_amb`) per day; fallback is `(Ta_p95 − Ta_p05) / 2` if no valid day has all three events.
+- `HDD18` / `CDD24`: `mean(max(0, 18 − Ta)) × 365.25` / `mean(max(0, Ta − 24)) × 365.25`, using all event samples. These are event-sampled annualisations, not true daily-integral degree-day sums.
+- `GHI_mean`: mean `era5_GHI` over events with `GHI > 0`.
+- `GHI_daily_kWh_est`: proxy estimate based on noon-event mean GHI × 6.5 equivalent solar hours ÷ 1000; it is not a true 24-hour radiation integral.
+- `kt_mean`, `kt_std`: mean and standard deviation of `era5_CSI` over events with `CSI > 0`; defaults are 0.60 and 0.15 if the CSI column is absent.
+- `SAI`: fraction of days whose noon-based daily GHI estimate is at least 2.0 kWh/m²/day.
+- `cloudy_frac`: fraction of events for which `GHI / max(10, GHI_clearsky) < 0.35`.
+- `CCI`: `1 − std(daily cloudy-event fraction)`. This is a day-to-day cloudiness-persistence index, not a longest-run count.
+- `RH_mean`: mean `era5_RHum` across all events.
+- `HSI`: `RH_mean × mean(fraction of events with (Ta − Td) < 3 K)`. This is a dewpoint-proximity index, not `RH_mean × GHI_daily`.
+- `wind_mean`: mean `era5_W_spd`.
+- `elev_proxy`: mean `era5_P_atm` ÷ 1013.25.
+- `monsoon_index`: sum of ERA5 event-sampled precipitation in June–September divided by total annual ERA5 event-sampled precipitation. Because POWER `PRECTOTCORR` is not downloaded, this is not a true daily precipitation integral.
+- `seasonality`: standard deviation divided by mean of the 12 monthly mean `GHI_mean` values.
 
-`precipitation_annual`, `Ta_min_true`, and `Ta_max_true` are **not** computed anywhere in the
-signature script and do not appear in `climate_signatures_raw.csv`.
+The signature script does **not** compute `precipitation_annual`, `Ta_min_true`, or `Ta_max_true`; these do not appear in `climate_signatures_raw.csv`.
 
-Five interaction terms are also computed and carried into the standardised clustering matrix
-(`climate_signatures_matrix.csv`), but are not listed in earlier drafts of this document:
-`ix_GHI_x_kt_std`, `ix_DTR_x_cloudy`, `ix_RH_x_Ta`, `ix_wind_x_Ta`, `ix_CCI_x_1mSAI`.
+Five interaction terms are also carried into the standardised clustering matrix (`climate_signatures_matrix.csv`):
 
-*Note on Soil Temperature*: soil temperature was never downloaded; no soil-temperature term
-appears in the current signature or interaction terms.
+- `ix_GHI_x_kt_std`
+- `ix_DTR_x_cloudy`
+- `ix_RH_x_Ta`
+- `ix_wind_x_Ta`
+- `ix_CCI_x_1mSAI`
+
+**Soil temperature:** soil temperature was not downloaded and no soil-temperature term appears in the current signature or interaction terms.
 
 ---
 
 ## PCM Property Database (`pcm_database_final.csv`)
 
-### Final Locked Database (58 PCMs)
-- **Dataset**: `data/processed/pcm/pcm_database_final.csv`
-- **Scope**: **58 deduplicated PCM records** spanning commercial paraffins (Rubitherm RT), bio-based organics (PLUSS savE), fatty acids, and eutectics.
-- **Properties**: 41 columns capturing thermodynamic, physical, safety, and operational parameters.
-- **Strict Provenance**:
-  - `source_type`: Explicit attribution (Manufacturer datasheet, Literature primary source).
-  - `value_status`: Cell-level flags (`Reported`, `Imputed`, `Missing`).
-- **Strict Specific Heat Capacity Policy**:
-  - $C_{p,\text{avg}} = 0.5 \times (C_{p,\text{solid}} + C_{p,\text{liquid}})$ is computed **only** when both phase-specific values are reported.
-  - The model **never** silently falls back from a missing phase to a single reported phase.
+### Final Locked Database
+
+- **Dataset**: `data/processed/pcm/pcm_database_final.csv`.
+- **Current database size**: 58 deduplicated PCM records.
+- **Property count**: 41 columns covering thermodynamic, physical, safety, and operational parameters.
+- **Scope**: commercial paraffins (Rubitherm RT), bio-based organics (PLUSS savE), fatty acids, and eutectics.
+- **Provenance fields**:
+  - `source_type`: explicit attribution, such as manufacturer datasheet or primary literature source.
+  - `value_status`: cell-level status (`Reported`, `Imputed`, `Missing`).
+- **Specific heat capacity policy**:
+  - \(C_{p,\mathrm{avg}} = 0.5 \times (C_{p,\mathrm{solid}} + C_{p,\mathrm{liquid}})\) is computed only when both phase-specific values are reported.
+  - The model does not silently substitute a single reported phase when the other phase is missing.
 
 ### Historical Prototype Database (`pcm_database_assam.csv`)
-- An early 25-row prototype (`pcm_database_assam.csv`) used during initial $K=4$ pipeline exploration is retained as a **locked historical artifact** and must not be confused with the final 58-row production database.
+
+The early 25-row prototype used during initial K=4 pipeline exploration is a historical artifact. It must not be confused with the final 58-record production database.
+
+---
+
+## Current Assam Dataset and Version-Control Notes
+
+| Item | Current audited value |
+|---|---|
+| Active population-weighted points | 80 (`ASP_0001`–`ASP_0080`) |
+| Population coverage | 87.8% |
+| Daily aggregate rows | 292,160 |
+| Daily aggregate date range | 2016-01-02 to 2025-12-31 |
+| Final climate regimes | K = 3 |
+| Cluster sizes | 27 / 28 / 25 |
+| Medoid point IDs | `ASP_0003`, `ASP_0036`, `ASP_0080` |
+
+**Do not carry forward the earlier 129-point / 467,367-row descriptions as current Assam values.** Those counts refer to an earlier pipeline version. When updating this document after future reruns, verify the grid, daily aggregation, and signature outputs together so that point counts and row counts remain consistent.
+
+**Known implementation gap:** daily aggregates and `tier2_signature_assam.csv` are generated, but the current `04b_climate_signature.py` does not consume them. Keep this caveat visible until the implementation is changed and re-audited.
