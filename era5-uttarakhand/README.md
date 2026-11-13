@@ -9,6 +9,28 @@ builds a per-point climate signature, clusters the state into climate
 regimes, and screens/ranks PCM (phase-change-material) candidates for each
 regime, ending in one recommendation card per regime.
 
+> **Status check (2026-09-22):** Phases 1-8 are complete and internally
+> consistent — every file in `data/processed/pcm/` (`pcm_database_uttarakhand.csv`
+> through `recommendation_cards.md`) carries the same 2026-09-22 09:01
+> timestamp, confirming a fresh, single, end-to-end `run_all_uttarakhand.py`
+> pass. Two things below this line are documented as run/current but are
+> not, as of that same check:
+> - **`11_level_b_seasonal_analysis.py` has never been run** — no
+>   `data/processed/pcm/level_b_seasonal_topk.csv` or
+>   `level_b_seasonal_summary.md` exists on disk. It's outside the core
+>   8-phase numbering (a seasonal re-ranking extension, not a blocker —
+>   see its own section below), so this doesn't affect the Phase 1-8
+>   "done" status, but don't cite Level-B seasonal results as available.
+> - **`data/plots/mcdm/*` is one generation stale**: those 3 files
+>   (`mcdm_clusters_folium.html`, `mcdm_clusters_plotly.html`,
+>   `mcdm_cluster_map_points.csv`) are dated 2026-09-14, from BEFORE the
+>   most recent `08_mcdm_ranking.py` re-run (2026-09-22) that produced the
+>   current `mcdm_topk_by_cluster.csv`. `12_mcdm_interactive_plots.py`
+>   hasn't been re-run since, so its `mcdm_final_results_complete.csv`
+>   output doesn't exist yet and the plots folder doesn't reflect the
+>   latest ranking. Re-run `12_mcdm_interactive_plots.py` before citing or
+>   screenshotting anything from `data/plots/mcdm/`.
+
 ## Pipeline overview
 
 ```
@@ -43,13 +65,12 @@ PHASE 2 QA — POST-CLEANING CHECKS
 
 PHASE 3 — CLIMATE SIGNATURE (Tier 1 sun-event + Tier 2 true-daily-integral)
   04b_climate_signature.py        →  data/processed/signatures/climate_signature_uttarakhand.csv
-  04d_signature_interactive.py    →  data/processed/signatures/interactive/*.html
+  04d_signature_interactive.py    →  data/plots/signatures/interactive/*.html
 
 PHASE 4 — CLIMATE REGIME CLUSTERING
   05_cluster_uttarakhand.py       →  data/processed/clustering/cluster_assignments_uttarakhand.csv
                                       data/processed/clustering/cluster_profiles_uttarakhand.csv
-  05b_cluster_interactive.py      →  data/processed/clustering/interactive/*.html
-  05_cluster_regions.py           →  (multi-state, NOT for now — see its section below)
+  05b_cluster_interactive.py      →  data/plots/clustering/interactive/*.html
 
 PHASE 4 — EXTRA EXPLORATION (optional, either order relative to 05/05b)
   05c_explore_interactive.py      →  Streamlit app (raw vs. processed vs. comparison)
@@ -57,12 +78,16 @@ PHASE 4 — EXTRA EXPLORATION (optional, either order relative to 05/05b)
 
 PHASE 5 — PCM DATABASE + FEASIBILITY FILTERING
   PCM_data/01_preprocess.py       →  PCM_data/data/PCM_Properties_cleaned_mice_pmm_detailed.csv
-  06_build_pcm_database.py        →  data/processed/pcm/pcm_candidates.csv
+  06_build_pcm_database.py        →  data/processed/pcm/pcm_database_uttarakhand.csv
   07b_charging_feasibility.py     →  (optional) regime-dependent Tm cap, run before 07
   07_feasibility_filter.py        →  data/processed/pcm/feasibility_survivors_by_cluster.csv
 
 PHASE 6 — MULTI-CRITERIA RANKING
   08_mcdm_ranking.py              →  data/processed/pcm/mcdm_topk_by_cluster.csv
+                                     data/processed/pcm/mcdm_full_scores_by_cluster.csv
+  09b_monte_carlo_stability.py    →  data/processed/pcm/monte_carlo_stability.csv
+                                     (2,000 draws default; run by run_all_uttarakhand.py after 08,
+                                     non-blocking; needed by generate_objective1_plots.py)
 
 PHASE 7 — PHYSICS-BASED VALIDATION
   10_physics_validation.py        →  data/processed/pcm/physics_validation_results.csv
@@ -86,8 +111,7 @@ python run_all_uttarakhand.py --from 05_cluster_uttarakhand.py   # resume from a
 ```
 
 It does not run `02_combine_uttarakhand.py`, `05c_explore_interactive.py`
-(a Streamlit app — launch that one yourself), or `05_cluster_regions.py`
-(the multi-state version, on standby for later) — see its own docstring
+(a Streamlit app — launch that one yourself) — see its own docstring
 for the full explanation. Otherwise it's exactly the same steps as below,
 in the same order, via `subprocess`.
 
@@ -170,15 +194,16 @@ python 05d_plots_comprehensive.py       # batch maps/timeseries/stats plots, sta
 python PCM_data/01_preprocess.py        # (only if you haven't already) cleans the raw PCM
                                          # manufacturer/literature data -> PCM_Properties_cleaned_mice_pmm_detailed.csv
 python 06_build_pcm_database.py         # edit INPUT_CSV at the top if PCM_data isn't a sibling
-                                         # folder of this pipeline -> pcm_candidates.csv
+                                         # folder of this pipeline -> pcm_database_uttarakhand.csv
 python 07b_charging_feasibility.py      # optional: regime-dependent Tm ceiling, run BEFORE 07
                                          # if you want it factored into the melting-window filter
 python 07_feasibility_filter.py         # hard filters per cluster's Tm_target/L_required ->
                                          # feasibility_survivors_by_cluster.csv
 
 # ── Phase 6 — multi-criteria ranking ───────────────────────────────────────
-python 08_mcdm_ranking.py               # TOPSIS + GRA, entropy weights blended with a stated prior (no AHP elicitation), Gaussian Tm fitness,
-                                         # Borda consensus -> mcdm_topk_by_cluster.csv (headline table)
+python 08_mcdm_ranking.py               # TOPSIS + GRA + PROMETHEE II + VIKOR, entropy weights blended with a stated prior (no AHP elicitation),
+                                         # Gaussian Tm fitness, Borda consensus + Kendall's W ->
+                                         # mcdm_topk_by_cluster.csv (headline table)
 
 # ── Phase 7 — physics-based validation ───────────────────────────────────────
 python 10_physics_validation.py         # grey-box lumped-enthalpy tank model, driven by each
@@ -369,7 +394,7 @@ preprocessing, or needs bias correction against NASA POWER first. Never
 writes back to `climate_uttarakhand_points.csv`.
 
 - Output: `data/processed/era5_power_agreement_uttarakhand.csv`,
-  `outputs/qc_era5_power_scatter_uttarakhand.html`,
+  `data/plots/qc/qc_era5_power_scatter.html`,
   `outputs/bias_decision_uttarakhand.txt` (read this before trusting `04`)
 
 ### `03e_interactive_raw_plotly.py` / `03f_interactive_raw_folium.py`
@@ -450,13 +475,12 @@ interactive correlation heatmap, index-distribution histograms, and a
 scatter matrix of the key PCM-facing indices to eyeball the clustering
 structure before `05` finds it formally.
 
-- Output: `data/processed/signatures/interactive/*.html`
+- Output: `data/plots/signatures/interactive/*.html`
 
 ### `05_cluster_uttarakhand.py`
 Phase 4 — climate regime clustering, Uttarakhand only (not combined with
 any other state's Phase 3 output — nothing in the objective requires
-cross-state regimes, and this script's output format is compatible with
-the multi-state `05_cluster_regions.py`, described below). Uses
+cross-state regimes). Uses
 Gaussian Mixture rather than K-Means because climate is a continuous
 gradient — the boundary between, say, high-hill and valley/plains
 Uttarakhand isn't a hard line, and a point near it genuinely has partial
@@ -473,7 +497,7 @@ per-cluster profiles.
   `cluster_assignments_uttarakhand.csv` (soft membership probabilities),
   `cluster_profiles_uttarakhand.csv` (population-weighted profile per
   regime — feed this into Phase 5 PCM feasibility filtering),
-  `cluster_map_uttarakhand.png`.
+  `cluster_map.png`.
 
 ### `05b_cluster_interactive.py`
 Interactive explorer for `05`'s output: a Folium cluster map where each
@@ -484,20 +508,7 @@ grouped-bar comparison of population-weighted cluster profiles, a
 population-share pie chart per regime, and BIC/silhouette K-selection
 curves if `bic_selection_uttarakhand.csv` exists.
 
-- Output: `data/processed/clustering/interactive/*.html`
-
-### `05_cluster_regions.py`
-Multi-state version of Phase 4 — **not for now**. Needs
-`climate_signature_{region}.csv` from at least one other state's own
-pipeline folder (e.g. `../era5-rajasthan/data/processed/signatures/...`)
-before it does anything useful; its `REGION_FILES` dict at the top already
-points at Uttarakhand's own signature file plus a placeholder for
-Rajasthan. Nothing in the Objective 1 definition requires cross-state
-regimes — `05_cluster_uttarakhand.py` alone is sufficient to finish the
-objective on Uttarakhand. Leave this one alone until you actually add a
-second state's Phase 3 output; its output format matches
-`05_cluster_uttarakhand.py`'s exactly, so nothing downstream needs to
-change if/when you do.
+- Output: `data/plots/clustering/interactive/*.html`
 
 ### `11_level_b_seasonal_analysis.py`
 "Level B" from the plan — for each EXISTING Level-A cluster (from `05`),
@@ -560,10 +571,13 @@ contains **55 rows** (31 manufacturer + 24 literature) spanning 6 brands
 n-alkanes/fatty acids/composites), all fully imputed, covering the 42-70 °C
 melting band.
 
-- **Expects `PCM_data/` as a sibling folder** of this pipeline
-  (`INPUT_CSV = PROCESSED_DIR.parent.parent / "PCM_data" / "data" / ...`)
-  — either place it one level above this folder, or edit `INPUT_CSV` at
-  the top of the script to point wherever you put it.
+- **Expects `PCM_data/` as a child folder of this pipeline**
+  (`INPUT_CSV = PROCESSED_DIR.parent.parent / "PCM_data" / "data" / ...`,
+  and `PROCESSED_DIR` = `era5-uttarakhand/data/processed`, so
+  `.parent.parent` resolves to `era5-uttarakhand/` itself — i.e.
+  `era5-uttarakhand/PCM_data/data/...`, not a folder one level above this
+  pipeline) — either place it there, or edit `INPUT_CSV` at the top of the
+  script to point wherever you put it.
 - Output: `data/processed/pcm/pcm_database_uttarakhand.csv`
 - The 55-row set meets the 40-60 candidate target from the plan doc.
 
@@ -584,32 +598,43 @@ constant.
 Phase 5 — for each cluster's `Tm_target`/`L_required` (from
 `cluster_profiles_uttarakhand.csv`), applies hard filters against
 `06`'s candidate database: melting window `[Tm_target-5, Tm_target+8]`,
-absolute 42-70°C band, latent heat ≥ 0.7× `L_required`, corrosion veto if
-that cluster's HSI is above its own 75th percentile, supercooling veto
->8K, safety exclusion. Reports survivor counts per cluster.
+absolute 42-70°C band, latent heat ≥ 0.7× `L_required`, cycling stability
+(≥300 cycles where reported), and a supercooling veto (>8K). Reports
+survivor counts per cluster.
 
 - Output: `data/processed/pcm/feasibility_survivors_by_cluster.csv`
-- **Known limitation, stated in its own docstring**: the corrosion veto
-  and a 5th-percentile-day charging-feasibility check from the plan
-  doc's Table 12 aren't fully applied yet — the database/cluster profiles
-  don't carry the data those two specific filters need. Documented, not
-  silently skipped.
+- **Corrosion veto — implemented (2026-09).** Compares each cluster's HSI
+  against the 75th percentile across all clusters, vetoing any
+  `corrosion_class="check_manually"` (inorganic) candidate in a
+  high-humidity cluster. Currently a documented no-op: all 55 database
+  candidates are organic (`corrosion_class="low_organic"`), so nothing is
+  vetoed yet — it will start binding automatically once an inorganic
+  candidate is added to the database.
+- **Still not applied**: the 5th-percentile-day charging-feasibility check
+  from the plan doc's Table 12 — the cluster profiles don't carry a daily
+  GHI percentile (just the mean), which that specific filter needs.
+  Documented, not silently skipped.
 
 ### `08_mcdm_ranking.py`
 Phase 6 — the headline deliverable. For each cluster's feasibility
 survivors: a **Gaussian Tm fitness transform**
 (`f_Tm = exp(-(Tm-Tm_target)^2 / (2*sigma^2))`, sigma≈4K — this has to
 come before anything else touches melting temperature, since a raw
-distance metric gets this wrong) feeds into **TOPSIS** and **GRA**
-(Grey Relational Analysis) run independently, with **entropy weights**
-computed per cluster from that cluster's own filtered matrix (blended
-0.5/0.5 with AHP priors if supplied, entropy-only otherwise). Ranks are
-aggregated to a **Borda-count consensus**, with **Kendall's W** reported
-per cluster as an explicit agreement/disagreement signal — a low W is
-treated as a genuine, reportable finding (that regime's PCM choice is
-ambiguous), not hidden.
+distance metric gets this wrong) feeds into a **four-method stack —
+TOPSIS, GRA (Grey Relational Analysis), PROMETHEE II, and VIKOR** — run
+independently, with **entropy weights** computed per cluster from that
+cluster's own filtered matrix (blended 0.5/0.5 with AHP priors if
+supplied, entropy-only otherwise). Ranks are aggregated to a
+**Borda-count consensus**, with **Kendall's W** (over all four methods)
+reported per cluster as an explicit agreement/disagreement signal — a low
+W is treated as a genuine, reportable finding (that regime's PCM choice is
+ambiguous), not hidden. A companion script, `09b_monte_carlo_stability.py`,
+runs a Monte Carlo perturbation of weights/properties per cluster (2,000
+draws by default, `--draws 5000` for the full spec) to report
+Top-3-inclusion and Top-1-retention probabilities.
 
-- Output: `data/processed/pcm/mcdm_topk_by_cluster.csv`
+- Output: `data/processed/pcm/mcdm_topk_by_cluster.csv`,
+  `data/processed/pcm/mcdm_full_scores_by_cluster.csv`
 
 ### `10_physics_validation.py`
 Phase 7 — physics-based validation, the step that makes the MCDM ranking
@@ -634,8 +659,9 @@ population covered, approximate medoid point, population-weighted climate
 signature table, `Tm_target`/`L_required`, survivor count, Top-3 PCM
 candidates with per-method scores and the Kendall's W agreement note, and
 a caveats section (thermal conductivity/density/specific heat not
-reported for the literature-added candidates; cycling/corrosion vetoes
-only partially applied — see `07`'s docstring).
+reported for the literature-added candidates; corrosion veto implemented
+but currently a no-op given an all-organic database, 5th-percentile-day
+charging feasibility still not applied — see `07`'s docstring).
 
 - Output: `data/processed/pcm/recommendation_cards.md` — this is your
   results section; reformat the tables to your target format (e.g. IEEE
@@ -713,8 +739,9 @@ random-forest imputation).
   wrong thing, and a cloudy-run-counting contiguity gap — all three
   currently latent given this dataset's 100% Tier-2 coverage and zero
   missing hours, but real defects fixed for future runs). Consequences:
-  Cluster 1 now gets a genuinely different consensus PCM (PureTemp 53, not
-  PureTemp 58), and the physics-validation benchmark match dropped from a
+  the high-elevation cluster gets a genuinely different consensus PCM
+  (PureTemp 53, not PureTemp 58 — Cluster 3 in the current K = 4 run), and
+  the physics-validation benchmark match dropped from a
   bug-inflated 92% to a bug-fixed 0% (see `NEXT_STEPS.md` for the full
   writeup and exact numbers).
 - **WorldPop download size**: ~1.5-2GB, one-time, cached in
@@ -733,9 +760,10 @@ random-forest imputation).
   traceable in a methodology write-up.
 - **PCM database coverage**: 55 rows (31 manufacturer + 24 literature)
   across 6 brands, meeting the 40-60 candidate target (see `06`'s section
-  above). Corrosion veto and 5th-percentile-day charging feasibility aren't
-  fully wired into `07` yet either (see `07`'s section above).
-- **Phase 7 (physics-based validation) is implemented** in `10_physics_validation.py`. It runs a single-PCM grey-box lumped-enthalpy-tank simulation per cluster, comparing simulated annual solar fraction against published benchmarks (54-84%). **A backward-Euler solve bug and a latent-heat-accumulator bug were fixed here 2026-09** (see "Notes / known limitations" below) — the corrected result is 0% of simulated runs landing within the benchmark band (actual ~15-19% across clusters); a previously-reported 92% was itself an artifact of the bug.
+  above). Corrosion veto is implemented (see `07`'s section above, currently
+  a documented no-op given an all-organic database); 5th-percentile-day
+  charging feasibility isn't fully wired into `07` yet.
+- **Phase 7 (physics-based validation) is implemented** in `10_physics_validation.py`. It runs a single-PCM grey-box lumped-enthalpy-tank simulation per cluster, comparing simulated annual solar fraction against published benchmarks (54-84%). **A backward-Euler solve bug and a latent-heat-accumulator bug were fixed here 2026-09** (see "Notes / known limitations" above) — the corrected result is 0% of simulated runs landing within the benchmark band (actual ~12-19% across clusters); a previously-reported 92% was itself an artifact of the bug. **A Phase 3/Phase 7 sizing inconsistency was found and fixed shortly after (2026-09)**: the tank/PCM/collector sizing here (150kg tank, 28kg PCM, 2.5m^2 collector) had been independently literature-cited rather than matched to `04b`'s own household sizing (300kg/day draw, 150kg PCM) that `L_required` is built around. Reconciled to 300kg tank, 150kg PCM, 5.0m^2 collector (scaled by the same source's own collector-to-tank ratio), 2x150kg/day draws. Solar fraction barely moved (still 12-19%, still 0% in-band) — proportional scaling of the whole system can't change a ratio-based metric, so this confirms the low result is a genuine climate-vs-design finding for Uttarakhand, not a residual sizing bug. See `NEXT_STEPS.md` for the full quantification.
 
 ## Further reading in this repo
 

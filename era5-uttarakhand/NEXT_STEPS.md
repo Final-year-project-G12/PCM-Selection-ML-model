@@ -19,9 +19,9 @@ table below is kept for phase-by-phase context, not as an open TODO list.
 | 1. Data Collection | ERA5 + NASA POWER, 45 population-weighted Uttarakhand points, 3 sun-events/day, 10 years | **Done.** Points confirmed (`00a_build_population_grid.py`, ~87.5% population coverage); `02_combine_uttarakhand.py` produces `climate_uttarakhand_points.csv` (493,155 rows, 100% ERA5/POWER coverage). |
 | 2. Preprocessing & QC | 13-step sequence + Tier-2 daily-integral repair | **Done.** `02b_build_daily_aggregates.py` confirmed (45/45 points, 164,385 point-days). `04_preprocess_uttarakhand.py` run — `qc_report.txt` ends 5/5 checks PASS, 489,105 rows, 0 NaN/duplicates. |
 | 3. Climate Signature | 2-tier ~18-index vector per point, Tm_target/L_required, PCA, standardization | **Done.** `04b_climate_signature.py` run (Tier1+Tier2 merge, 45/45 Tier-2 coverage). PCA: 2 components, 90.7%/6.8% variance, `elevation_m` loads a balanced ~0.37 on PC1. |
-| 4. Climate Regime Clustering | GMM, BIC-selected K, silhouette sanity | **Done.** `05_cluster_uttarakhand.py` run, K_FINAL=5, silhouette=0.28 (in the expected 0.15-0.40 band for 45 points — see `README_PREPROCESSING.md` for why higher isn't better here). Cluster sizes: 7/3/9/10/16. |
-| 5. Feasibility Filtering | Hard-filter PCM database per cluster | **Done.** `06_build_pcm_database.py` (55 candidates: 31 manufacturer + 24 literature) + `07_feasibility_filter.py` — all 5 clusters HIGH survivor count (27-29 each). |
-| 6. Multi-Criteria Ranking | TOPSIS + GRA minimum, entropy+AHP weights, Gaussian Tm fitness transform, Borda consensus | **Done.** `08_mcdm_ranking.py` run — Kendall's W 0.71-0.84 per cluster. After the 2026-09 bug-fix round below, clusters genuinely differentiate: Cluster 1's regime-capped Tm_target (55.2C) makes PureTemp 53 its consensus #1, not PureTemp 58 (the pick everywhere else) — the earlier "same PCM everywhere" was a real bug (07b's regime cap), not a finding. |
+| 4. Climate Regime Clustering | GMM, BIC-selected K, silhouette sanity | **Done.** `05_cluster_uttarakhand.py` run, **K_FINAL=4** (re-chosen from 5 in 2026-10: best Davies-Bouldin/Calinski-Harabasz of K=2..10, tied-best silhouette, most stable across seeds and subsamples; K=5 was worse on all three), silhouette=0.362 (in the expected 0.15-0.40 band for 45 points — see `README_PREPROCESSING.md` for why higher isn't better here). Cluster sizes: 10/23/9/3, ordered warm plains → high Himalaya. |
+| 5. Feasibility Filtering | Hard-filter PCM database per cluster | **Done.** `06_build_pcm_database.py` (55 candidates: 31 manufacturer + 24 literature) + `07_feasibility_filter.py` — all 4 clusters HIGH survivor count (29/29/29/30). |
+| 6. Multi-Criteria Ranking | TOPSIS + GRA minimum, entropy+AHP weights, Gaussian Tm fitness transform, Borda consensus | **Done.** `08_mcdm_ranking.py` run — Kendall's W 0.78-0.84 per cluster. After the 2026-09 bug-fix round below, the high-elevation cluster genuinely differentiates: Cluster 3's regime-capped Tm_target (55.2C) makes PureTemp 53 its consensus #1, not PureTemp 58 (the pick in Clusters 0-2; Clusters 0 and 1 rank identically) — the earlier "same PCM everywhere" was a real bug (07b's regime cap), not a finding. |
 | 7. Physics-Based Validation | Grey-box lumped enthalpy tank model, Spearman rho vs. MCDM rank | **Done, but see the RESOLVED note below — the "92% in benchmark band" figure was itself a bug artifact and is no longer accurate.** Current, bug-fixed result: 0% of simulations land in the published 54-84% solar-fraction band (actual: ~15-19% across clusters). |
 | 8. Explanation & Output | Recommendation card per cluster | **Done.** `09_recommendation_cards.py` run — `recommendation_cards.md`, 5 cluster cards. |
 
@@ -181,12 +181,35 @@ for Uttarakhand, only filenames.
   MICE+RF+PMM-imputed to full coverage across 42-70C) — the earlier ~25-row
   count is stale; `06_build_pcm_database.py`'s docstring has the current
   breakdown.
-- **Corrosion veto and 5th-percentile-day charging feasibility** are not
-  applied in `07` — the database and cluster profiles don't carry the
-  data those two specific filters from Table 12 need yet. Documented,
-  not silently skipped. `07b_charging_feasibility.py` covers the
-  regime-dependent Tm cap piece of this if you want it before `07`.
-- **Physics validation (Phase 7)** is completed in `10_physics_validation.py`. It runs a grey-box lumped-enthalpy simulation across all 5 clusters against Table 16 benchmark ranges (54-84% annual solar fraction). **Result changed materially by the 2026-09 bug-fix round below — see that note.** Current result: 0% of runs fall within the benchmark band (actual solar fraction ~15-19% across clusters), down from a previously-reported 92% that was itself inflated by the tank-model bug.
+- **Corrosion veto — implemented (2026-09).** `07_feasibility_filter.py`
+  now compares each cluster's HSI against the 75th percentile across all
+  clusters and vetoes any `corrosion_class="check_manually"` candidate in
+  a high-humidity cluster. Currently a documented no-op — all 55 database
+  candidates are organic (`low_organic`), so nothing is vetoed with the
+  current database — but it will bind automatically once an inorganic
+  candidate is added. `NEXT_STEPS.md`'s earlier anticipation that "the
+  corrosion veto will bite for high-monsoon-humidity Uttarakhand clusters"
+  still can't be realized until the database gains an inorganic row.
+- **5th-percentile-day charging feasibility** is still not applied in
+  `07` — the cluster profiles don't carry a daily GHI percentile (just the
+  mean), which this specific Table-12 filter needs. Documented, not
+  silently skipped. `07b_charging_feasibility.py` covers the
+  regime-dependent Tm cap piece of Table 12 (a different filter).
+- **Physics validation (Phase 7)** is completed in `10_physics_validation.py`. It runs a grey-box lumped-enthalpy simulation across all 4 clusters against Table 16 benchmark ranges (54-84% annual solar fraction). **Result changed materially by the 2026-09 bug-fix round below — see that note.** Current result: 0% of runs fall within the benchmark band (actual solar fraction ~12-20% across clusters; the high-elevation Cluster 3 never meets the delivery target), down from a previously-reported 92% that was itself inflated by the tank-model bug.
+  **A sizing inconsistency between Phase 3 and Phase 7 was found and fixed** (also 2026-09, after
+  the bug-fix round): `10_physics_validation.py`'s tank/PCM/collector sizing was independently
+  literature-cited (Barqawi2025's own "mid-configuration": 150kg tank, 2.5m^2 collector, 28kg PCM)
+  rather than matching `04b_climate_signature.py`'s own household sizing (300kg/day draw, 150kg
+  PCM) that the MCDM's `L_required` criterion was actually built around. Reconciled: tank mass
+  300kg, PCM mass 150kg (via `V_PCM_M3=0.1705` at the database's median solid density), collector
+  area 5.0m^2 (scaled by Barqawi2025's own collector-to-tank ratio, not an arbitrary number), draws
+  doubled to 2x150kg/day. **Result: solar fraction barely moved** (still 12-19%, still 0% in-band) —
+  proportional scaling of the whole system doesn't change a ratio-based metric like solar fraction,
+  so this confirms the low result is a genuine climate-vs-design-ratio finding for Uttarakhand, not
+  a residual sizing bug. The reconciliation is still worth keeping (Phase 3 and Phase 7 are now
+  internally consistent, which they weren't before) — just don't expect it to close the benchmark
+  gap, and don't further inflate these numbers chasing the benchmark without a new, external
+  justification (that would be tuning toward a target, not fixing a bug).
 
 - **Second correctness audit round — 10 bugs found and fixed, RESOLVED
   (2026-09).** After the elevation/GHI fixes below were confirmed working,
@@ -208,9 +231,10 @@ for Uttarakhand, only filenames.
     measure that erases the absolute clearness signal the heuristic needs
     — this is exactly why it printed "0/5 clusters where the regime cap
     actually lowers Tm_target" every time it ran. Fixed to use
-    `poor_day_kt` directly; now 2/5 clusters get a real, physically
-    meaningful lower cap (Cluster 1: 55.2C, Cluster 2: 56.5C), which is
-    **why Cluster 1's MCDM #1 is now PureTemp 53, not PureTemp 58** — the
+    `poor_day_kt` directly; now 2 clusters get a real, physically
+    meaningful lower cap (in the current K = 4 run: Cluster 2: 56.5C,
+    Cluster 3: 55.2C), which is **why the high-elevation cluster's MCDM #1
+    is PureTemp 53, not PureTemp 58** — the
     "same PCM in every cluster" pattern reported earlier was this bug, not
     a genuine finding.
   - `10_physics_validation.py`: the backward-Euler tank-temperature solve

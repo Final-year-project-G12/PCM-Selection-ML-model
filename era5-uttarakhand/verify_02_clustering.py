@@ -16,7 +16,6 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 from sklearn.mixture import GaussianMixture
 from sklearn.metrics import silhouette_samples, silhouette_score, davies_bouldin_score, calinski_harabasz_score
@@ -49,15 +48,13 @@ merged['lat'] = merged['lat'].fillna(merged['cluster_lat'])
 merged['lon'] = merged['lon'].fillna(merged['cluster_lon'])
 print(f"  Merged rows for validation: {merged.shape[0]}")
 
-feature_cols = [
-    c for c in merged.columns
-    if c not in {'point_id', 'cluster_id', 'lat', 'lon', 'cluster_lat', 'cluster_lon', 'population'}
-    and pd.api.types.is_numeric_dtype(merged[c])
-]
+# Use the same feature space 05_cluster_uttarakhand.py clusters on: the
+# already-standardized *_z signature columns only. Mixing raw + z columns
+# double-counts every variable and gives k-selection curves that disagree
+# with bic_selection_uttarakhand.csv.
+feature_cols = [c for c in merged.columns if c.endswith('_z')]
 
-X = merged[feature_cols].fillna(merged[feature_cols].median()).values
-scaler = StandardScaler()
-X_scaled = scaler.fit_transform(X)
+X_scaled = merged[feature_cols].fillna(merged[feature_cols].median()).values
 labels_actual = merged['cluster_id'].astype(int).to_numpy()
 chosen_k = len(np.unique(labels_actual))
 
@@ -72,7 +69,7 @@ bic_scores = []
 db_scores = []
 ch_scores = []
 for k in k_range:
-    gmm = GaussianMixture(n_components=k, random_state=42, n_init=10)
+    gmm = GaussianMixture(n_components=k, covariance_type='diag', random_state=42, n_init=10)
     labels = gmm.fit_predict(X_scaled)
     silhouette_scores.append(silhouette_score(X_scaled, labels))
     bic_scores.append(gmm.bic(X_scaled))

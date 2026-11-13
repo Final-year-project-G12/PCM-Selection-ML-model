@@ -22,7 +22,7 @@ Filters applied (Table 12; two are noted as NOT applied — see below):
                             flagged, not excluded)
   6. Corrosion veto        : exclude a "check_manually" (inorganic)
                             candidate if that cluster's HSI exceeds the
-                            75th percentile of HSI across all 5 clusters
+                            75th percentile of HSI across all clusters
                             (plan v3.0 Table 12). IMPORTANT HONESTY NOTE:
                             this filter is real and active, but currently
                             a no-op — every one of the 55 candidates in
@@ -77,8 +77,13 @@ MIN_SURVIVORS, MAX_RELAX_STEPS, RELAX_STEP_K = 5, 4, 2.0
 
 
 def filter_cluster(pcm_db, tm_target, l_required, cluster_hsi, hsi_p75, window_relax=0.0):
-    lo = tm_target - WINDOW_LOWER_OFFSET - window_relax
-    hi = tm_target + WINDOW_UPPER_OFFSET + window_relax
+    # Round the window edges: tm_target is a population-weighted mean of a
+    # constant (57.0), which comes back as 57.00000000000001 or
+    # 56.99999999999999 depending on the cluster's weights. Unrounded, a
+    # PCM with Tm exactly 52.0 passed in one cluster and failed in another
+    # purely from floating-point noise.
+    lo = round(tm_target - WINDOW_LOWER_OFFSET - window_relax, 6)
+    hi = round(tm_target + WINDOW_UPPER_OFFSET + window_relax, 6)
 
     df = pcm_db.copy()
     df["pass_melting_window"] = df["Tm_C"].between(lo, hi)
