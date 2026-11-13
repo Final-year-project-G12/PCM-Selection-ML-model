@@ -282,10 +282,10 @@ recommendation depends on.
 | `GHI_mean` | ERA5 noon GHI, no Tier-2 override — **RESOLVED (2026-09)**, the deaccumulation bug that deflated it ~10x is fixed | Was High, now resolved |
 | `elevation_m` | **RESOLVED (2026-09)** — no longer built from `era5_P_atm`; now real elevation from ERA5 geopotential, unaffected by the 850 hPa bound issue | Was High for a montane state, now resolved |
 | `RH_mean` | ERA5-side proxy fallback, used only when Tier-2 (`RH_mean_true`) is missing — **RESOLVED (2026-09)**, the fallback naming bug that could silently null this is fixed; currently 100% Tier-2 coverage so this row is canonical NASA POWER data, not ERA5, for every point in this run | Was Moderate, now resolved |
-| `wind_mean` | ERA5-side, −1.14 m/s MBE vs POWER, unused `wind_mean_true` available | Moderate |
-| `HSI` | Built on `RH_mean`, so inherits its offset | Moderate |
+| `wind_mean` | **RESOLVED (2026-09)** — `CANON_MAP` maps it to `wind_mean_true`, so with 100% Tier-2 coverage it is NASA POWER data, not the ERA5 series with the −1.14 m/s MBE | Was Moderate, now resolved |
+| `HSI` | Built on `RH_mean`; inherits whatever offset that column has (now canonical NASA POWER) | Low |
 | `monsoon_index` | Permanently a 3×/day ERA5 precipitation *fraction*; JJAS here vs JJA in `SEASON_MAP` | Low (a ratio; descriptive only) |
-| `int_wind_x_TaMinusTsoil` | Algebraically `3.0 × wind_mean` — a rescaled duplicate, not an interaction | Low |
+| ~~`int_wind_x_TaMinusTsoil`~~ | **Removed** — it was algebraically `3.0 × wind_mean`; the signature now has 4 interaction terms | — |
 | `Tm_target_C` | Zero-variance column | Cosmetic |
 
 ## `04d_signature_interactive.py` — explorer
@@ -327,7 +327,7 @@ None of Phase 3's own outputs are committed. The only surviving evidence of the 
 | Tier-2 coverage per point reported | Implemented; value not available in the source files |
 | Reads the physical (unscaled) file only | **Confirmed** — `PHYSICAL_FILE` is the only climate input |
 | lat/lon excluded from clustering | **Confirmed** — dropped in `DROP_FROM_CLUSTERING`, re-announced by `05` |
-| PCA retains 95 % variance | Implemented (`n_components=0.95`); component count not available |
+| PCA retains 95 % variance | Implemented (`n_components=0.95`); **2 components** (PC1 90.7 %, PC2 6.8 %) |
 | Diagnostic plots handle degenerate columns | **Yes** — `signature_distributions.png` has an explicit constant-value branch, which is what `Tm_target_C` triggers |
 
 ## Problems / risks

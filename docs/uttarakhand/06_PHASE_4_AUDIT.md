@@ -203,7 +203,7 @@ into a warm-plains cluster (0) and a mid-hill cluster (1).
 | 1 | 23 | **3,993,013** | 38.1 % | 29.125 – 30.625 (29.625) | 77.875 – 80.125 (79.375) | ~1,090 m |
 | 2 | 9 | **2,451,044** | 23.4 % | 30.125 – 30.625 (30.292) | 78.125 – 78.875 (78.486) | ~1,299 m |
 | 3 | **3** | **330,780** | 3.2 % | 30.125 – 30.375 (30.292) | 79.125 – 79.375 (79.292) | ~2,219 m |
-| **Total** | **45** | **10,475,713** | 100 % | | | |
+| **Total** | **45** | **10,475,711** | 100 % | | | |
 
 (Mean elevation is the population-weighted `elevation_m` from the cluster profiles.)
 Cluster 3 is the smallest by both point count (3) and population (3.2 %), and is the most spatially
@@ -236,9 +236,9 @@ inputs.
 > such as "warm plains" (C0) or "high Himalaya" (C3) in a write-up are interpretation added on top
 > of the pipeline, based on the elevation and temperature columns above.
 
-> **`GHI_mean` enters the clustering matrix carrying the ERA5 GHI anomaly** documented in
-> `04_PHASE_2_AUDIT.md` Part A.3. The *relative* ordering across clusters is informative; treat
-> absolute magnitudes with that caveat.
+> **`GHI_mean` is the one solar column with no Tier-2 (NASA POWER) override.** It is ERA5 noon GHI;
+> the magnitude anomaly it used to carry (`04_PHASE_2_AUDIT.md` Part A.3) was fixed in 2026-09, so the
+> values above are correct-magnitude ERA5 values.
 
 ### Soft membership — effectively hard at K = 4
 
@@ -355,8 +355,9 @@ Davies-Bouldin or Calinski-Harabasz appears anywhere in `era5-uttarakhand/`. See
 5. **Cluster 3 is a 3-point regime carrying 3.2 % of population.** Every per-cluster statistic for
    it — profile means, survivor counts, MCDM ranks — rests on three sampling points.
 6. **`Tm_target_C` enters the clustering matrix as a zero-variance column.** Harmless but untidy.
-7. **`GHI_mean` enters the clustering matrix carrying the ERA5 GHI anomaly** — the one solar column
-   the Tier-2 repair does not cover.
+7. **`GHI_mean` is the one solar column the Tier-2 repair does not cover** — it is ERA5-only noon GHI.
+   The magnitude anomaly it used to carry was fixed in 2026-09; what remains is that it is not
+   cross-checked against NASA POWER the way the other solar indices are.
 
 ## Status
 

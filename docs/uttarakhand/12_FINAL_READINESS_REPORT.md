@@ -14,7 +14,7 @@ readiness verdict for the `era5-uttarakhand/` pipeline.
 | 1 — Data Collection | `00a`, `00b`, `01`, `01b`, `00_unzip_accum` | **COMPLETE** | 45 points `UKP_0001–UKP_0045`, 10,475,711 population, 2016–2025 |
 | 2 — Combine + Tier-2 repair | `02`, `02b` | **COMPLETE** | **493,155 rows = 45 × 3,653 × 3 exactly** — zero rows lost to the 3 h match window |
 | 2 QA — Raw checks | `03`, `03b`, `03b_agreement_analysis` | **COMPLETE, RESOLVED 2026-09** | Noon peaks GHI (timezone OK); post-deaccumulation-fix **GHI MBE +19.55 W/m², r = 0.759**, `03b_agreement_analysis.py` decision branch **QUANTILE_MAP** (was MBE −211.4/−602 W/m², r = 0.432/-0.03 pre-fix, branch MANUAL_REVIEW) |
-| 2 — Preprocessing & QC | `04`, `04c` ×2 | **COMPLETE** | 493,155 → **489,105 rows** (99.2 %); 36 → 89 columns; **zero residual NaN** |
+| 2 — Preprocessing & QC | `04`, `04c` ×2 | **COMPLETE** | 493,155 → **489,105 rows** (99.2 %); 37 → 90 columns; **zero residual NaN** |
 | 3 — Climate Signature | `04b`, `04d` | **COMPLETE** | Two-tier merge; `Tm_target` fixed at **57 °C** for every point; real per-point `elevation_m` (196-2510m) replaces the old pressure-derived `elev_proxy` |
 | 4 — Regime Clustering | `05`, `05b` | **COMPLETE, K revised 2026-10** | **K = 4** (was 5), GMM **diagonal** covariance; sizes **10 / 23 / 9 / 3**; silhouette **0.362**, DB 0.935, CH 28.9 — best DB/CH of K = 2…10, tied-best silhouette, most seed/subsample-stable (K = 5 was worse on all three metrics) |
 | 5 — Feasibility Filtering | `06`, `07`, `07b` | **COMPLETE** | 55-candidate database; window [52, 65] °C at Tm_target=57; **29/29/29/30 survivors**; `07b`'s regime cap gives Clusters 2/3 56.51/55.16 °C, but only Cluster 3's survivor set changes. A floating-point edge in the window comparison (made Cluster 0 drop two `Tm` = 52.0 °C candidates) fixed 2026-10 |
@@ -165,12 +165,12 @@ readiness verdict for the `era5-uttarakhand/` pipeline.
 
 ### Open, medium priority
 
-8. **The Hampel filter flagged 10.0 % of `era5_cloud_cover` and 7.2 % of `era5_GHI`** — a known
+8. **The Hampel filter flagged 10.0 % of `era5_cloud_cover` and 6.9 % of `era5_GHI`** — a known
    weakness of univariate MAD filtering on bounded bimodal and high-variance-by-nature variables.
-   114,004 values across five columns were replaced by imputation. Clouds are weather, not errors.
+   113,226 values across five columns were replaced by imputation. Clouds are weather, not errors.
 
-9. **Imputed and flagged climate cells are unmarked in the output.** 114,004 Hampel-NaN'd plus
-   546,424 bounds-NaN'd values were imputed with no `{col}_imputed` flag. The *PCM* database carries
+9. **Imputed and flagged climate cells are unmarked in the output.** 113,226 Hampel-NaN'd plus
+   182,899 bounds-NaN'd values were imputed with no `{col}_imputed` flag. The *PCM* database carries
    such flags; the climate data does not.
 
 10. **~~`RH_mean`/`wind_mean` reach the clustering matrix from the ERA5 side while Tier-2
@@ -199,7 +199,7 @@ readiness verdict for the `era5-uttarakhand/` pipeline.
     night load. Non-binding in this run, but both should be stated.
 
 16. **Plotting/verification defects** — the Tamil-Nadu map centre, the four `passes_all`-blind
-    plots, the never-run `comparison_plots_uttarakhand.py`, the mislabelled agreement plot and the
+    plots, the formerly never-run `comparison_plots_uttarakhand.py` (fixed 2026-09), the mislabelled agreement plot and the
     synthetic tank plot. All thirteen are tabulated in
     `11_OBJECTIVE1_PLOTTING_AND_VERIFICATION_AUDIT.md`.
 

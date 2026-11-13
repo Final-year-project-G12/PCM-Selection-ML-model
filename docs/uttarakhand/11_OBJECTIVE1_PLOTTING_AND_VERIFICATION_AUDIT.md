@@ -43,7 +43,7 @@ are the evidentiary backbone of this entire documentation set:
   0.4321; clear-sky GHI MBE +5.625, r = 0.9929; T_amb MBE
   −0.089 °C, r = 0.902; RHum +11.383 %; wind −1.141 m/s).
 - **`data/plots/post_preprocess/C_qc_flag_counts.csv`** — the only committed QC counts
-  (`era5_LW_down` 363,525 and `era5_P_atm` 182,899 physical-bounds flags; Hampel flags
+  (`era5_P_atm` 182,899 physical-bounds flags — `era5_LW_down`'s pre-fix 363,525 no longer appears; Hampel flags
   `era5_cloud_cover` 49,519, `era5_GHI` 35,559, `era5_W_spd` 11,350, `era5_T_amb` 9,762,
   `era5_RHum` 8,814).
 

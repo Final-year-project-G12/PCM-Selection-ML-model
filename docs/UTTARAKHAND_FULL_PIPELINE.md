@@ -227,7 +227,7 @@ FIGURE / VERIFICATION LAYER (not part of the numbered phase chain)
 | 1 — Data Collection | `00a`, `00b`, `00c`, `01`, `01b`, `00_unzip_accum` | **RUN** (evidenced by downstream artefacts) | 45 points `UKP_0001–UKP_0045`, 10,475,711 population covered, 2016–2025; `00c_attach_elevation.py` attaches real per-point elevation (196m–2510m) |
 | 2 — Combine + Tier-2 repair | `02`, `02b` | **RUN** | `climate_uttarakhand_points.csv` = **493,155 rows** = 45 × 3653 × 3 exactly (no rows lost to the 3 h match window); `deaccumulate()` fixed to return ERA5's per-step value directly (was deflating GHI ~10x) |
 | 2 QA — Raw checks | `03`, `03b`, `03b_agreement_analysis` | **RUN** | Noon peaks GHI (timezone check passes); post-fix ERA5-vs-POWER GHI cross-source agreement: **MBE = +19.6 W/m², r = 0.759**, decision branch **QUANTILE_MAP** (before the deaccumulation fix this was MBE = −602 W/m², r = −0.03, branch MANUAL_REVIEW) |
-| 2 — Preprocessing & QC | `04`, `04c` ×2 | **RUN** | 493,155 -> **489,105 rows** (99.2 % retention); 36 -> 89 columns; 0 residual NaN; `qc_report.txt` 5/5 checks PASS |
+| 2 — Preprocessing & QC | `04`, `04c` ×2 | **RUN** | 493,155 -> **489,105 rows** (99.2 % retention); 37 -> 90 columns; 0 residual NaN; `qc_report.txt` 5/5 checks PASS |
 | 3 — Climate Signature | `04b`, `04d` | **RUN** | `Tm_target` fixed at **57 °C** for every point (50 + 7, indirect-system rule); PCA temperature/elevation block now uses real `elevation_m` (balanced ~0.37 loading on PC1, which explains 90.7% of variance) instead of the old pressure-derived `elev_proxy` (which had an outsized, unexplained −0.33/0.59 loading) |
 | 4 — Regime Clustering | `05`, `05b` | **RUN** | **K_FINAL = 4** (was 5 until 2026-10), GMM **diagonal** covariance; sizes **10 / 23 / 9 / 3** (Clusters 0–3); silhouette **0.362**, DB 0.935, CH 28.9 — best DB/CH of K = 2…10 and most stable; regimes ordered by temperature/elevation (~24.7 °C / 320 m → ~13.8 °C / 2,220 m) |
 | 5 — Feasibility Filtering | `06`, `07` (`07b`) | **RUN** | 55-candidate database; melting window [52, 65] °C; **29/29/29/30 candidates survive in Clusters 0–3** — `07b`'s regime cap lowers `Tm_target` for Clusters 2 (56.51 °C) and 3 (55.16 °C), but only Cluster 3's survivor set changes |
@@ -1553,7 +1553,7 @@ Source: `docs/uttarakhand/04_PHASE_2_AUDIT.md`
 `04c_interactive_postprocess_qc.py`
 
 **Status**: **COMPLETE.** `climate_uttarakhand_points.csv` is confirmed at **493,155 rows**;
-`uttarakhand_cleaned_physical.csv` at **489,105 rows × 89 columns** with zero residual missing
+`uttarakhand_cleaned_physical.csv` at **489,105 rows × 90 columns** with zero residual missing
 values.
 
 This file contains everything Phase 2: the merge, the Tier-2 daily-integral repair, the ERA5
@@ -2002,8 +2002,8 @@ df["DHI"] = (df["GHI"] - df["DNI"] * cos_z).clip(0)
 
 **Not independently derived.** The closure equation `GHI = DNI·cos(SZA) + DHI` is satisfied *by
 construction*, so agreement with it is evidence of nothing, and any error in GHI or DNI propagates
-entirely into DHI. Because GHI is anomalously low while DNI comes from a separate un-deaccumulated
-field, the residual will frequently be negative and clipped to zero. `04`'s `BOUNDS` records **no**
+entirely into DHI. Before the 2026-09 deaccumulation fix GHI was anomalously low while DNI came from a
+separate un-deaccumulated field, so the residual was frequently negative and clipped to zero. `04`'s `BOUNDS` records **no**
 `era5_DHI` flags, consistent with the column being dominated by clipped zeros.
 
 **`DHI` is not used by `04b_climate_signature.py`.** Its only appearance downstream is in `04`'s
@@ -2014,7 +2014,7 @@ correlation and VIF reports. It should not be presented as a measured or modelle
 `CSI = GHI / GHI_clearsky` clipped [0, 1.5], forced to 0 below a 10 W/m² clear-sky floor and again
 where `SZA ≥ 90°`.
 
-Because GHI is anomalously low while `GHI_clearsky` is validated as correct, **`era5_CSI` is
+Before the 2026-09 fix GHI was anomalously low while `GHI_clearsky` was validated as correct, so **`era5_CSI` was
 correspondingly depressed**, and with it `kt_mean_proxy`, `kt_std_proxy`, `cloudy_frac_proxy`,
 `CCI_proxy`, `SAI_proxy` and `era5_cloud_opacity`.
 
@@ -2024,7 +2024,8 @@ correspondingly depressed**, and with it `kt_mean_proxy`, `kt_std_proxy`, `cloud
 rule. This is a real architectural benefit of the Tier-2 repair and should be reported as such.
 
 **The one exception is `GHI_mean`** (mean noon `era5_GHI`), which carries no `_proxy` suffix and has
-no Tier-2 override, so it enters the clustering matrix carrying the anomaly.
+no Tier-2 override, so before the fix it entered the clustering matrix carrying the anomaly. Since the
+2026-09 `deaccumulate()` fix it carries correct-magnitude ERA5 noon GHI.
 
 ### Cloud cover, precipitation, longwave
 
@@ -2032,15 +2033,16 @@ no Tier-2 override, so it enters the clustering matrix carrying the anomaly.
 |---|---|---|---|
 | `era5_cloud_cover` | `tcc` pass-through | [0, 1] | 0 |
 | `era5_precipitation` | `deaccumulate(tp) × 1000` mm | [0, 200] | 0 |
-| `era5_LW_down` | `deaccumulate(strd)/3600` | **[50, 600]** | **363,525 (73.7 %)** |
+| `era5_LW_down` | `deaccumulate(strd)/3600` | **[50, 600]** | **0 since the 2026-09 fix** (was 363,525 / 73.7 % pre-fix) |
 
-Cleaned `era5_precipitation`: mean **0.08 mm**, std 0.44, max **45.85 mm** — per-instant values at
-three sun-event samples per day, not daily totals. It also passes through `deaccumulate()`, so it
-carries the same unverified assumption; its only downstream use is `monsoon_index`, a **ratio** in
+Cleaned `era5_precipitation`: mean **0.19 mm**, std 0.80, max **63.91 mm** (post-fix; was 0.08 / 0.44 /
+45.85 before the 2026-09 `deaccumulate()` fix) — per-instant values at three sun-event samples per
+day, not daily totals. It passes through the same (now fixed) `deaccumulate()`; its only downstream use is `monsoon_index`, a **ratio** in
 which a uniform multiplicative error would cancel (a non-uniform one would not).
 
-`era5_LW_down` is not used by `04b`; its impact is limited to the correlation/VIF reports. It is
-retained here as the second independent fingerprint of the de-accumulation problem.
+`era5_LW_down` is not used by `04b`; its impact is limited to the correlation/VIF reports. Its
+pre-fix 73.7 % bound violation was the second independent fingerprint of the de-accumulation
+problem; it has no flags since the fix.
 
 ### Physical bounds applied to derived solar variables
 
@@ -2050,12 +2052,12 @@ retained here as the second independent fingerprint of the de-accumulation probl
 | `GHI`, `DNI`, `GHI_clearsky` | `[0, 1400]` | `04` | 0 each |
 | `DHI` | `[0, 900]` | `04` | 0 |
 | `CSI` | `[0, 1.5]` | `04` | 0 |
-| `LW_down` | `[50, 600]` | `04` | **363,525** |
+| `LW_down` | `[50, 600]` | `04` | **0** (was 363,525 pre-fix) |
 | all five solar fields | forced `0.0` where `SZA ≥ 90°` | `04` | logged to `qc_report.txt`, not committed |
 
-Not one of the five directly-solar columns triggered a physical-bounds flag. Read with the observed
-magnitudes, that says the values sit comfortably *inside* their ranges because they are too small,
-not because they are correct.
+Not one of the five directly-solar columns triggered a physical-bounds flag. Before the 2026-09 fix
+that was because the values were too small; since the fix the cleaned `era5_GHI` reaches 1,079 W/m²
+and still sits inside its [0, 1400] bound.
 
 ## A.8 Cross-Source Validation Decision — RESOLVED (2026-09): a decision now exists, but it is still never applied to the pipeline's data
 
@@ -2216,7 +2218,7 @@ comment: "matches your 'safer than clipping' rule."
 
 | Column | Lower | Upper | Values flagged (observed) |
 |---|---|---|---|
-| `era5_LW_down` | **50 W/m²** | 600 W/m² | **363,525 (73.7 %)** |
+| `era5_LW_down` | **50 W/m²** | 600 W/m² | **0** (was 363,525 / 73.7 % before the 2026-09 deaccumulation fix) |
 | `era5_P_atm` | **850 hPa** | 1060 hPa | **182,899 (37.1 %)** |
 | `era5_GHI`, `era5_DNI`, `era5_GHI_clearsky` | 0 | 1400 W/m² | 0 |
 | `era5_DHI` | 0 | 900 W/m² | 0 |
@@ -2252,11 +2254,11 @@ event*, roughly ±15 days. **Policy: flag → `NaN`, never delete.**
 | Column | Flagged | % of 493,155 |
 |---|---|---|
 | `era5_cloud_cover` | **49,519** | 10.04 % |
-| `era5_GHI` | **35,559** | 7.21 % |
+| `era5_GHI` | **33,781** | 6.85 % |
 | `era5_W_spd` | 11,350 | 2.30 % |
 | `era5_T_amb` | 9,762 | 1.98 % |
 | `era5_RHum` | 8,814 | 1.79 % |
-| **Total** | **114,004** | |
+| **Total** | **113,226** | |
 
 **Both high rates have the same cause: univariate MAD filtering misapplied to variables whose
 variance is the signal.** `era5_cloud_cover` is a bounded [0, 1] strongly bimodal variable (clear or
@@ -2288,9 +2290,10 @@ clustering, just named `impute_zone` to avoid confusion with it." With 45 points
 averages 5–6 points; `README_PREPROCESSING.md` warns this "will produce noticeably coarser zones
 with 45 points to group."
 
-**How many values reached each tier is not available in the source files** — `04` logs the
-`Remaining after …` counts to `qc_report.txt`, which is git-ignored, and `04c`'s parser extracts
-only the `physical_bounds` and `hampel_MAD` categories.
+**Tier counts (from the local, git-ignored `qc_report.txt`):** 296,344 cells were imputed in total
+(2.861 % of the imputable matrix); 174,903 were still missing after tiers (a)+(b), 0 after the
+median tier (c), so **MICE (d) was not needed in the current run**. `04c`'s parser extracts only the
+`physical_bounds` and `hampel_MAD` categories into the committed CSV.
 
 ## B.4 Steps 5–9c — validation, feature engineering, occurrence-based features
 
@@ -2391,8 +2394,8 @@ From `data/plots/verify_preprocessing/07_preprocessing_summary.png`:
 | Input records | 493,155 |
 | Output records | **489,105** |
 | Data retention | **99.2 %** |
-| Input dimensions | 36 |
-| Output dimensions | **89** |
+| Input dimensions | 37 (includes `elevation_m`, added 2026-09) |
+| Output dimensions | **90** |
 | Core climate variables | 6 |
 | Engineered features | 45 |
 | Completeness of all 6 core variables | **100.0 % each** |
@@ -2404,7 +2407,7 @@ cover something and step 13's hard gate should already have failed").
 
 ## B.8 Cleaned-file distributions (observed)
 
-From `data/plots/verify_preprocessing/01_climate_distributions.png`, over all 489,105 rows:
+From `data/plots/verify_preprocessing/01_climate_distributions.png` (regenerated 2026-11, post-fix), over all 489,105 rows:
 
 | Column | Mean | Std | Min | Max |
 |---|---|---|---|---|
@@ -2412,8 +2415,8 @@ From `data/plots/verify_preprocessing/01_climate_distributions.png`, over all 48
 | `era5_RHum` (%) | 68.99 | 19.00 | 8.96 | 100.00 |
 | `era5_W_spd` (m/s) | 1.43 | 0.75 | 0.00 | 9.08 |
 | `era5_P_atm` (hPa) | 901.90 | 47.66 | **850.00** | 1001.65 |
-| `era5_GHI` (W/m²) | **21.03** | 37.94 | 0.00 | **702.74** |
-| `era5_precipitation` (mm) | 0.08 | 0.44 | 0.00 | 45.85 |
+| `era5_GHI` (W/m²) | **243.14** | 343.06 | 0.00 | **1079.11** |
+| `era5_precipitation` (mm) | 0.19 | 0.80 | 0.00 | 63.91 |
 
 Three observations for a write-up:
 
@@ -2434,7 +2437,7 @@ Three observations for a write-up:
    geopotential instead, so `PCA_BLOCK` no longer touches `era5_P_atm` at all. The 850 hPa
    truncation is therefore a real, still-unfixed data-quality issue for `era5_P_atm` itself (and
    anything still reading that column directly), but it no longer contaminates elevation/clustering.
-3. **`era5_GHI` is anomalously low** — see Part A.3.
+3. **`era5_GHI` was anomalously low before the 2026-09 deaccumulation fix** (mean 21.03, max 702.74 W/m²) — see Part A.3. Post-fix the mean is 243.14 W/m² and the maximum 1,079.11 W/m².
 
 ## B.9 Post-cleaning QA (`04c_postprocess_plots.py`)
 
@@ -2491,11 +2494,11 @@ Ranked by severity.
 4. **~~`era5_LW_down`'s 50 W/m² bound destroyed 73.7%~~ RESOLVED.** Was a second independent
    fingerprint of the deaccumulation bug (item 1) — no longer appears in `C_qc_flag_counts.csv` at
    all post-fix.
-5. **The Hampel filter flagged 10.0 % of `era5_cloud_cover` and 7.2 % of `era5_GHI`** — a known
+5. **The Hampel filter flagged 10.0 % of `era5_cloud_cover` and 6.9 % of `era5_GHI`** — a known
    weakness of univariate MAD filtering on bounded bimodal and high-variance-by-nature variables.
-   114,004 values across five columns were replaced by imputation.
-6. **Imputed and flagged cells are unmarked in the output.** With 114,004 Hampel-NaN'd values plus
-   546,424 bounds-NaN'd values all imputed and unlabelled, a consumer of
+   113,226 values across five columns were replaced by imputation.
+6. **Imputed and flagged cells are unmarked in the output.** With 113,226 Hampel-NaN'd values plus
+   182,899 bounds-NaN'd values (`era5_P_atm` only, post-fix) all imputed and unlabelled, a consumer of
    `uttarakhand_cleaned_physical.csv` cannot distinguish measured from reconstructed values. Adding
    `{col}_imputed` booleans would cost little and would let `09`'s caveat text be specific. (The
    *PCM* database does carry `*_imputed` flags; the climate data does not.)
@@ -2848,10 +2851,10 @@ recommendation depends on.
 | `GHI_mean` | ERA5 noon GHI, no Tier-2 override — **RESOLVED (2026-09)**, the deaccumulation bug that deflated it ~10x is fixed | Was High, now resolved |
 | `elevation_m` | **RESOLVED (2026-09)** — no longer built from `era5_P_atm`; now real elevation from ERA5 geopotential, unaffected by the 850 hPa bound issue | Was High for a montane state, now resolved |
 | `RH_mean` | ERA5-side proxy fallback, used only when Tier-2 (`RH_mean_true`) is missing — **RESOLVED (2026-09)**, the fallback naming bug that could silently null this is fixed; currently 100% Tier-2 coverage so this row is canonical NASA POWER data, not ERA5, for every point in this run | Was Moderate, now resolved |
-| `wind_mean` | ERA5-side, −1.14 m/s MBE vs POWER, unused `wind_mean_true` available | Moderate |
-| `HSI` | Built on `RH_mean`, so inherits its offset | Moderate |
+| `wind_mean` | **RESOLVED (2026-09)** — `CANON_MAP` maps it to `wind_mean_true`, so with 100% Tier-2 coverage it is NASA POWER data, not the ERA5 series with the −1.14 m/s MBE | Was Moderate, now resolved |
+| `HSI` | Built on `RH_mean`; inherits whatever offset that column has (now canonical NASA POWER) | Low |
 | `monsoon_index` | Permanently a 3×/day ERA5 precipitation *fraction*; JJAS here vs JJA in `SEASON_MAP` | Low (a ratio; descriptive only) |
-| `int_wind_x_TaMinusTsoil` | Algebraically `3.0 × wind_mean` — a rescaled duplicate, not an interaction | Low |
+| ~~`int_wind_x_TaMinusTsoil`~~ | **Removed** — it was algebraically `3.0 × wind_mean`; the signature now has 4 interaction terms | — |
 | `Tm_target_C` | Zero-variance column | Cosmetic |
 
 ## `04d_signature_interactive.py` — explorer
@@ -2893,7 +2896,7 @@ None of Phase 3's own outputs are committed. The only surviving evidence of the 
 | Tier-2 coverage per point reported | Implemented; value not available in the source files |
 | Reads the physical (unscaled) file only | **Confirmed** — `PHYSICAL_FILE` is the only climate input |
 | lat/lon excluded from clustering | **Confirmed** — dropped in `DROP_FROM_CLUSTERING`, re-announced by `05` |
-| PCA retains 95 % variance | Implemented (`n_components=0.95`); component count not available |
+| PCA retains 95 % variance | Implemented (`n_components=0.95`); **2 components** (PC1 90.7 %, PC2 6.8 %) |
 | Diagnostic plots handle degenerate columns | **Yes** — `signature_distributions.png` has an explicit constant-value branch, which is what `Tm_target_C` triggers |
 
 ## Problems / risks
@@ -3151,7 +3154,7 @@ into a warm-plains cluster (0) and a mid-hill cluster (1).
 | 1 | 23 | **3,993,013** | 38.1 % | 29.125 – 30.625 (29.625) | 77.875 – 80.125 (79.375) | ~1,090 m |
 | 2 | 9 | **2,451,044** | 23.4 % | 30.125 – 30.625 (30.292) | 78.125 – 78.875 (78.486) | ~1,299 m |
 | 3 | **3** | **330,780** | 3.2 % | 30.125 – 30.375 (30.292) | 79.125 – 79.375 (79.292) | ~2,219 m |
-| **Total** | **45** | **10,475,713** | 100 % | | | |
+| **Total** | **45** | **10,475,711** | 100 % | | | |
 
 (Mean elevation is the population-weighted `elevation_m` from the cluster profiles.)
 Cluster 3 is the smallest by both point count (3) and population (3.2 %), and is the most spatially
@@ -3184,9 +3187,9 @@ inputs.
 > such as "warm plains" (C0) or "high Himalaya" (C3) in a write-up are interpretation added on top
 > of the pipeline, based on the elevation and temperature columns above.
 
-> **`GHI_mean` enters the clustering matrix carrying the ERA5 GHI anomaly** documented in
-> `04_PHASE_2_AUDIT.md` Part A.3. The *relative* ordering across clusters is informative; treat
-> absolute magnitudes with that caveat.
+> **`GHI_mean` is the one solar column with no Tier-2 (NASA POWER) override.** It is ERA5 noon GHI;
+> the magnitude anomaly it used to carry (`04_PHASE_2_AUDIT.md` Part A.3) was fixed in 2026-09, so the
+> values above are correct-magnitude ERA5 values.
 
 ### Soft membership — effectively hard at K = 4
 
@@ -3303,8 +3306,9 @@ Davies-Bouldin or Calinski-Harabasz appears anywhere in `era5-uttarakhand/`. See
 5. **Cluster 3 is a 3-point regime carrying 3.2 % of population.** Every per-cluster statistic for
    it — profile means, survivor counts, MCDM ranks — rests on three sampling points.
 6. **`Tm_target_C` enters the clustering matrix as a zero-variance column.** Harmless but untidy.
-7. **`GHI_mean` enters the clustering matrix carrying the ERA5 GHI anomaly** — the one solar column
-   the Tier-2 repair does not cover.
+7. **`GHI_mean` is the one solar column the Tier-2 repair does not cover** — it is ERA5-only noon GHI.
+   The magnitude anomaly it used to carry was fixed in 2026-09; what remains is that it is not
+   cross-checked against NASA POWER the way the other solar indices are.
 
 ## Status
 
@@ -4661,7 +4665,7 @@ are the evidentiary backbone of this entire documentation set:
   0.4321; clear-sky GHI MBE +5.625, r = 0.9929; T_amb MBE
   −0.089 °C, r = 0.902; RHum +11.383 %; wind −1.141 m/s).
 - **`data/plots/post_preprocess/C_qc_flag_counts.csv`** — the only committed QC counts
-  (`era5_LW_down` 363,525 and `era5_P_atm` 182,899 physical-bounds flags; Hampel flags
+  (`era5_P_atm` 182,899 physical-bounds flags — `era5_LW_down`'s pre-fix 363,525 no longer appears; Hampel flags
   `era5_cloud_cover` 49,519, `era5_GHI` 35,559, `era5_W_spd` 11,350, `era5_T_amb` 9,762,
   `era5_RHum` 8,814).
 
@@ -4961,7 +4965,7 @@ readiness verdict for the `era5-uttarakhand/` pipeline.
 | 1 — Data Collection | `00a`, `00b`, `01`, `01b`, `00_unzip_accum` | **COMPLETE** | 45 points `UKP_0001–UKP_0045`, 10,475,711 population, 2016–2025 |
 | 2 — Combine + Tier-2 repair | `02`, `02b` | **COMPLETE** | **493,155 rows = 45 × 3,653 × 3 exactly** — zero rows lost to the 3 h match window |
 | 2 QA — Raw checks | `03`, `03b`, `03b_agreement_analysis` | **COMPLETE, RESOLVED 2026-09** | Noon peaks GHI (timezone OK); post-deaccumulation-fix **GHI MBE +19.55 W/m², r = 0.759**, `03b_agreement_analysis.py` decision branch **QUANTILE_MAP** (was MBE −211.4/−602 W/m², r = 0.432/-0.03 pre-fix, branch MANUAL_REVIEW) |
-| 2 — Preprocessing & QC | `04`, `04c` ×2 | **COMPLETE** | 493,155 → **489,105 rows** (99.2 %); 36 → 89 columns; **zero residual NaN** |
+| 2 — Preprocessing & QC | `04`, `04c` ×2 | **COMPLETE** | 493,155 → **489,105 rows** (99.2 %); 37 → 90 columns; **zero residual NaN** |
 | 3 — Climate Signature | `04b`, `04d` | **COMPLETE** | Two-tier merge; `Tm_target` fixed at **57 °C** for every point; real per-point `elevation_m` (196-2510m) replaces the old pressure-derived `elev_proxy` |
 | 4 — Regime Clustering | `05`, `05b` | **COMPLETE, K revised 2026-10** | **K = 4** (was 5), GMM **diagonal** covariance; sizes **10 / 23 / 9 / 3**; silhouette **0.362**, DB 0.935, CH 28.9 — best DB/CH of K = 2…10, tied-best silhouette, most seed/subsample-stable (K = 5 was worse on all three metrics) |
 | 5 — Feasibility Filtering | `06`, `07`, `07b` | **COMPLETE** | 55-candidate database; window [52, 65] °C at Tm_target=57; **29/29/29/30 survivors**; `07b`'s regime cap gives Clusters 2/3 56.51/55.16 °C, but only Cluster 3's survivor set changes. A floating-point edge in the window comparison (made Cluster 0 drop two `Tm` = 52.0 °C candidates) fixed 2026-10 |
@@ -5112,12 +5116,12 @@ readiness verdict for the `era5-uttarakhand/` pipeline.
 
 ### Open, medium priority
 
-8. **The Hampel filter flagged 10.0 % of `era5_cloud_cover` and 7.2 % of `era5_GHI`** — a known
+8. **The Hampel filter flagged 10.0 % of `era5_cloud_cover` and 6.9 % of `era5_GHI`** — a known
    weakness of univariate MAD filtering on bounded bimodal and high-variance-by-nature variables.
-   114,004 values across five columns were replaced by imputation. Clouds are weather, not errors.
+   113,226 values across five columns were replaced by imputation. Clouds are weather, not errors.
 
-9. **Imputed and flagged climate cells are unmarked in the output.** 114,004 Hampel-NaN'd plus
-   546,424 bounds-NaN'd values were imputed with no `{col}_imputed` flag. The *PCM* database carries
+9. **Imputed and flagged climate cells are unmarked in the output.** 113,226 Hampel-NaN'd plus
+   182,899 bounds-NaN'd values were imputed with no `{col}_imputed` flag. The *PCM* database carries
    such flags; the climate data does not.
 
 10. **~~`RH_mean`/`wind_mean` reach the clustering matrix from the ERA5 side while Tier-2
@@ -5146,7 +5150,7 @@ readiness verdict for the `era5-uttarakhand/` pipeline.
     night load. Non-binding in this run, but both should be stated.
 
 16. **Plotting/verification defects** — the Tamil-Nadu map centre, the four `passes_all`-blind
-    plots, the never-run `comparison_plots_uttarakhand.py`, the mislabelled agreement plot and the
+    plots, the formerly never-run `comparison_plots_uttarakhand.py` (fixed 2026-09), the mislabelled agreement plot and the
     synthetic tank plot. All thirteen are tabulated in
     `11_OBJECTIVE1_PLOTTING_AND_VERIFICATION_AUDIT.md`.
 
@@ -5574,14 +5578,14 @@ Content merged:
 
 Content merged:
 - The 13-step sequence in full, with the occurrence-not-hours schema note the script leads with
-- Physical-bounds table with observed flag counts (`era5_LW_down` 363,525; `era5_P_atm` 182,899)
-- The Hampel filter and why 10.0 % of `era5_cloud_cover` and 7.2 % of `era5_GHI` were flagged —
+- Physical-bounds table with observed flag counts (`era5_P_atm` 182,899; `era5_LW_down` 0 post-fix, 363,525 pre-fix)
+- The Hampel filter and why 10.0 % of `era5_cloud_cover` and 6.9 % of `era5_GHI` were flagged —
   clouds are weather, not errors
 - The four-tier hierarchical imputation chain and the `impute_zone` clarification
 - Feature engineering, lag/rolling/delta counts (18 + 24 + 3 = 45, matching the verified figure)
 - The 4,050-row lag warm-up drop = 45 × 3 × 30 exactly
 - Leakage-safe scaling and the step-13 hard gate
-- The verified outcome: 489,105 rows, 89 columns, 100 % complete cases
+- The verified outcome: 489,105 rows, 90 columns, 100 % complete cases
 - The cleaned-file distribution table and its three key observations
 - `04c`'s six post-cleaning checks
 

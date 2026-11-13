@@ -113,14 +113,14 @@ Content merged:
 
 Content merged:
 - The 13-step sequence in full, with the occurrence-not-hours schema note the script leads with
-- Physical-bounds table with observed flag counts (`era5_LW_down` 363,525; `era5_P_atm` 182,899)
-- The Hampel filter and why 10.0 % of `era5_cloud_cover` and 7.2 % of `era5_GHI` were flagged —
+- Physical-bounds table with observed flag counts (`era5_P_atm` 182,899; `era5_LW_down` 0 post-fix, 363,525 pre-fix)
+- The Hampel filter and why 10.0 % of `era5_cloud_cover` and 6.9 % of `era5_GHI` were flagged —
   clouds are weather, not errors
 - The four-tier hierarchical imputation chain and the `impute_zone` clarification
 - Feature engineering, lag/rolling/delta counts (18 + 24 + 3 = 45, matching the verified figure)
 - The 4,050-row lag warm-up drop = 45 × 3 × 30 exactly
 - Leakage-safe scaling and the step-13 hard gate
-- The verified outcome: 489,105 rows, 89 columns, 100 % complete cases
+- The verified outcome: 489,105 rows, 90 columns, 100 % complete cases
 - The cleaned-file distribution table and its three key observations
 - `04c`'s six post-cleaning checks
 

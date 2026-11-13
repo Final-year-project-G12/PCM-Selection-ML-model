@@ -5,7 +5,7 @@
 `04c_interactive_postprocess_qc.py`
 
 **Status**: **COMPLETE.** `climate_uttarakhand_points.csv` is confirmed at **493,155 rows**;
-`uttarakhand_cleaned_physical.csv` at **489,105 rows × 89 columns** with zero residual missing
+`uttarakhand_cleaned_physical.csv` at **489,105 rows × 90 columns** with zero residual missing
 values.
 
 This file contains everything Phase 2: the merge, the Tier-2 daily-integral repair, the ERA5
@@ -454,8 +454,8 @@ df["DHI"] = (df["GHI"] - df["DNI"] * cos_z).clip(0)
 
 **Not independently derived.** The closure equation `GHI = DNI·cos(SZA) + DHI` is satisfied *by
 construction*, so agreement with it is evidence of nothing, and any error in GHI or DNI propagates
-entirely into DHI. Because GHI is anomalously low while DNI comes from a separate un-deaccumulated
-field, the residual will frequently be negative and clipped to zero. `04`'s `BOUNDS` records **no**
+entirely into DHI. Before the 2026-09 deaccumulation fix GHI was anomalously low while DNI came from a
+separate un-deaccumulated field, so the residual was frequently negative and clipped to zero. `04`'s `BOUNDS` records **no**
 `era5_DHI` flags, consistent with the column being dominated by clipped zeros.
 
 **`DHI` is not used by `04b_climate_signature.py`.** Its only appearance downstream is in `04`'s
@@ -466,7 +466,7 @@ correlation and VIF reports. It should not be presented as a measured or modelle
 `CSI = GHI / GHI_clearsky` clipped [0, 1.5], forced to 0 below a 10 W/m² clear-sky floor and again
 where `SZA ≥ 90°`.
 
-Because GHI is anomalously low while `GHI_clearsky` is validated as correct, **`era5_CSI` is
+Before the 2026-09 fix GHI was anomalously low while `GHI_clearsky` was validated as correct, so **`era5_CSI` was
 correspondingly depressed**, and with it `kt_mean_proxy`, `kt_std_proxy`, `cloudy_frac_proxy`,
 `CCI_proxy`, `SAI_proxy` and `era5_cloud_opacity`.
 
@@ -476,7 +476,8 @@ correspondingly depressed**, and with it `kt_mean_proxy`, `kt_std_proxy`, `cloud
 rule. This is a real architectural benefit of the Tier-2 repair and should be reported as such.
 
 **The one exception is `GHI_mean`** (mean noon `era5_GHI`), which carries no `_proxy` suffix and has
-no Tier-2 override, so it enters the clustering matrix carrying the anomaly.
+no Tier-2 override, so before the fix it entered the clustering matrix carrying the anomaly. Since the
+2026-09 `deaccumulate()` fix it carries correct-magnitude ERA5 noon GHI.
 
 ### Cloud cover, precipitation, longwave
 
@@ -484,15 +485,16 @@ no Tier-2 override, so it enters the clustering matrix carrying the anomaly.
 |---|---|---|---|
 | `era5_cloud_cover` | `tcc` pass-through | [0, 1] | 0 |
 | `era5_precipitation` | `deaccumulate(tp) × 1000` mm | [0, 200] | 0 |
-| `era5_LW_down` | `deaccumulate(strd)/3600` | **[50, 600]** | **363,525 (73.7 %)** |
+| `era5_LW_down` | `deaccumulate(strd)/3600` | **[50, 600]** | **0 since the 2026-09 fix** (was 363,525 / 73.7 % pre-fix) |
 
-Cleaned `era5_precipitation`: mean **0.08 mm**, std 0.44, max **45.85 mm** — per-instant values at
-three sun-event samples per day, not daily totals. It also passes through `deaccumulate()`, so it
-carries the same unverified assumption; its only downstream use is `monsoon_index`, a **ratio** in
+Cleaned `era5_precipitation`: mean **0.19 mm**, std 0.80, max **63.91 mm** (post-fix; was 0.08 / 0.44 /
+45.85 before the 2026-09 `deaccumulate()` fix) — per-instant values at three sun-event samples per
+day, not daily totals. It passes through the same (now fixed) `deaccumulate()`; its only downstream use is `monsoon_index`, a **ratio** in
 which a uniform multiplicative error would cancel (a non-uniform one would not).
 
-`era5_LW_down` is not used by `04b`; its impact is limited to the correlation/VIF reports. It is
-retained here as the second independent fingerprint of the de-accumulation problem.
+`era5_LW_down` is not used by `04b`; its impact is limited to the correlation/VIF reports. Its
+pre-fix 73.7 % bound violation was the second independent fingerprint of the de-accumulation
+problem; it has no flags since the fix.
 
 ### Physical bounds applied to derived solar variables
 
@@ -502,12 +504,12 @@ retained here as the second independent fingerprint of the de-accumulation probl
 | `GHI`, `DNI`, `GHI_clearsky` | `[0, 1400]` | `04` | 0 each |
 | `DHI` | `[0, 900]` | `04` | 0 |
 | `CSI` | `[0, 1.5]` | `04` | 0 |
-| `LW_down` | `[50, 600]` | `04` | **363,525** |
+| `LW_down` | `[50, 600]` | `04` | **0** (was 363,525 pre-fix) |
 | all five solar fields | forced `0.0` where `SZA ≥ 90°` | `04` | logged to `qc_report.txt`, not committed |
 
-Not one of the five directly-solar columns triggered a physical-bounds flag. Read with the observed
-magnitudes, that says the values sit comfortably *inside* their ranges because they are too small,
-not because they are correct.
+Not one of the five directly-solar columns triggered a physical-bounds flag. Before the 2026-09 fix
+that was because the values were too small; since the fix the cleaned `era5_GHI` reaches 1,079 W/m²
+and still sits inside its [0, 1400] bound.
 
 ## A.8 Cross-Source Validation Decision — RESOLVED (2026-09): a decision now exists, but it is still never applied to the pipeline's data
 
@@ -668,7 +670,7 @@ comment: "matches your 'safer than clipping' rule."
 
 | Column | Lower | Upper | Values flagged (observed) |
 |---|---|---|---|
-| `era5_LW_down` | **50 W/m²** | 600 W/m² | **363,525 (73.7 %)** |
+| `era5_LW_down` | **50 W/m²** | 600 W/m² | **0** (was 363,525 / 73.7 % before the 2026-09 deaccumulation fix) |
 | `era5_P_atm` | **850 hPa** | 1060 hPa | **182,899 (37.1 %)** |
 | `era5_GHI`, `era5_DNI`, `era5_GHI_clearsky` | 0 | 1400 W/m² | 0 |
 | `era5_DHI` | 0 | 900 W/m² | 0 |
@@ -704,11 +706,11 @@ event*, roughly ±15 days. **Policy: flag → `NaN`, never delete.**
 | Column | Flagged | % of 493,155 |
 |---|---|---|
 | `era5_cloud_cover` | **49,519** | 10.04 % |
-| `era5_GHI` | **35,559** | 7.21 % |
+| `era5_GHI` | **33,781** | 6.85 % |
 | `era5_W_spd` | 11,350 | 2.30 % |
 | `era5_T_amb` | 9,762 | 1.98 % |
 | `era5_RHum` | 8,814 | 1.79 % |
-| **Total** | **114,004** | |
+| **Total** | **113,226** | |
 
 **Both high rates have the same cause: univariate MAD filtering misapplied to variables whose
 variance is the signal.** `era5_cloud_cover` is a bounded [0, 1] strongly bimodal variable (clear or
@@ -740,9 +742,10 @@ clustering, just named `impute_zone` to avoid confusion with it." With 45 points
 averages 5–6 points; `README_PREPROCESSING.md` warns this "will produce noticeably coarser zones
 with 45 points to group."
 
-**How many values reached each tier is not available in the source files** — `04` logs the
-`Remaining after …` counts to `qc_report.txt`, which is git-ignored, and `04c`'s parser extracts
-only the `physical_bounds` and `hampel_MAD` categories.
+**Tier counts (from the local, git-ignored `qc_report.txt`):** 296,344 cells were imputed in total
+(2.861 % of the imputable matrix); 174,903 were still missing after tiers (a)+(b), 0 after the
+median tier (c), so **MICE (d) was not needed in the current run**. `04c`'s parser extracts only the
+`physical_bounds` and `hampel_MAD` categories into the committed CSV.
 
 ## B.4 Steps 5–9c — validation, feature engineering, occurrence-based features
 
@@ -843,8 +846,8 @@ From `data/plots/verify_preprocessing/07_preprocessing_summary.png`:
 | Input records | 493,155 |
 | Output records | **489,105** |
 | Data retention | **99.2 %** |
-| Input dimensions | 36 |
-| Output dimensions | **89** |
+| Input dimensions | 37 (includes `elevation_m`, added 2026-09) |
+| Output dimensions | **90** |
 | Core climate variables | 6 |
 | Engineered features | 45 |
 | Completeness of all 6 core variables | **100.0 % each** |
@@ -856,7 +859,7 @@ cover something and step 13's hard gate should already have failed").
 
 ## B.8 Cleaned-file distributions (observed)
 
-From `data/plots/verify_preprocessing/01_climate_distributions.png`, over all 489,105 rows:
+From `data/plots/verify_preprocessing/01_climate_distributions.png` (regenerated 2026-11, post-fix), over all 489,105 rows:
 
 | Column | Mean | Std | Min | Max |
 |---|---|---|---|---|
@@ -864,8 +867,8 @@ From `data/plots/verify_preprocessing/01_climate_distributions.png`, over all 48
 | `era5_RHum` (%) | 68.99 | 19.00 | 8.96 | 100.00 |
 | `era5_W_spd` (m/s) | 1.43 | 0.75 | 0.00 | 9.08 |
 | `era5_P_atm` (hPa) | 901.90 | 47.66 | **850.00** | 1001.65 |
-| `era5_GHI` (W/m²) | **21.03** | 37.94 | 0.00 | **702.74** |
-| `era5_precipitation` (mm) | 0.08 | 0.44 | 0.00 | 45.85 |
+| `era5_GHI` (W/m²) | **243.14** | 343.06 | 0.00 | **1079.11** |
+| `era5_precipitation` (mm) | 0.19 | 0.80 | 0.00 | 63.91 |
 
 Three observations for a write-up:
 
@@ -886,7 +889,7 @@ Three observations for a write-up:
    geopotential instead, so `PCA_BLOCK` no longer touches `era5_P_atm` at all. The 850 hPa
    truncation is therefore a real, still-unfixed data-quality issue for `era5_P_atm` itself (and
    anything still reading that column directly), but it no longer contaminates elevation/clustering.
-3. **`era5_GHI` is anomalously low** — see Part A.3.
+3. **`era5_GHI` was anomalously low before the 2026-09 deaccumulation fix** (mean 21.03, max 702.74 W/m²) — see Part A.3. Post-fix the mean is 243.14 W/m² and the maximum 1,079.11 W/m².
 
 ## B.9 Post-cleaning QA (`04c_postprocess_plots.py`)
 
@@ -943,11 +946,11 @@ Ranked by severity.
 4. **~~`era5_LW_down`'s 50 W/m² bound destroyed 73.7%~~ RESOLVED.** Was a second independent
    fingerprint of the deaccumulation bug (item 1) — no longer appears in `C_qc_flag_counts.csv` at
    all post-fix.
-5. **The Hampel filter flagged 10.0 % of `era5_cloud_cover` and 7.2 % of `era5_GHI`** — a known
+5. **The Hampel filter flagged 10.0 % of `era5_cloud_cover` and 6.9 % of `era5_GHI`** — a known
    weakness of univariate MAD filtering on bounded bimodal and high-variance-by-nature variables.
-   114,004 values across five columns were replaced by imputation.
-6. **Imputed and flagged cells are unmarked in the output.** With 114,004 Hampel-NaN'd values plus
-   546,424 bounds-NaN'd values all imputed and unlabelled, a consumer of
+   113,226 values across five columns were replaced by imputation.
+6. **Imputed and flagged cells are unmarked in the output.** With 113,226 Hampel-NaN'd values plus
+   182,899 bounds-NaN'd values (`era5_P_atm` only, post-fix) all imputed and unlabelled, a consumer of
    `uttarakhand_cleaned_physical.csv` cannot distinguish measured from reconstructed values. Adding
    `{col}_imputed` booleans would cost little and would let `09`'s caveat text be specific. (The
    *PCM* database does carry `*_imputed` flags; the climate data does not.)
