@@ -331,7 +331,7 @@ section's survivor-count table" — a deliberate design choice. **Consumers must
 
 ### Confirmed from committed artefacts
 
-`data/plots/verify_feasibility/06_summary.png` (current K = 4 run):
+`data/plots/verify_feasibility/06_feasibility_summary.png` (current K = 4 run):
 
 ```
 Total survivors: 117
@@ -341,9 +341,8 @@ Avg survivors/cluster: 29.2
 ```
 
 `verify_03_feasibility.py` now filters on `passes_all`, so these are true survivor counts. (An
-earlier capture of this plot, `06_feasibility_summary.png`, showed 55 per cluster because it counted
-every row including failures; that stale file has been deleted.)
-`05_pcm_survivors_per_cluster_interactive.html` also filters on `passes_all` and shows 29/29/29/30.
+early capture of this plot showed 55 per cluster because it counted every row including failures.)
+`objective1/05_pcm_survivors_per_cluster_interactive.html` also filters on `passes_all` and shows 29/29/29/30.
 
 ### Reproduced survivor count
 

@@ -3,7 +3,7 @@
 **Script**: `08_mcdm_ranking.py`
 
 **Status**: **COMPLETE (K = 4).** The Top-3 result for all four clusters, with per-method ranks,
-is in `mcdm_topk_by_cluster.csv` and the committed `data/plots/uttarakhand_objective1/` plots.
+is in `mcdm_topk_by_cluster.csv` and the committed `data/plots/objective1/` plots.
 
 ---
 
@@ -201,8 +201,8 @@ occur here.
 
 > Everything from here to "What is absent from Phase 6" describes the superseded two-method K = 5
 > run. The current K = 4 result is the table in the update notice at the top of this file. The
-> `data/plots/objective1/` directory these numbers were recovered from had no generator script and
-> has been deleted (2026-10); the `uttarakhand_objective1/` plots now show the K = 4 result.
+> artefacts these numbers were recovered from have since been regenerated; `data/plots/objective1/`
+> (`docs/PLOT_NAMING.md`) now shows the K = 4 result.
 
 These numbers were recovered from four artefacts of that run:
 `data/plots/objective1/recommended_pcm_summary.html` (consensus ranks),

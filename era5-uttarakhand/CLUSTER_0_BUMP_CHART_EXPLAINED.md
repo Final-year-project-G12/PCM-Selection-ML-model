@@ -1,10 +1,10 @@
 # Cluster 0 Bump Chart — Explained
 
-This is a candidate-by-candidate walkthrough of `data/plots/uttarakhand_objective1/07_bump_chart_ranks_cluster0.png` (and its interactive `.html` twin), tying every zigzag on the chart back to the actual criterion values and the actual formula each MCDM method uses. Read `PHASE_6_MCDM_RANKING_EXPLAINED.md` first for the general method/weighting background — this file assumes it.
+This is a candidate-by-candidate walkthrough of `data/plots/objective1/07_bump_chart_ranks_cluster_0.png` (and its interactive `.html` twin), tying every zigzag on the chart back to the actual criterion values and the actual formula each MCDM method uses. Read `PHASE_6_MCDM_RANKING_EXPLAINED.md` first for the general method/weighting background — this file assumes it.
 
 **Cluster 0** (K = 4 run) — warm plains, 10 points, ~320 m mean elevation, `Tm_target = 57.0°C`, 29 feasibility survivors, Kendall's W = 0.796 (fairly strong four-method agreement, but with real, explainable exceptions below).
 
-> **Cluster 1 (mid-hills, 23 points) produces exactly the same chart.** It has the same `Tm_target`, the same 29 survivors and therefore identical ranks and scores, so everything below applies to `07_bump_chart_ranks_cluster1.png` as well. Only `L_required` differs (118 vs 132 kJ/kg), and that is a feasibility floor, not a ranking criterion.
+> **Cluster 1 (mid-hills, 23 points) produces exactly the same chart.** It has the same `Tm_target`, the same 29 survivors and therefore identical ranks and scores, so everything below applies to `07_bump_chart_ranks_cluster_1.png` as well. Only `L_required` differs (118 vs 132 kJ/kg), and that is a feasibility floor, not a ranking criterion.
 
 ---
 

@@ -61,7 +61,7 @@ TIER2_FILE = PROCESSED_DIR / "tier2_signature_uttarakhand.csv"
 
 # --- Tm_target rule, v2.0/v3.0 CORRECTED (unchanged from before) ---------
 # NOTE (2026-11-10): state-specific 50 C delivery basis. pcm_shared_config.py (Rajasthan / Tamil Nadu) uses 60 C.
-# Known OPEN decision; the value is intentionally unchanged. See docs/uttarakhand/00_MASTER_OVERVIEW.md,
+# Decided 2026-11: Uttarakhand keeps this 50 C basis (Tm_target 57 C). See docs/uttarakhand/00_MASTER_OVERVIEW.md,
 # section 'Delivery and melting-target basis'.
 T_DELIVERY_C = 50.0
 DT_APPROACH_C = 7.0

@@ -240,7 +240,7 @@ DRAW_HOURS_LOCAL = [7, 19]
 DRAW_MASS_KG = 150.0   # 2 draws x 150kg = 300kg/day, matching 04b's
                        # DRAW_VOLUME_L=300 (resized 2026-09 from 75kg)
 # NOTE (2026-11-10): state-specific 50 C delivery basis. pcm_shared_config.py (Rajasthan / Tamil Nadu) uses 60 C.
-# Known OPEN decision; the value is intentionally unchanged. See docs/uttarakhand/00_MASTER_OVERVIEW.md,
+# Decided 2026-11: Uttarakhand keeps this 50 C basis (Tm_target 57 C). See docs/uttarakhand/00_MASTER_OVERVIEW.md,
 # section 'Delivery and melting-target basis'.
 T_DELIVERY_C = 50.0
 

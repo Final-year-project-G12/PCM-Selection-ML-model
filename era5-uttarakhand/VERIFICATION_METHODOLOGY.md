@@ -215,7 +215,7 @@ data/
 documents 0.15-0.40 as the expected/preferred silhouette band — a score
 above ~0.4 is more likely to mean an over-simplified signature than a
 genuinely crisp regime split (see that script's own printed guidance, and
-`NEXT_STEPS.md`). Uttarakhand's actual runs land at 0.24-0.28, which fails
+`NEXT_STEPS.md`). Uttarakhand's current K = 4 run lands at 0.362, which fails
 this generic ≥0.4 checklist item literally but is the correct, expected
 outcome for this state's sample size — don't treat it as a red flag here.
 

@@ -166,7 +166,7 @@ and 12 recommended fixes ordered by effort-to-impact.
 Rajasthan's `11_OBJECTIVE1_PLOTTING_AUDIT_AND_PROMPT.md` slot.
 
 Content: the committed plot inventory, what each of the 13 Objective 1 plots actually shows, the
-`passes_all` defect, the orphaned `data/plots/objective1/` directory, the never-run
+`passes_all` defect, the `data/plots/objective1/` figure folder (orphaned at the time, now the generator's output folder), the never-run
 `comparison_plots_uttarakhand.py`, the four verification scripts, the two preserved generations of
 results, an internal-consistency cross-check, and 13 tabulated defects.
 

@@ -46,7 +46,7 @@ Source: `.claude/Objective_1_and_Objective_2_corrected_methodology_.docx`, each 
 |---|---|---|---|---|---|
 | Uttarakhand | 50 C, own constants (`era5-uttarakhand/04b_climate_signature.py:66`, `10_physics_validation.py:245`, `11_level_b_seasonal_analysis.py:76`); NOT imported from `pcm_shared_config.py`, which says 60 C | 57 C (`04b_climate_signature.py:68`, 50 + 7) | K = 4 (O1 main since the 2026-11 merge, and the O2 input): 57.00 / 57.00 / 56.51 / 55.16 for clusters 0-3 (`Tm_target_C_regime_capped`, `data/processed/clustering/cluster_profiles_uttarakhand.csv`; same values in `OBJECTIVE2/Objective---2/objective2-uttarakhand/data/objective1/mcdm_topk_by_cluster.csv`) | 50 C (`OBJECTIVE2/Objective---2/objective2-uttarakhand/configs/system_config_shared.yaml:84`, comment there: "matches Obj1's T_DELIVERY_C") | 65 C (same file, line 55) |
 
-Two different things are called "delivery". For Uttarakhand the two meanings coincide numerically (50 C in O1 sizing and in O2), but this is **not** the Rajasthan / Tamil Nadu basis: there O1 sizes at 60 C (Avargani 2021 capability validated at 60 +/- 2 C, `pcm_shared_config.py:36-50`) and O2 counts hot water as delivered above 45 C. Moving Uttarakhand to the 60 C basis would require a full O1 and O2 re-run and has **not** been decided (open decision b). Because 57 C is below the 65 C PCM limit, no nominal target here exceeds the limit; O2's held-out PCM peaks were 62.0-64.2 C (`results/g10_heldout_results.csv`).
+Two different things are called "delivery". For Uttarakhand the two meanings coincide numerically (50 C in O1 sizing and in O2), but this is **not** the Rajasthan / Tamil Nadu basis: there O1 sizes at 60 C (Avargani 2021 capability validated at 60 +/- 2 C, `pcm_shared_config.py:36-50`) and O2 counts hot water as delivered above 45 C. **Decided (2026-11, open decision b closed): Uttarakhand keeps the 50 C delivery basis** (O1 `Tm_target` = 50 + 7 = 57 C, O2 delivery target 50 C); it is not moved to the 60 C Rajasthan / Tamil Nadu basis, which would have required a full O1 and O2 re-run. Because 57 C is below the 65 C PCM limit, no nominal target here exceeds the limit; O2's held-out PCM peaks were 62.0-64.2 C (`results/g10_heldout_results.csv`).
 
 ### K = 5 versus K = 4 - RECONCILED (2026-11): O1 main now uses K = 4, matching O2
 
@@ -75,7 +75,7 @@ Diagonal covariance (`05_cluster_uttarakhand.py:114,163`); the AHP placeholder w
 
 ### Still open
 
-~~K = 4 versus K = 5 reconciliation (open decision a)~~ resolved 2026-11 (K = 4, see above); whether Uttarakhand adopts the 60 C O1 basis (open decision b); NBC/ECBC and Koppen not wired in; no AHP elicitation.
+~~K = 4 versus K = 5 reconciliation (open decision a)~~ resolved 2026-11 (K = 4, see above); ~~whether Uttarakhand adopts the 60 C O1 basis (open decision b)~~ decided 2026-11: it keeps 50 C; NBC/ECBC and Koppen not wired in; no AHP elicitation.
 
 ---
 
@@ -174,35 +174,35 @@ PHASE 2 QA — POST-CLEANING CHECKS
         |
 PHASE 3 — CLIMATE SIGNATURE (Tier 1 sun-event + Tier 2 true daily integral)
   04b_climate_signature.py        -> data/processed/signatures/climate_signature_uttarakhand.csv
-                                     pca_loadings.csv + 3 diagnostic PNGs
-  04d_signature_interactive.py    -> data/processed/signatures/interactive/*.html
+                                     pca_loadings.csv; 3 diagnostic PNGs -> data/plots/signatures/
+  04d_signature_interactive.py    -> data/plots/signatures/interactive/*.html
         |
 PHASE 4 — CLIMATE REGIME CLUSTERING (Uttarakhand only)
   05_cluster_uttarakhand.py       -> data/processed/clustering/bic_selection_uttarakhand.csv
                                      kmeans_comparison_uttarakhand.csv
                                      cluster_assignments_uttarakhand.csv (soft membership)
                                      cluster_profiles_uttarakhand.csv    (population-weighted)
-                                     cluster_map_uttarakhand.png
-  05b_cluster_interactive.py      -> data/processed/clustering/interactive/*.html
-  05_cluster_regions.py           -> (multi-state; NOT run — stops if <2 regions present)
+                                     data/plots/clustering/cluster_map.png   (K = 4)
+  05b_cluster_interactive.py      -> data/plots/clustering/interactive/*.html
         |
 PHASE 4 — OPTIONAL EXPLORATION
   05c_explore_interactive.py      -> Streamlit app (raw / processed / comparison)
   05d_plots_comprehensive.py      -> data/plots/comprehensive/{maps,timeseries,statistics,solar_resource}
         |
 PHASE 5 — PCM DATABASE + FEASIBILITY FILTERING
-  PCM_data/PCM_data/01_preprocess.py -> PCM_Properties_cleaned_mice_pmm{,_detailed}.csv (55 rows)
+  PCM_data/data/PCM_Properties_cleaned_mice_pmm_detailed.csv           (55-row input, committed)
   06_build_pcm_database.py        -> data/processed/pcm/pcm_database_uttarakhand.csv
-  07b_charging_feasibility.py     -> adds Tm_target_C_regime_capped to cluster profiles — now a real
-                                     regime-dependent cap for Clusters 1 (55.16C) and 2 (56.51C) after
+  07b_charging_feasibility.py     -> adds Tm_target_C_regime_capped to cluster profiles — a real
+                                     regime-dependent cap for Clusters 2 (56.51C) and 3 (55.16C) after
                                      the poor_day_kt normalization bug was fixed (was a near no-op before)
   07_feasibility_filter.py        -> data/processed/pcm/feasibility_survivors_by_cluster.csv
         |
 PHASE 6 — MULTI-CRITERIA RANKING (TOPSIS + GRA + PROMETHEE II + VIKOR)
   08_mcdm_ranking.py              -> data/processed/pcm/mcdm_topk_by_cluster.csv
                                      data/processed/pcm/mcdm_full_scores_by_cluster.csv
-  09b_monte_carlo_stability.py    -> Monte Carlo rank-stability results, 2,000 draws default (Top-3-inclusion /
-                                     Top-1-retention probability per candidate per cluster)
+  09b_monte_carlo_stability.py    -> data/processed/pcm/monte_carlo_stability.csv, 2,000 draws default
+                                     (Top-3-inclusion / Top-1-retention probability per candidate per cluster)
+  11_level_b_seasonal_analysis.py -> data/processed/pcm/level_b_seasonal_topk.csv (runs after 08)
         |
 PHASE 7 — PHYSICS-BASED VALIDATION
   10_physics_validation.py        -> data/processed/pcm/physics_validation_results.csv
@@ -212,8 +212,8 @@ PHASE 8 — RECOMMENDATION CARDS
   09_recommendation_cards.py      -> data/processed/pcm/recommendation_cards.md
 
 FIGURE / VERIFICATION LAYER (not part of the numbered phase chain)
-  generate_objective1_plots.py    -> data/plots/uttarakhand_objective1/*   (13-plot set)
-  comparison_plots_uttarakhand.py -> data/plots/comparison/*               (never produced — path bug)
+  generate_objective1_plots.py    -> data/plots/objective1/*               (13-plot set, docs/PLOT_NAMING.md)
+  comparison_plots_uttarakhand.py -> data/plots/comparison/*               (path bug fixed 2026-09; produced)
   verify_01_preprocessing.py      -> data/plots/verify_preprocessing/*
   verify_02_clustering.py         -> data/plots/verify_clustering/*
   verify_03_feasibility.py        -> data/plots/verify_feasibility/*
@@ -261,7 +261,7 @@ FIGURE / VERIFICATION LAYER (not part of the numbered phase chain)
 | Per-point elevation | Real elevation from ERA5 geopotential, **196 m – 2510 m** across the 45 points (`00c_attach_elevation.py`); `DEFAULT_ALT_M = 1200` in `02_combine_uttarakhand.py` survives only as a fallback if `elevation_m` is missing for a point | `00c_attach_elevation.py`; `02_combine_uttarakhand.py` |
 | Season map | Winter DJF / **Summer MAM** / **Monsoon JJA** / **Retreat SON** | `02_combine_uttarakhand.py` `SEASON_MAP` |
 | Accumulated-field handling | `deaccumulate()` — now a pass-through returning ERA5's per-step (already-hourly) value directly; the old `diff()`-against-prior-hour logic assumed a since-reset accumulation convention ERA5 does not actually use here, and was deflating GHI ~10x | `02_combine_uttarakhand.py` |
-| `Tm_target` | Constant **57 °C** (`T_DELIVERY_C = 50` + `DT_APPROACH_C = 7`) for every point; regime-capped downward for Clusters 1 (55.16 °C) and 2 (56.51 °C) by `07b_charging_feasibility.py` | `04b_climate_signature.py`; `07b_charging_feasibility.py` |
+| `Tm_target` | Constant **57 °C** (`T_DELIVERY_C = 50` + `DT_APPROACH_C = 7`) for every point; regime-capped downward for Clusters 2 (56.51 °C) and 3 (55.16 °C) by `07b_charging_feasibility.py` | `04b_climate_signature.py`; `07b_charging_feasibility.py` |
 | GMM covariance | **`diag`** (diagonal) — deliberately not `full`, to avoid overfitting a high-dimensional covariance with only 45 samples | `05_cluster_uttarakhand.py` |
 | K_FINAL | **4** (was 5 until 2026-10) | `05_cluster_uttarakhand.py` |
 | Silhouette accept band | 0.15 – 0.40 (widened from the 4-state 0.15 – 0.35); the actual run scores **0.362** | `05_cluster_uttarakhand.py` |
@@ -583,7 +583,7 @@ Three source files in `era5-uttarakhand/` used to disagree about the PCM databas
 **Resolution from the artefacts:** the committed
 `PCM_data/PCM_data/data/PCM_Properties_cleaned_mice_pmm_detailed.csv` has exactly **55 rows** with
 exactly the manufacturer breakdown `06` claims, and the committed plot
-`data/plots/verify_feasibility/06_summary.png` reports 55 PCM rows per cluster. The 25-row figures
+An earlier capture of `data/plots/verify_feasibility/06_summary.png` (since replaced by `06_feasibility_summary.png`) reported 55 PCM rows per cluster. The 25-row figures
 in `NEXT_STEPS.md` and `07`'s warning string are stale text from an earlier database generation.
 
 An earlier 25-row generation is independently evidenced: `data/plots/verify_feasibility/` and
@@ -1641,7 +1641,10 @@ clear-sky-plus-cloud climatology.
 
 #### Evidence 2 — cross-source disagreement, with two clean controls
 
-`data/plots/raw/C_era5_vs_power_stats.csv`, computed over every row:
+`data/plots/raw/C_era5_vs_power_stats.csv`, computed over every row. **The table below is the
+pre-fix record** (before the 2026-09 `deaccumulate()` fix described further down). The committed
+CSV has since been regenerated and now reads GHI MBE **+4.246 W/m², RMSE 92.362, r = 0.9608** and
+clear-sky GHI +5.625 / 65.362 / 0.9929; the T_amb, RHum and wind rows are unchanged.
 
 | Variable | n | MBE (ERA5 − POWER) | RMSE | Pearson *r* |
 |---|---|---|---|---|
@@ -3651,7 +3654,7 @@ section's survivor-count table" — a deliberate design choice. **Consumers must
 
 ### Confirmed from committed artefacts
 
-`data/plots/verify_feasibility/06_summary.png` (current K = 4 run):
+`data/plots/verify_feasibility/06_feasibility_summary.png` (current K = 4 run):
 
 ```
 Total survivors: 117
@@ -3661,9 +3664,8 @@ Avg survivors/cluster: 29.2
 ```
 
 `verify_03_feasibility.py` now filters on `passes_all`, so these are true survivor counts. (An
-earlier capture of this plot, `06_feasibility_summary.png`, showed 55 per cluster because it counted
-every row including failures; that stale file has been deleted.)
-`05_pcm_survivors_per_cluster_interactive.html` also filters on `passes_all` and shows 29/29/29/30.
+early capture of this plot showed 55 per cluster because it counted every row including failures.)
+`objective1/05_pcm_survivors_per_cluster_interactive.html` also filters on `passes_all` and shows 29/29/29/30.
 
 ### Reproduced survivor count
 
@@ -3832,7 +3834,7 @@ Source: `docs/uttarakhand/08_PHASE_6_AUDIT.md`
 **Script**: `08_mcdm_ranking.py`
 
 **Status**: **COMPLETE (K = 4).** The Top-3 result for all four clusters, with per-method ranks,
-is in `mcdm_topk_by_cluster.csv` and the committed `data/plots/uttarakhand_objective1/` plots.
+is in `mcdm_topk_by_cluster.csv` and the committed `data/plots/objective1/` plots.
 
 ---
 
@@ -4030,8 +4032,8 @@ occur here.
 
 > Everything from here to "What is absent from Phase 6" describes the superseded two-method K = 5
 > run. The current K = 4 result is the table in the update notice at the top of this file. The
-> `data/plots/objective1/` directory these numbers were recovered from had no generator script and
-> has been deleted (2026-10); the `uttarakhand_objective1/` plots now show the K = 4 result.
+> artefacts these numbers were recovered from have since been regenerated; `data/plots/objective1/`
+> (`docs/PLOT_NAMING.md`) now shows the K = 4 result.
 
 These numbers were recovered from four artefacts of that run:
 `data/plots/objective1/recommended_pcm_summary.html` (consensus ranks),
@@ -4637,12 +4639,12 @@ from it. This file records what each plot is, which are trustworthy, and which a
 | `data/plots/post_preprocess/` | 5 PNG + `C_qc_flag_counts.png` + **`C_qc_flag_counts.csv`** | `04c_postprocess_plots.py` | Yes |
 | `data/plots/post_preprocess_interactive/` | 5 HTML | `04c_interactive_postprocess_qc.py` | Yes |
 | `data/plots/comprehensive/{maps,timeseries,statistics,solar_resource}` | 4 HTML + 8 PNG | `05d_plots_comprehensive.py` | Yes |
-| `data/plots/uttarakhand_objective1/` | 19 PNG + 16 HTML (incl. one bump chart per cluster, 0–3) | `generate_objective1_plots.py` | Yes |
-| ~~`data/plots/objective1/`~~ | — | no generator — **deleted 2026-10** (see below) | — |
+| `data/plots/objective1/` | 13-plot set + one bump chart per cluster (`_cluster_0`…`_cluster_3`) | `generate_objective1_plots.py` (folder per `docs/PLOT_NAMING.md`) | Yes |
+| `data/plots/objective1/` | legacy copy (K = 4) | none — the generator now writes `objective1/` | Yes |
 | `data/plots/verify_preprocessing/` | 7 PNG | `verify_01_preprocessing.py` | Yes |
 | `data/plots/verify_clustering/` | 6 PNG | `verify_02_clustering.py` | Yes |
-| `data/plots/verify_feasibility/` | 6 PNG | `verify_03_feasibility.py` (orphan deleted 2026-10) | Yes |
-| `data/plots/verify_ranking/` | 6 PNG | `verify_04_ranking.py` (orphan deleted 2026-10) | Yes |
+| `data/plots/verify_feasibility/` | 6 PNG | `verify_03_feasibility.py` (summary: `06_feasibility_summary.png`) | Yes |
+| `data/plots/verify_ranking/` | 6 PNG | `verify_04_ranking.py` (summary: `06_ranking_summary.png`) | Yes |
 | `data/plots/comparison/` | 8 PNG | `comparison_plots_uttarakhand.py` | **RESOLVED (2026-09)** — a path bug that made this "never produced" is fixed; now runs and populates this directory |
 | `data/plots/signatures/interactive/` | — | `04d_signature_interactive.py` | git-ignored |
 | `data/plots/clustering/interactive/` | — | `05b_cluster_interactive.py` | git-ignored |
@@ -4655,7 +4657,8 @@ These run inside the phase chain and are documented in `04_PHASE_2_AUDIT.md`. Tw
 are the evidentiary backbone of this entire documentation set:
 
 - **`data/plots/raw/C_era5_vs_power_stats.csv`** — the only committed cross-source statistics
-  (n = 493,155; GHI MBE −211.406 W/m², r = 0.4321; clear-sky GHI MBE +5.314, r = 0.9923; T_amb MBE
+  (n = 493,155; GHI MBE +4.246 W/m², r = 0.9608 since the 2026-09 deaccumulation fix, was −211.406 /
+  0.4321; clear-sky GHI MBE +5.625, r = 0.9929; T_amb MBE
   −0.089 °C, r = 0.902; RHum +11.383 %; wind −1.141 m/s).
 - **`data/plots/post_preprocess/C_qc_flag_counts.csv`** — the only committed QC counts
   (`era5_LW_down` 363,525 and `era5_P_atm` 182,899 physical-bounds flags; Hampel flags
@@ -4744,23 +4747,15 @@ per-cluster counts (29/29/29/30 in the K = 4 run — see `07_PHASE_5_AUDIT.md`),
 
 ---
 
-## `data/plots/objective1/` — an orphaned output directory — DELETED (2026-10)
+## `data/plots/objective1/` — the Objective 1 figure folder
 
-This directory held 12 files (`bump_chart`, `climate_regime_map`, `consensus_vs_topsis_agreement`,
-`melting_point_vs_latent_heat`, `method_rank_correlation_heatmap`, `pcm_feasibility_scatter`,
-`pcm_survivors_per_cluster`, `rank_reversal_frequency`, `raw_vs_preprocessed_radiation`,
-`recommended_pcm_summary`, `tank_temperature_melt_fraction`, `top3_inclusion_probability`) from a
-K = 5, two-method run, produced by a generator that was never committed — no `.py` file in
-`era5-uttarakhand/` writes there. Because it could not be regenerated for K = 4 and would otherwise
-keep showing superseded results, it was deleted (as defect #7 below recommended); it remains in git
-history.
-
-Two of its files were essential to the earlier audit of the K = 5 run
-(`recommended_pcm_summary.html`, `consensus_vs_topsis_agreement.html`); their numbers are kept as
-a historical record in `08_PHASE_6_AUDIT.md`. Its `top3_inclusion_probability.html` was a **count**
-of clusters, not a Monte Carlo probability. The real inclusion-probability plot is
-`09_monte_carlo_top3_probability.html` in `data/plots/uttarakhand_objective1/`, produced by
-`generate_objective1_plots.py` from `09b_monte_carlo_stability.py`'s output.
+`data/plots/objective1/` once held an orphaned set of K = 5, two-method figures with no generator
+script. Under the shared naming scheme (`docs/PLOT_NAMING.md`, 2026-10) it is now the folder
+`generate_objective1_plots.py` writes to, and it has been regenerated from the K = 4 outputs. The
+older `data/plots/uttarakhand_objective1/` folder is a legacy copy that no script updates. The old
+orphan set's `top3_inclusion_probability.html` was a **count** of clusters, not a Monte Carlo
+probability; the real inclusion-probability plot is `09_monte_carlo_top3_probability.html`,
+produced from `09b_monte_carlo_stability.py`'s output.
 
 ---
 
@@ -4838,7 +4833,7 @@ total_survivors = len(survivors)
 
 **Confirmed fixed by reading the current script** (line 39-40):
 `if "passes_all" in survivors_full.columns: survivors = survivors_full[survivors_full["passes_all"]].copy()`
-— filtering now happens before `total_survivors = len(survivors)`. `06_summary.png` now reports the
+— filtering now happens before `total_survivors = len(survivors)`. `06_feasibility_summary.png` now reports the
 true per-cluster survivor counts (117 total, 29/29/29/30), not "275 … 55 PCMs."
 
 Its per-cluster survival-rate branch requires `all_candidates` (the PCM database) to have a
@@ -4847,7 +4842,7 @@ to plotting raw counts with a "Survival rate (%)" axis label carried over from t
 
 ### `verify_04_ranking.py` — trustworthy, with two framing caveats (one newly current)
 
-`06_summary.png` used to report (an earlier, two-method-era run):
+The old `06_summary.png` (now `06_ranking_summary.png`) used to report (an earlier, two-method-era run):
 
 ```
 Number of methods: 3    Methods: TOPSIS, GRA, CONSENSUS
@@ -4875,21 +4870,19 @@ reversal, and the summary panel). Fixed: `rank_cols` now includes all five colum
 computation added for the two new methods (`promethee_flow` descending, `vikor_Q` ascending —
 matching `08`'s own conventions) and the summary panel's pairwise-agreement text generalized to
 loop over all pairs instead of three hardcoded ones. Confirmed by rerunning: `Methods:` now prints
-all five columns, `06_summary.png` shows all 10 pairwise Spearman values.
+all five columns, `06_ranking_summary.png` shows all 10 pairwise Spearman values.
 
 ---
 
-## Two generations of verify summaries — RESOLVED (2026-10)
+## Earlier generations of verify summaries
 
-`verify_feasibility/` and `verify_ranking/` used to each contain **two** summary files, only one of
-which the current script writes (`06_summary.png`). The extra files (`06_feasibility_summary.png`,
-`06_ranking_summary.png`) came from a much earlier run — a **25-row** PCM database, 5 clusters, a
-Top-3 of **RT54HC, RT55, RT64HC** and TOPSIS-vs-GRA Spearman −1.000 — and showed the Top-3 result
+An early run (a **25-row** PCM database, 5 clusters, Top-3 **RT54HC, RT55, RT64HC**, TOPSIS-vs-GRA
+Spearman −1.000, "Overall Survival Rate: 500.0 %" from the old `passes_all` defect) showed the Top-3
 **completely changed** when the database grew from 25 to 55 rows: direct evidence that the
-recommendation is sensitive to database coverage. Their "Overall Survival Rate: 500.0 %" line was an
-artefact of the old `passes_all` defect combined with a 25-row denominator. Both files were deleted
-in 2026-10 (they are in git history); the current `06_summary.png` in each directory reflects the
-K = 4 run (4 clusters, 117 survivors, 12 ranked Top-3 rows, data completeness 98.4 %).
+recommendation is sensitive to database coverage. Those images are in git history only. The
+current summaries are `verify_feasibility/06_feasibility_summary.png` and
+`verify_ranking/06_ranking_summary.png` (file names per `docs/PLOT_NAMING.md`), regenerated from
+the K = 4 run (4 clusters, 117 survivors, 12 ranked Top-3 rows, data completeness 98.4 %).
 
 The results have moved several times, and the sequence is worth stating in a write-up: 25-row
 database (RT54HC/RT55/RT64HC) → 55-row database, two methods (RT60 everywhere) → four methods plus
@@ -4909,10 +4902,10 @@ independently reproduced.
 | 45 points | `A0_all_points_overview.html` markers; `A2_population_map.html` popups; `02_climate_regime_map_folium.html` popups | **Yes** |
 | 493,155 input rows | `C_era5_vs_power_stats.csv` (n); `07_preprocessing_summary.png` | **Yes** |
 | 4 clusters, sizes 10/23/9/3 | `02_climate_regime_map_folium.html`; `06_cluster_sizes.png`; `02_silhouette_plot.png` (k=4); `01_elbow_curves.png` vs `bic_selection_uttarakhand.csv` | **Yes** (all regenerated 2026-10) |
-| 55-row PCM database | `06_summary.png`; `05_pcm_survivors_per_cluster_interactive.html`; the committed source CSV | **Yes** |
-| Top-3 per cluster | `mcdm_topk_by_cluster.csv`; `recommendation_cards.md`; `uttarakhand_objective1/07_bump_chart_ranks.html`; `uttarakhand_objective1/13_recommended_pcm_summary_interactive.html` | **Yes — all four** |
+| 55-row PCM database | `06_feasibility_summary.png`; `05_pcm_survivors_per_cluster_interactive.html`; the committed source CSV | **Yes** |
+| Top-3 per cluster | `mcdm_topk_by_cluster.csv`; `recommendation_cards.md`; `objective1/07_bump_chart_ranks.html`; `objective1/13_recommended_pcm_summary_interactive.html` | **Yes — all four** |
 | Top-3 PCM properties | `13_recommended_pcm_summary_interactive.html` `customdata` vs `PCM_Properties_cleaned_mice_pmm_detailed.csv` | **Yes — exact match** |
-| Spearman ρ values | `verify_ranking/06_summary.png`; `08_method_rank_correlation_heatmap_interactive.html` | **Yes** |
+| Spearman ρ values | `verify_ranking/06_ranking_summary.png`; `08_method_rank_correlation_heatmap_interactive.html` | **Yes** |
 
 The plot layer is internally consistent. Where it misleads, it does so systematically (the
 `passes_all` filter) rather than randomly.
@@ -4928,11 +4921,11 @@ The plot layer is internally consistent. Where it misleads, it does so systemati
 | 3 | ~~`comparison_plots_uttarakhand.py`'s `BASE` includes a spurious `".."`~~ | **RESOLVED** — script now uses `config.py` for all paths and runs correctly | done |
 | 4 | ~~Plot 11 titled "Simulated Performance vs MCDM Consensus Rank" while plotting TOPSIS vs consensus~~ | **RESOLVED** — Phase 7 now exists, plot 11 correctly plots simulated solar fraction | done |
 | 5 | Plot 12 is hard-coded sinusoids | Medium — reads as simulation output | relabel "illustrative schematic" or remove |
-| 6 | ~~`objective1/top3_inclusion_probability.html` is a count, not a probability~~ | **RESOLVED** — directory deleted 2026-10 | done |
-| 7 | ~~`data/plots/objective1/` has no generator in the folder~~ | **RESOLVED** — deleted 2026-10 | done |
+| 6 | ~~`objective1/top3_inclusion_probability.html` is a count, not a probability~~ | **RESOLVED** — old orphan set replaced by the regenerated `objective1/` folder | done |
+| 7 | ~~`data/plots/objective1/` has no generator in the folder~~ | **RESOLVED** — `objective1/` is now written by `generate_objective1_plots.py` | done |
 | 8 | ~~`verify_02` silhouette computed on a different feature space than the GMM used~~ | **RESOLVED** — restricted to `_z` columns with `diag` covariance (2026-10) | done |
 | 9 | `verify_03`'s survival-rate branch needs a `cluster_id` the PCM database never has | Low | use `len(all_candidates)` as the denominator |
-| 10 | ~~Two generations of verify summaries coexist under different filenames~~ | **RESOLVED** — stale files deleted 2026-10 | done |
+| 10 | ~~Two generations of verify summaries coexist under different filenames~~ | **RESOLVED** — one summary per folder, named per `docs/PLOT_NAMING.md` | done |
 | 11 | `verify_*` use relative paths, not `config.py` | Low | import `config` |
 | 12 | `05c` docstring says "133 points" | Cosmetic | correct to 45 |
 | 13 | `B_distributions_post.html` is 43 MB | Low | `include_plotlyjs="cdn"` and downsample |
@@ -5634,7 +5627,7 @@ and 12 recommended fixes ordered by effort-to-impact.
 Rajasthan's `11_OBJECTIVE1_PLOTTING_AUDIT_AND_PROMPT.md` slot.
 
 Content: the committed plot inventory, what each of the 13 Objective 1 plots actually shows, the
-`passes_all` defect, the orphaned `data/plots/objective1/` directory, the never-run
+`passes_all` defect, the `data/plots/objective1/` figure folder (orphaned at the time, now the generator's output folder), the never-run
 `comparison_plots_uttarakhand.py`, the four verification scripts, the two preserved generations of
 results, an internal-consistency cross-check, and 13 tabulated defects.
 

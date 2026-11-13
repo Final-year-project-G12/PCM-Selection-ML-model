@@ -10,7 +10,7 @@ Source: `.claude/Objective_1_and_Objective_2_corrected_methodology_.docx`, each 
 |---|---|---|---|---|---|
 | Uttarakhand | 50 C, own constants (`era5-uttarakhand/04b_climate_signature.py:66`, `10_physics_validation.py:245`, `11_level_b_seasonal_analysis.py:76`); NOT imported from `pcm_shared_config.py`, which says 60 C | 57 C (`04b_climate_signature.py:68`, 50 + 7) | K = 4 (O1 main since the 2026-11 merge, and the O2 input): 57.00 / 57.00 / 56.51 / 55.16 for clusters 0-3 (`Tm_target_C_regime_capped`, `data/processed/clustering/cluster_profiles_uttarakhand.csv`; same values in `OBJECTIVE2/Objective---2/objective2-uttarakhand/data/objective1/mcdm_topk_by_cluster.csv`) | 50 C (`OBJECTIVE2/Objective---2/objective2-uttarakhand/configs/system_config_shared.yaml:84`, comment there: "matches Obj1's T_DELIVERY_C") | 65 C (same file, line 55) |
 
-Two different things are called "delivery". For Uttarakhand the two meanings coincide numerically (50 C in O1 sizing and in O2), but this is **not** the Rajasthan / Tamil Nadu basis: there O1 sizes at 60 C (Avargani 2021 capability validated at 60 +/- 2 C, `pcm_shared_config.py:36-50`) and O2 counts hot water as delivered above 45 C. Moving Uttarakhand to the 60 C basis would require a full O1 and O2 re-run and has **not** been decided (open decision b). Because 57 C is below the 65 C PCM limit, no nominal target here exceeds the limit; O2's held-out PCM peaks were 62.0-64.2 C (`results/g10_heldout_results.csv`).
+Two different things are called "delivery". For Uttarakhand the two meanings coincide numerically (50 C in O1 sizing and in O2), but this is **not** the Rajasthan / Tamil Nadu basis: there O1 sizes at 60 C (Avargani 2021 capability validated at 60 +/- 2 C, `pcm_shared_config.py:36-50`) and O2 counts hot water as delivered above 45 C. **Decided (2026-11, open decision b closed): Uttarakhand keeps the 50 C delivery basis** (O1 `Tm_target` = 50 + 7 = 57 C, O2 delivery target 50 C); it is not moved to the 60 C Rajasthan / Tamil Nadu basis, which would have required a full O1 and O2 re-run. Because 57 C is below the 65 C PCM limit, no nominal target here exceeds the limit; O2's held-out PCM peaks were 62.0-64.2 C (`results/g10_heldout_results.csv`).
 
 ### K = 5 versus K = 4 - RECONCILED (2026-11): O1 main now uses K = 4, matching O2
 
@@ -39,7 +39,7 @@ Diagonal covariance (`05_cluster_uttarakhand.py:114,163`); the AHP placeholder w
 
 ### Still open
 
-~~K = 4 versus K = 5 reconciliation (open decision a)~~ resolved 2026-11 (K = 4, see above); whether Uttarakhand adopts the 60 C O1 basis (open decision b); NBC/ECBC and Koppen not wired in; no AHP elicitation.
+~~K = 4 versus K = 5 reconciliation (open decision a)~~ resolved 2026-11 (K = 4, see above); ~~whether Uttarakhand adopts the 60 C O1 basis (open decision b)~~ decided 2026-11: it keeps 50 C; NBC/ECBC and Koppen not wired in; no AHP elicitation.
 
 ---
 
@@ -138,35 +138,35 @@ PHASE 2 QA — POST-CLEANING CHECKS
         |
 PHASE 3 — CLIMATE SIGNATURE (Tier 1 sun-event + Tier 2 true daily integral)
   04b_climate_signature.py        -> data/processed/signatures/climate_signature_uttarakhand.csv
-                                     pca_loadings.csv + 3 diagnostic PNGs
-  04d_signature_interactive.py    -> data/processed/signatures/interactive/*.html
+                                     pca_loadings.csv; 3 diagnostic PNGs -> data/plots/signatures/
+  04d_signature_interactive.py    -> data/plots/signatures/interactive/*.html
         |
 PHASE 4 — CLIMATE REGIME CLUSTERING (Uttarakhand only)
   05_cluster_uttarakhand.py       -> data/processed/clustering/bic_selection_uttarakhand.csv
                                      kmeans_comparison_uttarakhand.csv
                                      cluster_assignments_uttarakhand.csv (soft membership)
                                      cluster_profiles_uttarakhand.csv    (population-weighted)
-                                     cluster_map_uttarakhand.png
-  05b_cluster_interactive.py      -> data/processed/clustering/interactive/*.html
-  05_cluster_regions.py           -> (multi-state; NOT run — stops if <2 regions present)
+                                     data/plots/clustering/cluster_map.png   (K = 4)
+  05b_cluster_interactive.py      -> data/plots/clustering/interactive/*.html
         |
 PHASE 4 — OPTIONAL EXPLORATION
   05c_explore_interactive.py      -> Streamlit app (raw / processed / comparison)
   05d_plots_comprehensive.py      -> data/plots/comprehensive/{maps,timeseries,statistics,solar_resource}
         |
 PHASE 5 — PCM DATABASE + FEASIBILITY FILTERING
-  PCM_data/PCM_data/01_preprocess.py -> PCM_Properties_cleaned_mice_pmm{,_detailed}.csv (55 rows)
+  PCM_data/data/PCM_Properties_cleaned_mice_pmm_detailed.csv           (55-row input, committed)
   06_build_pcm_database.py        -> data/processed/pcm/pcm_database_uttarakhand.csv
-  07b_charging_feasibility.py     -> adds Tm_target_C_regime_capped to cluster profiles — now a real
-                                     regime-dependent cap for Clusters 1 (55.16C) and 2 (56.51C) after
+  07b_charging_feasibility.py     -> adds Tm_target_C_regime_capped to cluster profiles — a real
+                                     regime-dependent cap for Clusters 2 (56.51C) and 3 (55.16C) after
                                      the poor_day_kt normalization bug was fixed (was a near no-op before)
   07_feasibility_filter.py        -> data/processed/pcm/feasibility_survivors_by_cluster.csv
         |
 PHASE 6 — MULTI-CRITERIA RANKING (TOPSIS + GRA + PROMETHEE II + VIKOR)
   08_mcdm_ranking.py              -> data/processed/pcm/mcdm_topk_by_cluster.csv
                                      data/processed/pcm/mcdm_full_scores_by_cluster.csv
-  09b_monte_carlo_stability.py    -> Monte Carlo rank-stability results, 2,000 draws default (Top-3-inclusion /
-                                     Top-1-retention probability per candidate per cluster)
+  09b_monte_carlo_stability.py    -> data/processed/pcm/monte_carlo_stability.csv, 2,000 draws default
+                                     (Top-3-inclusion / Top-1-retention probability per candidate per cluster)
+  11_level_b_seasonal_analysis.py -> data/processed/pcm/level_b_seasonal_topk.csv (runs after 08)
         |
 PHASE 7 — PHYSICS-BASED VALIDATION
   10_physics_validation.py        -> data/processed/pcm/physics_validation_results.csv
@@ -176,8 +176,8 @@ PHASE 8 — RECOMMENDATION CARDS
   09_recommendation_cards.py      -> data/processed/pcm/recommendation_cards.md
 
 FIGURE / VERIFICATION LAYER (not part of the numbered phase chain)
-  generate_objective1_plots.py    -> data/plots/uttarakhand_objective1/*   (13-plot set)
-  comparison_plots_uttarakhand.py -> data/plots/comparison/*               (never produced — path bug)
+  generate_objective1_plots.py    -> data/plots/objective1/*               (13-plot set, docs/PLOT_NAMING.md)
+  comparison_plots_uttarakhand.py -> data/plots/comparison/*               (path bug fixed 2026-09; produced)
   verify_01_preprocessing.py      -> data/plots/verify_preprocessing/*
   verify_02_clustering.py         -> data/plots/verify_clustering/*
   verify_03_feasibility.py        -> data/plots/verify_feasibility/*
@@ -225,7 +225,7 @@ FIGURE / VERIFICATION LAYER (not part of the numbered phase chain)
 | Per-point elevation | Real elevation from ERA5 geopotential, **196 m – 2510 m** across the 45 points (`00c_attach_elevation.py`); `DEFAULT_ALT_M = 1200` in `02_combine_uttarakhand.py` survives only as a fallback if `elevation_m` is missing for a point | `00c_attach_elevation.py`; `02_combine_uttarakhand.py` |
 | Season map | Winter DJF / **Summer MAM** / **Monsoon JJA** / **Retreat SON** | `02_combine_uttarakhand.py` `SEASON_MAP` |
 | Accumulated-field handling | `deaccumulate()` — now a pass-through returning ERA5's per-step (already-hourly) value directly; the old `diff()`-against-prior-hour logic assumed a since-reset accumulation convention ERA5 does not actually use here, and was deflating GHI ~10x | `02_combine_uttarakhand.py` |
-| `Tm_target` | Constant **57 °C** (`T_DELIVERY_C = 50` + `DT_APPROACH_C = 7`) for every point; regime-capped downward for Clusters 1 (55.16 °C) and 2 (56.51 °C) by `07b_charging_feasibility.py` | `04b_climate_signature.py`; `07b_charging_feasibility.py` |
+| `Tm_target` | Constant **57 °C** (`T_DELIVERY_C = 50` + `DT_APPROACH_C = 7`) for every point; regime-capped downward for Clusters 2 (56.51 °C) and 3 (55.16 °C) by `07b_charging_feasibility.py` | `04b_climate_signature.py`; `07b_charging_feasibility.py` |
 | GMM covariance | **`diag`** (diagonal) — deliberately not `full`, to avoid overfitting a high-dimensional covariance with only 45 samples | `05_cluster_uttarakhand.py` |
 | K_FINAL | **4** (was 5 until 2026-10) | `05_cluster_uttarakhand.py` |
 | Silhouette accept band | 0.15 – 0.40 (widened from the 4-state 0.15 – 0.35); the actual run scores **0.362** | `05_cluster_uttarakhand.py` |

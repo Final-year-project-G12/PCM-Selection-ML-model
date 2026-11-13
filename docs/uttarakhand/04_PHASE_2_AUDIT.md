@@ -93,7 +93,10 @@ clear-sky-plus-cloud climatology.
 
 #### Evidence 2 — cross-source disagreement, with two clean controls
 
-`data/plots/raw/C_era5_vs_power_stats.csv`, computed over every row:
+`data/plots/raw/C_era5_vs_power_stats.csv`, computed over every row. **The table below is the
+pre-fix record** (before the 2026-09 `deaccumulate()` fix described further down). The committed
+CSV has since been regenerated and now reads GHI MBE **+4.246 W/m², RMSE 92.362, r = 0.9608** and
+clear-sky GHI +5.625 / 65.362 / 0.9929; the T_amb, RHum and wind rows are unchanged.
 
 | Variable | n | MBE (ERA5 − POWER) | RMSE | Pearson *r* |
 |---|---|---|---|---|
