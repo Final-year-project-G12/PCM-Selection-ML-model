@@ -197,13 +197,14 @@ def run_feasibility_filter():
                 rec["Tm_C_status"] = pcm["Tm_C_status"]
                 rec["latent_heat_kJ_kg"] = pcm["latent_heat_kJ_kg"]
                 rec["latent_heat_status"] = pcm["latent_heat_status"]
+                rec["Tm_target_C"] = TARGET_TM_C
 
                 # ----------------------------------------------------------
-                # 1. Tm FEASIBILITY CRITERION
+                # 1. Tm FEASIBILITY CRITERION (Criterion C2: [42.0, 70.0] °C)
                 # ----------------------------------------------------------
                 tm_val = pcm["Tm_C"]
 
-                in_combined = window_lo <= tm_val <= window_hi
+                in_combined = ABSOLUTE_TM_MIN_C <= tm_val <= ABSOLUTE_TM_MAX_C
 
                 if in_combined:
                     c_survivors_combined_tm += 1
@@ -212,18 +213,27 @@ def run_feasibility_filter():
                     rec["status_tm"] = "FAIL"
 
                 # ----------------------------------------------------------
-                # 2. LATENT HEAT REQUIREMENT
+                # 2. LATENT HEAT REQUIREMENT (Continuous MCDM criterion, not a hard feasibility veto)
                 # ----------------------------------------------------------
                 lh_val = pcm["latent_heat_kJ_kg"]
                 lh_status = pcm["latent_heat_status"]
 
-                if pd.notna(lh_val) and lh_val >= l_req:
+                if pd.notna(lh_val) and lh_val > 0:
                     rec["status_latent_heat"] = "PASS"
                     c_survivors_lh += 1
-                elif pd.notna(lh_val) and lh_val < l_req:
-                    rec["status_latent_heat"] = "FAIL"
                 else:
                     rec["status_latent_heat"] = "UNKNOWN"
+
+                # Check data completeness for fundamental MCDM criteria (TC, rho*H)
+                tc_val = pcm.get("TC_W_mK", np.nan)
+                tc_status = str(pcm.get("TC_status", "Missing"))
+                rho_h = pcm.get("rho_H_MJ_m3", np.nan)
+                has_complete_data = (
+                    pd.notna(tc_val)
+                    and tc_status != "Missing"
+                    and pd.notna(rho_h)
+                )
+                rec["status_data_complete"] = "PASS" if has_complete_data else "FAIL"
 
                 # ----------------------------------------------------------
                 # 3. CYCLING STABILITY
@@ -292,46 +302,66 @@ def run_feasibility_filter():
                     rec["c6_charging_feasibility"] = "flag_missing"
 
                 # ----------------------------------------------------------
-                # 6. CORROSION
+                # 6. CORROSION (C7)
                 # ----------------------------------------------------------
                 is_inorg = bool(pcm.get("is_inorganic", False))
-                corr_test_evidence = pcm.get(
-                    "corrosion_evidence", np.nan
-                )
+                pname = str(pcm.get("product_name", "")).strip()
+                fam = str(pcm.get("family", "")).strip()
+                corr_test_evidence = pcm.get("corrosion_evidence", np.nan)
 
-                if not is_inorg:
-                    rec["status_corrosion"] = "PASS"
-                    rec["corrosion_evidence"] = (
-                        "Not_Applicable_Organic_PCM"
-                    )
-                    rec["corrosion_source"] = "PCM_Category"
-
-                elif hsi_high:
+                # Rule 6a: Inorganic with high HSI veto -> FAIL
+                if is_inorg and hsi_high:
                     rec["status_corrosion"] = "FAIL"
-                    rec["corrosion_evidence"] = (
-                        "Inorganic_HighHSI_Veto"
-                    )
-                    rec["corrosion_source"] = (
-                        "Project_Corrosion_Veto_Rule"
-                    )
+                    rec["corrosion_evidence"] = "Inorganic_HighHSI_Veto"
+                    rec["corrosion_source"] = "Project_Corrosion_Veto_Rule"
 
-                elif (
-                    pd.notna(corr_test_evidence)
-                    and str(corr_test_evidence).strip() != ""
-                ):
+                # Rule 6b: Fatty acids and fatty-acid eutectics -> CONDITIONAL
+                # (Carboxylic acids react with copper/aluminum; compatible with stainless steel AISI 304/316)
+                elif any(fa in pname for fa in ["Myristic", "Palmitic", "Stearic", "Lauric"]):
+                    rec["status_corrosion"] = "CONDITIONAL"
+                    rec["corrosion_evidence"] = (
+                        "FattyAcid_CopperReactive_Requires_StainlessSteel"
+                    )
+                    rec["corrosion_source"] = "Literature_Experimental_Corrosion"
+
+                # Rule 6c: Pure linear alkanes / pure paraffin waxes -> PASS
+                # (Saturated hydrocarbons confirmed chemically inert toward standard metals in literature)
+                elif any(
+                    pname.startswith(alk) or alk in pname
+                    for alk in [
+                        "RT", "n-Docosane", "n-Tricosane", "n-Tetracosane", "n-Pentacosane",
+                        "n-Hexacosane", "n-Heptacosane", "n-Octacosane", "n-Nonacosane",
+                        "n-Triacontane", "n-Hentriacontane", "n-Dotriacontane", "Paraffin wax"
+                    ]
+                ) and not any(comp in pname for comp in ["Expanded graphite", "HDPE", "NBR"]):
                     rec["status_corrosion"] = "PASS"
-                    rec["corrosion_evidence"] = (
-                        str(corr_test_evidence).strip()
-                    )
-                    rec["corrosion_source"] = (
-                        "Datasheet_Compatibility_Test"
-                    )
+                    rec["corrosion_evidence"] = "Confirmed_Inert_Alkane_Literature"
+                    rec["corrosion_source"] = "Literature_and_Manufacturer_Alkanes"
 
+                # Rule 6d: Composites with conductive/structural matrices -> UNKNOWN
+                # (Galvanic coupling or additive interaction requires coupon testing)
+                elif any(comp in pname for comp in ["Expanded graphite", "HDPE", "NBR"]):
+                    rec["status_corrosion"] = "UNKNOWN"
+                    rec["corrosion_evidence"] = "Composite_Galvanic_Coupon_Unreported"
+                    rec["corrosion_source"] = "Unreported"
+
+                # Rule 6e: Commercial proprietary bio-based/organic blends -> UNKNOWN
+                # (Proprietary formulations lack published material-specific coupon immersion data)
+                elif any(brand in pname or brand in fam for brand in ["savE", "PlusICE", "PureTemp", "CrodaTherm"]):
+                    rec["status_corrosion"] = "UNKNOWN"
+                    rec["corrosion_evidence"] = "Proprietary_Organic_Blend_Coupon_Unreported"
+                    rec["corrosion_source"] = "Unreported"
+
+                # Rule 6f: Explicit datasheet compatibility evidence if available
+                elif pd.notna(corr_test_evidence) and str(corr_test_evidence).strip() != "":
+                    rec["status_corrosion"] = "PASS"
+                    rec["corrosion_evidence"] = str(corr_test_evidence).strip()
+                    rec["corrosion_source"] = "Datasheet_Compatibility_Test"
+
+                # Rule 6g: Default unreported
                 else:
                     rec["status_corrosion"] = "UNKNOWN"
-                    rec["corrosion_evidence"] = (
-                        "Missing_Explicit_Compatibility_Test"
-                    )
+                    rec["corrosion_evidence"] = "Missing_Explicit_Compatibility_Test"
                     rec["corrosion_source"] = "Unreported"
 
                 # ----------------------------------------------------------
@@ -393,25 +423,22 @@ def run_feasibility_filter():
                 # ----------------------------------------------------------
                 # 8. DEPLOYABILITY / SURVIVOR RULE
                 # ----------------------------------------------------------
-                rec["survives_c1_c2_c3_c6"] = (
-                    rec["status_tm"] != "FAIL"
-                    and rec["status_latent_heat"] != "FAIL"
-                    and rec["c6_charging_feasibility"] != "fail"
-                )
-
-                rec["survives_c7_corrosion"] = (
-                    rec["status_corrosion"] != "FAIL"
-                )
-
-                rec["survives_c8_safety"] = (
-                    rec["status_safety"] != "FAIL"
-                )
+                # C2: Thermodynamic melting window [42.0, 70.0] C
+                # C8: Confirmed flammability hazard veto
+                # C7: High-HSI corrosion veto for inorganics
+                # Data completeness: Fundamental MCDM criteria (k, rho*H)
+                rec["survives_c2_tm"] = (rec["status_tm"] != "FAIL")
+                rec["survives_c7_corrosion"] = (rec["status_corrosion"] != "FAIL")
+                rec["survives_c8_safety"] = (rec["status_safety"] != "FAIL")
+                rec["survives_data_complete"] = (rec["status_data_complete"] == "PASS")
 
                 rec["survives_all"] = (
-                    rec["survives_c1_c2_c3_c6"]
+                    rec["survives_c2_tm"]
                     and rec["survives_c7_corrosion"]
                     and rec["survives_c8_safety"]
+                    and rec["survives_data_complete"]
                 )
+                rec["passes_all"] = rec["survives_all"]
 
                 # ----------------------------------------------------------
                 # 9. EVIDENCE-BASED CLASSIFICATION
@@ -429,7 +456,7 @@ def run_feasibility_filter():
                     rec["overall_feasibility"] = "INFEASIBLE"
                     n_infeasible += 1
 
-                elif any(s == "UNKNOWN" for s in statuses):
+                elif any(s in ("UNKNOWN", "CONDITIONAL") for s in statuses):
                     rec["overall_feasibility"] = (
                         "CONDITIONALLY_FEASIBLE"
                     )
@@ -492,6 +519,15 @@ def run_feasibility_filter():
 
     df_audit.to_csv(OUT_BY_CLUSTER_CSV, index=False)
     df_summary.to_csv(OUT_SUMMARY_CSV, index=False)
+
+    # Save surviving PCMs across all clusters for downstream plotting/verification
+    out_pcm_dir = BASE_DIR / "data" / "processed" / "pcm"
+    out_pcm_dir.mkdir(parents=True, exist_ok=True)
+    feas_surv_file = out_pcm_dir / "feasibility_survivors_assam.csv"
+    surv_df = df_audit[df_audit["survives_all"]].copy()
+    surv_df["name"] = surv_df["product_name"]
+    surv_df["passes_all"] = True
+    surv_df.to_csv(feas_surv_file, index=False)
 
     report_lines = []
 

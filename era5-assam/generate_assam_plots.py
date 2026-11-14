@@ -33,6 +33,7 @@ CLUSTERS     = os.path.join(BASE, "data", "processed", "clustering", "cluster_as
 PCM_DB       = os.path.join(BASE, "data", "processed", "pcm", "pcm_database_assam.csv")
 FEASIBILITY  = os.path.join(BASE, "data", "processed", "pcm", "feasibility_survivors_assam.csv")
 TOPK         = os.path.join(BASE, "data", "processed", "pcm", "mcdm_topk_assam.csv")
+FULL         = os.path.join(BASE, "data", "processed", "pcm", "mcdm_full_scores_assam.csv")
 MC_STABILITY = os.path.join(BASE, "data", "processed", "pcm", "monte_carlo_stability_assam.csv")
 PHYS_VAL     = os.path.join(BASE, "data", "processed", "pcm", "physics_validation_results_assam.csv")
 OUT          = os.path.join(BASE, "data", "plots", "objective1")
@@ -216,14 +217,14 @@ def p04_05():
 # ---- Plot 7: Bump Chart Ranks ----
 def p07():
     print("[7/13] Bump Chart for Rank Stability across MCDM Methods")
-    topk = load(TOPK, "topk")
-    if topk is None or "cluster_id" not in topk.columns: return
-    topk = ensure_ranks(topk)
-    name_col = "name" if "name" in topk.columns else "PCM_Name"
-    ranks = [c for c in ["topsis_rank", "gra_rank", "promethee_rank", "vikor_rank", "consensus_rank"] if c in topk.columns]
+    src = load(FULL, "full_scores") if os.path.exists(FULL) else load(TOPK, "topk")
+    if src is None or "cluster_id" not in src.columns: return
+    src = ensure_ranks(src)
+    name_col = "name" if "name" in src.columns else ("product_name" if "product_name" in src.columns else "PCM_Name")
+    ranks = [c for c in ["topsis_rank", "gra_rank", "promethee_rank", "vikor_rank", "consensus_rank"] if c in src.columns]
     if len(ranks) < 2: return
-    clus = sorted(topk["cluster_id"].unique())
-    sub = topk[topk["cluster_id"] == clus[0]].head(8)
+    clus = sorted(src["cluster_id"].unique())
+    sub = src[src["cluster_id"] == clus[0]].sort_values("consensus_rank").head(8)
     fig, ax = plt.subplots(figsize=(11, 6))
     for _, r in sub.iterrows():
         y = [r[rk] for rk in ranks]
@@ -235,7 +236,7 @@ def p07():
 # ---- Plot 8: Method Rank Correlation Heatmap ----
 def p08():
     print("[8/13] Method Rank Correlation Heatmap")
-    topk = load(TOPK, "topk")
+    topk = load(FULL, "full_scores") if os.path.exists(FULL) else load(TOPK, "topk")
     if topk is None: return
     topk = ensure_ranks(topk)
     ranks = [c for c in ["topsis_rank", "gra_rank", "promethee_rank", "vikor_rank", "consensus_rank"] if c in topk.columns]
@@ -249,7 +250,7 @@ def p08():
 # ---- Plot 10: Rank Reversal Distribution ----
 def p10():
     print("[10/13] Rank Reversal Violin Plot")
-    topk = load(TOPK, "topk")
+    topk = load(FULL, "full_scores") if os.path.exists(FULL) else load(TOPK, "topk")
     if topk is None: return
     topk = ensure_ranks(topk)
     ranks = [c for c in ["topsis_rank", "gra_rank", "promethee_rank", "vikor_rank"] if c in topk.columns]
@@ -303,6 +304,13 @@ def main():
     print(f"=== Generating Assam Objective 1 Plots -> {OUT} ===")
     p01()  # Raw vs Preprocessed Radiation distribution across Assam points
     p02()  # Climate-Regime Map (K=3 GMM clusters per grid point + Folium interactive map)
+    p03()  # PCM Candidate Space
+    p04_05()  # Feasible Candidates and Survivors per Cluster
+    p07()  # Bump Chart for Rank Stability across MCDM Methods
+    p08()  # Method Rank Correlation Heatmap
+    p10()  # Rank Reversal Violin Plot
+    p11()  # Consensus Agreement Plot
+    p13()  # Recommended PCM Summary
     print("=== Objective 1 Assam plots complete! ===")
 
 if __name__ == "__main__":

@@ -114,9 +114,9 @@ summary_text = (
     "ASSAM K=3 MCDM & MONTE CARLO STABILITY VERIFICATION SUMMARY\n"
     "===========================================================\n"
     f"Active Thermal Regimes   : K = 3 (Cluster 0, Cluster 1, Cluster 2)\n"
-    f"Ranked Candidates        : {len(topk) if topk is not None else 'N/A'} (Top-3 per cluster across 16 feasible survivors)\n"
+    f"Ranked Candidates        : {len(topk) if topk is not None else 'N/A'} (Top-3 recommendations per cluster across 49 deployable survivors)\n"
     "MCDM Methods Evaluated   : TOPSIS, GRA, PROMETHEE II, VIKOR, Consensus Borda\n"
-    f"Monte Carlo Robustness   : {n_draws:,} weight-perturbation iterations (Dirichlet $\\alpha=1.0$)\n"
+    f"Monte Carlo Robustness   : {n_draws:,} weight-perturbation iterations (Matrix C Dirichlet $\\alpha=[10.5, 4.5, 4.5, 10.5]$)\n"
     "Status                   : VERIFIED & SYNCHRONIZED\n"
     "Output Synchronization   : Saved to data/plots/verify_ranking & plots/verify_ranking\n"
 )

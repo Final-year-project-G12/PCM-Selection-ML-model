@@ -759,7 +759,10 @@ def build_all():
     save_html(fig_px_agr, os.path.join(dir_p6, "11_agreement_plot_interactive.html"))
 
     # 12_tank_temperature_melt_fraction.png & interactive
-    ci_targets = feas_df.groupby("cluster_id")["Tm_target_C"].first().to_dict()
+    if "Tm_target_C" in feas_df.columns:
+        ci_targets = feas_df.groupby("cluster_id")["Tm_target_C"].first().to_dict()
+    else:
+        ci_targets = {cid: 56.0 for cid in sorted(feas_df["cluster_id"].unique())}
     hrs = np.linspace(0, 24, 300)
     nc_ci = len(ci_targets)
     fig_tm, axes_tm = plt.subplots(nc_ci, 1, figsize=(13, 4.2 * nc_ci), squeeze=False)

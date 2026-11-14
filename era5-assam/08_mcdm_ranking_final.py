@@ -29,6 +29,7 @@ OUTPUTS:
   - data/preprocessed/mcdm_ranking_report.txt
 """
 
+import json
 import sys
 import warnings
 from pathlib import Path
@@ -56,27 +57,54 @@ OUT_RANKINGS_CSV = OUT_PCM_DIR / "mcdm_rankings_by_cluster.csv"
 OUT_REPORT_TXT = OUT_REPORT_DIR / "mcdm_ranking_report.txt"
 
 # Core Parameters
-TARGET_TM_C = 56.0
-SIGMA_TM = 4.0
+XI_REF = 0.178  # Collector stagnation sensitivity (tau*alpha / U_L in m2*K/W)
+CLUSTER_MEDOIDS = {0: "ASP_0003", 1: "ASP_0036", 2: "ASP_0080"}
 
 GRA_ZETA = 0.5
 PROMETHEE_Q, PROMETHEE_P = 0.05, 0.25
 VIKOR_V = 0.5
 
-# Equal-Prior AHP Weights for 5 Criteria
-# 1. f_Tm (0.30), 2. L_margin (0.25), 3. rho_H (0.15), 4. k (0.15), 5. C_confidence (0.15)
+# Matrix C Frozen Criteria and Weights
+# 1. f_ASTP (0.35), 2. latent_heat_kJ_kg (0.15), 3. rho_H_MJ_m3 (0.15), 4. TC_W_mK (0.35)
 PRIOR_WEIGHTS = {
-    "f_Tm": 0.30,
-    "latent_heat_margin_ratio": 0.25,
+    "f_ASTP": 0.35,
+    "latent_heat_kJ_kg": 0.15,
     "rho_H_MJ_m3": 0.15,
-    "TC_W_mK": 0.15,
-    "cycles_confidence": 0.15,
+    "TC_W_mK": 0.35,
 }
 CRITERIA = list(PRIOR_WEIGHTS.keys())
 
-def gaussian_tm_fitness(tm, target=TARGET_TM_C, sigma=SIGMA_TM):
-    """Symmetric target-distance Gaussian fitness function."""
-    return np.exp(-((tm - target) ** 2) / (2.0 * sigma ** 2))
+def load_cluster_solar_potentials(base_dir, xi=XI_REF):
+    """Loads 10-year hourly weather for medoids and computes daytime solar-thermal potential T_pot."""
+    potentials = {}
+    p_dir = base_dir / "data" / "raw" / "nasapower"
+    for cid, m_id in CLUSTER_MEDOIDS.items():
+        vals = []
+        for y in range(2016, 2026):
+            fn = p_dir / f"power_{m_id}_{y}.json"
+            if fn.exists():
+                with open(fn, "r") as fp:
+                    d = json.load(fp)["properties"]["parameter"]
+                ghi = d["ALLSKY_SFC_SW_DWN"]
+                t2m = d["T2M"]
+                for k in ghi:
+                    g = ghi[k]
+                    if g > 0:
+                        vals.append(t2m[k] + xi * g)
+        potentials[cid] = np.array(vals)
+    return potentials
+
+def kendalls_w(rank_df):
+    """Kendall's coefficient of concordance W across ranking methods."""
+    R = rank_df.values
+    n, m = R.shape
+    if n <= 1:
+        return 1.0
+    R_sum = R.sum(axis=1)
+    R_bar = R_sum.mean()
+    S = ((R_sum - R_bar) ** 2).sum()
+    W = 12.0 * S / (m ** 2 * (n ** 3 - n))
+    return float(W)
 
 def compute_thermal_conductivity(row):
     """Computes k based on availability: phase average, reported solid, or reported liquid."""
@@ -167,6 +195,8 @@ def run_phase7():
     feas_by_cluster = pd.read_csv(FEASIBILITY_BY_CLUSTER_FILE)
     feas_summary = pd.read_csv(FEASIBILITY_SUMMARY_FILE)
     profiles = pd.read_csv(CLUSTER_PROFILE_FILE)
+
+    potentials = load_cluster_solar_potentials(BASE_DIR)
 
     max_cycles_reported = pcm_db[pcm_db["cycles_status"] == "Reported"]["cycles_tested"].max()
     if pd.isna(max_cycles_reported):
@@ -370,13 +400,18 @@ def run_phase7():
                 k_val, k_prov = compute_thermal_conductivity(db_row)
                 cyc_conf = compute_cycling_confidence(db_row, max_cycles_reported)
 
+                f_astp_val = float((potentials[cid] >= db_row["Tm_C"]).mean()) if cid in potentials else 0.5
+
                 eval_list.append({
                     "cluster_id": cid,
                     "product_name": pname,
+                    "name": pname,
                     "manufacturer": db_row["manufacturer"],
                     "source_type": db_row["source_type"],
+                    "family": db_row.get("family", ""),
+                    "pcm_type": db_row.get("pcm_type", ""),
                     "Tm_C": db_row["Tm_C"],
-                    "f_Tm": gaussian_tm_fitness(db_row["Tm_C"]),
+                    "f_ASTP": f_astp_val,
                     "latent_heat_kJ_kg": db_row["latent_heat_kJ_kg"],
                     "latent_heat_margin_ratio": db_row["latent_heat_kJ_kg"] / l_req,
                     "rho_H_MJ_m3": db_row["rho_H_MJ_m3"],
@@ -384,17 +419,12 @@ def run_phase7():
                     "TC_provenance": k_prov,
                     "cycles_confidence": cyc_conf,
                     "cycles_status": db_row["cycles_status"],
+                    "flammability": db_row.get("flammability", ""),
+                    "flammability_status": db_row.get("flammability_status", "Missing"),
                     "eligibility": "DEPLOYABLE_SURVIVOR"
                 })
 
             df_eval = pd.DataFrame(eval_list)
-
-            # Cycling confidence is intentionally UNKNOWN when cycling data are
-            # unreported. For MCDM normalization, use a neutral value rather
-            # than allowing NaN to contaminate every ranking score. This does
-            # not change Phase 6 evidence classification.
-            if df_eval["cycles_confidence"].isna().any():
-                df_eval["cycles_confidence"] = df_eval["cycles_confidence"].fillna(0.5)
 
             missing_criteria = [c for c in CRITERIA if df_eval[c].isna().any()]
             if missing_criteria:
@@ -406,11 +436,16 @@ def run_phase7():
             M = minmax_normalize(df_eval, CRITERIA)
             w = np.array([PRIOR_WEIGHTS[c] for c in CRITERIA])
 
+            for c in CRITERIA:
+                df_eval[f"weight_{c}"] = PRIOR_WEIGHTS[c]
+
             df_eval["topsis_score"] = topsis(M, w)
             df_eval["gra_grade"] = gra(M, w)
             df_eval["promethee_flow"] = promethee_ii(M, w)
             vq, vs, vr = vikor(M, w)
             df_eval["vikor_Q"] = vq
+            df_eval["vikor_S"] = vs
+            df_eval["vikor_R"] = vr
 
             df_eval["topsis_rank"] = df_eval["topsis_score"].rank(
                 ascending=False, method="min"
@@ -437,6 +472,7 @@ def run_phase7():
             df_eval["consensus_rank"] = df_eval["borda_score"].rank(
                 ascending=False, method="min"
             ).astype(int)
+            df_eval["kendall_w"] = kendalls_w(df_eval[["topsis_rank", "gra_rank", "promethee_rank", "vikor_rank"]])
 
             all_ranking_rows.append(df_eval)
         else:
@@ -450,10 +486,11 @@ def run_phase7():
                 all_ranking_rows.append(pd.DataFrame([{
                     "cluster_id": cid,
                     "product_name": pname,
+                    "name": pname,
                     "manufacturer": db_p["manufacturer"],
                     "source_type": db_p["source_type"],
                     "Tm_C": db_p["Tm_C"],
-                    "f_Tm": gaussian_tm_fitness(db_p["Tm_C"]),
+                    "f_ASTP": float((potentials[cid] >= db_p["Tm_C"]).mean()) if cid in potentials else 0.5,
                     "latent_heat_kJ_kg": db_p["latent_heat_kJ_kg"],
                     "latent_heat_margin_ratio": db_p["latent_heat_kJ_kg"] / l_req,
                     "rho_H_MJ_m3": db_p["rho_H_MJ_m3"],
@@ -474,6 +511,15 @@ def run_phase7():
     if all_ranking_rows:
         df_rankings = pd.concat(all_ranking_rows, ignore_index=True)
         df_rankings.to_csv(OUT_RANKINGS_CSV, index=False)
+        # Also save full scores and top-k for downstream plotting and verification scripts
+        df_rankings.to_csv(OUT_PCM_DIR / "mcdm_full_scores_assam.csv", index=False)
+        topk_df = (
+            df_rankings.sort_values(["cluster_id", "consensus_rank"])
+            .groupby("cluster_id")
+            .head(3)
+            .reset_index(drop=True)
+        )
+        topk_df.to_csv(OUT_PCM_DIR / "mcdm_topk_assam.csv", index=False)
     else:
         pd.DataFrame(columns=["cluster_id", "ranking_status", "reason"]).to_csv(OUT_RANKINGS_CSV, index=False)
 

@@ -53,9 +53,6 @@ OUT_PCA_LOAD = PROCESSED_DIR / "pca_loadings.csv"
 OUT_REPORT = PREPROCESSED_DIR / "climate_signature_report.txt"
 
 # Design Parameters (§6.3)
-# NOTE (2026-11-10): state-specific 50 C delivery basis. pcm_shared_config.py (Rajasthan / Tamil Nadu) uses 60 C.
-# Known OPEN decision; the value is intentionally unchanged. See docs/assam/00_MASTER_OVERVIEW.md,
-# section 'Delivery and melting-target basis'.
 T_DELIVERY = 50.0       # °C (Indian domestic hot-water target)
 DT_APPROACH = 6.0       # K  (Heat exchanger approach temperature)
 TM_TARGET = T_DELIVERY + DT_APPROACH # = 56 °C (indirect-system rule)

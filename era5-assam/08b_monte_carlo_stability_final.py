@@ -31,6 +31,7 @@ OUTPUTS:
   - data/preprocessed/monte_carlo_stability_report.txt
 """
 
+import json
 import sys
 import warnings
 from pathlib import Path
@@ -60,20 +61,36 @@ MC_TM_STD_K = 1.0
 MC_RELATIVE_STD = {"latent_heat_kJ_kg": 0.05, "TC_W_mK": 0.10, "rho_H_MJ_m3": 0.08}
 RANDOM_SEED = 42
 
-TARGET_TM_C = 56.0
-SIGMA_TM = 4.0
+XI_REF = 0.178  # Collector stagnation sensitivity (tau*alpha / U_L in m2*K/W)
+CLUSTER_MEDOIDS = {0: "ASP_0003", 1: "ASP_0036", 2: "ASP_0080"}
 
+# Matrix C Frozen Criteria and Weights
 PRIOR_WEIGHTS = {
-    "f_Tm": 0.30,
-    "latent_heat_margin_ratio": 0.25,
+    "f_ASTP": 0.35,
+    "latent_heat_kJ_kg": 0.15,
     "rho_H_MJ_m3": 0.15,
-    "TC_W_mK": 0.15,
-    "cycles_confidence": 0.15,
+    "TC_W_mK": 0.35,
 }
 CRITERIA = list(PRIOR_WEIGHTS.keys())
 
-def gaussian_tm_fitness(tm, target=TARGET_TM_C, sigma=SIGMA_TM):
-    return np.exp(-((tm - target) ** 2) / (2.0 * sigma ** 2))
+def load_cluster_solar_potentials(base_dir, xi=XI_REF):
+    potentials = {}
+    p_dir = base_dir / "data" / "raw" / "nasapower"
+    for cid, m_id in CLUSTER_MEDOIDS.items():
+        vals = []
+        for y in range(2016, 2026):
+            fn = p_dir / f"power_{m_id}_{y}.json"
+            if fn.exists():
+                with open(fn, "r") as fp:
+                    d = json.load(fp)["properties"]["parameter"]
+                ghi = d["ALLSKY_SFC_SW_DWN"]
+                t2m = d["T2M"]
+                for k in ghi:
+                    g = ghi[k]
+                    if g > 0:
+                        vals.append(t2m[k] + xi * g)
+        potentials[cid] = np.array(vals)
+    return potentials
 
 def minmax_normalize(df, cols):
     M = df[cols].copy()
@@ -91,7 +108,7 @@ def topsis(matrix, weights):
     s_minus = np.sqrt(((weighted - v_minus) ** 2).sum(axis=1))
     return s_minus / (s_plus + s_minus + 1e-12)
 
-def run_monte_carlo_for_cluster(df_eval, l_req, n_draws=N_MONTE_CARLO_DRAWS, seed=RANDOM_SEED):
+def run_monte_carlo_for_cluster(df_eval, potentials_c, l_req=None, n_draws=N_MONTE_CARLO_DRAWS, seed=RANDOM_SEED):
     rng = np.random.default_rng(seed)
     names = df_eval["product_name"].tolist()
     n_cand = len(names)
@@ -101,43 +118,58 @@ def run_monte_carlo_for_cluster(df_eval, l_req, n_draws=N_MONTE_CARLO_DRAWS, see
     baseline_scores = topsis(base_matrix, w_baseline)
     baseline_rank = pd.Series(baseline_scores, index=names).rank(ascending=False, method="min")
 
-    top3_count = {n: 0 for n in names}
-    top1_count = {n: 0 for n in names}
+    top1_count = np.zeros(n_cand)
+    top3_count = np.zeros(n_cand)
     spearman_rhos = []
 
     alpha = np.clip(w_baseline, 1e-6, None) * MC_DIRICHLET_CONCENTRATION
+    sorted_pot = np.sort(potentials_c)
+    n_pot = len(sorted_pot)
 
-    for _ in range(n_draws):
-        w_draw = rng.dirichlet(alpha)
-        tm_draw = df_eval["Tm_C"].values + rng.normal(0, MC_TM_STD_K, n_cand)
-        l_draw = df_eval["latent_heat_kJ_kg"].values * (1 + rng.normal(0, MC_RELATIVE_STD["latent_heat_kJ_kg"], n_cand))
-        tc_draw = df_eval["TC_W_mK"].values * (1 + rng.normal(0, MC_RELATIVE_STD["TC_W_mK"], n_cand))
-        rho_draw = df_eval["rho_H_MJ_m3"].values * (1 + rng.normal(0, MC_RELATIVE_STD["rho_H_MJ_m3"], n_cand))
+    # Vectorized pre-sampling for maximum performance
+    w_draws = rng.dirichlet(alpha, size=n_draws)
+    tm_draws = df_eval["Tm_C"].values + rng.normal(0, MC_TM_STD_K, size=(n_draws, n_cand))
+    l_draws = df_eval["latent_heat_kJ_kg"].values * (1 + rng.normal(0, MC_RELATIVE_STD["latent_heat_kJ_kg"], size=(n_draws, n_cand)))
+    tc_draws = df_eval["TC_W_mK"].values * (1 + rng.normal(0, MC_RELATIVE_STD["TC_W_mK"], size=(n_draws, n_cand)))
+    rho_draws = df_eval["rho_H_MJ_m3"].values * (1 + rng.normal(0, MC_RELATIVE_STD["rho_H_MJ_m3"], size=(n_draws, n_cand)))
 
-        draw_df = pd.DataFrame({
-            "f_Tm": gaussian_tm_fitness(tm_draw),
-            "latent_heat_margin_ratio": l_draw / l_req,
-            "rho_H_MJ_m3": rho_draw,
-            "TC_W_mK": tc_draw,
-            "cycles_confidence": df_eval["cycles_confidence"].values,
-        })
+    idx_draws = np.searchsorted(sorted_pot, tm_draws)
+    fastp_draws = 1.0 - (idx_draws / n_pot)
 
-        draw_matrix = minmax_normalize(draw_df, CRITERIA)
-        draw_scores = topsis(draw_matrix, w_draw)
-        draw_rank = pd.Series(draw_scores, index=names).rank(ascending=False, method="min")
+    base_rank_vals = baseline_rank.values
 
-        for name in draw_rank[draw_rank <= 3].index:
-            top3_count[name] += 1
-        for name in draw_rank[draw_rank == 1].index:
-            top1_count[name] += 1
+    for d in range(n_draws):
+        w_d = w_draws[d]
+        M_raw = np.column_stack((fastp_draws[d], l_draws[d], rho_draws[d], tc_draws[d]))
+        lo = M_raw.min(axis=0)
+        hi = M_raw.max(axis=0)
+        span = np.where((hi - lo) == 0, 1e-12, hi - lo)
+        M_norm = (M_raw - lo) / span
 
-        rho, _ = spearmanr(baseline_rank.values, draw_rank.values)
+        # Vector normalized TOPSIS
+        vec_norm = M_norm / (np.sqrt((M_norm ** 2).sum(axis=0)) + 1e-12)
+        weighted = vec_norm * w_d
+        v_plus = weighted.max(axis=0)
+        v_minus = weighted.min(axis=0)
+        s_plus = np.sqrt(((weighted - v_plus) ** 2).sum(axis=1))
+        s_minus = np.sqrt(((weighted - v_minus) ** 2).sum(axis=1))
+        scores = s_minus / (s_plus + s_minus + 1e-12)
+
+        order = np.argsort(-scores)
+        top1_count[order[0]] += 1
+        top3_count[order[:3]] += 1
+
+        rk = np.empty_like(order)
+        rk[order] = np.arange(1, n_cand + 1)
+
+        rho, _ = spearmanr(base_rank_vals, rk)
         spearman_rhos.append(rho if pd.notna(rho) else 0.0)
 
     res = pd.DataFrame({
         "product_name": names,
-        "top1_retention_rate": [top1_count[n] / n_draws for n in names],
-        "top3_inclusion_probability": [top3_count[n] / n_draws for n in names],
+        "name": names,
+        "top1_retention_rate": top1_count / n_draws,
+        "top3_inclusion_probability": top3_count / n_draws,
         "mean_spearman_rho_vs_baseline": [float(np.mean(spearman_rhos))] * n_cand,
         "n_draws": [n_draws] * n_cand,
     })
@@ -153,6 +185,7 @@ def run_phase8_framework():
 
     df_elig = pd.read_csv(ELIGIBILITY_CSV)
     df_rank = pd.read_csv(RANKINGS_CSV)
+    potentials = load_cluster_solar_potentials(BASE_DIR)
 
     mc_csv_rows = []
     report_lines = []
@@ -195,7 +228,7 @@ def run_phase8_framework():
                     "rankings file."
                 )
 
-            mc_res = run_monte_carlo_for_cluster(c_rank, l_req)
+            mc_res = run_monte_carlo_for_cluster(c_rank, potentials[cid], l_req)
             mc_res.insert(0, "cluster_id", cid)
             mc_res["status"] = "COMPLETED"
             mc_res["skip_reason"] = "None"
